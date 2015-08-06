@@ -1,2 +1,8 @@
 *.[oa]
 *~
+bin/*
+*.cache
+Makefile
+*.log
+*.status
+configure
