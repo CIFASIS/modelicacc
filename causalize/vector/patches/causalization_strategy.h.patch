@@ -1,0 +1,12 @@
+--- ../modelica2/modelicacc-code/causalize/causalization_strategy.h	2014-06-11 09:31:05.793819091 -0300
++++ causalize/causalization_strategy.h	2014-06-09 11:18:19.841912153 -0300
+@@ -5,7 +5,8 @@
+  *      Author: fede
+  */
+ 
+-#include <causalize/graph_definition.h>
++//#include <causalize/graph_definition.h>
++#include <causalize/causalize2/graph_definition.h>
+ 
+ using namespace std;
+ 

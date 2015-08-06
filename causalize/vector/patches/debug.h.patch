@@ -1,0 +1,10 @@
+--- ../modelica2/modelicacc-code/util/debug.h	2014-06-11 09:31:08.181819161 -0300
++++ util/debug.h	2014-05-19 09:00:29.010184144 -0300
+@@ -39,6 +39,7 @@
+ void DEBUG (char flag, const char* format, ...);
+ 
+ bool isDebugParam(char *param);
++bool debugIsEnabled(char);
+ 
+ /*
+  * Print an ERROR message. Then exits with EXIT_FAILURE status.

@@ -1,0 +1,17 @@
+OBJS_MMO := mmo/main.o \
+	mmo/mmo_class.o \
+	util/table.o \
+	util/debug.o \
+	util/ast_visitors/evalexp.o \
+	util/ast_visitors/part_evalexp.o \
+	util/ast_visitors/to_micro/to_micro.o \
+	util/ast_visitors/to_micro/to_micro_st.o \
+	util/ast_visitors/to_micro/to_micro_exp.o \
+	util/type.o  
+
+bin/mmo: $(OBJS_MMO) lib/libmodelica.a
+	$(CXX) $(CXXFLAGS) -o bin/mmo $(OBJS_MMO) -L./lib -lmodelica
+
+
+
+	

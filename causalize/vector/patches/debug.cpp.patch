@@ -1,0 +1,12 @@
+--- ../modelica2/modelicacc-code/util/debug.cpp	2014-06-11 09:31:08.181819161 -0300
++++ util/debug.cpp	2014-05-19 08:37:18.054196931 -0300
+@@ -58,6 +58,9 @@
+   if (strcmp(param, "s") == 0) {
+     return true;
+   }
++  if (strcmp(param, "g") == 0) {
++	return true;
++  }
+   return false;
+ }
+ 

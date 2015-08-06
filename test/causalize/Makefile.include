@@ -1,0 +1,31 @@
+OBJS_TEST_CAUSALIZATION := util/debug.o \
+                  util/table.o \
+                  util/type.o \
+                  util/solve/solve.o \
+                  util/ast_visitors/evalexp.o \
+                  util/ast_visitors/part_evalexp.o \
+                  util/ast_visitors/ginac_interface.o \
+                  util/ast_visitors/contains.o \
+                  causalize/for_unrolling/for_index_iterator.o \
+                  causalize/for_unrolling/process_for_equations.o \
+                  causalize/state_variables_finder.o \
+                  causalize/unknowns_collector.o \
+                  causalize/causalization_strategy.o \
+                  causalize/vector/graph_printer.o \
+                  causalize/vector/contains_vector.o \
+                  causalize/vector/graph_builder.o \
+                  causalize/apply_tarjan.o \
+                  mmo/mmo_class.o \
+									test/causalize/causalization_strategy_test.o
+									
+OBJS_TEST_TARJAN := util/debug.o \
+									causalize/apply_tarjan.o \
+									test/causalize/apply_tarjan_test.o
+
+TEST_LIBS = -lboost_unit_test_framework -L./lib -lmodelica -lginac
+
+test/causalize/causalization_strategy_test: $(OBJS_TEST_CAUSALIZATION)
+	$(CXX) $(CXXFLAGS) -o test/causalize/causalization_strategy_test $(OBJS_TEST_CAUSALIZATION) $(TEST_LIBS)
+	
+test/causalize/apply_tarjan_test: $(OBJS_TEST_TARJAN) lib/libmodelica.a
+	$(CXX) $(CXXFLAGS) -o test/causalize/apply_tarjan_test $(OBJS_TEST_TARJAN) $(TEST_LIBS)

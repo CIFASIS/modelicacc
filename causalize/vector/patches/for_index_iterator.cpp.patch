@@ -1,0 +1,19 @@
+--- ../modelica2/modelicacc-code/causalize/for_unrolling/for_index_iterator.cpp	2014-06-11 09:31:05.365819078 -0300
++++ causalize/for_unrolling/for_index_iterator.cpp	2014-05-26 11:38:42.006544469 -0300
+@@ -23,6 +23,7 @@
+ #include <util/ast_util.h>
+ #include <util/debug.h>
+ 
++
+ RangeIterator::RangeIterator(AST_Expression_Range range, VarSymbolTable symbolTable) {
+   _rangeElements = range->expressionList();
+   AST_ExpressionListIterator iter = _rangeElements->begin();
+@@ -40,6 +41,8 @@
+   _current = _rangeBegin;
+ }
+ 
++RangeIterator::~RangeIterator(){}
++
+ AST_Real RangeIterator::eval(AST_Expression exp, VarSymbolTable symbolTable) {
+   EvalExp evaluator(symbolTable);
+   AST_Expression result =  evaluator.eval(exp);

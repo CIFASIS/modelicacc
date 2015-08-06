@@ -1,0 +1,23 @@
+OBJS_FLATTER := flatter/main.o \
+	mmo/mmo_class.o \
+	util/table.o \
+	util/type.o  \
+	util/debug.o  \
+	flatter/classFinder.o \
+	flatter/remove_composition.o \
+	util/ast_visitors/dotExpression.o \
+	util/ast_visitors/markConnector.o \
+	util/ast_visitors/evalexp.o \
+	util/ast_visitors/part_evalexp.o \
+	util/ast_visitors/constExp.o \
+	util/ast_visitors/replace.o \
+	flatter/flatter.o \
+	flatter/connectors.o \
+	mmo/mmo_tree.o
+
+bin/flatter: $(OBJS_FLATTER) lib/libmodelica.a
+	$(CXX) $(CXXFLAGS) -o bin/flatter $(OBJS_FLATTER) -L./lib -lmodelica
+
+
+
+	

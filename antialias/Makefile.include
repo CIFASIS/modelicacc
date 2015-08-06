@@ -1,0 +1,19 @@
+OBJS_ANTIALIAS := antialias/main.o \
+	mmo/mmo_class.o \
+	util/table.o \
+	util/type.o \
+	util/debug.o \
+	util/ast_visitors/evalexp.o \
+	util/ast_visitors/part_evalexp.o \
+	util/ast_visitors/replace.o \
+	util/ast_visitors/replace_eq.o \
+	util/ast_visitors/replace_st.o \
+	causalize/state_variables_finder.o \
+	antialias/remove_alias.o
+LIBS=-L./lib -lginac -lmodelica 
+bin/antialias: $(OBJS_ANTIALIAS) lib/libmodelica.a
+	$(CXX) $(CXXFLAGS) $(OBJS_ANTIALIAS) -o bin/antialias $(LIBS)
+
+
+
+	

@@ -1,0 +1,18 @@
+--- ../modelica2/modelicacc-code/causalize/for_unrolling/for_index_iterator.h	2014-06-11 09:31:05.365819078 -0300
++++ causalize/for_unrolling/for_index_iterator.h	2014-05-26 11:27:56.674550398 -0300
+@@ -26,11 +26,15 @@
+   virtual AST_Real next() = 0;
+ };
+ 
++
+ class RangeIterator : public ForIndexIterator {
+ public:
+   RangeIterator(AST_Expression_Range range, VarSymbolTable symbolTable);
++  ~RangeIterator();
+   bool hasNext();
+   AST_Real next();
++  AST_Real begin(){return _rangeBegin;};
++  AST_Real end(){return _rangeEnd;}
+ private:
+   AST_Real eval(AST_Expression exp, VarSymbolTable symbolTable);
+   AST_ExpressionList _rangeElements;

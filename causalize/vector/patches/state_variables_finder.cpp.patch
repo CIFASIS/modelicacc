@@ -1,0 +1,43 @@
+--- ../modelica2/modelicacc-code/causalize/state_variables_finder.cpp	2014-06-11 09:31:05.785819090 -0300
++++ causalize/state_variables_finder.cpp	2014-06-10 09:57:42.580237426 -0300
+@@ -12,6 +12,7 @@
+ #include <ast/expression.h>
+ #include <util/symbol_table.h>
+ #include <util/debug.h>
++#include <cassert>
+ 
+ StateVariablesFinder::StateVariablesFinder(MMO_Class c) {
+ 	_c = c;
+@@ -51,6 +52,14 @@
+           }
+         }
+           break;
++		case EQFOR:
++		{
++		  assert(eq->getAsFor()->equationList()->front()->equationType() == EQEQUALITY);
++		  AST_Equation_Equality eqEq = eq->getAsFor()->equationList()->front()->getAsEquality();
++		  mapTraverse(eqEq->left());
++		  mapTraverse(eqEq->right());
++		}
++		  break;
+         default:
+           ERROR("StateVariablesFinder::findStateVariablesInEquations:\n"
+               "Equation type not supported.\n");
+@@ -62,6 +71,7 @@
+ AST_Expression StateVariablesFinder::mapTraverseElement(AST_Expression e) {
+ 	switch(e->expressionType()) {
+ 		case EXPDERIVATIVE:
++		{
+ 			AST_Expression_Derivative der = e->getAsDerivative();
+ 			AST_ExpressionList arguments = der->arguments();
+ 			ERROR_UNLESS(arguments->size() == 1, "StateVariablesFinder::mapTraverseElement:\n"
+@@ -79,6 +89,9 @@
+ 				  ERROR("StateVariablesFinder::mapTraverseElement:\n"
+ 				      "Incorrect expression type of AST_Expression_Derivative argument\n.");
+ 			}
++		}
++		default:
++			break;
+ 
+ 	}
+ 	return e;
