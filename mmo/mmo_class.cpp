@@ -122,8 +122,11 @@ namespace Modelica {
       out <<  vinfo.type() << " " << n;
       if (vinfo.indices()) {
         ExpList el = vinfo.indices().get();
+        int l=el.size(),i=0;
+        out << "[" ;
         foreach_(Expression e, el)
-          out << "[" << e << "]";
+          out << e << (++i<l ? ", " : "");
+        out << "]" ;
       }
       if (vinfo.modification())
         out << vinfo.modification().get();

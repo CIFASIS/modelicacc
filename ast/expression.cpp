@@ -274,6 +274,10 @@ namespace Modelica {
     std::ostream& operator<<(std::ostream& out, const Output &o) 
     {
       int l=o.args().size(),i=0;
+      if (l==1 && o.args().front() && is<Output>(o.args().front().get())) {
+            out << o.args().front().get();
+            return out;
+      }
       out << "(";
       foreach_(OptExp e, o.args()) {
         if (e) 
