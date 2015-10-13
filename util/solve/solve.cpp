@@ -191,14 +191,14 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
       code << "double " << buff << "(";
     i=0;
     foreach_(Name n, args) {
-      code << (i++==1 ? "," : "") << "double " << n;
+      code << (i++==1 ? "," : "") << "doublae " << n;
     }
     i=0;
     if (crs.size()>1) {
       code << ",";
       foreach_(Expression e, crs) {
         code << "double *" << e;
-        if (++i<crs.size()) 
+        if (++i<(int)crs.size()) 
           code << ",";
       }
     }
@@ -219,6 +219,23 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
       code << "  __args[" << i++ << "] = " << n << ";\n";
     }
     code << "   __F.params  = __args;\n";
+    code << "  gsl_vector *__f = gsl_vector_alloc(" << eqs.size() << ");\n";
+    code << "   // Try if we are already in the solution from the start (useful for discrete dependendt loops) \n";
+    code << "   " << buff << "_eval(__x, (void*)__args, __f) ;\n";
+    code << "   if (gsl_multiroot_test_residual(__f, 1e-7)==GSL_SUCCESS) {\n";
+    code << "       gsl_vector_free(__f);\n";
+    code << "       gsl_multiroot_fsolver_free (__s);\n";
+    if (crs.size()==1) {
+    code << "       return gsl_vector_get (__x, 0 );\n";
+    } else {
+        i=0;
+        foreach_(Expression e, crs) {
+            code << "       " << e << "[0] = " << "gsl_vector_get(__x," << i << ");\n";
+            i++;
+        }
+    }
+    code << "   }\n";
+    code << "   gsl_vector_free(__f);\n";
     code << "   gsl_multiroot_fsolver_set (__s, &__F,__x);\n";
     code << "   do {\n";
     code << "     __iter++;\n";
@@ -227,7 +244,7 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
     code << "       break;\n";
     code << "       __status = gsl_multiroot_test_residual (__s->f, 1e-7);\n";
     code << "   } while (__status == GSL_CONTINUE && __iter < 100);\n";
-    code << "   if (__iter == 100) printf(\"Warning: GSL could not solve an algebraic loop after %d iterations\\n\", __iter); \n";
+    code << "   if (__iter == 100) printf(\"Warning: GSL could not solve an algebraic loop after %d iterations\\n\",(int) __iter); \n";
     i=0;
     if (crs.size()>1) {
       foreach_(Expression e, crs) {
