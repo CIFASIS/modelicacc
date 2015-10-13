@@ -105,8 +105,8 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
 
   EquationList ret;
   try  {
-    //if (size>1)
-      //throw std::logic_error("Blahh");
+    if (size>1)
+      throw std::logic_error("Blahh");
     GiNaC::ex solved= lsolve(eqns, vars,GiNaC::solve_algo::gauss);
     if (solved.nops()==0) {
       std::cerr << "EquationSolver: cannot solve equation" << eqns<< std::endl;
@@ -239,6 +239,7 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
     }
     if (crs.size()==1) {
         code << "  " << "double ret = " << "gsl_vector_get(__s->x,0);\n";
+        code << "  gsl_vector_set (__x, 0 , ret);\n";
         code << "  gsl_multiroot_fsolver_free (__s);\n";
         code << "  return ret;\n";
     }

@@ -54,11 +54,20 @@ namespace Modelica {
  
 
   std::ostream& operator<<(std::ostream& out, const CallSt &ce) {
-    int l=ce.arg().size(),i=0;
-    if (ce.out().size()) {
+    int l=ce.out().size(),i=0;
+    if (l) {
       out << "(";
-      out << ")=";
+      foreach_(OptExp oe, ce.out()) {
+        if (oe) {
+            out << oe.get();
+        }
+        if (++i<l)
+            out << ", ";
+      }
+      out << ") :=";
     }  
+    l=ce.arg().size(),i=0;
+    if (ce.arg().size()) {
     out << ce.n();
     out << "(";
     l=ce.arg().size();i=0;
@@ -68,11 +77,14 @@ namespace Modelica {
           out << ",";
     }
     out << ")";
+    }
     return out;
   }
   member_imp(CallSt,OptExpList,out);
   member_imp(CallSt,Expression,n);
   member_imp(CallSt,ExpList,arg);
+  CallSt::CallSt(OptExpList out, Expression name, ExpList args):out_(out), n_(name), arg_(args){
+  };
  
   member_imp(Assign,Modelica::AST::Expression,left);
   member_imp(Assign,OptExp,right);
@@ -81,6 +93,18 @@ namespace Modelica {
   member_imp(WhileSt,StatementList,elements);
   member_imp(WhileSt,Expression,cond);
   
+  std::ostream& operator<<(std::ostream& out, const WhileSt &st) // output
+  {
+    out << "while " << st.cond() << " loop\n";
+    BEGIN_BLOCK;
+    foreach_(Statement s, st.elements()) {
+        out << INDENT<< s << ";\n";
+    }
+    END_BLOCK;
+    out << INDENT << "end while";
+    return out;
+  }
+
   }
 }
  

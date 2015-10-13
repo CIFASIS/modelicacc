@@ -31,7 +31,7 @@ namespace Modelica {
     struct CallSt: public StatementBase {
       
       CallSt(){};
-      CallSt(OptExpList out, Expression name, ExpList args):out_(out), n_(name), arg_(args){};
+      CallSt(OptExpList out, Expression name, ExpList args);
       friend std::ostream& operator<<(std::ostream& out, const CallSt &a); // output
 
       bool operator==(const CallSt & other) const {
@@ -137,16 +137,9 @@ namespace Modelica {
     struct WhileSt: public StatementBase {
       WhileSt(){}
       WhileSt(Expression cond, StatementList el): cond_(cond), elements_(el) {}
-      //StatementList el;
       member(StatementList , elements);
       member(Expression, cond);
-      friend std::ostream& operator<<(std::ostream& out, const WhileSt &) // output
-      {
-        out << "while\n";
-        return out;
-      }
-
-
+      printable(WhileSt);
     };
 
 

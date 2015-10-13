@@ -56,7 +56,14 @@ namespace Modelica {
       return v;
     }
     Statement replace_st::operator()(CallSt v) const {
-      ERROR("Replace in call statement not implemented\n");
+      v.n_ref()=boost::apply_visitor(replace_exp, v.n_ref());
+      foreach_(Expression &e, v.arg_ref()) {
+        e=boost::apply_visitor(replace_exp, e);
+      }
+      foreach_(OptExp &oe, v.out_ref()) {
+        if (oe) 
+            oe=boost::apply_visitor(replace_exp, oe.get());
+      }
       return v;
     };
     Statement replace_st::operator()(ForSt v) const {

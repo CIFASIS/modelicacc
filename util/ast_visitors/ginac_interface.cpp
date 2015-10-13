@@ -170,6 +170,12 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
         ss << v;
         return getSymbol(ss.str());
       } 
+      if ("log"==v.name()) {
+        return log(apply(v.args()[0]));
+      } 
+      if ("log10"==v.name()) {
+        return log(apply(v.args()[0]))/log(10);
+      } 
       WARNING("ConvertToGiNaC: conversion of function %s implemented. Returning 0.\n", v.name().c_str());
       return 0;
     }
