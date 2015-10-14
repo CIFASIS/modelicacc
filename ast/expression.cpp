@@ -66,6 +66,11 @@ namespace Modelica {
 
     std::ostream& operator<<(std::ostream& out, const BinOp  &b) // output
     {
+      if (b.op()==Exp) {
+        //out << "pow(" << b.left() << ", " << b.right() << ")";
+        out << "(" << b.left() << "^" << b.right() << ")";
+        return out;
+      }
       out << b.left() << BinOpTypeName[b.op()] << b.right();
       return out;
     }
