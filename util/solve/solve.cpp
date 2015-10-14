@@ -56,7 +56,7 @@ void my_print_power_dflt(const power & p, const print_dflt & c, unsigned level) 
 }
 
 
-EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &funs) {
+EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &funs, const std::string path) {
   using namespace std;
   static int fsolve=1;
   Modelica::ConvertToGiNaC tog(syms);
@@ -191,7 +191,7 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
       code << "double " << buff << "(";
     i=0;
     foreach_(Name n, args) {
-      code << (i++==1 ? "," : "") << "doublae " << n;
+      code << (++i>1 ? "," : "") << "double " << n;
     }
     i=0;
     if (crs.size()>1) {
@@ -295,7 +295,7 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
     el.push_back(String("m")); 
     el.push_back(String("gsl")); 
     el.push_back(String("blas")); 
-    Annotation ext_anot(ClassModification(Argument(ElMod("Library",ModEq(Brace(el)))), Argument(ElMod("Include",ModEq(String("#include \\\"/home/fbergero/PHD/branches/new_parser/bin/SistHibGen1.c\\\"\n"))))  ));
+    Annotation ext_anot(ClassModification(Argument(ElMod("Library",ModEq(Brace(el)))), Argument(ElMod("Include",ModEq(String("#include \\\"" + path + "\\\"\n"))))  ));
     com.ext_annot_ref()=ext_anot;
     c.composition_ref()=com;
     

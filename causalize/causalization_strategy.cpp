@@ -25,6 +25,7 @@
 using namespace Modelica::AST;
 CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(mmo_class) {
 
+  char buff[1024];
   Causalize::process_for_equations(mmo_class);
 
   EquationList &equations = mmo_class.equations_ref().equations_ref();
@@ -94,6 +95,11 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   }
   DEBUG('c', "\n");
 
+  char *path = get_current_dir_name();
+
+  sprintf(buff,"%s/%s.c",path,_mmo_class.name().c_str());
+  free(path);
+  c_path = buff;
 }
 
 void CausalizationStrategy::causalize(Name name) {
@@ -187,7 +193,6 @@ void CausalizationStrategy::causalize(Name name) {
   _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsEnd.begin(),_causalEqsEnd.end());
   _mmo_class.equations_ref().equations_ref() = _causalEqsBegining;
 
-  sprintf(buff,"%s.c",_mmo_class.name().c_str());
   
   // Add new functions
   foreach_(ClassType ct, cl) {
@@ -196,24 +201,25 @@ void CausalizationStrategy::causalize(Name name) {
     MMO_Class *mmo = new MMO_Class(c);
     _mmo_class.tyTable_ref().insert(c.name(), Type::Class(c.name(),mmo));
   }
-  std::fstream fs (buff, std::fstream::out);  
-  fs << "#include <gsl/gsl_multiroots.h>\n";
-  fs << "#define pre(X) X\n";
-  foreach_(std::string s, c_code) 
-    fs << s;
-  fs.close();
-
+  if (c_code.size()) { 
+    std::fstream fs (c_path.c_str() , std::fstream::out);  
+     fs << "#include <gsl/gsl_multiroots.h>\n";
+    fs << "#define pre(X) X\n";
+    foreach_(std::string s, c_code) 
+        fs << s;
+    fs.close();
+  }
 }
 
 void CausalizationStrategy::makeCausalBegining(EquationList eqs, ExpList unknowns) {
-  EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl);
+  EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl, c_path);
   foreach_(Equation e, causalEqs) {
     _causalEqsBegining.push_back(e);
   }
 }
 
 void CausalizationStrategy::makeCausalEnd(EquationList eqs, ExpList unknowns) {
-  EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl);
+  EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl, c_path );
   foreach_(Equation e, causalEqs) {
     _causalEqsEnd.insert(_causalEqsEnd.begin(),e);
   }
@@ -252,7 +258,7 @@ void CausalizationStrategy::makeCausalMiddle() {
       eqs.push_back(eq);
     }
 
-    EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl);
+    EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl, c_path );
 
     _causalEqsMiddle.insert(_causalEqsMiddle.end(), causalEqs.begin(), causalEqs.end());
   }

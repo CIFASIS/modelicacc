@@ -20,6 +20,7 @@ private:
   CausalizationGraph _graph;
   std::list<Vertex> _eqVertices;
   std::list<Vertex> _unknownVertices;
+  std::string c_path;
   Modelica::MMO_Class &_mmo_class;
   Modelica::AST::EquationList _causalEqsBegining;
   Modelica::AST::EquationList _causalEqsMiddle;

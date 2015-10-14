@@ -147,7 +147,7 @@ namespace Modelica {
         if (e.comp_ref()) 
           out << e.comp_ref().get() << " =";
         out << " " << e.fun() << "(";
-        int i=0;
+        unsigned int i=0;
         foreach_(OptExp oe, e.args()) {
           if (oe)
             out << oe.get() << (++i<e.args().size() ? "," : "");
