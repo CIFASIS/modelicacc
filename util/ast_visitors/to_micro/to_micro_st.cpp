@@ -53,6 +53,16 @@ namespace Modelica {
     }
 
     Statement toMicroSt::operator()(WhenSt v) const { 
+      if (is<Call>(v.cond())) {
+        Call c = get<Call>(v.cond());
+        if ("sample"==c.name()) {
+            Expression d=newDiscrete(c.args().front());
+            WhenSt ret = v;
+            ret.cond_ref() = BinOp(Reference("time"),Greater,Call("pre",ExpList(1,d)));
+            ret.elements_ref().insert(ret.elements_ref().begin(), Assign(d,OptExp(BinOp(Reference("time"),Add, c.args().at(1)))));
+            return ret;
+        }
+      }
       return v;
     }
 
@@ -61,4 +71,22 @@ namespace Modelica {
     }
 
     StatementList toMicroSt::statements() const { return statements_; }
+
+    Expression toMicroSt::newDiscrete(Option<Expression> oe) const {
+        char buff[1024];
+        sprintf(buff,"d%d",disc_count++);
+        Name name(buff);
+        VarSymbolTable &syms=mmo_class.syms_ref();     
+        if (oe) {
+          ClassModification cm;
+          cm.push_back(ElMod("start",ModEq(oe.get())));
+          ModClass mc(cm);
+          Modification m = mc;
+          syms.insert(name,VarInfo(TypePrefixes(1,discrete) , "Real", Option<Comment>(), m));
+        }  else
+          syms.insert(name,VarInfo(TypePrefixes(1,discrete) , "Real"));
+        mmo_class.variables_ref().push_back(name);
+        return Reference(Ref(1,RefTuple(name,ExpList())));
+    }
+ 
 }
