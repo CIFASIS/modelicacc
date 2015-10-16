@@ -180,6 +180,7 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
           ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
           Equality eq = get<Equality>(e);
           //loop.push_back(Equality(boost::apply_visitor(peval,eq.left_ref()), boost::apply_visitor(peval,eq.right_ref())));
+          setCFlag(code,1);
           code << "  gsl_vector_set (__f," << i++ << ", (" << 
             boost::apply_visitor(peval,eq.left_ref()) << ") - (" << boost::apply_visitor(peval,eq.right_ref()) << "));\n";
     }

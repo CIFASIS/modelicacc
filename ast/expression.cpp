@@ -67,8 +67,11 @@ namespace Modelica {
     std::ostream& operator<<(std::ostream& out, const BinOp  &b) // output
     {
       if (b.op()==Exp) {
-        //out << "pow(" << b.left() << ", " << b.right() << ")";
-        out << "(" << b.left() << "^" << b.right() << ")";
+        
+        if (printAsCActive (out))
+            out << "pow(" << b.left() << ", " << b.right() << ")";
+        else
+            out << "(" << b.left() << "^" << b.right() << ")";
         return out;
       }
       out << b.left() << BinOpTypeName[b.op()] << b.right();
@@ -371,6 +374,21 @@ namespace Modelica {
    member_imp(FunctionExp,ExpList,args);
    Boolean True(TRUE);
    Boolean False(FALSE);
+
+   long & printAsC(std::ios_base& s) {
+    static int my_index = std::ios_base::xalloc();
+    return s.iword(my_index);
+   }
+
+    long printAsCActive (std::ios_base& s) {
+        return printAsC(s);
+    }
+
+    void setCFlag(std::ios_base& s, long n) {
+        printAsC(s) = n;
+    } 
+
+
   }
 }
 

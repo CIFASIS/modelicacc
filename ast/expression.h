@@ -262,6 +262,10 @@ namespace Modelica {
     inline bool is(Expression e) {
       return e.type()==typeid(T);
     }
+
+    long & printAsC(std::ios_base& s);
+    long printAsCActive (std::ios_base& s) ;
+    void setCFlag(std::ios_base& s, long n) ;
   };
 };
 #endif
