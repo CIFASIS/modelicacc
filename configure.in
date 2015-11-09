@@ -14,10 +14,10 @@ AC_MSG_CHECKING([for bison++])
 
 # Checks for libraries.
 AC_LANG([C++])
-AC_CHECK_HEADERS([ginac/ginac.h],[],[AC_MSG_ERROR([MCC needs libginac.])],[])
+AC_CHECK_HEADERS([ginac/ginac.h],[],[AC_MSG_ERROR([ModelicaCC needs libginac.])],[])
 
 # Checks for header files.
-AX_BOOST_BASE([],[], AC_MSG_ERROR([MCC needs boost library.]))
+AX_BOOST_BASE([],[], AC_MSG_ERROR([ModelicaCC needs boost library.]))
 AC_FUNC_ALLOCA
 AC_CHECK_HEADERS([malloc.h stdlib.h string.h unistd.h])
 
