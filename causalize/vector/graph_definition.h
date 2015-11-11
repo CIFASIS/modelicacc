@@ -25,10 +25,11 @@ struct VertexProperties{
 	bool isState;
 	int count; //size of the array or number of equations
 	int  index; //for debug purposes
+	bool visited;
 	//these fields are for compatibility with the previous
 	//algorithm
-	Modelica::AST::EquationList  eqs;
-	Modelica::AST::ExpList unknowns;
+	Modelica::AST::Equation  eq;
+	Modelica::AST::Expression unknown;
 };
 
 /*
@@ -38,12 +39,15 @@ struct VertexProperties{
 * an array) that are used in the equation connected by the edge.
 */
 struct EdgeProperties{
-	//std::pair<int, int> genericIndex;
 	boost::icl::interval_set<int> p_e;
 	boost::icl::interval_set<int> p_v;
+	std::pair<int, int> genericIndex;
+	boost::icl::interval_set<int> indexInterval;
   bool operator<  (const EdgeProperties & rhs) const {
     if (p_e <rhs.p_e) return true;
     if (p_v < rhs.p_v ) return true; 
+    if (genericIndex<rhs.genericIndex) return true;
+    if (indexInterval < rhs.indexInterval) return true; 
     return false;
   }
   bool isBalanced() {

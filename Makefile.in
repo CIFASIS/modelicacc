@@ -1,7 +1,6 @@
-CXXFLAGS = -I. -Wall -Wno-reorder -O3
+CXXFLAGS = -I. -Wall -Wno-reorder -O3 -g
 
-OBJS_COMMON :=  ast/expression.o \
-		ast/class.o \
+OBJS_COMMON :=  ast/class.o \
 		ast/equation.o \
 		ast/statement.o \
 		ast/modification.o \
@@ -9,12 +8,13 @@ OBJS_COMMON :=  ast/expression.o \
 		ast/expression.o \
 		parser/parser.o
 
-all:lib/libmodelica.a bin/antialias bin/flatter bin/mmo bin/causalize
+all:lib/libmodelica.a bin/antialias bin/flatter bin/mmo bin/causalize test/causalize/causalization_strategy_test test/causalize/performance_test
 
 include antialias/Makefile.include
 include mmo/Makefile.include
 include flatter/Makefile.include
 include causalize/Makefile.include
+include test/causalize/Makefile.include
 
 lib/libmodelica.a: $(OBJS_COMMON)
 	$(AR) rcs lib/libmodelica.a $(OBJS_COMMON)
@@ -25,4 +25,13 @@ parser/parser.cpp: parser/parser_imp.h parser/actions.h parser/adapters.h
 	$(CXX) -c $(CXXFLAGS) $*.cpp -o $*.o
 
 clean:
-	$(RM) $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) lib/libmodelica.a
+	$(RM) \
+	$(OBJS_COMMON) \
+	$(OBJS_ANTIALIAS) \
+	$(OBJS_FLATTER) \
+	$(OBJS_MMO) \
+	$(OBJS_CAUSALIZE) \
+	$(OBJS_TEST_CAUSALIZATION) \
+	test/causalize/causalization_strategy_test.o \
+	test/causalize/performance_test.o \
+	lib/libmodelica.a

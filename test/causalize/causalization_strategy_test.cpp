@@ -17,15 +17,7 @@
 using namespace boost::unit_test;
 using namespace Modelica::AST;
 
-void check_causality(MMO_Class &mmoClass) {
-
-  UnknownsCollector collector(mmoClass);
-  ExpList unkowns = collector.collectUnknowns();
-
-  CausalizationStrategy cStrategy(mmoClass);
-  cStrategy.causalize("a", ClassList(0));
-
-  std::cout << mmoClass << std::endl;
+void check_causality(MMO_Class &mmoClass, ExpList unknowns) {
 
   const EquationList &causalEqs = mmoClass.equations_ref().equations_ref();
 
@@ -56,7 +48,7 @@ void check_causality(MMO_Class &mmoClass) {
       ERROR("Unexpected type for equation's left expression\n");
     }
 
-    foreach_(Expression unknown, unkowns) {
+    foreach_(Expression unknown, unknowns) {
       Modelica::contains occurrs(unknown);
       if (boost::apply_visitor(occurrs, eqEq.right_ref())) {
         bool isKnown = false;
@@ -85,7 +77,15 @@ void rlc_test() {
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
 
-  check_causality(mmo);
+  UnknownsCollector collector(mmo);
+  ExpList unknowns = collector.collectUnknowns();
+
+  CausalizationStrategy cStrategy(mmo);
+  cStrategy.causalize("Anything");
+
+  std::cout << mmo << std::endl;
+
+  check_causality(mmo, unknowns);
 
 }
 
@@ -101,19 +101,52 @@ void rlc_loop_test() {
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
 
-  check_causality(mmo);
+  UnknownsCollector collector(mmo);
+  ExpList unknowns = collector.collectUnknowns();
+
+  CausalizationStrategy cStrategy(mmo);
+  cStrategy.causalize("Anything");
+
+  std::cout << mmo << std::endl;
+
+  check_causality(mmo, unknowns);
+
+}
+
+void rlc_loop_no_opt_test() {
+
+  bool r;
+
+  StoredDef sd = parseFile("rlc_loop.mo",r);
+
+  if (!r)
+    ERROR("Can't parse file\n");
+
+  Class ast_c = boost::get<Class>(sd.classes().front());
+  MMO_Class mmo(ast_c);
+
+  UnknownsCollector collector(mmo);
+  ExpList unknowns = collector.collectUnknowns();
+
+  CausalizationStrategy cStrategy(mmo);
+  cStrategy.causalize_no_opt("Anything");
+
+  std::cout << mmo << std::endl;
+
+  check_causality(mmo, unknowns);
 
 }
 
 test_suite*
 init_unit_test_suite( int, char* []) {
 
-    debugInit("c");
+  debugInit("c");
 
-    framework::master_test_suite().p_name.value = "Causalization Strategy";
+  framework::master_test_suite().p_name.value = "Causalization Strategy Test";
 
-    framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_test) );
-    framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_loop_test) );
+  framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_test) );
+  framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_loop_test) );
+  framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_loop_no_opt_test) );
 
-    return 0;
+  return 0;
 }

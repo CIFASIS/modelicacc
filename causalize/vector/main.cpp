@@ -30,7 +30,6 @@
 #include <causalize/causalization_strategy.h>
 
 #include <causalize/causalize2/graph_builder.h>
-#include <causalize/causalize2/graph_printer.h>
 #include <causalize/causalize2/causalization_algorithm.h>
 
 int main(int argc, char** argv){
@@ -68,17 +67,17 @@ int main(int argc, char** argv){
 	CausalizationGraph g = gb->makeGraph();
 
 	//para debuggeo: crea archivo grafo.dot 
-	if(debugIsEnabled('g')){
-		GraphPrinter gp(g);
-		gp.printGraph();
-	}
+	// if(debugIsEnabled('g')){
+	// 	GraphPrinter gp(g);
+	// 	gp.printGraph();
+	// }
 
 	CausalizationStrategy2 *cs = new CausalizationStrategy2(g);
 	if(cs->causalize()){
-		if(debugIsEnabled('c')){
-			cout << "Result of causalization (variable, [range,] equationID):" << endl;
-			cs->print();
-		}
+		// if(debugIsEnabled('c')){
+		// 	cout << "Result of causalization (variable, [range,] equationID):" << endl;
+		// 	cs->print();
+		// }
 	}else{
 		//si no anduvo, probamos con la estrategia clasica
 		DEBUG('c', "Executing the classic strategy\n");

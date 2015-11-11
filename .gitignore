@@ -6,3 +6,9 @@ Makefile
 *.log
 *.status
 configure
+OneDHeatTransferTI_FD.c
+*.dot
+"test/causalize/\020"
+test/causalize/causalization_strategy_test
+"test/causalize/\276\364v"
+

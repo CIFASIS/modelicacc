@@ -1,4 +1,5 @@
-OBJS_CAUSALIZE := causalize/main.o \
+OBJS_CAUSALIZE := $(OBJS_COMMON) \
+                  causalize/main.o \
                   util/debug.o \
                   util/table.o \
                   util/type.o \
@@ -13,9 +14,9 @@ OBJS_CAUSALIZE := causalize/main.o \
                   causalize/state_variables_finder.o \
                   causalize/unknowns_collector.o \
                   causalize/causalization_strategy.o \
-                  causalize/vector/graph_printer.o \
                   causalize/vector/contains_vector.o \
                   causalize/vector/graph_builder.o \
+                  causalize/vector/graph_printer.o \
                   causalize/vector/causalization_algorithm.o \
                   mmo/mmo_class.o
 

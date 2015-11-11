@@ -7,7 +7,6 @@
 
 #include <causalize/causalization_strategy.h>
 #include <causalize/vector/graph_definition.h>
-#include <causalize/vector/graph_printer.h>
 #include <ast/ast_types.h>
 #include <causalize/for_unrolling/process_for_equations.h>
 #include <util/debug.h>
@@ -27,7 +26,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
 
   Causalize::process_for_equations(mmo_class);
 
-  EquationList &equations = mmo_class.equations_ref().equations_ref();
+  const EquationList &equations = mmo_class.equations_ref().equations_ref();
 
   UnknownsCollector collector(mmo_class);
   ExpList unknowns = collector.collectUnknowns();
@@ -42,21 +41,24 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
 
   _all_unknowns = unknowns;
 
-  DEBUG('c', "Building causalization graph...\n");
+  std::list<Vertex> eqVerts;
+  std::list<Vertex> unknownVerts;
 
+  DEBUG('c', "Building causalization graph...\n");
   DEBUG('c', "Equation indexes:\n");
 
-  foreach_(Equation &e, equations) {
+  foreach_(Equation e, equations) {
     VertexProperties vp;
     Equality &eq = get<Equality>(e);
     PartEvalExp eval(_mmo_class.syms_ref(),false);
     eq.left_ref()=boost::apply_visitor(eval ,eq.left_ref());
     eq.right_ref()=boost::apply_visitor(eval ,eq.right_ref());
-    vp.eqs = EquationList(1,e);
+    vp.eq = e;
     vp.type = E;
     vp.index = index++;
+    vp.visited = false;
     Vertex v = add_vertex(vp, _graph);
-    _eqVertices.push_back(v);
+    eqVerts.push_back(v);
     if (debugIsEnabled('c'))
       cout << vp.index << ":" << e << endl;
   }
@@ -66,11 +68,12 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   index = 0;
   foreach_(Expression e, unknowns) {
     VertexProperties vp;
-    vp.unknowns = ExpList(1, e);
+    vp.unknown = e;
     vp.type = U;
     vp.index = index++;
+    vp.visited = false;
     Vertex v = add_vertex(vp, _graph);
-    _unknownVertices.push_back(v);
+    unknownVerts.push_back(v);
     if (debugIsEnabled('c'))
       cout << vp.index << ":" << e << endl;
    }
@@ -78,142 +81,203 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   DEBUG('c', "Graph edges as (equation_index, uknown_index):\n");
 
   list<Vertex>::iterator acausalEqsIter, unknownsIter;
-  foreach_(Vertex eqVertex, _eqVertices) {
-    foreach_(Vertex unknownVertex , _unknownVertices) {
-      Modelica::contains occurrs(_graph[unknownVertex].unknowns.front()); 
-      Equation e = _graph[eqVertex].eqs.front();
+  foreach_(Vertex eqVertex, eqVerts) {
+    foreach_(Vertex unknownVertex , unknownVerts) {
+      Modelica::contains occurrs(_graph[unknownVertex].unknown);
+      Equation e = _graph[eqVertex].eq;
       ERROR_UNLESS(is<Equality>(e), "Causalization of non-equality equation is not supported");
       Equality eq = boost::get<Equality>(e);
-      const bool rl = boost::apply_visitor(occurrs,eq.right_ref());
-      const bool ll = boost::apply_visitor(occurrs,eq.left_ref());
+      const bool rl = boost::apply_visitor(occurrs,eq.left_ref());
+      const bool ll = boost::apply_visitor(occurrs,eq.right_ref()); 
       if(rl || ll) {
         add_edge(eqVertex, unknownVertex, _graph);
         DEBUG('c', "(%d, %d) ", _graph[eqVertex].index, _graph[unknownVertex].index);
       }
     }
   }
+
   DEBUG('c', "\n");
 
 }
 
-void CausalizationStrategy::causalize(Name name) {
+void CausalizationStrategy::causalize(Modelica::AST::Name name) {
+    simpleCausalizationStrategy();
+    std::cout << "After simpleCausalizationStrategy" << std::endl;
+    causalize_no_opt(name);
+}
 
-  static int step=0;
-  GraphPrinter gp(_graph);
-  char buff[1024];
-  sprintf(buff,"graph_%d.dot",step++);
-  gp.printGraph(buff);
+void CausalizationStrategy::causalize_no_opt(Modelica::AST::Name name) {
 
-  list<Vertex>::size_type acausalEqsSize;
+  makeCausalMiddle();
 
-  do {
+  std::cout << "After makeCausalMiddle" << std::endl;
 
-    acausalEqsSize = _eqVertices.size();
+  _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsMiddle.begin(),_causalEqsMiddle.end());
 
-    list<Vertex>::iterator iter, auxiliaryIter;
-
-    auxiliaryIter = _eqVertices.begin();
-    for(iter = auxiliaryIter; iter != _eqVertices.end(); iter = auxiliaryIter) {
-      ++auxiliaryIter;
-      Vertex eq = *iter;
-      if (out_degree(eq, _graph) == 1) {
-        Edge e = *out_edges(eq, _graph).first;
-        Vertex unknown = target(e, _graph);
-        remove_out_edge_if(unknown, boost::lambda::_1 != e, _graph);
-        if (debugIsEnabled('c')) {
-          cout << "Causalizing ";
-          foreach_(Expression e, _graph[unknown].unknowns)
-            cout << " " << e;
-          cout << std::endl;
-          cout << "Using ";
-          foreach_(Equation e, _graph[eq].eqs)
-            cout << std::endl << e;
-          cout << std::endl;
-        }
-        makeCausalBegining(_graph[eq].eqs, _graph[unknown].unknowns);
-        clear_vertex(unknown,_graph);
-        remove_vertex(unknown,_graph);
-        clear_vertex(eq,_graph);
-        remove_vertex(eq,_graph);
-        _eqVertices.erase(iter);
-        _unknownVertices.remove(unknown);
-        //GraphPrinter gpp(_graph);
-        //sprintf(buff,"graph_%d.dot",step++);
-        //gpp.printGraph(buff);
-      } else if (out_degree(eq, _graph) == 0) {
-        cout << "Causalizing " << _graph[eq].eqs.front() << std::endl;
-        ERROR("Problem is singular. Not supported yet.\n");
-      }
-    }
-
-    auxiliaryIter = _unknownVertices.begin();
-    for(iter = auxiliaryIter; iter != _unknownVertices.end(); iter = auxiliaryIter) {
-      ++auxiliaryIter;
-      Vertex unknown = *(iter);
-      if(out_degree(unknown, _graph) == 1) {
-        Edge e = *out_edges(unknown, _graph).first;
-        Vertex eq = target(e, _graph);
-        remove_out_edge_if(eq, boost::lambda::_1 != e, _graph);
-        if (debugIsEnabled('c')) {
-          cout << "Causalizing " << _graph[unknown].unknowns.size() << " variables " << _graph[unknown].unknowns.front() << std::endl;
-
-        }
-        makeCausalEnd(_graph[eq].eqs, _graph[unknown].unknowns);
-        clear_vertex(unknown,_graph);
-        remove_vertex(unknown,_graph);
-        clear_vertex(eq,_graph);
-        remove_vertex(eq,_graph);
-        _eqVertices.remove(eq);
-        _unknownVertices.erase(iter);
-        //sprintf(buff,"graph_%d.dot",step++);
-        //GraphPrinter gpp(_graph);
-        //gpp.printGraph(buff);
-
-      } else if (out_degree(unknown, _graph) == 0) {
-        cout << "Causalizing " << _graph[unknown].unknowns.size() << " variables " << _graph[unknown].unknowns.front() << std::endl;
-        ERROR("Problem is singular. Not supported yet.\n");
-      }
-    }
-
-  } while (!_eqVertices.empty()
-      && (acausalEqsSize != _eqVertices.size()));
-
-  if (acausalEqsSize == _eqVertices.size()) {
-    DEBUG('c', "Algebraic loop(s) detected.\n");
-    makeCausalMiddle();
-   _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsMiddle.begin(),_causalEqsMiddle.end());
-  }
-
-  _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsEnd.begin(),_causalEqsEnd.end());
   _mmo_class.equations_ref().equations_ref() = _causalEqsBegining;
 
-  sprintf(buff,"%s.c",_mmo_class.name().c_str());
-  
   // Add new functions
-  foreach_(ClassType ct, cl) {
-    Class c = get<Class>(ct);
-    _mmo_class.types_ref().push_back(c.name());
-    MMO_Class *mmo = new MMO_Class(c);
-    _mmo_class.tyTable_ref().insert(c.name(), Type::Class(c.name(),mmo));
-  }
-  std::fstream fs (buff, std::fstream::out);  
-  fs << "#include <gsl/gsl_multiroots.h>\n";
-  fs << "#define pre(X) X\n";
-  foreach_(std::string s, c_code) 
-    fs << s;
-  fs.close();
+ foreach_(ClassType ct, _cl) {
+   Class c = get<Class>(ct);
+   _mmo_class.types_ref().push_back(c.name());
+   MMO_Class *mmo = new MMO_Class(c);
+   _mmo_class.tyTable_ref().insert(c.name(), Type::Class(c.name(),mmo));
+ }
+ char buff[1024];
+ std::fstream fs (buff, std::fstream::out);
+ fs << "#include <gsl/gsl_multiroots.h>\n";
+ fs << "#define pre(X) X\n";
+ foreach_(std::string s, c_code)
+ fs << s;
+ fs.close();
 
 }
 
-void CausalizationStrategy::makeCausalBegining(EquationList eqs, ExpList unknowns) {
-  EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl);
+void CausalizationStrategy::simpleCausalizationStrategy() {
+
+  std::list<Vertex> eqDegree1Verts;
+  std::list<Vertex> unknownDegree1Verts;
+
+  CausalizationGraph::vertex_iterator vi, vi_end;
+  for(boost::tie(vi,vi_end) = vertices(_graph); vi != vi_end; ++vi) {
+    Vertex v = *vi;
+    if (out_degree(v, _graph) == 1) {
+      _graph[v].visited = true;
+      if (_graph[v].type == E) {
+        eqDegree1Verts.push_back(v);
+      } else {
+        unknownDegree1Verts.push_back(v);
+      }
+    }
+  }
+
+      std::cout << "SimpleCausalizationStrategy 1" << std::endl;
+
+  while(!eqDegree1Verts.empty() || !unknownDegree1Verts.empty()) {
+    std::list<Vertex>::iterator eqIter = eqDegree1Verts.begin();
+    if (eqIter != eqDegree1Verts.end()) {
+      Vertex eq = *eqIter;
+      Edge e = getUniqueEdge(eq);
+      Vertex unknown = target(e, _graph);
+      makeCausalBegining(_graph[eq].eq, _graph[unknown].unknown);
+      remove_edge(e, _graph);
+      remove_vertex(eq,_graph);
+      CausalizationGraph::out_edge_iterator outEdgeIter, outEdgeIterEnd, next;
+      boost::tie(outEdgeIter, outEdgeIterEnd) = out_edges(unknown, _graph);
+      for(next = outEdgeIter; outEdgeIter != outEdgeIterEnd; outEdgeIter = next) {
+        next++;
+        Edge unkownAdjEdge = *outEdgeIter;
+        Vertex unknownAdjEq = target(unkownAdjEdge, _graph);
+        remove_edge(unkownAdjEdge, _graph);
+        if (out_degree(unknownAdjEq, _graph) == 1) {
+            Edge e = getUniqueEdge(unknownAdjEq);
+            Vertex eqAdjUnknown = target(e, _graph);
+            if(!_graph[eqAdjUnknown].visited) {
+                _graph[unknownAdjEq].visited = true;
+                eqDegree1Verts.push_back(unknownAdjEq);
+            }
+        }
+      }
+      remove_vertex(unknown,_graph);
+      eqDegree1Verts.erase(eqIter);
+    }
+
+      std::cout << "SimpleCausalizationStrategy 2" << std::endl;
+
+
+    std::list<Vertex>::iterator unknownIter = unknownDegree1Verts.begin();
+    if(unknownIter != unknownDegree1Verts.end()) {
+      Vertex unknown = *unknownIter;
+
+      std::cout << "SimpleCausalizationStrategy 2.0.1" << std::endl;
+
+
+      Edge e = getUniqueEdge(unknown);
+
+      std::cout << "SimpleCausalizationStrategy 2.0.2 " << e << std::endl;
+
+
+      Vertex eq = target(e, _graph);
+
+      std::cout << "SimpleCausalizationStrategy 2.1" << eq << std::endl;
+
+
+      makeCausalEnd(_graph[eq].eq, _graph[unknown].unknown);
+
+      std::cout << "SimpleCausalizationStrategy 2.1.1" << std::endl;
+
+
+      remove_edge(e, _graph);
+
+      std::cout << "SimpleCausalizationStrategy 2.1.2" << std::endl;
+
+
+      remove_vertex(unknown, _graph);
+
+      std::cout << "SimpleCausalizationStrategy 2.1.3" << std::endl;
+
+
+      CausalizationGraph::out_edge_iterator outEdgeIter, outEdgeIterEnd, next;
+      boost::tie(outEdgeIter, outEdgeIterEnd) = out_edges(eq, _graph);
+
+      std::cout << "SimpleCausalizationStrategy 2.2" << std::endl;
+
+
+      for(next = outEdgeIter; outEdgeIter != outEdgeIterEnd; outEdgeIter = next) {
+        next++;
+        Edge eqAdjEdge = *outEdgeIter;
+        Vertex eqAdjUnknown = target(eqAdjEdge, _graph);
+        remove_edge(eqAdjEdge, _graph);
+
+      std::cout << "SimpleCausalizationStrategy 2.3" << std::endl;
+
+
+        if (out_degree(eqAdjUnknown, _graph) == 1) {
+            Edge e = getUniqueEdge(eqAdjUnknown);
+            Vertex unknownAdjEq = target(e, _graph);
+            if(!_graph[unknownAdjEq].visited) {
+                _graph[eqAdjUnknown].visited = true;
+                unknownDegree1Verts.push_back(eqAdjUnknown);
+            }
+        }
+      }
+      remove_vertex(eq, _graph);
+      unknownDegree1Verts.erase(unknownIter);
+    }
+  }
+}
+
+Edge CausalizationStrategy::getUniqueEdge(Vertex v) {
+  CausalizationGraph::out_edge_iterator eqOutEdgeIter, eqOutEdgeIterEnd;
+  boost::tie(eqOutEdgeIter, eqOutEdgeIterEnd) = out_edges(v, _graph);
+  return *eqOutEdgeIter;
+}
+
+void CausalizationStrategy::makeCausalBegining(Equation e, Expression unknown) {
+  if (debugIsEnabled('c')) {
+      cout << "Causalizing ";
+      cout << " " << unknown;
+      cout << std::endl;
+      cout << "Using ";
+      cout << std::endl << e;
+      cout << std::endl;
+  }
+  EquationList causalEqs = EquationSolver::solve(EquationList(1, e), ExpList(1, unknown), _mmo_class.syms_ref(), c_code, _cl);
   foreach_(Equation e, causalEqs) {
     _causalEqsBegining.push_back(e);
   }
 }
 
-void CausalizationStrategy::makeCausalEnd(EquationList eqs, ExpList unknowns) {
-  EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl);
+void CausalizationStrategy::makeCausalEnd(Equation e, Expression unknown) {
+  if (debugIsEnabled('c')) {
+    cout << "Causalizing ";
+    cout << " " << unknown;
+    cout << std::endl;
+    cout << "Using ";
+    cout << std::endl << e;
+    cout << std::endl;
+  }
+  EquationList causalEqs = EquationSolver::solve(EquationList(1, e), ExpList(1, unknown), _mmo_class.syms_ref(), c_code, _cl);
   foreach_(Equation e, causalEqs) {
     _causalEqsEnd.insert(_causalEqsEnd.begin(),e);
   }
@@ -237,8 +301,7 @@ void CausalizationStrategy::makeCausalMiddle() {
     std::list<Vertex>::iterator uIt;
     for (uIt = uVertices->begin(); uIt != uVertices->end(); uIt++) {
       Vertex v = *uIt;
-      ExpList _unknowns = _graph[v].unknowns;
-      Expression unknown = _unknowns.front();
+      Expression unknown = _graph[v].unknown;
       unknowns.push_back(unknown);
     }
 
@@ -247,12 +310,11 @@ void CausalizationStrategy::makeCausalMiddle() {
     std::list<Vertex>::iterator eqIt;
     for (eqIt = eqVertices->begin(); eqIt != eqVertices->end(); eqIt++) {
       Vertex v = *eqIt;
-      EquationList _eqs = _graph[v].eqs;
-      Equation eq = _eqs.front();
+      Equation eq = _graph[v].eq;
       eqs.push_back(eq);
     }
 
-    EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl);
+    EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(), c_code, _cl);
 
     _causalEqsMiddle.insert(_causalEqsMiddle.end(), causalEqs.begin(), causalEqs.end());
   }

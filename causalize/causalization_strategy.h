@@ -13,13 +13,14 @@ class CausalizationStrategy {
 public:
   CausalizationStrategy(Modelica::MMO_Class &mmo_class);
   void causalize(Modelica::AST::Name name);
+  void causalize_no_opt(Modelica::AST::Name name);
 private:
-  void makeCausalBegining(Modelica::AST::EquationList eqs, Modelica::AST::ExpList unknowns);
+  void simpleCausalizationStrategy();
+  Edge getUniqueEdge(Vertex v);
+  void makeCausalBegining(Modelica::AST::Equation eq, Modelica::AST::Expression unknown);
   void makeCausalMiddle();
-  void makeCausalEnd(Modelica::AST::EquationList eqs, Modelica::AST::ExpList unknowns);
+  void makeCausalEnd(Modelica::AST::Equation eq, Modelica::AST::Expression unknown);
   CausalizationGraph _graph;
-  std::list<Vertex> _eqVertices;
-  std::list<Vertex> _unknownVertices;
   Modelica::MMO_Class &_mmo_class;
   Modelica::AST::EquationList _causalEqsBegining;
   Modelica::AST::EquationList _causalEqsMiddle;
@@ -27,7 +28,6 @@ private:
   Modelica::AST::ClassList _cl;
   Modelica::AST::ExpList _all_unknowns;
   std::list<std::string> c_code;
-  ClassList cl;
 };
 
 

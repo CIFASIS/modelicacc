@@ -44,7 +44,7 @@ int main(int argc, char ** argv)
 
   bool r;
   int opt;
-  //bool for_qss;
+  bool for_qss;
 
   while ((opt = getopt(argc, argv, "d:q")) != -1) {
     switch (opt) {
@@ -56,7 +56,7 @@ int main(int argc, char ** argv)
        }
        break;
      case 'q':
-       //for_qss=true;
+       for_qss=true;
        break;
     }
   }
@@ -75,10 +75,9 @@ int main(int argc, char ** argv)
 
   ReducedGraphBuilder gb(mmo);
   CausalizationGraph g = gb.makeGraph();
+  CausalizationStrategyVector cs(g,mmo);
   GraphPrinter gp(g);
   gp.printGraph("grafo.dot");
-  CausalizationStrategyVector cs(g,mmo);
-  /*
   if(cs.causalize()){ // Try vectorial causalization first
     if(debugIsEnabled('c')){
      cout << "Result of causalization (variable, [range,] equationID):" << endl;
@@ -87,8 +86,7 @@ int main(int argc, char ** argv)
     cout << mmo << endl;
     return 0;
   }
- // return 0;
-  */
+  return -1;
  
   CausalizationStrategy cStrategy(mmo);
   cStrategy.causalize("a");
