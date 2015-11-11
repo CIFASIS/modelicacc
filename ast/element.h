@@ -26,9 +26,9 @@ namespace Modelica {
   namespace AST {
   
   struct Extends {
-    member(Name,name);
-    member(Option<ClassModification>,modification);
-    member(Option<Annotation>,annotation);
+    member_(Name,name);
+    member_(Option<ClassModification>,modification);
+    member_(Option<Annotation>,annotation);
     printable(Extends);
   };
 
@@ -44,14 +44,14 @@ namespace Modelica {
   struct ElemClass { 
     ElemClass(){}
     ElemClass(ClassType_);
-    member(boost::recursive_wrapper<ClassType_>, class_element);
-    member(bool, replaceable);
-    member(bool, redeclare);
-    member(bool, final);
-    member(bool, inner);
-    member(bool, outer);
-    member(Option<Constrained>, constrained);
-    member(Option<Comment>, constrained_comment);
+    member_(boost::recursive_wrapper<ClassType_>, class_element);
+    member_(bool, replaceable);
+    member_(bool, redeclare);
+    member_(bool, final);
+    member_(bool, inner);
+    member_(bool, outer);
+    member_(Option<Constrained>, constrained);
+    member_(Option<Comment>, constrained_comment);
     printable(ElemClass);
   };
   typedef boost::variant<

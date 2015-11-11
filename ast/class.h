@@ -29,9 +29,9 @@ namespace Modelica {
   namespace AST {
   
   struct External {
-    member(OptExp,comp_ref);
-    member(Name,fun);
-    member(OptExpList,args);
+    member_(OptExp,comp_ref);
+    member_(Name,fun);
+    member_(OptExpList,args);
   };
   
   struct Public: public ElemList {
@@ -62,68 +62,68 @@ namespace Modelica {
   struct Composition {
     Composition(){};
     Composition(ElemList, CompElemList ,boost::optional<boost::fusion::vector3<boost::optional<String>, boost::optional<External>, boost::optional<Annotation> > >);
-    member(ElemList,elements);
-    member(CompElemList,comp_elem);
-    member(bool,external);
-    member(Option<String>,language);
-    member(Option<External>,call);
-    member(Option<Annotation>,ext_annot);
-    member(Option<Annotation>,annotation);
+    member_(ElemList,elements);
+    member_(CompElemList,comp_elem);
+    member_(bool,external);
+    member_(Option<String>,language);
+    member_(Option<External>,call);
+    member_(Option<Annotation>,ext_annot);
+    member_(Option<Annotation>,annotation);
   } ;
 
   struct ExtendsClass {
-    member(Name, name);
-    member(Option<ClassModification>, modification);
-    member(StringComment, st_comment);
-    member(Composition, composition);
-    member(ClassPrefixes,prefixes);
-    member(bool,encapsulated);
-    member(bool,final);
+    member_(Name, name);
+    member_(Option<ClassModification>, modification);
+    member_(StringComment, st_comment);
+    member_(Composition, composition);
+    member_(ClassPrefixes,prefixes);
+    member_(bool,encapsulated);
+    member_(bool,final);
     printable(ExtendsClass);
   };
 
   struct DerClass {
-    member(Name, name);
-    member(Name, deriv);
-    member(IdentList, ident_list);
-    member(Comment, comment);
-    member(ClassPrefixes,prefixes);
-    member(bool,encapsulated);
-    member(bool,final);
+    member_(Name, name);
+    member_(Name, deriv);
+    member_(IdentList, ident_list);
+    member_(Comment, comment);
+    member_(ClassPrefixes,prefixes);
+    member_(bool,encapsulated);
+    member_(bool,final);
     printable(DerClass);
   };
 
   struct EnumClass {
-    member(Name, name);
-    member(EnumSpec, enum_spec);
-    member(Comment, comment);
-    member(ClassPrefixes,prefixes);
-    member(bool,encapsulated);
-    member(bool,final);
+    member_(Name, name);
+    member_(EnumSpec, enum_spec);
+    member_(Comment, comment);
+    member_(ClassPrefixes,prefixes);
+    member_(bool,encapsulated);
+    member_(bool,final);
     printable(EnumClass);
   };
 
   struct DefClass {
-    member(Name,name);
-    member(TypePrefixes,type_prefixes);
-    member(Name,definition);
-    member(Option<ExpList>,indices);
-    member(Option<ClassModification>,modification);
-    member(Comment,comment);
+    member_(Name,name);
+    member_(TypePrefixes,type_prefixes);
+    member_(Name,definition);
+    member_(Option<ExpList>,indices);
+    member_(Option<ClassModification>,modification);
+    member_(Comment,comment);
     printable(DefClass);
-    member(ClassPrefixes,prefixes);
-    member(bool,encapsulated);
-    member(bool,final);
+    member_(ClassPrefixes,prefixes);
+    member_(bool,encapsulated);
+    member_(bool,final);
   };
   struct Class {
     Class(): final_(false), encapsulated_(false) {}
-    member(Name,name);
-    member(StringComment,st_comment);
-    member(Composition, composition);
-    member(Name,end_name);
-    member(ClassPrefixes,prefixes);
-    member(bool,encapsulated);
-    member(bool,final);
+    member_(Name,name);
+    member_(StringComment,st_comment);
+    member_(Composition, composition);
+    member_(Name,end_name);
+    member_(ClassPrefixes,prefixes);
+    member_(bool,encapsulated);
+    member_(bool,final);
     printable(Class);
  };
   typedef boost::variant<
@@ -137,7 +137,7 @@ namespace Modelica {
   struct ClassType_ {
     ClassType_(){};
     ClassType_(ClassType);
-    member(ClassType, cl);
+    member_(ClassType, cl);
   };
 
   template<typename T> 
@@ -151,9 +151,9 @@ namespace Modelica {
     StoredDef(){};
     StoredDef(boost::optional<Name> name, ClassList cl);
     StoredDef(ClassList cl);
-    member(bool,within);
-    member(Option<Name>,name);
-    member(ClassList,classes);
+    member_(bool,within);
+    member_(Option<Name>,name);
+    member_(ClassList,classes);
     printable(StoredDef);
   };
 

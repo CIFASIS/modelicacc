@@ -104,7 +104,7 @@ namespace Modelica {
       String();
       friend std::ostream& operator<<(std::ostream& out, const String &s);
       comparable(String);
-      member(std::string, val);
+      member_(std::string, val);
     };
 
     typedef std::vector<String> StringList;
@@ -116,7 +116,7 @@ namespace Modelica {
     
       printable(Boolean);
       comparable(Boolean);
-      member(bool, val);
+      member_(bool, val);
     };
 
     struct BinOp {
@@ -125,9 +125,9 @@ namespace Modelica {
 
       comparable(BinOp);
       printable(BinOp);
-      member(Expression,left);
-      member(Expression,right);
-      member(BinOpType,op);
+      member_(Expression,left);
+      member_(Expression,right);
+      member_(BinOpType,op);
     };
 
     struct IfExp {
@@ -136,10 +136,10 @@ namespace Modelica {
       IfExp (Expression a, Expression b, std::vector<fusion::vector2<Expression, Expression> > elseif, Expression c);
       comparable(IfExp);
       printable(IfExp);
-      member(Expression,cond);
-      member(Expression,then);
-      member(List<ExpPair>, elseif)
-      member(Expression,elseexp);
+      member_(Expression,cond);
+      member_(Expression,then);
+      member_(List<ExpPair>, elseif)
+      member_(Expression,elseexp);
     };
 
     struct Call {
@@ -148,8 +148,8 @@ namespace Modelica {
       Call(Name n, ExpList args);
       printable(Call);
       comparable(Call);
-      member(Name,name);
-      member(ExpList,args)
+      member_(Name,name);
+      member_(ExpList,args)
     };
     
     struct ForExp {
@@ -157,8 +157,8 @@ namespace Modelica {
       ForExp(Expression e, ExpList indices);
       comparable(ForExp);
       printable(ForExp);
-      member(Expression,exp);
-      member(ExpList, indices);
+      member_(Expression,exp);
+      member_(ExpList, indices);
     };
 
 
@@ -167,8 +167,8 @@ namespace Modelica {
       Named(Name n, Expression e);
       printable(Named);
       comparable(Named);
-      member(Name,name);
-      member(Expression,exp);
+      member_(Name,name);
+      member_(Expression,exp);
     };
 
     struct Index {
@@ -176,8 +176,8 @@ namespace Modelica {
       Index (Name n, OptExp e);
       printable(Index);
       comparable(Index);
-      member(OptExp,exp)
-      member(Name,name)
+      member_(OptExp,exp)
+      member_(Name,name)
     };
 
     typedef std::vector<Index> IndexList;
@@ -187,7 +187,7 @@ namespace Modelica {
       Indexes (IndexList ind):indexes_(ind) {};
       printable(Indexes);
       comparable(Indexes);
-      member(IndexList, indexes);
+      member_(IndexList, indexes);
     };
 
     struct UnaryOp {
@@ -195,8 +195,8 @@ namespace Modelica {
       UnaryOp (Expression e, UnaryOpType op);
       printable(UnaryOp);
       comparable(UnaryOp);
-      member(Expression,exp);
-      member(UnaryOpType,op);
+      member_(Expression,exp);
+      member_(UnaryOpType,op);
     };
 
     struct Reference {
@@ -207,7 +207,7 @@ namespace Modelica {
       Reference(Ref r);
       printable(Reference); 
       comparable(Reference);
-      member(Ref,ref);
+      member_(Ref,ref);
     };
  
     struct Range {
@@ -216,9 +216,9 @@ namespace Modelica {
       Range (Expression s, Expression i, Expression e);
       comparable(Range);
       printable(Range);
-      member(Expression,start);
-      member(OptExp,step);
-      member(Expression,end);
+      member_(Expression,start);
+      member_(OptExp,step);
+      member_(Expression,end);
     };
 
     struct Output {
@@ -227,7 +227,7 @@ namespace Modelica {
       Output (OptExpList l);
       printable(Output);
       comparable(Output);
-      member(OptExpList,args)
+      member_(OptExpList,args)
     };
 
     struct FunctionExp {
@@ -235,8 +235,8 @@ namespace Modelica {
       FunctionExp (Name n, ExpList args);
       printable(FunctionExp);
       comparable(FunctionExp);
-      member(Name,name)
-      member(ExpList,args)
+      member_(Name,name)
+      member_(ExpList,args)
     };
  
     struct Brace {
@@ -245,7 +245,7 @@ namespace Modelica {
       Brace(ExpList args);
       printable(Brace);
       comparable(Brace);
-      member(ExpList,args) 
+      member_(ExpList,args) 
     };
 
     struct Bracket {
@@ -253,7 +253,7 @@ namespace Modelica {
       Bracket(ExpListList args);
       printable(Bracket);
       comparable(Bracket);
-      member(ExpListList,args)
+      member_(ExpListList,args)
     };
 
     extern Boolean True, False;

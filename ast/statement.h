@@ -40,9 +40,9 @@ namespace Modelica {
       bool operator!=(const CallSt & other) const {
         return false;
       }
-      member(OptExpList,out);
-      member(Expression,n);
-      member(ExpList,arg);
+      member_(OptExpList,out);
+      member_(Expression,n);
+      member_(ExpList,arg);
     };      
  
     struct Assign: public StatementBase {
@@ -51,9 +51,9 @@ namespace Modelica {
      Assign(Expression l, OptExp r): left_(l), right_(r){ };
      Assign(Expression l, Option<ExpList> rl): left_(l), right_(), rl_(rl){ } ;
      printable(Assign);
-     member(Expression, left);
-     member(OptExp,right);
-     member(Option<ExpList>,rl);
+     member_(Expression, left);
+     member_(OptExp,right);
+     member_(Option<ExpList>,rl);
    };      
    struct Break: public StatementBase {
       
@@ -128,8 +128,8 @@ namespace Modelica {
     struct StatementSection {
       StatementSection() {};
       StatementSection(bool ini, StatementList l): statements_(l),initial_(ini) {};
-      member(bool, initial);
-      member(StatementList , statements);
+      member_(bool, initial);
+      member_(StatementList , statements);
       void addStatement(Statement s) { statements_.push_back(s); }
       printable(StatementSection);
     };
@@ -137,8 +137,8 @@ namespace Modelica {
     struct WhileSt: public StatementBase {
       WhileSt(){}
       WhileSt(Expression cond, StatementList el): cond_(cond), elements_(el) {}
-      member(StatementList , elements);
-      member(Expression, cond);
+      member_(StatementList , elements);
+      member_(Expression, cond);
       printable(WhileSt);
     };
 

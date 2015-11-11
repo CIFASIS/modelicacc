@@ -26,13 +26,13 @@ namespace Modelica {
   namespace AST {
     
     struct EquationBase {
-      member(Option<Comment>,comment);
+      member_(Option<Comment>,comment);
     };
     struct Equality: public EquationBase {
       Equality(){};
       Equality(Expression l, Expression r);
-      member(Expression,left);
-      member(Expression,right);
+      member_(Expression,left);
+      member_(Expression,right);
       printable(Equality);
       comparable(Equality);
 
@@ -47,8 +47,8 @@ namespace Modelica {
         out << INDENT << "connect(" << e.left() << " , " << e.right() << ")";
         return out;
       }
-      member(Expression,left);
-      member(Expression,right);
+      member_(Expression,left);
+      member_(Expression,right);
       comparable(Connect);
     };
 
@@ -56,8 +56,8 @@ namespace Modelica {
       CallEq(){};
       CallEq(Name name, ExpList args): name_(name), args_(args) {}
       friend std::ostream& operator<<(std::ostream& out, const CallEq &e);// output
-      member(Name,name);
-      member(ExpList,args);
+      member_(Name,name);
+      member_(ExpList,args);
       comparable(CallEq);
     };
     struct ForEq;
@@ -247,8 +247,8 @@ namespace Modelica {
     struct EquationSection {
       EquationSection() {};
       EquationSection(bool ini, EquationList l): equations_(l),initial_(ini) {};
-      member(bool, initial);
-      member(EquationList, equations);
+      member_(bool, initial);
+      member_(EquationList, equations);
       printable(EquationSection);
       void addEquation(Equation e) { equations_.push_back(e); }
     };
