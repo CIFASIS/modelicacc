@@ -67,52 +67,52 @@ namespace Type {
       comparable(TypeDef);
       printable(TypeDef);
       
-      member(Name,name);
-      member(AST::TypePrefixes,type_prefixes);
-	  member(Name,definition);
-      member(Option<AST::ExpList>,indices);
-      member(Option<AST::ClassModification>,modification);
-      member(AST::ClassPrefixes,prefixes);
+      member_(Name,name);
+      member_(AST::TypePrefixes,type_prefixes);
+	  member_(Name,definition);
+      member_(Option<AST::ExpList>,indices);
+      member_(Option<AST::ClassModification>,modification);
+      member_(AST::ClassPrefixes,prefixes);
     };
 	
     struct EnumType {
       EnumType(AST::ClassPrefixes cp, Name n, AST::EnumSpec sp);
       comparable(EnumType);
       printable(EnumType);
-      member(Name, name);
-      member(AST::EnumSpec, enum_spec);
-      member(AST::ClassPrefixes,prefixes);
+      member_(Name, name);
+      member_(AST::EnumSpec, enum_spec);
+      member_(AST::ClassPrefixes,prefixes);
     };
 	
     struct Class {
       Class(Name n,MMO_Class * m);
       comparable(Class);
       printable(Class);
-      member(Name,name);
-      member(MMO_Class * ,clase);
+      member_(Name,name);
+      member_(MMO_Class * ,clase);
     };
 
 	struct Array {
       Array(AST::ExpList e,Type t);
       comparable(Array);
       printable(Array);
-      member(AST::ExpList,dim);
-      member(Type,arrayOf);
+      member_(AST::ExpList,dim);
+      member_(Type,arrayOf);
     };
 
 	struct Tuple {
       Tuple(TypeList e);
       comparable(Tuple);
       printable(Tuple);
-      member(TypeList,types);
+      member_(TypeList,types);
     };
 
 	struct Function {
       Function(Type out, TypeList e);
       comparable(Function);
       printable(Function);
-      member(TypeList,args);
-      member(Type,out);
+      member_(TypeList,args);
+      member_(Type,out);
     };
 
     template<typename T> 

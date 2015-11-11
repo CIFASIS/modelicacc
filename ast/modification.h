@@ -28,7 +28,7 @@ namespace Modelica {
     struct ModEq {
       ModEq() {};
       ModEq(Expression exp): exp_(exp){};
-      member(Expression,exp);
+      member_(Expression,exp);
       printable(ModEq);
       comparable(ModEq);
     };
@@ -36,7 +36,7 @@ namespace Modelica {
     struct ModAssign {
       ModAssign() {};
       ModAssign(Expression exp): exp_(exp){};
-      member(Expression,exp);
+      member_(Expression,exp);
       printable(ModAssign);
       comparable(ModAssign);
     };
@@ -57,11 +57,11 @@ namespace Modelica {
       ElMod() {};
       ElMod(Name, Modification);
       ElMod(Name);
-      member(Name,name);
-      member(Option<Modification>, modification);
-      member(StringComment, st_comment);
-      member(bool, each);
-      member(bool, final);
+      member_(Name,name);
+      member_(Option<Modification>, modification);
+      member_(StringComment, st_comment);
+      member_(bool, each);
+      member_(bool, final);
       printable(ElMod);
       comparable(ElMod);
     };
@@ -87,27 +87,27 @@ namespace Modelica {
     struct Annotation {
       Annotation(){};
       Annotation(ClassModification);
-      member(ClassModification,modification);
+      member_(ClassModification,modification);
       printable(Annotation);
     };
     struct ModClass {
       ModClass(){};
       ModClass(ClassModification);
       ModClass(ClassModification, Expression);
-      member(ClassModification,modification);
-      member(OptExp,exp);
+      member_(ClassModification,modification);
+      member_(OptExp,exp);
       printable(ModClass);
       comparable(ModClass);
     };   
     struct Comment {
-      member(StringComment,st_comment);
-      member(Option<Annotation>,annotation);
+      member_(StringComment,st_comment);
+      member_(Option<Annotation>,annotation);
     };
 
  
   struct Enum {
-    member(Name, name);
-    member(Comment, comment);
+    member_(Name, name);
+    member_(Comment, comment);
     comparable(Enum);
   };
   typedef std::vector<Enum> EnumList;
@@ -115,7 +115,7 @@ namespace Modelica {
   struct EnumSpec {
     EnumSpec(){};
     EnumSpec(EnumList){};
-    member(EnumList,list);
+    member_(EnumList,list);
     comparable(EnumSpec);
     printable(EnumSpec);
   };
@@ -127,20 +127,20 @@ namespace Modelica {
     ShortClass(ClassPrefixes, Name, EnumSpec, Comment );
     comparable(ShortClass);
     printable(ShortClass);
-    member(ClassPrefixes,prefixes);
-    member(Name,name);
-    member(Option<TypePrefixes>, type_prefixes);
-    member(Option<Name>, derived);
-    member(Option<ExpList>, indices);
-    member(Comment, comment);
-    member(Option<ClassModification>, modification);
-    member(Option<EnumSpec>, enum_spec);
+    member_(ClassPrefixes,prefixes);
+    member_(Name,name);
+    member_(Option<TypePrefixes>, type_prefixes);
+    member_(Option<Name>, derived);
+    member_(Option<ExpList>, indices);
+    member_(Comment, comment);
+    member_(Option<ClassModification>, modification);
+    member_(Option<EnumSpec>, enum_spec);
     
   };
 
   struct Constrained {
-    member(Name, name);
-    member(Option<ClassModification>, modification);
+    member_(Name, name);
+    member_(Option<ClassModification>, modification);
     comparable(Constrained);
   };
 
@@ -148,11 +148,11 @@ namespace Modelica {
     Declaration();
     Declaration(Name, Option<ExpList>, Option<Modification>, OptExp);
     Declaration(Name);
-    member(Name,name);
-    member(Option<ExpList>, indices);
-    member(Option<Modification>,modification);
-    member(Comment, comment);
-    member(OptExp,conditional);
+    member_(Name,name);
+    member_(Option<ExpList>, indices);
+    member_(Option<Modification>,modification);
+    member_(Comment, comment);
+    member_(OptExp,conditional);
     printable(Declaration);
     comparable(Declaration);
   };
@@ -161,26 +161,26 @@ namespace Modelica {
   struct Component {
     Component();
     Component(TypePrefixes, Name, Option<ExpList>, DeclList);
-    member(TypePrefixes,prefixes);
-    member(Name,type);
-    member(Option<ExpList>, indices);
-    member(DeclList,declarations);
-    member(bool,redeclare);
-    member(bool,final);
-    member(bool,inner);
-    member(bool,outer);
-    member(bool,replaceable);
-    member(Option<Constrained>,constrained);
-    member(Option<Comment>,constrained_comment);
+    member_(TypePrefixes,prefixes);
+    member_(Name,type);
+    member_(Option<ExpList>, indices);
+    member_(DeclList,declarations);
+    member_(bool,redeclare);
+    member_(bool,final);
+    member_(bool,inner);
+    member_(bool,outer);
+    member_(bool,replaceable);
+    member_(Option<Constrained>,constrained);
+    member_(Option<Comment>,constrained_comment);
     printable(Component);
   };
 
   struct Component1 {
     Component1();
     Component1(TypePrefixes, Name, DeclList);
-    member(TypePrefixes,prefixes);
-    member(Name,type);
-    member(Declaration,declaration);
+    member_(TypePrefixes,prefixes);
+    member_(Name,type);
+    member_(Declaration,declaration);
     printable(Component1);
     comparable(Component1);
   };
@@ -192,10 +192,10 @@ namespace Modelica {
   struct ElRepl {
     ElRepl();
     ElRepl(ReplArg, Option<Constrained>);
-    member(bool, each);
-    member(bool, final);
-    member(ReplArg, argument);
-    member(Option<Constrained>, constrain);
+    member_(bool, each);
+    member_(bool, final);
+    member_(ReplArg, argument);
+    member_(Option<Constrained>, constrain);
     printable(ElRepl);
     comparable(ElRepl);
   };
@@ -208,9 +208,9 @@ namespace Modelica {
   struct ElRedecl {
       ElRedecl();
       ElRedecl(bool each, bool final, RedeclArg arg);
-      member(bool, each);
-      member(bool, final);
-      member(RedeclArg, argument);
+      member_(bool, each);
+      member_(bool, final);
+      member_(RedeclArg, argument);
       comparable(ElRedecl);
       printable(ElRedecl);
     };

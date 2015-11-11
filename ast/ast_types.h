@@ -132,7 +132,7 @@ namespace Modelica {
 }
 
 #define foreach_ BOOST_FOREACH
-#define member(X,Y) X Y##_; X Y() const; void set_##Y(X x); X &Y##_ref();
+#define member_(X,Y) X Y##_; X Y() const; void set_##Y(X x); X &Y##_ref();
 #define member_imp(C,X,Y) X C::Y() const { return Y##_;} void C::set_##Y(X x) { Y##_=x; } X &C::Y##_ref() { return Y##_; }
 #define comparable(X) bool operator==(const X & other) const; 
 #define printable(X) friend std::ostream& operator<<(std::ostream& out, const X &);

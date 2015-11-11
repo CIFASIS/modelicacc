@@ -34,22 +34,22 @@ struct MMO_Class;
 struct MMO_Class {
   MMO_Class();
   MMO_Class(Class &c);
-  member(Name,name);
-  member(ClassPrefixes,prefixes);
-  member(EquationSection, initial_eqs);
-  member(EquationSection, equations);
-  member(StatementSection, initial_sts);
-  member(StatementSection, statements);
+  member_(Name,name);
+  member_(ClassPrefixes,prefixes);
+  member_(EquationSection, initial_eqs);
+  member_(EquationSection, equations);
+  member_(StatementSection, initial_sts);
+  member_(StatementSection, statements);
   
-  member(Option<Annotation>,annotation);
-  member(Option<Annotation>,external_annot);
-  member(Option<String>,language);
-  member(Option<External>,external);
+  member_(Option<Annotation>,annotation);
+  member_(Option<Annotation>,external_annot);
+  member_(Option<String>,language);
+  member_(Option<External>,external);
   
-  member(VarSymbolTable,syms);
-  member(TypeSymbolTable,tyTable);
-  member(std::vector<Name>, variables);
-  member(std::vector<Name>, types);
+  member_(VarSymbolTable,syms);
+  member_(TypeSymbolTable,tyTable);
+  member_(std::vector<Name>, variables);
+  member_(std::vector<Name>, types);
   
   printable(MMO_Class);
   bool isConnector();	
@@ -60,9 +60,9 @@ struct MMO_Class {
   void addStatement(Statement);
   void addInitStatement(Statement);
   
-  member(ExtendList,extends);
-  member(ImportList,imports);
-  member(MMO_Class *,father);
+  member_(ExtendList,extends);
+  member_(ImportList,imports);
+  member_(MMO_Class *,father);
   void addVar(Name n , VarInfo var);
   Option<VarInfo> getVar(Name n);
   bool isLocal(Name n);
