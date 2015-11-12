@@ -162,6 +162,8 @@ void CausalizationStrategy::simpleCausalizationStrategy() {
       makeCausalBegining(_graph[eq].eq, _graph[unknown].unknown);
       remove_edge(e, _graph);
       remove_vertex(eq,_graph);
+      // If the unknown is in the degree1 set also remove it. This is the case where both eq and unknown have degree=1
+      unknownDegree1Verts.remove(unknown);
       CausalizationGraph::out_edge_iterator outEdgeIter, outEdgeIterEnd, next;
       boost::tie(outEdgeIter, outEdgeIterEnd) = out_edges(unknown, _graph);
       for(next = outEdgeIter; outEdgeIter != outEdgeIterEnd; outEdgeIter = next) {
@@ -208,6 +210,8 @@ void CausalizationStrategy::simpleCausalizationStrategy() {
 
 
       remove_edge(e, _graph);
+      // If the eq is in the degree1 set also remove it. This is the case where both eq and unknown have degree=1
+      eqDegree1Verts.remove(eq);
 
       std::cout << "SimpleCausalizationStrategy 2.1.2" << std::endl;
 
