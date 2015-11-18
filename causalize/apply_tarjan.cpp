@@ -31,6 +31,7 @@ DGVertex original2collapsed(Vertex value) {
     }
   }
   ERROR("Can't find collapsed vertex from original.");
+  return (*it).first;
 }
 
 void buildCollapsedGraph(CausalizationGraph& graph, DirectedGraph& digraph) {

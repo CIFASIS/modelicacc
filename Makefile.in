@@ -1,4 +1,4 @@
-CXXFLAGS = -I. -Wall -Wno-reorder -O3
+CXXFLAGS = -I. -Wall -Wno-reorder -O3 -Werror -fPIC
 
 OBJS_COMMON :=  ast/expression.o \
 		ast/class.o \
@@ -6,7 +6,6 @@ OBJS_COMMON :=  ast/expression.o \
 		ast/statement.o \
 		ast/modification.o \
 		ast/element.o \
-		ast/expression.o \
 		parser/parser.o
 
 all:lib/libmodelica.a bin/antialias bin/flatter bin/mmo bin/causalize
