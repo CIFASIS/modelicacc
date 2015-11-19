@@ -19,7 +19,9 @@
 
 #include <iostream>
 #include <ast/class.h>
+#include <cstdlib>
 #include <parser/parser.h>
+#include <util/debug.h>
 #include <boost/variant/get.hpp>
 #include <antialias/remove_alias.h>
 
@@ -29,16 +31,33 @@ int main(int argc, char ** argv)
   using namespace std;
   using namespace Modelica::AST;
   using namespace Modelica;
+
   bool ret;
-  StoredDef sd = parseFile("",ret);
+  int opt;
+  StoredDef sd;
+  while ((opt = getopt(argc, argv, "d:q")) != -1) {
+    switch (opt) {
+     case 'd':
+       if (optarg != NULL && isDebugParam(optarg)) {
+         debugInit(optarg);
+       } else {
+         ERROR("command-line option d has no arguments\n");
+       }
+       break;
+    }
+  }
+ 
+  if (argv[optind]!=NULL) 
+    sd=parseFile(argv[optind],ret);
+  else
+    sd=parseFile("",ret);
+ 
   if (!ret)
     return -1;
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
-  //std::cerr << "Number of equations is " << mmo.equations_ref().equations_ref().size() << "\n";
   RemoveAlias ra(mmo);
   ra.removeAliasEquations();
-  //std::cerr << "Number of equations is " << mmo.equations_ref().equations_ref().size() << "\n";
   cout << mmo << "\n";
   return 0;
 }
