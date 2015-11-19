@@ -28,7 +28,7 @@ namespace Modelica {
   using namespace Modelica::AST;
   class toMicroExp: public boost::static_visitor<Expression> {
   public:
-    toMicroExp(MMO_Class &cl, unsigned int &discont, bool for_when=false);
+    toMicroExp(MMO_Class &cl, unsigned int &discont, bool for_when=false, bool in_algorithm=false);
     Expression operator()(Integer v) const;
     Expression operator()(Boolean v) const;
     Expression operator()(String v) const;
@@ -51,6 +51,7 @@ namespace Modelica {
  
   private:
     bool when;
+    bool in_algorithm;
     Expression newDiscrete(Option<Expression> s=Option<Expression>()) const;
     Expression negate(BinOp v) const;
     unsigned int &disc_count;

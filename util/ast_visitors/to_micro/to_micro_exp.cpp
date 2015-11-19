@@ -26,7 +26,8 @@
 namespace Modelica {
 
     using namespace boost;
-    toMicroExp::toMicroExp(MMO_Class &cl, unsigned int &discont, bool w): mmo_class(cl), disc_count(discont), when(w) {
+    toMicroExp::toMicroExp(MMO_Class &cl, unsigned int &discont, bool w, bool in_alg): mmo_class(cl), 
+                                                disc_count(discont), when(w), in_algorithm(in_alg) {
     };
     Expression toMicroExp::operator()(Integer v) const { 
       return v;
@@ -52,6 +53,8 @@ namespace Modelica {
       return v;
     }
     Expression toMicroExp::operator()(BinOp v) const { 
+      if (in_algorithm) 
+        return v;
       if (isRelation(v)) { 
         v.left_ref()=apply(v.left_ref());
         v.right_ref()=apply(v.right_ref());
@@ -77,6 +80,8 @@ namespace Modelica {
       return UnaryOp(apply(v.exp_ref()), v.op());
     } 
     Expression toMicroExp::operator()(IfExp v) const { 
+      if (in_algorithm) 
+        return v;
       Expression then = apply(v.then_ref());
       Expression elseexp = apply(v.elseexp_ref());
       Expression cond = apply(v.cond_ref());
@@ -107,6 +112,8 @@ namespace Modelica {
       return v;
     }
     Expression toMicroExp::operator()(Call v) const { 
+      if (in_algorithm) 
+        return v;
       if ("abs"==v.name()) {
         ERROR_UNLESS (v.args().size()==1, "Call to abs with more than one or zero arguments");
         Expression arg = apply(v.args_ref().front());

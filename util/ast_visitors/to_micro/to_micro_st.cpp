@@ -1,4 +1,4 @@
-/*****************************************************************************
+/****************************************************************************
 
     This file is part of Modelica C Compiler.
 
@@ -18,6 +18,7 @@
 ******************************************************************************/
 
 #include <util/ast_visitors/to_micro/to_micro_st.h>
+#include <util/ast_visitors/to_micro/to_micro_exp.h>
 #include <ast/queries.h>
 #include <stdio.h>
 #include <boost/variant/apply_visitor.hpp>
@@ -29,6 +30,16 @@ namespace Modelica {
     toMicroSt::toMicroSt(MMO_Class &cl, unsigned int &discont): mmo_class(cl), disc_count(discont) {
     };
     Statement toMicroSt::operator()(Assign v) const { 
+      Expression l=v.left(); 
+      Expression r=v.left(); 
+      OptExp opt_r=v.right(); 
+      unsigned int i=0;
+      toMicroExp tom(mmo_class, i, false,true);
+      l = boost::apply_visitor(tom, l);
+      if (opt_r) 
+        opt_r = boost::apply_visitor(tom, opt_r.get());
+      v.left_ref() = l; 
+      v.right_ref() = opt_r; 
       return v;
     }
 
@@ -57,12 +68,12 @@ namespace Modelica {
         Call c = get<Call>(v.cond());
         if ("sample"==c.name()) {
             Expression d=newDiscrete(c.args().front());
-            WhenSt ret = v;
-            ret.cond_ref() = BinOp(Reference("time"),Greater,Call("pre",ExpList(1,d)));
-            ret.elements_ref().insert(ret.elements_ref().begin(), Assign(d,OptExp(BinOp(Reference("time"),Add, c.args().at(1)))));
-            return ret;
+            v.cond_ref() = BinOp(Reference("time"),Greater,Call("pre",ExpList(1,d)));
+            v.elements_ref().insert(v.elements_ref().begin(), Assign(d,OptExp(BinOp(Reference("time"),Add, c.args().at(1)))));
         }
       }
+      foreach_(Statement &s, v.elements_ref()) 
+        s=apply(s);
       return v;
     }
 
