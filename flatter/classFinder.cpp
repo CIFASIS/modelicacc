@@ -112,12 +112,17 @@ void ClassFinder::ExpandAll(MMO_Class &up)
 
 #define newMMO(NEW,OLD)  MMO_Class * (NEW) = new MMO_Class(); *(NEW) = (OLD);
 
+
 Option<typeContexTuple> ClassFinder::findTypeByName(MMO_Class &c,Name n) 
 {
 	Option<Type::Type> t = c.tyTable_ref()[n];
 	newMMO(contex,c)
-	if (t) return typeContexTuple(t.get(),*contex);
-	else if (c.father()) {MMO_Class cc = * c.father(); return findTypeByName( cc , n ); }
+	if (t) {
+		return typeContexTuple(t.get(),*contex);
+	} else if (c.father()) {
+		MMO_Class cc = * c.father(); 
+		return findTypeByName( cc , n ); 
+	}
 	return Option<typeContexTuple>();
 }
 
@@ -141,6 +146,11 @@ OptTypeDefinition ClassFinder::getFinalClass(MMO_Class &c, Type::Type t)
 			return OptTypeDefinition(res);	
 		}
 		else return OptTypeDefinition();
+	} else if ( is<Type::Class>(t)) {
+		newMMO(d , * (boost::get<Type::Class>(t).clase())) ;
+                ExpandAll(*d);
+                Type::Class  t_final = Type::Class(d->name(),d);
+		return OptTypeDefinition( typeDefinition( TypePrefixes() , t_final, ExpList() ) );
 	}
 	return OptTypeDefinition(typeDefinition( TypePrefixes() , t , ExpList() ));
 }
@@ -169,6 +179,7 @@ OptTypeDefinition ClassFinder::resolveType(MMO_Class &c,Name t)
 	TypePrefixes tpre;
 	Type::Type t_final;
 	foreach_(Name name , ts){
+		if (i == 1 && contex.name() == name ) { i++ ;continue; }
 		OptTypeDefinition otd = resolveDependencies(contex,name);
 		if (otd) {
 			typeDefinition td = otd.get();

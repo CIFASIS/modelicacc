@@ -62,65 +62,65 @@ int main(int argc, char ** argv)
 	if (className==NULL) {
 		cerr << "Please, specify Class to flat. Option -c" << endl;
 		exit(-1);
-	}	
-	
+	}
+
 	StoredDef sd;
   if (argv[optind]!=NULL)
     sd=parseFile(argv[optind],ret);
   else
     sd=parseFile("",ret);
 
-	
+
 	if (ret) {
 		MMO_Tree mt;
 		MMO_Class mmo = mt.create(sd);
-		
+
 		Flatter f = Flatter();
 		Connectors co = Connectors(mmo);
 		// Me posiciono en la clase que quiero aplanar
 		if (className != NULL) {
 			if (debug) std::cerr << "Searching for class " << (className?className:"NULL") << std::endl;
 			ClassFinder re = ClassFinder();
-			OptTypeDefinition m = re.resolveType(mmo,className);	
+			OptTypeDefinition m = re.resolveType(mmo,className);
 			if (m) {
 				typeDefinition td = m.get();
 				Type::Type t_final = get<1>(td);
-				if ( is<Type::Class>(t_final)) 
-					mmo =  *(boost::get<Type::Class>(t_final).clase());	
-			}	
+				if ( is<Type::Class>(t_final))
+					mmo =  *(boost::get<Type::Class>(t_final).clase());
+			}
 		}
-		
+
 		if (debug) {
 			std::cerr << "Class to  Flat: " << endl;
-			std::cerr <<  mmo  << std::endl;		
+			std::cerr <<  mmo  << std::endl;
 			std::cerr <<  " - - - - - - - - - - - - - - - - - - - - - - - - "  << std::endl << std::endl;
 		}
-		
+
 		f.Flat(mmo,false,true);
 		if (debug) {
 			std::cerr << "First Flatter: " << endl;
-			std::cerr <<  mmo  << std::endl;		
-			std::cerr <<  " - - - - - - - - - - - - - - - - - - - - - - - - "  << std::endl << std::endl; 
-		}		
-		
+			std::cerr <<  mmo  << std::endl;
+			std::cerr <<  " - - - - - - - - - - - - - - - - - - - - - - - - "  << std::endl << std::endl;
+		}
+
 		co.resolve(mmo);
 		if (debug) {
-			std::cerr <<  " - - - - - - - - - - - - - - - - - - - - - - - - "  << std::endl; 
+			std::cerr <<  " - - - - - - - - - - - - - - - - - - - - - - - - "  << std::endl;
 			co.Debug(filename);
 			std::cerr <<  " - - - - - - - - - - - - - - - - - - - - - - - - "  << std::endl;
-		}	
-	
+		}
+
 		//f.Flat(mmo,true,true);
 		f.removeConnectorVar(mmo);
 		if (debug) std::cerr << "Final Result: " << endl;
 		if (out) {
 			if (debug) std::cout <<  mmo << std::endl;
 			outputFile <<  mmo << std::endl;
-			outputFile.close();			
+			outputFile.close();
 		} else std::cout <<  mmo << std::endl;
-	} else 
-		std::cout << "Error parser" <<  std::endl; 
-		
+	} else
+		std::cout << "Error parser" <<  std::endl;
+
 	return 0;
 }
 

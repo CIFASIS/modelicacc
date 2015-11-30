@@ -43,7 +43,7 @@ struct SymbolTable: public std::map<Key,Value> {
   void dump() {
     typename std::map<Key,Value>::iterator it;
     for(it=std::map<Key,Value>::begin();it!=std::map<Key,Value>::end();it++) {
-      std::cerr << it->first << ":" << it->second << "\n";
+      std::cerr << it->first << ":" /*<< it->second */<< "\n";
     } 
   }
 };
