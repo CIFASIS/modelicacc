@@ -50,12 +50,12 @@ namespace Modelica {
     Expression operator()(Range) const;
  
   private:
-    bool when;
-    bool in_algorithm;
     Expression newDiscrete(Option<Expression> s=Option<Expression>()) const;
     Expression negate(BinOp v) const;
-    unsigned int &disc_count;
     MMO_Class & mmo_class;
+    unsigned int &disc_count;
+    bool when;
+    bool in_algorithm;
   }; 
 }
 #endif 

@@ -111,8 +111,8 @@ namespace Type {
       Function(Type out, TypeList e);
       comparable(Function);
       printable(Function);
-      member_(TypeList,args);
       member_(Type,out);
+      member_(TypeList,args);
     };
 
     template<typename T> 

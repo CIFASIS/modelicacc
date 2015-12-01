@@ -41,8 +41,8 @@ namespace Modelica {
   private:
     StatementList statements_;
     Expression newDiscrete(Option<Expression> s=Option<Expression>()) const;
-    unsigned int &disc_count;
     MMO_Class & mmo_class;
+    unsigned int &disc_count;
   }; 
 }
 #endif 

@@ -167,10 +167,10 @@ namespace Modelica {
 
       
   
-      ElseList elsesif;
-      std::vector<E> elses;
       Expression c;
       std::vector<E> els;
+      std::vector<E> elses;
+      ElseList elsesif;
 
  
     };
@@ -247,8 +247,8 @@ namespace Modelica {
     struct EquationSection {
       EquationSection() {};
       EquationSection(bool ini, EquationList l): equations_(l),initial_(ini) {};
-      member_(bool, initial);
       member_(EquationList, equations);
+      member_(bool, initial);
       printable(EquationSection);
       void addEquation(Equation e) { equations_.push_back(e); }
     };
