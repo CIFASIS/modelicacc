@@ -35,28 +35,26 @@ namespace parser {
   template <typename Iterator>
   struct parser: qi::grammar<Iterator, skipper<Iterator>, StoredDef() >
   {
-   parser(Iterator &it) : parser::base_type(stored_definition), it(it), 
+   parser(Iterator &it) : parser::base_type(stored_definition), 
       OPAREN("("),CPAREN(")"), COLON(":"), SEMICOLON(";"),  QUOTE("\""), 
       STAR("*"), OBRACKET("["), CBRACKET("]"), COMA(","), OBRACE("{"), 
       CBRACE("}"), EQUAL("="), PLUS("+"), ASSIGN(":="), DOT(qi::char_('.')), 
+      DER(qi::string("der")), INITIAL(qi::string("initial")),
       ALGORITHM("algorithm"), AND("and"), ANNOTATION("annotation"), 
-      CONNECT("connect"), CONSTRAINEDBY("constrainedby"), DER(qi::string("der")), DER2("der"), EACH("each"), ELSE("else"),
+      CONNECT("connect"), CONSTRAINEDBY("constrainedby"), DER2("der"), EACH("each"), ELSE("else"),
       ELSEIF("elseif"), ELSEWHEN("elsewhen"), ENCAPSULATED("encapsulated"), 
       END("end"), ENUMERATION("enumeration"), EQUATION("equation"),
       EXTENDS("extends"), EXTERNAL("external"), 
       FALSE("false"), FINAL("final"), FOR("for"), 
       FUNCTION1("function"), IF("if"), IMPORT("import"), 
-      IN("in"), INITIAL(qi::string("initial")), INNER("inner"),
-      LOOP("loop"), NOT("not"), OR("or"), 
+      IN("in"),  INNER("inner"), LOOP("loop"), NOT("not"), OR("or"), 
       OUTER("outer"), PROTECTED("protected"), PUBLIC("public"), REDECLARE("redeclare"), 
       REPLACEABLE("replaceable"), THEN("then"), TRUE("true"), 
-      WHEN("when"), WHILE("while"), WITHIN("within")
+      WHEN("when"), WHILE("while"), WITHIN("within"), it(it)
    {
       using namespace qi::labels;
-      using phoenix::val;
       using phoenix::bind;
       using phoenix::construct;
-      using qi::uint_;
       using qi::char_;
       using qi::alpha;
       using qi::lexeme;
@@ -72,7 +70,6 @@ namespace parser {
       using qi::_5;
       using qi::_6;
       using qi::_7;
-      using qi::eps;
       using qi::matches;
 
       stored_definition = 
@@ -529,7 +526,7 @@ namespace parser {
         (
             stored_definition
           , std::cerr
-                << val("Parser error. Expecting ")
+                << phoenix::val("Parser error. Expecting ")
                 << _4                               // what failed?
                 << bind(&at,_3,it)
                 << std::endl
@@ -813,7 +810,6 @@ namespace parser {
                          WHEN, WHILE, WITHIN;
   
       Iterator &it; 
-  
     };
   }
 }
