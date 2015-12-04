@@ -88,7 +88,7 @@ namespace Modelica {
       foreach_ (P f, elseif) 
         elseif_.push_back(ExpPair(get<0>(f),get<1>(f)));
     };
-    IfExp::IfExp (Expression a, Expression b, List<ExpPair> elseif, Expression c): cond_(a), then_(b), elseexp_(c), elseif_(elseif){}
+    IfExp::IfExp (Expression a, Expression b, List<ExpPair> elseif, Expression c): cond_(a), then_(b), elseif_(elseif), elseexp_(c) {}
     bool IfExp::operator==(const IfExp & other) const {
       return other.cond()==cond() && other.then()==then() && other.elseexp() == elseexp();
     }
@@ -250,7 +250,7 @@ namespace Modelica {
     member_imp(Reference,Ref,ref);
       
     Range::Range (Expression s, Expression e): start_(s), end_(e) {};
-    Range::Range (Expression s, Expression i, Expression e): start_(s), end_(e), step_(i) {};
+    Range::Range (Expression s, Expression i, Expression e): start_(s),  step_(i), end_(e) {};
  
     std::ostream& operator<<(std::ostream& out, const Range &r) 
     {
@@ -314,7 +314,7 @@ namespace Modelica {
       return out; 
     };
  
-    Named::Named(Name n, Expression e): exp_(), name_(n) {};
+    Named::Named(Name n, Expression e):  name_(n), exp_() {};
     std::ostream& operator<<(std::ostream& out, const Named &n) {
       out << n.name() << "=" << n.exp() ;
         return out;

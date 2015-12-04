@@ -122,8 +122,8 @@ namespace Modelica {
     member_(Composition, composition);
     member_(Name,end_name);
     member_(ClassPrefixes,prefixes);
-    member_(bool,encapsulated);
     member_(bool,final);
+    member_(bool,encapsulated);
     printable(Class);
  };
   typedef boost::variant<
@@ -151,9 +151,9 @@ namespace Modelica {
     StoredDef(){};
     StoredDef(boost::optional<Name> name, ClassList cl);
     StoredDef(ClassList cl);
-    member_(bool,within);
-    member_(Option<Name>,name);
     member_(ClassList,classes);
+    member_(Option<Name>,name);
+    member_(bool,within);
     printable(StoredDef);
   };
 

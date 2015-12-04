@@ -132,8 +132,8 @@ namespace Modelica {
     member_(Option<TypePrefixes>, type_prefixes);
     member_(Option<Name>, derived);
     member_(Option<ExpList>, indices);
-    member_(Comment, comment);
     member_(Option<ClassModification>, modification);
+    member_(Comment, comment);
     member_(Option<EnumSpec>, enum_spec);
     
   };

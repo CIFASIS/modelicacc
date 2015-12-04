@@ -63,8 +63,8 @@ namespace Modelica {
   ::GiNaC::symbol& getTime() const;
   private:
     mutable std::map<std::string, ::GiNaC::symbol> directory;
-    bool _forDerivation;
     VarSymbolTable  &varEnv;
+    bool _forDerivation;
   };
 }
 #endif

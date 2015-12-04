@@ -128,8 +128,8 @@ namespace Modelica {
     struct StatementSection {
       StatementSection() {};
       StatementSection(bool ini, StatementList l): statements_(l),initial_(ini) {};
-      member_(bool, initial);
       member_(StatementList , statements);
+      member_(bool, initial);
       void addStatement(Statement s) { statements_.push_back(s); }
       printable(StatementSection);
     };
@@ -137,8 +137,8 @@ namespace Modelica {
     struct WhileSt: public StatementBase {
       WhileSt(){}
       WhileSt(Expression cond, StatementList el): cond_(cond), elements_(el) {}
-      member_(StatementList , elements);
       member_(Expression, cond);
+      member_(StatementList , elements);
       printable(WhileSt);
     };
 
