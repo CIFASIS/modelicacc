@@ -11,13 +11,18 @@
 
 #include <boost/variant/get.hpp>
 
-#include <ctime>
+#include <sys/time.h>
+#include <stdio.h>
 
 using namespace Modelica::AST;
 
 int main(int argc, char const *argv[])
 {
+
 	bool r;
+	struct timeval tval_before, tval_after, tval_result;
+
+	debugInit("p");
 
 	StoredDef sd = parseFile("OneDHeatTransferTI_FD.mo",r);
 
@@ -32,25 +37,29 @@ int main(int argc, char const *argv[])
 
 	CausalizationStrategy cStrategy(mmo);
 
-	time_t causalize_simple_t0  = time(NULL);
+	gettimeofday(&tval_before, NULL);
 
 	cStrategy.causalize_simple("anything");
 
-	time_t causalize_simple_t1  = time(NULL);
+	gettimeofday(&tval_after, NULL);
 
-	std::cout << difftime(causalize_simple_t1, causalize_simple_t0) << std::endl;
+	timersub(&tval_after, &tval_before, &tval_result);
+
+	printf("Simple strategy: Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
 
 	MMO_Class mmo2(ast_c);
 
 	CausalizationStrategy cStrategy2(mmo2);
 
-	time_t causalize_tarjan_t0  = time(NULL);
+	gettimeofday(&tval_before, NULL);
 
 	cStrategy2.causalize_tarjan("anything");
 
-	time_t causalize_tarjan_t1  = time(NULL);
+	gettimeofday(&tval_after, NULL);
 
-	std::cout << difftime(causalize_tarjan_t1, causalize_tarjan_t0) << std::endl;
+	timersub(&tval_after, &tval_before, &tval_result);
+
+	printf("Tarjan strategy: Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
 
 	return 0;
 }
