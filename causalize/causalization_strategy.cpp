@@ -102,17 +102,39 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
 
 void CausalizationStrategy::causalize(Modelica::AST::Name name) {
     simpleCausalizationStrategy();
-    std::cout << "After simpleCausalizationStrategy" << std::endl;
-    causalize_no_opt(name);
+    causalize_tarjan(name);
 }
 
-void CausalizationStrategy::causalize_no_opt(Modelica::AST::Name name) {
+void CausalizationStrategy::causalize_tarjan(Modelica::AST::Name name) {
 
   makeCausalMiddle();
 
-  std::cout << "After makeCausalMiddle" << std::endl;
-
   _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsMiddle.begin(),_causalEqsMiddle.end());
+
+  _mmo_class.equations_ref().equations_ref() = _causalEqsBegining;
+
+  // Add new functions
+ foreach_(ClassType ct, _cl) {
+   Class c = get<Class>(ct);
+   _mmo_class.types_ref().push_back(c.name());
+   MMO_Class *mmo = new MMO_Class(c);
+   _mmo_class.tyTable_ref().insert(c.name(), Type::Class(c.name(),mmo));
+ }
+ char buff[1024];
+ std::fstream fs (buff, std::fstream::out);
+ fs << "#include <gsl/gsl_multiroots.h>\n";
+ fs << "#define pre(X) X\n";
+ foreach_(std::string s, c_code)
+ fs << s;
+ fs.close();
+
+}
+
+void CausalizationStrategy::causalize_simple(Modelica::AST::Name name) {
+
+  simpleCausalizationStrategy();
+
+  _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsEnd.begin(),_causalEqsEnd.end());
 
   _mmo_class.equations_ref().equations_ref() = _causalEqsBegining;
 

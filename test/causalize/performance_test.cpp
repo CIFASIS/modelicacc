@@ -32,25 +32,25 @@ int main(int argc, char const *argv[])
 
 	CausalizationStrategy cStrategy(mmo);
 
-	time_t causalize_t0  = time(NULL);
+	time_t causalize_simple_t0  = time(NULL);
 
-	cStrategy.causalize("anything");
+	cStrategy.causalize_simple("anything");
 
-	time_t causalize_t1  = time(NULL);
+	time_t causalize_simple_t1  = time(NULL);
 
-	std::cout << difftime(causalize_t1, causalize_t0) << std::endl;
+	std::cout << difftime(causalize_simple_t1, causalize_simple_t0) << std::endl;
 
 	MMO_Class mmo2(ast_c);
 
 	CausalizationStrategy cStrategy2(mmo2);
 
-	time_t causalize_no_opt_t0  = time(NULL);
+	time_t causalize_tarjan_t0  = time(NULL);
 
-	cStrategy2.causalize_no_opt("anything");
+	cStrategy2.causalize_tarjan("anything");
 
-	time_t causalize_no_opt_t1  = time(NULL);
+	time_t causalize_tarjan_t1  = time(NULL);
 
-	std::cout << difftime(causalize_no_opt_t1, causalize_no_opt_t0) << std::endl;
+	std::cout << difftime(causalize_tarjan_t1, causalize_tarjan_t0) << std::endl;
 
 	return 0;
 }

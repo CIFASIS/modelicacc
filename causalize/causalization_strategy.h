@@ -13,7 +13,8 @@ class CausalizationStrategy {
 public:
   CausalizationStrategy(Modelica::MMO_Class &mmo_class);
   void causalize(Modelica::AST::Name name);
-  void causalize_no_opt(Modelica::AST::Name name);
+  void causalize_tarjan(Modelica::AST::Name name);
+  void causalize_simple(Modelica::AST::Name name);
 private:
   void simpleCausalizationStrategy();
   Edge getUniqueEdge(Vertex v);
