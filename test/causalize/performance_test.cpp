@@ -34,7 +34,7 @@ int main(int argc, char const *argv[])
 
 	time_t causalize_t0  = time(NULL);
 
-	cStrategy.causalize("anything");
+	cStrategy.causalize_simple("anything");
 
 	time_t causalize_t1  = time(NULL);
 
@@ -46,7 +46,7 @@ int main(int argc, char const *argv[])
 
 	time_t causalize_no_opt_t0  = time(NULL);
 
-	cStrategy2.causalize_no_opt("anything");
+	cStrategy2.causalize_tarjan("anything");
 
 	time_t causalize_no_opt_t1  = time(NULL);
 

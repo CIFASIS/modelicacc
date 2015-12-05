@@ -83,7 +83,7 @@ void rlc_test() {
   CausalizationStrategy cStrategy(mmo);
   cStrategy.causalize("Anything");
 
-  std::cout << mmo << std::endl;
+  //std::cout << mmo << std::endl;
 
   check_causality(mmo, unknowns);
 
@@ -107,13 +107,13 @@ void rlc_loop_test() {
   CausalizationStrategy cStrategy(mmo);
   cStrategy.causalize("Anything");
 
-  std::cout << mmo << std::endl;
+  //std::cout << mmo << std::endl;
 
   check_causality(mmo, unknowns);
 
 }
 
-void rlc_loop_no_opt_test() {
+void rlc_loop_tarjan_test() {
 
   bool r;
 
@@ -129,9 +129,53 @@ void rlc_loop_no_opt_test() {
   ExpList unknowns = collector.collectUnknowns();
 
   CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize_no_opt("Anything");
+  cStrategy.causalize_tarjan("Anything");
 
-  std::cout << mmo << std::endl;
+  //std::cout << mmo << std::endl;
+
+  check_causality(mmo, unknowns);
+
+}
+
+void OneDHeatTransferTI_FD_test() {
+
+  bool r;
+
+  StoredDef sd = parseFile("OneDHeatTransferTI_FD.mo",r);
+
+  if (!r)
+    ERROR("Can't parse file\n");
+
+  Class ast_c = boost::get<Class>(sd.classes().front());
+  MMO_Class mmo(ast_c);
+
+  UnknownsCollector collector(mmo);
+  ExpList unknowns = collector.collectUnknowns();
+
+  CausalizationStrategy cStrategy(mmo);
+  cStrategy.causalize("Anything");
+
+  check_causality(mmo, unknowns);
+
+}
+
+void OneDHeatTransferTI_FD_simple_test() {
+
+  bool r;
+
+  StoredDef sd = parseFile("OneDHeatTransferTI_FD.mo",r);
+
+  if (!r)
+    ERROR("Can't parse file\n");
+
+  Class ast_c = boost::get<Class>(sd.classes().front());
+  MMO_Class mmo(ast_c);
+
+  UnknownsCollector collector(mmo);
+  ExpList unknowns = collector.collectUnknowns();
+
+  CausalizationStrategy cStrategy(mmo);
+  cStrategy.causalize_simple("Anything");
 
   check_causality(mmo, unknowns);
 
@@ -140,13 +184,15 @@ void rlc_loop_no_opt_test() {
 test_suite*
 init_unit_test_suite( int, char* []) {
 
-  debugInit("c");
+  //debugInit("c");
 
   framework::master_test_suite().p_name.value = "Causalization Strategy Test";
 
   framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_test) );
   framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_loop_test) );
-  framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_loop_no_opt_test) );
+  framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_loop_tarjan_test) );
+  framework::master_test_suite().add( BOOST_TEST_CASE( &OneDHeatTransferTI_FD_test) );
+  framework::master_test_suite().add( BOOST_TEST_CASE( &OneDHeatTransferTI_FD_simple_test) );
 
   return 0;
 }

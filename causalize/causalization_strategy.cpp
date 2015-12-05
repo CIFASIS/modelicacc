@@ -101,16 +101,58 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
 }
 
 void CausalizationStrategy::causalize(Modelica::AST::Name name) {
-    simpleCausalizationStrategy();
-    std::cout << "After simpleCausalizationStrategy" << std::endl;
-    causalize_no_opt(name);
+  
+  simpleCausalizationStrategy();
+  makeCausalMiddle();
+  
+  _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsMiddle.begin(),_causalEqsMiddle.end());
+  _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsEnd.begin(),_causalEqsEnd.end());
+
+  _mmo_class.equations_ref().equations_ref() = _causalEqsBegining;
+
+  // Add new functions
+ foreach_(ClassType ct, _cl) {
+   Class c = get<Class>(ct);
+   _mmo_class.types_ref().push_back(c.name());
+   MMO_Class *mmo = new MMO_Class(c);
+   _mmo_class.tyTable_ref().insert(c.name(), Type::Class(c.name(),mmo));
+ }
+ char buff[1024];
+ std::fstream fs (buff, std::fstream::out);
+ fs << "#include <gsl/gsl_multiroots.h>\n";
+ fs << "#define pre(X) X\n";
+ foreach_(std::string s, c_code)
+ fs << s;
+ fs.close();
 }
 
-void CausalizationStrategy::causalize_no_opt(Modelica::AST::Name name) {
+void CausalizationStrategy::causalize_simple(Modelica::AST::Name name) {
+    
+  simpleCausalizationStrategy();
+
+  _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsEnd.begin(),_causalEqsEnd.end());
+
+  _mmo_class.equations_ref().equations_ref() = _causalEqsBegining;
+
+  // Add new functions
+ foreach_(ClassType ct, _cl) {
+   Class c = get<Class>(ct);
+   _mmo_class.types_ref().push_back(c.name());
+   MMO_Class *mmo = new MMO_Class(c);
+   _mmo_class.tyTable_ref().insert(c.name(), Type::Class(c.name(),mmo));
+ }
+ char buff[1024];
+ std::fstream fs (buff, std::fstream::out);
+ fs << "#include <gsl/gsl_multiroots.h>\n";
+ fs << "#define pre(X) X\n";
+ foreach_(std::string s, c_code)
+ fs << s;
+ fs.close();
+}
+
+void CausalizationStrategy::causalize_tarjan(Modelica::AST::Name name) {
 
   makeCausalMiddle();
-
-  std::cout << "After makeCausalMiddle" << std::endl;
 
   _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsMiddle.begin(),_causalEqsMiddle.end());
 
@@ -151,8 +193,6 @@ void CausalizationStrategy::simpleCausalizationStrategy() {
     }
   }
 
-      std::cout << "SimpleCausalizationStrategy 1" << std::endl;
-
   while(!eqDegree1Verts.empty() || !unknownDegree1Verts.empty()) {
     std::list<Vertex>::iterator eqIter = eqDegree1Verts.begin();
     if (eqIter != eqDegree1Verts.end()) {
@@ -184,57 +224,30 @@ void CausalizationStrategy::simpleCausalizationStrategy() {
       eqDegree1Verts.erase(eqIter);
     }
 
-      std::cout << "SimpleCausalizationStrategy 2" << std::endl;
-
-
     std::list<Vertex>::iterator unknownIter = unknownDegree1Verts.begin();
     if(unknownIter != unknownDegree1Verts.end()) {
       Vertex unknown = *unknownIter;
 
-      std::cout << "SimpleCausalizationStrategy 2.0.1" << std::endl;
-
-
       Edge e = getUniqueEdge(unknown);
-
-      std::cout << "SimpleCausalizationStrategy 2.0.2 " << e << std::endl;
-
 
       Vertex eq = target(e, _graph);
 
-      std::cout << "SimpleCausalizationStrategy 2.1" << eq << std::endl;
-
-
       makeCausalEnd(_graph[eq].eq, _graph[unknown].unknown);
-
-      std::cout << "SimpleCausalizationStrategy 2.1.1" << std::endl;
-
 
       remove_edge(e, _graph);
       // If the eq is in the degree1 set also remove it. This is the case where both eq and unknown have degree=1
       eqDegree1Verts.remove(eq);
 
-      std::cout << "SimpleCausalizationStrategy 2.1.2" << std::endl;
-
-
       remove_vertex(unknown, _graph);
-
-      std::cout << "SimpleCausalizationStrategy 2.1.3" << std::endl;
-
 
       CausalizationGraph::out_edge_iterator outEdgeIter, outEdgeIterEnd, next;
       boost::tie(outEdgeIter, outEdgeIterEnd) = out_edges(eq, _graph);
-
-      std::cout << "SimpleCausalizationStrategy 2.2" << std::endl;
-
 
       for(next = outEdgeIter; outEdgeIter != outEdgeIterEnd; outEdgeIter = next) {
         next++;
         Edge eqAdjEdge = *outEdgeIter;
         Vertex eqAdjUnknown = target(eqAdjEdge, _graph);
         remove_edge(eqAdjEdge, _graph);
-
-      std::cout << "SimpleCausalizationStrategy 2.3" << std::endl;
-
 
         if (out_degree(eqAdjUnknown, _graph) == 1) {
             Edge e = getUniqueEdge(eqAdjUnknown);
