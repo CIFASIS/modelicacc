@@ -11,13 +11,17 @@
 
 #include <boost/variant/get.hpp>
 
-#include <ctime>
+#include <sys/time.h>
+#include <stdio.h>
 
 using namespace Modelica::AST;
 
 int main(int argc, char const *argv[])
 {
+
 	bool r;
+
+	debugInit("p");
 
 	StoredDef sd = parseFile("OneDHeatTransferTI_FD.mo",r);
 
