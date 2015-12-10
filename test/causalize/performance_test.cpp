@@ -20,6 +20,7 @@ int main(int argc, char const *argv[])
 {
 
 	bool r;
+	struct timeval tval_before, tval_after, tval_result;
 
 	debugInit("p");
 
@@ -36,25 +37,35 @@ int main(int argc, char const *argv[])
 
 	CausalizationStrategy cStrategy(mmo);
 
-	time_t causalize_t0  = time(NULL);
+	gettimeofday(&tval_before, NULL);
 
 	cStrategy.causalize_simple("anything");
 
-	time_t causalize_t1  = time(NULL);
+	gettimeofday(&tval_after, NULL);
 
-	std::cout << difftime(causalize_t1, causalize_t0) << std::endl;
+	timersub(&tval_after, &tval_before, &tval_result);
 
-	MMO_Class mmo2(ast_c);
+	printf("Simple strategy: Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
+
+	StoredDef sd2 = parseFile("OneDHeatTransferTI_FD.mo",r);
+
+	if (!r)
+	ERROR("Can't parse file\n");
+
+	Class ast_c2 = boost::get<Class>(sd2.classes().front());
+	MMO_Class mmo2(ast_c2);
 
 	CausalizationStrategy cStrategy2(mmo2);
 
-	time_t causalize_no_opt_t0  = time(NULL);
+	gettimeofday(&tval_before, NULL);
 
 	cStrategy2.causalize_tarjan("anything");
 
-	time_t causalize_no_opt_t1  = time(NULL);
+	gettimeofday(&tval_after, NULL);
 
-	std::cout << difftime(causalize_no_opt_t1, causalize_no_opt_t0) << std::endl;
+	timersub(&tval_after, &tval_before, &tval_result);
+
+	printf("Tarjan strategy: Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
 
 	return 0;
 }

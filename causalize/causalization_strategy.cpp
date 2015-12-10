@@ -99,6 +99,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   DEBUG('c', "\n");
 
   _causalEqsEnd.resize(equations.size());
+  _causalEqsEndIndex = equations.size() - 1;
 
 }
 
@@ -109,7 +110,11 @@ void CausalizationStrategy::causalize(Modelica::AST::Name name) {
   makeCausalMiddle();
   
   _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsMiddle.begin(),_causalEqsMiddle.end());
-  _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsEnd.begin(),_causalEqsEnd.end());
+
+    for (size_t i = _causalEqsEndIndex + 1; i < _causalEqsEnd.size(); ++i)
+  {
+    _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsEnd[i]);
+  }
 
   _mmo_class.equations_ref().equations_ref() = _causalEqsBegining;
 
@@ -133,7 +138,10 @@ void CausalizationStrategy::causalize_simple(Modelica::AST::Name name) {
     
   simpleCausalizationStrategy();
 
-  _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsEnd.begin(),_causalEqsEnd.end());
+  for (size_t i = _causalEqsEndIndex + 1; i < _causalEqsEnd.size(); ++i)
+  {
+    _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsEnd[i]);
+  }
 
   _mmo_class.equations_ref().equations_ref() = _causalEqsBegining;
 
@@ -196,8 +204,6 @@ void CausalizationStrategy::simpleCausalizationStrategy() {
     }
   }
 
-  int causalEqsEndIndex = _causalEqsEnd.size() - 1;
-
   while(!eqDegree1Verts.empty() || !unknownDegree1Verts.empty()) {
     std::list<Vertex>::iterator eqIter = eqDegree1Verts.begin();
     if (eqIter != eqDegree1Verts.end()) {
@@ -234,7 +240,7 @@ void CausalizationStrategy::simpleCausalizationStrategy() {
       Vertex unknown = *unknownIter;
       Edge e = getUniqueEdge(unknown);
       Vertex eq = target(e, _graph);
-      makeCausalEnd(_graph[eq].eq, _graph[unknown].unknown, causalEqsEndIndex--);
+      makeCausalEnd(_graph[eq].eq, _graph[unknown].unknown);
       remove_edge(e, _graph);
       // If the eq is in the degree1 set also remove it. This is the case where both eq and unknown have degree=1
       eqDegree1Verts.remove(eq);
@@ -283,7 +289,7 @@ void CausalizationStrategy::makeCausalBegining(Equation e, Expression unknown) {
   }
 }
 
-void CausalizationStrategy::makeCausalEnd(Equation e, Expression unknown, int causalEqsEndIndex) {
+void CausalizationStrategy::makeCausalEnd(Equation e, Expression unknown) {
   if (debugIsEnabled('c')) {
     cout << "makeCausalEnd" << endl;
     cout << "Causalizing";
@@ -295,7 +301,7 @@ void CausalizationStrategy::makeCausalEnd(Equation e, Expression unknown, int ca
   }
   EquationList causalEqs = EquationSolver::solve(EquationList(1, e), ExpList(1, unknown), _mmo_class.syms_ref(), c_code, _cl);
   foreach_(Equation e, causalEqs) {
-    _causalEqsEnd[causalEqsEndIndex] = e;
+    _causalEqsEnd[_causalEqsEndIndex--] = e;
   }
 }
 
