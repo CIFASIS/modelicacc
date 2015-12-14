@@ -64,6 +64,21 @@ namespace Modelica {
     foreach_(Equation eq, remove) {
       eqs.erase(std::find(eqs.begin(),eqs.end(), eq));
     }
+    // Remove initial equations
+    EquationList &init_eqs = mmo_class.initial_eqs_ref().equations_ref();
+    remove.clear();
+    foreach_(Equation &eq, init_eqs) {
+      if (is<Equality>(eq)) {
+        Equality eq_eq = get<Equality>(eq);
+        mmo_class.initial_sts_ref().statements_ref().push_back(Assign(eq_eq.left(),eq_eq.right()));
+        remove.push_back(eq);
+      } else {
+        WARNING("Skiping initial equation");
+      }
+    }
+    foreach_(Equation eq, remove) {
+      init_eqs.erase(std::find(init_eqs.begin(),init_eqs.end(), eq));
+    }
     toMicroSt tom(mmo_class,disc_count);
     foreach_(Statement &st, mmo_class.statements_ref().statements_ref()) {
       st=boost::apply_visitor(tom, st);
