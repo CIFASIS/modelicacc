@@ -1,6 +1,6 @@
 model OneDHeatTransferTI_FD
   parameter Real L = 0.2;
-  constant Integer N = 500 ;
+  constant Integer N = 1000;
   parameter Real T0 = 273.15;
   parameter Real TN = 330;
   parameter Real cp = 910 ;

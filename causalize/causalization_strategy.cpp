@@ -194,8 +194,10 @@ void CausalizationStrategy::simpleCausalizationStrategy() {
   CausalizationGraph::vertex_iterator vi, vi_end;
   for(boost::tie(vi,vi_end) = vertices(_graph); vi != vi_end; ++vi) {
     Vertex v = *vi;
-    if (out_degree(v, _graph) == 1) {
-      _graph[v].visited = true;
+    if (out_degree(v, _graph) == 1 && !_graph[v].visited) {
+      Edge e = getUniqueEdge(v);
+      Vertex adjacent = target(e, _graph);
+      _graph[adjacent].visited = true;
       if (_graph[v].type == E) {
         eqDegree1Verts.push_back(v);
       } else {
@@ -213,24 +215,7 @@ void CausalizationStrategy::simpleCausalizationStrategy() {
       makeCausalBegining(_graph[eq].eq, _graph[unknown].unknown);
       remove_edge(e, _graph);
       remove_vertex(eq,_graph);
-      // If the unknown is in the degree1 set also remove it. This is the case where both eq and unknown have degree=1
-      unknownDegree1Verts.remove(unknown);
-      CausalizationGraph::out_edge_iterator outEdgeIter, outEdgeIterEnd, next;
-      boost::tie(outEdgeIter, outEdgeIterEnd) = out_edges(unknown, _graph);
-      for(next = outEdgeIter; outEdgeIter != outEdgeIterEnd; outEdgeIter = next) {
-        next++;
-        Edge unkownAdjEdge = *outEdgeIter;
-        Vertex unknownAdjEq = target(unkownAdjEdge, _graph);
-        remove_edge(unkownAdjEdge, _graph);
-        if (out_degree(unknownAdjEq, _graph) == 1) {
-            Edge e = getUniqueEdge(unknownAdjEq);
-            Vertex eqAdjUnknown = target(e, _graph);
-            if(!_graph[eqAdjUnknown].visited) {
-                _graph[unknownAdjEq].visited = true;
-                eqDegree1Verts.push_back(unknownAdjEq);
-            }
-        }
-      }
+      collectDegree1Verts(unknown, eqDegree1Verts);
       remove_vertex(unknown,_graph);
       eqDegree1Verts.erase(eqIter);
     }
@@ -242,25 +227,8 @@ void CausalizationStrategy::simpleCausalizationStrategy() {
       Vertex eq = target(e, _graph);
       makeCausalEnd(_graph[eq].eq, _graph[unknown].unknown);
       remove_edge(e, _graph);
-      // If the eq is in the degree1 set also remove it. This is the case where both eq and unknown have degree=1
-      eqDegree1Verts.remove(eq);
       remove_vertex(unknown, _graph);
-      CausalizationGraph::out_edge_iterator outEdgeIter, outEdgeIterEnd, next;
-      boost::tie(outEdgeIter, outEdgeIterEnd) = out_edges(eq, _graph);
-      for(next = outEdgeIter; outEdgeIter != outEdgeIterEnd; outEdgeIter = next) {
-        next++;
-        Edge eqAdjEdge = *outEdgeIter;
-        Vertex eqAdjUnknown = target(eqAdjEdge, _graph);
-        remove_edge(eqAdjEdge, _graph);
-        if (out_degree(eqAdjUnknown, _graph) == 1) {
-            Edge e = getUniqueEdge(eqAdjUnknown);
-            Vertex unknownAdjEq = target(e, _graph);
-            if(!_graph[unknownAdjEq].visited) {
-                _graph[eqAdjUnknown].visited = true;
-                unknownDegree1Verts.push_back(eqAdjUnknown);
-            }
-        }
-      }
+      collectDegree1Verts(eq, unknownDegree1Verts);
       remove_vertex(eq, _graph);
       unknownDegree1Verts.erase(unknownIter);
     }
@@ -271,6 +239,23 @@ Edge CausalizationStrategy::getUniqueEdge(Vertex v) {
   CausalizationGraph::out_edge_iterator eqOutEdgeIter, eqOutEdgeIterEnd;
   boost::tie(eqOutEdgeIter, eqOutEdgeIterEnd) = out_edges(v, _graph);
   return *eqOutEdgeIter;
+}
+
+void CausalizationStrategy::collectDegree1Verts(Vertex v, std::list<Vertex> &degree1Verts) {
+  CausalizationGraph::out_edge_iterator outEdgeIter, outEdgeIterEnd, next;
+  boost::tie(outEdgeIter, outEdgeIterEnd) = out_edges(v, _graph);
+  for(next = outEdgeIter; outEdgeIter != outEdgeIterEnd; outEdgeIter = next) {
+    next++;
+    Edge adjEdge = *outEdgeIter;
+    Vertex adjacent = target(adjEdge, _graph);
+    remove_edge(adjEdge, _graph);
+    if (out_degree(adjacent, _graph) == 1 && !_graph[adjacent].visited) {
+        Edge e = getUniqueEdge(adjacent);
+        Vertex adjAdjacent = target(e, _graph);
+        _graph[adjAdjacent].visited = true;
+        degree1Verts.push_back(adjacent);
+    }
+  }
 }
 
 void CausalizationStrategy::makeCausalBegining(Equation e, Expression unknown) {

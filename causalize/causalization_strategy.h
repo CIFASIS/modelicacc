@@ -18,6 +18,7 @@ public:
 private:
   void simpleCausalizationStrategy();
   Edge getUniqueEdge(Vertex v);
+  void collectDegree1Verts(Vertex v, std::list<Vertex> &degree1Verts);
   void makeCausalBegining(Modelica::AST::Equation eq, Modelica::AST::Expression unknown);
   void makeCausalMiddle();
   void makeCausalEnd(Modelica::AST::Equation eq, Modelica::AST::Expression unknown);
