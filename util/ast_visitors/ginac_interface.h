@@ -35,6 +35,7 @@ DECLARE_FUNCTION_1P(pre)
 
 namespace Modelica {
   using namespace Modelica::AST;
+  Expression ConvertToExp(GiNaC::ex e); 
   class ConvertToGiNaC: public boost::static_visitor<GiNaC::ex> {
   public:
   ConvertToGiNaC(VarSymbolTable  &varEnv,bool forDerivation=false);

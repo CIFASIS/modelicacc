@@ -1,0 +1,22 @@
+OBJS_TEST_DERIVATE:= test_derivate/main.o \
+	mmo/mmo_class.o \
+	util/table.o \
+	util/type.o \
+	util/debug.o \
+	util/ast_visitors/evalexp.o \
+	util/ast_visitors/part_evalexp.o \
+	util/ast_visitors/replace.o \
+	util/ast_visitors/replace_eq.o \
+	util/ast_visitors/replace_st.o \
+	util/ast_visitors/ginac_interface.o \
+	util/derivate.o \
+	util/derivate_equality.o \
+	causalize/state_variables_finder.o \
+	test_derivate/test_derivate.o
+LIBS=-L./lib -lginac -lmodelica 
+bin/test_derivate: $(OBJS_TEST_DERIVATE) lib/libmodelica.a
+	$(CXX) $(CXXFLAGS) $(OBJS_TEST_DERIVATE) -o bin/test_derivate $(LIBS)
+
+
+
+	

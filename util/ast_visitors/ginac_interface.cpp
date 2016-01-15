@@ -235,7 +235,7 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
       return directory.insert(make_pair(s, symbol(s))).first->second;
     }
     
-    /*Expression ConvertToExp(GiNaC::ex e) {
+    Expression ConvertToExp(GiNaC::ex e) {
       bool r;
       std::stringstream s(std::ios_base::out),der_s(std::ios_base::out);
       set_print_func<power,print_dflt>(my_print_power_dflt);
@@ -246,6 +246,6 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
         return 0;
       } 
       return exp;
-    }*/
+    }
 
 }
