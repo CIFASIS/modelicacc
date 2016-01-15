@@ -238,7 +238,7 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
     Expression ConvertToExp(GiNaC::ex e) {
       bool r;
       std::stringstream s(std::ios_base::out),der_s(std::ios_base::out);
-      set_print_func<power,print_dflt>(my_print_power_dflt);
+     // set_print_func<power,print_dflt>(my_print_power_dflt);
       s << e;
       Expression exp = parseExpression(s.str(),r);
       if (!r) {
