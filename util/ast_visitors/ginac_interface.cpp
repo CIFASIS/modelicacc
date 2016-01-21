@@ -214,10 +214,12 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
           ERROR("Multidimensional array not supported");
         } 
         return getSymbol(s);
-      } //else {
-      ERROR("converting a parameter");
-      return 0;
-      //}
+      } else if (_forDerivation) {
+          return var(getSymbol(s),ConvertToGiNaC::getTime());
+      } else {
+        ERROR("converting a parameter");
+        return 0;
+      }
     }
 
     GiNaC::symbol &ConvertToGiNaC::getSymbol(Name s) const {
