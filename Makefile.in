@@ -1,4 +1,4 @@
-CXXFLAGS = -I. -Wall -Werror -Wno-reorder -O3 
+CXXFLAGS = -I. -Wall -O3 
 
 OBJS_COMMON :=  ast/expression.o \
 		ast/class.o \
