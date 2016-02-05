@@ -41,14 +41,29 @@ namespace Modelica {
 
       // Rules
       qi::rule<Iterator,skipper<Iterator>,Expression()> expression_;
+      qi::rule<Iterator,skipper<Iterator>,Expression()> factor;
+      qi::rule<Iterator,skipper<Iterator>,Expression()> term;
+      qi::rule<Iterator,skipper<Iterator>,Expression()> arithmetic_expression;
+      qi::rule<Iterator,skipper<Iterator>,Expression()> relation;
+      qi::rule<Iterator,skipper<Iterator>,Expression()> logical_expression;
+      qi::rule<Iterator,skipper<Iterator>,Expression()> logical_term;
+      qi::rule<Iterator,skipper<Iterator>,Expression()> logical_factor;
+      qi::rule<Iterator,skipper<Iterator>,Expression()> simple_expression;
       qi::rule<Iterator,skipper<Iterator>,Expression()> primary;
       qi::rule<Iterator,skipper<Iterator>,Expression()> subscript;
       qi::rule<Iterator,skipper<Iterator>,Expression()> function_argument;
       qi::rule<Iterator, skipper<Iterator>, Reference()> component_reference;
       qi::rule<Iterator, skipper<Iterator>, Call()> call_exp;
+      qi::rule<Iterator, skipper<Iterator>, Output()> output_exp;
+      qi::rule<Iterator, skipper<Iterator>, IfExp()> if_expression;
       qi::rule<Iterator, skipper<Iterator>, FunctionExp()> function_exp;
       qi::rule<Iterator, skipper<Iterator>, Named()> named_argument;
       qi::rule<Iterator, skipper<Iterator>, Name()> name;
+      qi::rule<Iterator, skipper<Iterator>, Brace()> brace_exp;
+      qi::rule<Iterator, skipper<Iterator>, Index()> for_index;
+      qi::rule<Iterator, skipper<Iterator>, Indexes()> for_indices;
+      qi::rule<Iterator, skipper<Iterator>, Bracket()> bracket_exp;
+      qi::rule<Iterator, skipper<Iterator>, OptExpList()> output_expression_list;
  
       qi::rule<Iterator, skipper<Iterator>, ExpList()> 
           function_call_args, function_arguments, named_arguments, 
@@ -65,9 +80,8 @@ namespace Modelica {
       qi::uint_parser<int> modelica_int;
 
       /* Operators tokens */
-      qi::rule<Iterator> OPAREN, CPAREN, COLON, SEMICOLON, QUOTE, STAR,
-                  OBRACKET, CBRACKET, COMA, OBRACE, CBRACE, EQUAL, PLUS,
-                  ASSIGN;
+      qi::rule<Iterator> OPAREN, CPAREN, COLON, SEMICOLON, QUOTE,
+                  OBRACKET, CBRACKET, COMA, OBRACE, CBRACE, EQUAL, ELSE, ELSEIF, IF, IN, FOR, THEN ;
 
       /* Keywords with value */
       qi::rule<Iterator, Name()> DOT, DER, INITIAL;
