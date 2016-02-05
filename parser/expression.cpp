@@ -1,5 +1,5 @@
-#include "expression.h"
-#include "expression_def.h"
+#include <parser/expression.h>
+#include <parser/expression_def.h>
 
 namespace Modelica
 {

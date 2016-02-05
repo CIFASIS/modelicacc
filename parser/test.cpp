@@ -1,23 +1,10 @@
 #include <boost/spirit/include/qi.hpp>
 #include <iostream>
-#include <ident.h>
+#include <parser/modification.h>
+#include <parser/skipper.h>
 
-namespace qi = boost::spirit::qi;
+/*namespace qi = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;
-
-template <typename Iterator>
-struct skipper : qi::grammar<Iterator> {
-  skipper() : skipper::base_type(start) {
-    using qi::char_;
-    ascii::space_type space;
-
-    start = space                               // tab/space/cr/lf
-          |   "//" >> *(char_ - "\n") >> "\n"     // C++-style comments
-          |   "/*" >> *(char_ - "*/") >> "*/"     // C-style comments
-          ;
-    }
-    qi::rule<Iterator> start;
-};
 
 template <typename Iterator>
 struct ident2_parser: qi::grammar<Iterator,skipper<Iterator>,Name()>
@@ -33,7 +20,7 @@ struct ident2_parser: qi::grammar<Iterator,skipper<Iterator>,Name()>
 
   qi::rule<Iterator,skipper<Iterator>,Name()> ident2;
   Modelica::parser::ident<Iterator> ident;
-};
+};*/
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -50,7 +37,7 @@ main()
     std::cout << "Type [q or Q] to quit\n\n";
 
     std::string str;
-    Name res;
+    Modelica::AST::Modification res;
     typedef std::string::const_iterator iterator_type;
     typedef skipper<iterator_type> space_type;
 
@@ -61,9 +48,9 @@ main()
 
         std::string::const_iterator iter = str.begin();
         std::string::const_iterator end = str.end();
-        ident2_parser<iterator_type> p(iter);
+        Modelica::parser::modification<iterator_type> p(iter);
 
-        phrase_parse(iter, end, p.ident2, space_type(),res);
+        phrase_parse(iter, end, p.modification_, space_type(),res);
         if (iter==end)
         {
             std::cout << "-------------------------\n";
