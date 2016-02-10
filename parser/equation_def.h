@@ -134,9 +134,8 @@ namespace Modelica
  
       equation_list.name("equation_list");
 
-      equation.name("equation");
+      equation_.name("equation");
       equation_section.name("equation_section");
-      expression_list.name("expression list");
 
       for_equation.name("for equation");
 
