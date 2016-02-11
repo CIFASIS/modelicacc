@@ -302,6 +302,11 @@ namespace Modelica
                      ;
 
 
+      type_prefix = 
+                    (-(FLOW | STREAM)) >> (-(DISCRETE | PARAMETER | CONSTANT)) >> (-(INPUT | OUTPUT))
+                  ;
+
+ 
       component_clause1 =
                           type_prefix >> expression_.name >> component_declaration1 
                         ;

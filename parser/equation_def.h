@@ -63,7 +63,7 @@ namespace Modelica
     template <typename Iterator>
     equation<Iterator>::equation(Iterator &it) : equation::base_type(equation_), it(it), modification_(it), expression_(it),
                                                 OPAREN("("),CPAREN(")"), COMA(","), CONNECT("connect"), SEMICOLON(";"), 
-                                                WHEN("when"), THEN("then"), ELSEWHEN("elsewhen"), END("end"),
+                                                WHEN("when"), THEN("then"), ELSEWHEN("elsewhen"), END("end"), EQUAL("="),
                                                 FOR("for"), IF("if"), ELSEIF("elseif"), ELSE("else"), LOOP("loop"), 
                                                 EQUATION("equation"), INITIAL("initial") {
       using qi::_1;

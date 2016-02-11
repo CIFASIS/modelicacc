@@ -19,17 +19,19 @@
 
 #include <fstream>
 #include <streambuf>
-#include <util/debug.h>
-#include <parser/parser.h>
-#include <parser/parser_imp.h>
 #include <boost/fusion/include/std_pair.hpp>
 #include <boost/fusion/include/boost_tuple.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
 
+#include <util/debug.h>
+#include <parser/parser.h>
+#include <parser/class.h>
+#include <parser/skipper.h>
+
 using namespace std;
 namespace Modelica {
   typedef std::string::const_iterator iterator_type;
-  typedef Modelica::parser::skipper<iterator_type> space_type;
+  typedef skipper<iterator_type> space_type;
 
   AST::StoredDef parseFile(std::string name, bool &r) {
 
@@ -46,7 +48,7 @@ namespace Modelica {
       std::string res((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
       std::string::const_iterator iter = res.begin();
       std::string::const_iterator end = res.end();
-      Modelica::parser::parser<iterator_type> p(iter);
+      Modelica::parser::class_<iterator_type> p(iter);
       r = phrase_parse(iter, end, p.stored_definition, space_type(), sd);
       if (r && iter == end) 
         return sd;
@@ -59,7 +61,7 @@ namespace Modelica {
       }
       std::string::const_iterator iter = res.begin();
       std::string::const_iterator end = res.end();
-      Modelica::parser::parser<iterator_type> p(iter);
+      Modelica::parser::class_<iterator_type> p(iter);
       r = phrase_parse(iter, end, p.stored_definition, space_type(), sd);
       if (r && iter == end) {
         return sd;
@@ -72,9 +74,9 @@ namespace Modelica {
   AST::Expression parseExpression(std::string exp, bool &r) {
     std::string::const_iterator iter = exp.begin();
     std::string::const_iterator end = exp.end();
-    Modelica::parser::parser<iterator_type> p(iter);
     AST::Expression e;
-    r = phrase_parse(iter, end, p.expression, space_type(), e);
+    Modelica::parser::expression<iterator_type> p(iter);
+    r = phrase_parse(iter, end, p.expression_, space_type(), e);
     if (r && iter == end) {
       return e;
     } 
