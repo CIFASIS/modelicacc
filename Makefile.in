@@ -6,6 +6,13 @@ OBJS_COMMON :=  ast/expression.o \
 		ast/statement.o \
 		ast/modification.o \
 		ast/element.o \
+		ast/expression.o \
+		parser/ident.o \
+		parser/expression.o \
+		parser/modification.o \
+		parser/equation.o \
+		parser/statement.o \
+		parser/class.o \
 		parser/parser.o
 
 all:lib/libmodelica.a bin/antialias bin/flatter bin/mmo bin/causalize
@@ -17,8 +24,6 @@ include causalize/Makefile.include
 
 lib/libmodelica.a: $(OBJS_COMMON)
 	$(AR) rcs lib/libmodelica.a $(OBJS_COMMON)
-
-parser/parser.cpp: parser/parser_imp.h parser/actions.h parser/adapters.h
 
 %.o: %.cpp %.h
 	$(CXX) -c $(CXXFLAGS) $*.cpp -o $*.o

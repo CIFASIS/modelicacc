@@ -56,7 +56,7 @@ namespace Modelica {
     struct ElMod {
       ElMod() {};
       ElMod(Name, Modification);
-      ElMod(Name);
+      //ElMod(Name);
       member_(Name,name);
       member_(Option<Modification>, modification);
       member_(StringComment, st_comment);
