@@ -257,5 +257,27 @@ namespace Modelica {
     Declaration::Declaration(Name name): name_(name){};
     Declaration::Declaration(Name name, Option<ExpList> indices, Option<Modification> mod, OptExp cond): name_(name), indices_(indices), modification_(mod),
       conditional_(cond) { };
+
+
+    member_imp(Comment,StringComment,st_comment);
+    member_imp(Comment,Option<Annotation>,annotation);
+    std::ostream& operator<<(std::ostream& out, const Comment &c) {
+      if (c.st_comment()) {
+        const StringList st = c.st_comment().get();
+        int i=0,l=st.size();
+        out << " ";
+        foreach_(const String &s, st) {
+          out << s << (i++<l-1 ? " + " : "");
+        }
+      }
+      if (c.annotation()) {
+        out << " ";
+        SKIP_BLOCK_START;
+        out << c.annotation().get();
+        SKIP_BLOCK_END;
+
+      }
+      return out;
+    }
   }
 }
