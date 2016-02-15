@@ -346,7 +346,7 @@ namespace Modelica
       function_arguments = 
                            named_arguments [_val=_1]
                          | (function_argument [_val=bind(&consume_one<Expression>,_1)] >> (COMA > function_arguments [ _val = bind(&append_list<Expression>, _val, _1) ])) 
-                         | ((function_argument > FOR > for_indices) [_val = bind(&create_for, _1, _2)])   
+                         | ((function_argument >> FOR > for_indices) [_val = bind(&create_for, _1, _2)])   
                          | function_argument [_val=bind(&consume_one<Expression>,_1)] 
                          ;
 
