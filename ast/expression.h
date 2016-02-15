@@ -151,14 +151,36 @@ namespace Modelica {
       member_(Name,name);
       member_(ExpList,args)
     };
+
+    struct Index {
+      Index (){};
+      Index (Name n, OptExp e);
+      printable(Index);
+      comparable(Index);
+      member_(OptExp,exp)
+      member_(Name,name)
+    };
+
+
     
+    typedef std::vector<Index> IndexList;
+
+    struct Indexes {
+      Indexes (){};
+      Indexes (IndexList ind):indexes_(ind) {};
+      printable(Indexes);
+      comparable(Indexes);
+      member_(IndexList, indexes);
+    };
+
+ 
     struct ForExp {
       ForExp(){};
-      ForExp(Expression e, ExpList indices);
+      ForExp(Expression,Indexes);
       comparable(ForExp);
       printable(ForExp);
-      member_(Expression,exp);
-      member_(ExpList, indices);
+      member_(Indexes, indices);
+      member_(Expression, exp);
     };
 
 
@@ -171,26 +193,7 @@ namespace Modelica {
       member_(Expression,exp);
     };
 
-    struct Index {
-      Index (){};
-      Index (Name n, OptExp e);
-      printable(Index);
-      comparable(Index);
-      member_(OptExp,exp)
-      member_(Name,name)
-    };
-
-    typedef std::vector<Index> IndexList;
-
-    struct Indexes {
-      Indexes (){};
-      Indexes (IndexList ind):indexes_(ind) {};
-      printable(Indexes);
-      comparable(Indexes);
-      member_(IndexList, indexes);
-    };
-
-    struct UnaryOp {
+   struct UnaryOp {
       UnaryOp (){};
       UnaryOp (Expression e, UnaryOpType op);
       printable(UnaryOp);

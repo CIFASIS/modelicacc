@@ -41,6 +41,13 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
+    Modelica::AST::Declaration, 
+    (Modelica::AST::Name, name_)
+    (Option<Modelica::AST::ExpList>, indices_)
+    (Option<Modelica::AST::Modification>, modification_)
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
     Modelica::AST::ModClass,
     (Modelica::AST::ClassModification, modification_)
     (Modelica::AST::OptExp, exp_)
@@ -318,7 +325,7 @@ namespace Modelica
 
       // TODO add the + string
       string_comment =
-                       -(expression_.string_ [_val=construct<StringList>(1,_1)] >> *(PLUS > expression_.string_) [_val=StringComment()])
+                       -(expression_.string_ % PLUS)
                      ;
 
 
@@ -352,7 +359,7 @@ namespace Modelica
       // TODO: return something meaningful
       short_class_definition =
                                (class_prefixes >> expression_.ident_ >> EQUAL >> type_prefix >> expression_.name >> (-expression_.array_subscripts) >> (-class_modification) >> comment) [_val=construct<ShortClass>(_1,_2,_3,_4,_5,_6,_7)]
-                             | (class_prefixes >> expression_.ident_ >> EQUAL >> ENUMERATION >> OPAREN >> enum_spec >> CPAREN >>  comment)  [_val=ShortClass()]
+                             | (class_prefixes >> expression_.ident_ >> EQUAL >> ENUMERATION >> OPAREN >> enum_spec >> CPAREN >>  comment)  [_val=construct<ShortClass>(_1,_2,_3,_4)]
                              ;
       
  

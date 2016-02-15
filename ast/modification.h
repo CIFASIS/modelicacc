@@ -102,6 +102,7 @@ namespace Modelica {
     struct Comment {
       member_(StringComment,st_comment);
       member_(Option<Annotation>,annotation);
+      printable(Comment);
     };
 
  
