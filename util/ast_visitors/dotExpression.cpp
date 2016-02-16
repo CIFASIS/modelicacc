@@ -175,6 +175,10 @@ namespace Modelica {
 		OptTypeDefinition otd = cf.resolveDependencies(c,n);
 		if (otd) {
 			typeDefinition td = otd.get();
+      if (!is<Type::Class>(get <1>(td))) {
+        std::cerr << v << ":";
+        ERROR("Looking for class %s",n.c_str());
+      }
 			c = * boost::get<Type::Class>(get <1>(td)).clase();
 		} else if ( i != 0 ) {
 			Option<VarInfo> Opvv = c.syms_ref()[n];

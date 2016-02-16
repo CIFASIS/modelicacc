@@ -59,10 +59,10 @@ int main(int argc, char ** argv)
 	}
 	
 	if (out) outputFile.open(out);
-	if (className==NULL) {
+	/*if (className==NULL) {
 		cerr << "Please, specify Class to flat. Option -c" << endl;
 		exit(-1);
-	}
+	}*/
 
 	StoredDef sd;
   if (argv[optind]!=NULL)
@@ -77,7 +77,9 @@ int main(int argc, char ** argv)
 
 		Flatter f = Flatter();
 		Connectors co = Connectors(mmo);
-		// Me posiciono en la clase que quiero aplanar
+    if (className == NULL) { // if no specified, flat last class
+      className = (char*)::className(sd.classes().back()).c_str();
+    }
 		if (className != NULL) {
 			if (debug) std::cerr << "Searching for class " << (className?className:"NULL") << std::endl;
 			ClassFinder re = ClassFinder();
