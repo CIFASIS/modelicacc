@@ -111,10 +111,14 @@ namespace Modelica {
 
     Expression dotExpression::operator()(ForExp v) const {
       Expression exp = v.exp();
-      ExpList indices;
-      foreach_(Expression e, v.indices())
-		indices.push_back(apply(e));
-      return ForExp(apply(exp),indices);
+      IndexList indices;
+      foreach_(Index i, v.indices().indexes()) {
+        if (i.exp()) 
+		      indices.push_back(Index(i.name(),apply(i.exp().get())));
+        else
+		      indices.push_back(Index(i.name(),OptExp()));
+      }
+      return ForExp(apply(exp),Indexes(indices));
     }
     
     Expression dotExpression::operator()(Named v) const {
