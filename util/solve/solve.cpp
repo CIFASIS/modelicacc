@@ -221,8 +221,10 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
           ERROR("Solving variables with dot notation not supported");
         }
         RefTuple rt = ref.ref().front();
-        if (get<1>(rt).size()>0) 
-          ERROR("Solving variables with subindexes not supported");
+        if (get<1>(rt).size()>0) {
+          WARNING("Looking for initial value of indexes expression not supported");
+          continue;
+        }
         Name name = get<0>(rt);
         Option<VarInfo> opt_vinfo = syms[name];
         if (opt_vinfo && opt_vinfo.get().modification() && is<ModClass>(opt_vinfo.get().modification().get())) {
@@ -238,6 +240,9 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
             }
 
           }
+        } else if (!opt_vinfo) {
+          ERROR("No information for variable %s", name.c_str());
+
         }
       }
       i++;
