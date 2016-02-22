@@ -1,5 +1,5 @@
 model A
-  Real a, b, c;
-equations
-  der(a)= b + c
+  Real a,b,c;
+equation
+  der(a) = b + c;
 end A;
