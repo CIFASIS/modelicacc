@@ -24,9 +24,9 @@
 namespace Modelica {
 class TestDerivate {
   MMO_Class &_c;
-  void alias(Reference a, Expression b);
 public:
   TestDerivate(MMO_Class &c);
+  void findReplaceDer(Reference a);
   void derivateAllEqualities();
 };
 }

@@ -22,6 +22,11 @@
 #include <boost/variant/apply_visitor.hpp>
 #define apply(X) boost::apply_visitor(*this,X)
 
+
+/*
+ replace (l, r)
+ reemplaza la expresión l por la expresión r
+*/
 namespace Modelica {
 
     using namespace boost;

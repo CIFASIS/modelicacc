@@ -48,24 +48,19 @@ void TestDerivate::derivateAllEqualities() {
       }
     }
 }
-void TestDerivate::alias(Reference a, Expression b) { // Remove a from the model and replace every occurence with b
-  VarSymbolTable &syms = _c.syms_ref();
-  syms.remove(refName(a));
+void TestDerivate::findReplaceDer( Reference a ) { // Replace der(a) for der_a
+//  VarSymbolTable &syms = _c.syms_ref();
+ // syms.remove(refName(a));
   
-  // Remove variable a
-  std::vector<Name> &vars = _c.variables_ref();
-  std::vector<Name>::iterator pos = std::find(vars.begin(),vars.end(), refName(a));
-  if (pos!=vars.end())
-    vars.erase(pos);
-  replace_eq req(a,b);
+  replace_eq req(Call ("der", a), Reference(Name("der_") + get<0>(a.ref().front() )));
   foreach_ (Equation &eq, _c.equations_ref().equations_ref()) {
-    //std::cerr << eq << " is now ";
+    std::cerr << eq << " is now ";
     eq=boost::apply_visitor(req,eq);
-    //std::cerr << eq << "\n";
+    std::cerr << eq << "\n";
   }
   foreach_ (Equation &eq, _c.initial_eqs_ref().equations_ref()) 
     eq=boost::apply_visitor(req,eq);
-  replace_st rst(a,b);
+  replace_st rst(a,a);
   foreach_ (Statement &st, _c.statements_ref().statements_ref()) 
     st=boost::apply_visitor(rst,st);
   foreach_ (Statement &st, _c.initial_sts_ref().statements_ref()) 

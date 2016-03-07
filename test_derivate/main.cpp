@@ -57,7 +57,12 @@ int main(int argc, char ** argv)
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
   TestDerivate td(mmo);
+  //probamos derivar las equalities
   td.derivateAllEqualities();
+  cout << mmo << "\n";
+  //probamos reemplazar der(a) por der_a
+  Reference r = Reference("a");
+  td.findReplaceDer(r);  
   cout << mmo << "\n";
   return 0;
 }
