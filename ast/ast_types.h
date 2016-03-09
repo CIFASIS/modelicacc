@@ -24,6 +24,7 @@
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/foreach.hpp>
 #include <boost/optional/optional.hpp>
+#include <boost/optional/optional_io.hpp>
 #include <boost/variant/variant.hpp>
 #include <boost/variant/recursive_wrapper.hpp>
 #include <list>
