@@ -41,7 +41,7 @@ CausalizationGraph ReducedGraphBuilder::makeGraph() {
       vp.eqType=EQEQUALITY;
       vp.count=1;
     } else {
-      ERROR("Only causalization of for and equality equaitons");
+      ERROR("Only causalization of for and equality equations");
     }
     vp.index=index++;
     Vertex eqDescriptor = add_vertex(vp,graph);

@@ -30,6 +30,7 @@
 #include <util/ast_visitors/ginac_interface.h>
 #include <util/ast_visitors/contains.h>
 #include <util/ast_visitors/part_evalexp.h>
+#include <util/ast_visitors/evalexp.h>
 #include <util/solve/solve.h>
 #include <util/debug.h>
 #include <parser/parser.h>
@@ -61,6 +62,7 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
   static int fsolve=1;
   Modelica::ConvertToGiNaC tog(syms);
   Modelica::PartEvalExp peval(syms,true);
+  Modelica::EvalExp eval(syms);
 
   const int size=eqs.size();
   if (size==1 && is<Equality>(eqs.front())) { // Trivial solve
@@ -211,6 +213,40 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
     code << "    __x=gsl_vector_alloc(" << eqs.size() << ");\n";
     code << "    for (i=0;i<" << eqs.size() << ";i++)\n";
     code << "      gsl_vector_set (__x, i,0);\n";
+    i=0;
+    foreach_(Expression e, crs)  { // Check if the variable has a start value
+      if (is<Reference>(e)) {
+        Reference ref = get<Reference>(e);
+        if (ref.ref().size()>1) {
+          ERROR("Solving variables with dot notation not supported");
+        }
+        RefTuple rt = ref.ref().front();
+        if (get<1>(rt).size()>0) {
+          WARNING("Looking for initial value of indexes expression not supported");
+          continue;
+        }
+        Name name = get<0>(rt);
+        Option<VarInfo> opt_vinfo = syms[name];
+        if (opt_vinfo && opt_vinfo.get().modification() && is<ModClass>(opt_vinfo.get().modification().get())) {
+          ClassModification mod = get<ModClass>(opt_vinfo.get().modification().get()).modification();
+          foreach_(Argument a, mod) {
+            if (is<ElMod>(a) 
+                && get<ElMod>(a).name()=="start" 
+                && get<ElMod>(a).modification() 
+                && is<ModEq>(get<ElMod>(a).modification().get())) {
+              Expression exp_mod = get<ModEq>(get<ElMod>(a).modification().get()).exp();
+              Real r=boost::apply_visitor(eval,exp_mod);
+              code << "    gsl_vector_set (__x, " << i << "," << r <<");\n";
+            }
+
+          }
+        } else if (!opt_vinfo) {
+          ERROR("No information for variable %s", name.c_str());
+
+        }
+      }
+      i++;
+    }
     code << "  }\n";
     code << "  __F.n = " << eqs.size() << ";\n";
     code << "  __F.f = " << buff << "_eval;\n";

@@ -82,6 +82,7 @@ namespace Modelica {
         out << d.modification().get();
       if (d.conditional()) 
         out << " if " << d.conditional().get();
+      out << d.comment();
       return out;
     }
  

@@ -114,8 +114,10 @@ namespace Modelica {
     bool constExp::operator()(ForExp v) const {
       Expression exp = v.exp();
       bool indices = true;
-      foreach_(Expression e, v.indices())
-		indices &= apply(e);
+      foreach_(Index i, v.indices().indexes()) {
+        if (i.exp())
+		      indices &= apply(i.exp().get());
+      } 
       return indices;
     }
     

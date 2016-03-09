@@ -37,6 +37,7 @@ namespace Modelica {
     Expression right= boost::apply_visitor(eval,eq.right_ref());
     eq.left_ref()=derivate(left,syms);
     eq.right_ref()=derivate(right,syms);
+// aplicar evaluador al resultado... 
     return eq;
   }
 

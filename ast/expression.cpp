@@ -186,23 +186,17 @@ namespace Modelica {
     member_imp(UnaryOp,Expression,exp)
     member_imp(UnaryOp,UnaryOpType,op)
 
-    ForExp::ForExp(Expression e, ExpList ind): exp_(e), indices_(ind) {};
+    ForExp::ForExp(Expression e,Indexes ind): indices_(ind), exp_(e) {};
     std::ostream& operator<<(std::ostream& out, const ForExp &n) // output
     {
-      out << n.exp() ;
-      int l=n.indices().size(),i=0;
-      foreach_(Expression e, n.indices()) {
-        out << e;
-        if (++i<l)
-          out << ",";
-        }
+      out << n.exp() << " for " << n.indices();
       return out;
     }
     bool ForExp::operator==(const ForExp & other) const {
-      return other.exp()==exp() && other.indices()==indices();
+      return other.indices()==indices();
     }
-    member_imp(ForExp,Expression,exp);
-    member_imp(ForExp, ExpList, indices);
+    member_imp(ForExp, Indexes, indices);
+    member_imp(ForExp, Expression, exp);
 
     Reference::Reference(Ref r): ref_(r) { }
     Reference::Reference(Name n): ref_(Ref(1,RefTuple(n,ExpList(0)))) {

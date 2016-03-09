@@ -141,6 +141,8 @@ namespace Modelica {
 #define INDENT std::string(depth,' ')
 #define BEGIN_BLOCK depth+=INDENTSPACE;
 #define END_BLOCK depth-=INDENTSPACE;
+#define SKIP_BLOCK_START long depth_save = depth;depth=0;
+#define SKIP_BLOCK_END depth=depth_save;
 extern long depth;
 
 #endif
