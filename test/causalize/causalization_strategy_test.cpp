@@ -105,8 +105,6 @@ void rlc_simple_test() {
   CausalizationStrategy cStrategy(mmo);
   cStrategy.causalize_simple("Anything");
 
-  std::cout << mmo << std::endl;
-
   check_causality(mmo, unknowns);
 
 }
@@ -199,12 +197,34 @@ void OneDHeatTransferTI_FD_simple_test() {
 
 }
 
+// TODO fix the check_causality method
+// void OneDHeatTransferTI_FD_loop_test() {
 
+//   bool r;
+
+//   StoredDef sd = parseFile("OneDHeatTransferTI_FD_loop_100.mo",r);
+
+//   if (!r)
+//     ERROR("Can't parse file\n");
+
+//   Class ast_c = boost::get<Class>(sd.classes().front());
+//   MMO_Class mmo(ast_c);
+
+//   UnknownsCollector collector(mmo);
+//   ExpList unknowns = collector.collectUnknowns();
+
+//   CausalizationStrategy cStrategy(mmo);
+//   cStrategy.causalize("Anything");
+
+//   check_causality(mmo, unknowns);
+
+// }
 
 test_suite*
 init_unit_test_suite( int, char* []) {
 
-  // debugInit("c");
+  debugInit("p");
+
 
   framework::master_test_suite().p_name.value = "Causalization Strategy Test";
 
@@ -214,6 +234,8 @@ init_unit_test_suite( int, char* []) {
   framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_loop_tarjan_test) );
   framework::master_test_suite().add( BOOST_TEST_CASE( &OneDHeatTransferTI_FD_test) );
   framework::master_test_suite().add( BOOST_TEST_CASE( &OneDHeatTransferTI_FD_simple_test) );
+  // TODO fix the check_causality method
+  // framework::master_test_suite().add( BOOST_TEST_CASE( &OneDHeatTransferTI_FD_loop_test) );
 
   return 0;
 }

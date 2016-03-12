@@ -16,15 +16,16 @@
 
 using namespace Modelica::AST;
 
-int main(int argc, char const *argv[])
-{
+void test(std::string filename){
+
+	cout << "Testing file " << filename << "\t";
 
 	bool r;
 	struct timeval tval_before, tval_after, tval_result;
 
 	debugInit("p");
 
-	StoredDef sd = parseFile("OneDHeatTransferTI_FD.mo",r);
+	StoredDef sd = parseFile(filename,r);
 
 	if (!r)
 	ERROR("Can't parse file\n");
@@ -45,9 +46,9 @@ int main(int argc, char const *argv[])
 
 	timersub(&tval_after, &tval_before, &tval_result);
 
-	printf("Simple strategy: Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
+	printf("Simple strategy: Time elapsed: %ld.%06ld\t", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
 
-	StoredDef sd2 = parseFile("OneDHeatTransferTI_FD.mo",r);
+	StoredDef sd2 = parseFile(filename,r);
 
 	if (!r)
 	ERROR("Can't parse file\n");
@@ -65,7 +66,32 @@ int main(int argc, char const *argv[])
 
 	timersub(&tval_after, &tval_before, &tval_result);
 
-	printf("Tarjan strategy: Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
+	printf("Tarjan strategy: Time elapsed: %ld.%06ld\t", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
 
+	StoredDef sd3 = parseFile(filename,r);
+
+	if (!r)
+	ERROR("Can't parse file\n");
+
+	Class ast_c3 = boost::get<Class>(sd3.classes().front());
+	MMO_Class mmo3(ast_c3);
+
+	CausalizationStrategy cStrategy3(mmo3);
+
+	gettimeofday(&tval_before, NULL);
+
+	cStrategy3.causalize("anything");
+
+	gettimeofday(&tval_after, NULL);
+
+	timersub(&tval_after, &tval_before, &tval_result);
+
+	printf("Full Causalization strategy: Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
+}
+
+int main(int argc, char const *argv[])
+{
+	test("OneDHeatTransferTI_FD.mo");
+	test("OneDHeatTransferTI_FD_loop.mo");
 	return 0;
 }

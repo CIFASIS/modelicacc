@@ -105,11 +105,18 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
 
 void CausalizationStrategy::causalize(Modelica::AST::Name name) {
   
+  DEBUG('p', "Graph size before simple strategy:%d\n", num_vertices(_graph));
+
   simpleCausalizationStrategy();
 
-  makeCausalMiddle();
-  
-  _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsMiddle.begin(),_causalEqsMiddle.end());
+  int graph_size = num_vertices(_graph);
+
+  DEBUG('p', "Graph size after simple strategy:%d\n", graph_size);
+
+  if(graph_size > 0) { // graph still has vertices
+    makeCausalMiddle();
+    _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsMiddle.begin(),_causalEqsMiddle.end());
+  }
 
     for (size_t i = _causalEqsEndIndex + 1; i < _causalEqsEnd.size(); ++i)
   {
@@ -322,7 +329,6 @@ void CausalizationStrategy::makeCausalMiddle() {
     }
 
     EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(), c_code, _cl);
-
     _causalEqsMiddle.insert(_causalEqsMiddle.end(), causalEqs.begin(), causalEqs.end());
   }
 }
