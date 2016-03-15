@@ -18,6 +18,7 @@
 ******************************************************************************/
 
 #include <math.h>
+#include <boost/variant/variant.hpp>
 #include <boost/variant/get.hpp>
 
 #include <util/debug.h>

@@ -18,6 +18,7 @@
 
 ******************************************************************************/
 
+#include <boost/variant/variant.hpp>
 #include <boost/variant/get.hpp>
 #include <mmo/mmo_tree.h>
 #include <iostream>
