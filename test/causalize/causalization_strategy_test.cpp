@@ -179,7 +179,7 @@ void OneDHeatTransferTI_FD_simple_test() {
 
   bool r;
 
-  StoredDef sd = parseFile("OneDHeatTransferTI_FD_100.mo",r);
+  StoredDef sd = parseFile("OneDHeatTransferTI_FD.mo",r);
 
   if (!r)
     ERROR("Can't parse file\n");

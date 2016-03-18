@@ -23,7 +23,7 @@ void test(std::string filename){
 	bool r;
 	struct timeval tval_before, tval_after, tval_result;
 
-	debugInit("p");
+	//debugInit("p");
 
 	StoredDef sd = parseFile(filename,r);
 
@@ -46,7 +46,7 @@ void test(std::string filename){
 
 	timersub(&tval_after, &tval_before, &tval_result);
 
-	printf("Simple strategy: Time elapsed: %ld.%06ld\t", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
+	printf("Simple strategy: %ld.%06ld\t", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
 
 	StoredDef sd2 = parseFile(filename,r);
 
@@ -66,7 +66,7 @@ void test(std::string filename){
 
 	timersub(&tval_after, &tval_before, &tval_result);
 
-	printf("Tarjan strategy: Time elapsed: %ld.%06ld\t", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
+	printf("Tarjan strategy: %ld.%06ld\t", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
 
 	StoredDef sd3 = parseFile(filename,r);
 
@@ -86,12 +86,20 @@ void test(std::string filename){
 
 	timersub(&tval_after, &tval_before, &tval_result);
 
-	printf("Full Causalization strategy: Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
+	printf("Full Causalization strategy: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
 }
 
 int main(int argc, char const *argv[])
 {
-	test("OneDHeatTransferTI_FD.mo");
-	test("OneDHeatTransferTI_FD_loop.mo");
+	char const *char_filename;
+	if (argv[1] != NULL)
+	{
+		char_filename = argv[1];
+	} else {
+		printf("Usage:\n\tperformance_test model.mo\n");
+		exit(1);
+	}
+	std::string filename(char_filename);
+	test(filename);
 	return 0;
 }
