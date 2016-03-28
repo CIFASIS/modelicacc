@@ -198,7 +198,8 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
     }
     i=0;
     if (crs.size()>1) {
-      code << ",";
+      if (args.size())
+        code << ",";
       foreach_(Expression e, crs) {
         code << "double *" << e;
         if (++i<(int)crs.size()) 
@@ -317,7 +318,10 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
       ext.args_ref().push_back(Expression(Reference(n)));
     }
     foreach_(Expression e, crs) {
-      com.elements_ref().push_back(Component(TypePrefixes(1,output),"Real",Option<ExpList>(),DeclList(1,Declaration(Modelica::refName(get<Reference>(e))))));
+      if (is<Reference>(e)) 
+        com.elements_ref().push_back(Component(TypePrefixes(1,output),"Real",Option<ExpList>(),DeclList(1,Declaration(Modelica::refName(get<Reference>(e))))));
+      else
+        WARNING("Skiping call output value to algebraic loop");
       if (crs.size()>1)
         ext.args_ref().push_back(e);
     }
