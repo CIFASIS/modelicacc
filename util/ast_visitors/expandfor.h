@@ -17,4 +17,42 @@
 
 ******************************************************************************/
 
+#ifndef AST_VISITOR_EXPANDFOR
+#define AST_VISITOR_EXPANDFOR
 
+namespace Modelica {
+
+  using namespace Modelica::AST;
+
+	class ExpandFor: public boost::static_visitor<Equation> {
+	public:
+
+	  Equation operator()(Connect eq) const {
+      return eq;
+    };
+
+    Equation operator()(Equality eq) const {
+      return eq;
+    };
+    
+    Equation operator()(CallEq eq) const {
+      return eq;
+    };
+    
+    Equation operator()(IfEq eq) const {
+      return eq;
+    };
+    
+    Equation operator()(WhenEq eq) const {
+      return eq;
+    };
+
+    Equation operator()(ForEq eq) const {
+      return eq;
+    };
+
+	}
+	
+}
+
+#endif
