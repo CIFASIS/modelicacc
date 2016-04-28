@@ -18,33 +18,57 @@
 ******************************************************************************/
 
 #include <util/ast_visitors/expandfor_visitor.h>
+#include <util/debug.h>
+
 
 namespace Modelica {
 
     using namespace boost;
  
-    Equation ExpandForVisitor::operator()(Connect eq) const {
-        return eq;
+    EquationList ExpandForVisitor::operator()(Connect eq) const {
+        EquationList eql;
+        eql.push_back(eq);
+        return eql;
     };
 
-    Equation ExpandForVisitor::operator()(Equality eq) const {
-        return eq;
+    EquationList ExpandForVisitor::operator()(Equality eq) const {
+        EquationList eql;
+        eql.push_back(eq);
+        return eql;
     };
 
-    Equation ExpandForVisitor::operator()(CallEq eq) const {
-        return eq;
+    EquationList ExpandForVisitor::operator()(CallEq eq) const {
+        EquationList eql;
+        eql.push_back(eq);
+        return eql;
     };
 
-    Equation ExpandForVisitor::operator()(IfEq eq) const {
-        return eq;
+    EquationList ExpandForVisitor::operator()(IfEq eq) const {
+        EquationList eql;
+        eql.push_back(eq);
+        return eql;
     };
 
-    Equation ExpandForVisitor::operator()(WhenEq eq) const {
-        return eq;
+    EquationList ExpandForVisitor::operator()(WhenEq eq) const {
+        EquationList eql;
+        eql.push_back(eq);
+        return eql;
     };
 
-    Equation ExpandForVisitor::operator()(ForEq eq) const {
-        return eq;
+    EquationList ExpandForVisitor::operator()(ForEq eq) const {
+        EquationList eql;
+        foreach_(Equation e, eq.els) {
+            if (is<ForEq>(e)) {
+                ERROR("Nested 'for' is not supported");
+            }
+            else {
+                EquationList eqln;
+                eqln.push_back(e);
+                ForEq foreq = ForEq(eq.r,eqln);
+                eql.push_back(foreq);
+            }
+        }
+        return eql;
     };
     
 }
