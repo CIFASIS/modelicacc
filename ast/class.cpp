@@ -21,9 +21,9 @@
 #include <ast/class.h>
 #include <ast/element.h>
 #include <boost/fusion/include/boost_tuple.hpp>
-#if defined BOOST_VERSION && BOOST_VERSION>105000
+//#if defined BOOST_VERSION && BOOST_VERSION>105000
 #include <boost/optional/optional_io.hpp>
-#endif
+//#endif
 #include <boost/variant/get.hpp>
 #include <util/debug.h>
 
