@@ -35,9 +35,14 @@ namespace Modelica {
     void ExpandFor::expandFor() {
         EquationList &el = _c.equations_ref().equations_ref();
         ExpandForVisitor efv;
-        foreach_(Equation &e, el) {
-            e = boost::apply_visitor(efv, e);
+        EquationList el_new;
+        foreach_(Equation e1, el) {
+            EquationList eql = boost::apply_visitor(efv, e1);
+            foreach_(Equation e2, eql) {
+                el_new.push_back(e2);
+            }
         }
+        el=el_new;
     }
 
 };

@@ -26,15 +26,15 @@
 namespace Modelica {
 using namespace Modelica::AST;
 
-    class ExpandForVisitor: public boost::static_visitor<Equation> {
+    class ExpandForVisitor: public boost::static_visitor<EquationList> {
     public:
 
-        Equation operator()(Connect eq) const;
-        Equation operator()(Equality eq) const;
-        Equation operator()(CallEq eq) const;
-        Equation operator()(IfEq eq) const;
-        Equation operator()(WhenEq eq) const;
-        Equation operator()(ForEq eq) const;
+        EquationList operator()(Connect eq) const;
+        EquationList operator()(Equality eq) const;
+        EquationList operator()(CallEq eq) const;
+        EquationList operator()(IfEq eq) const;
+        EquationList operator()(WhenEq eq) const;
+        EquationList operator()(ForEq eq) const;
 
     };
 	
