@@ -26,33 +26,23 @@ namespace Modelica {
     using namespace boost;
  
     EquationList ExpandForVisitor::operator()(Connect eq) const {
-        EquationList eql;
-        eql.push_back(eq);
-        return eql;
+        return EquationList(1, eq);
     };
 
     EquationList ExpandForVisitor::operator()(Equality eq) const {
-        EquationList eql;
-        eql.push_back(eq);
-        return eql;
+        return EquationList(1, eq);
     };
 
     EquationList ExpandForVisitor::operator()(CallEq eq) const {
-        EquationList eql;
-        eql.push_back(eq);
-        return eql;
+        return EquationList(1, eq);
     };
 
     EquationList ExpandForVisitor::operator()(IfEq eq) const {
-        EquationList eql;
-        eql.push_back(eq);
-        return eql;
+        return EquationList(1, eq);
     };
 
     EquationList ExpandForVisitor::operator()(WhenEq eq) const {
-        EquationList eql;
-        eql.push_back(eq);
-        return eql;
+        return EquationList(1, eq);
     };
 
     EquationList ExpandForVisitor::operator()(ForEq eq) const {
@@ -62,9 +52,7 @@ namespace Modelica {
                 ERROR("Nested 'for' is not supported");
             }
             else {
-                EquationList eqln;
-                eqln.push_back(e);
-                ForEq foreq = ForEq(eq.r,eqln);
+                ForEq foreq = ForEq(eq.r, EquationList(1, e));
                 eql.push_back(foreq);
             }
         }

@@ -32,12 +32,14 @@
 #include <stdio.h>
 #include <iostream>
 #include <boost/variant/get.hpp>
+#include <expandfor/expandfor.h>
 
 
 using namespace std;
 using namespace Modelica;
 using namespace Modelica::AST;
 using namespace Causalize;
+//using namespace Modelica::ExpandFor;
 
 int main(int argc, char ** argv)
 {
@@ -72,7 +74,10 @@ int main(int argc, char ** argv)
 
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
-
+  
+  ExpandFor ef(mmo);
+  ef.expandFor();
+  
   ReducedGraphBuilder gb(mmo);
   CausalizationGraph g = gb.makeGraph();
   GraphPrinter gp(g);

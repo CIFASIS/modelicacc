@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <boost/variant/variant.hpp>
 #include <boost/variant/get.hpp>
 
 #include <causalize/state_variables_finder.h>

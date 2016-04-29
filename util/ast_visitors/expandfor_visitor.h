@@ -24,7 +24,8 @@
 #include <ast/equation.h>
 
 namespace Modelica {
-using namespace Modelica::AST;
+
+    using namespace Modelica::AST;
 
     class ExpandForVisitor: public boost::static_visitor<EquationList> {
     public:
