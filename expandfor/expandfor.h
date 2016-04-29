@@ -22,12 +22,12 @@
 #include <mmo/mmo_class.h>
 
 namespace Modelica {
-class ExpandFor {
-  MMO_Class &_c;
-public:
-  ExpandFor(MMO_Class &c);
-  void expandFor();
-};
+    class ExpandFor {
+      MMO_Class &_c;
+    public:
+      ExpandFor(MMO_Class &c);
+      void expandFor();
+    };
 }
 
 #endif
