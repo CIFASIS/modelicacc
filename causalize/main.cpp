@@ -77,7 +77,8 @@ int main(int argc, char ** argv)
   
   ExpandFor ef(mmo);
   ef.expandFor();
-  
+  cout << mmo << endl;
+
   ReducedGraphBuilder gb(mmo);
   CausalizationGraph g = gb.makeGraph();
   GraphPrinter gp(g);

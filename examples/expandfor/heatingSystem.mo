@@ -2,7 +2,7 @@
 model HeatingSystem
       "Declarative model of a heating system - continuous-time dynamics"
       import SI = Modelica.SIunits;
-      constant Real pi = Modelica.Constants.pi;
+      constant Real pi = 3.14;
       parameter Integer N = 3 "Number of heated units";
       parameter SI.HeatCapacity Cu[N] = (ones(N)+ linspace(0,1.348,N))*1e7
         "Heat capacity of heated units";
@@ -25,20 +25,20 @@ model HeatingSystem
       parameter Real b = 15 "Slope of the saturation function at the origin";
 
       // State variables
-      SI.Temperature Td(start = Td0, fixed = true)
+      Real Td(start = Td0, fixed = true)
         "Temperature of the fluid in the distribution system";
-      SI.Temperature Tu[N](each start = Tu0, each fixed = true)
+      Real Tu[N](each start = Tu0, each fixed = true)
         "Temperature of individual heated units";
       Real x[N](each start = -0.5, each fixed = true)
         "States of heated units temperature controllers";
 
       // Time-varying prescribed signals
-      SI.Temperature Text "External temperature";
+      Real Text "External temperature";
 
       // Other intermediate algebraic variables
-      SI.Power Que[N] "Heat flows from heated units to the outside";
-      SI.Power Qh[N] "Heat flows to each heated unit";
-      SI.Power Qd "Heat flow to the distribution system";
+      Real Que[N] "Heat flows from heated units to the outside";
+      Real Qh[N] "Heat flows to each heated unit";
+      Real Qd "Heat flow to the distribution system";
       Real u[N] "Control signals for heaters";
     equation
       Text = 278.15 + 8*sin(2*pi*time/86400);
