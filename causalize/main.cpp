@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <boost/variant/get.hpp>
-#include <expandfor/expandfor.h>
+#include <splitfor/splitfor.h>
 
 
 using namespace std;
@@ -75,8 +75,8 @@ int main(int argc, char ** argv)
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
   
-  ExpandFor ef(mmo);
-  ef.expandFor();
+  SplitFor sf(mmo);
+  sf.splitFor();
   cout << mmo << endl;
 
   ReducedGraphBuilder gb(mmo);

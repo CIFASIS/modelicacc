@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#ifndef AST_VISITOR_EXPANDFOR
-#define AST_VISITOR_EXPANDFOR
+#ifndef AST_VISITOR_SPLITFOR
+#define AST_VISITOR_SPLITFOR
 
 #include <boost/variant/static_visitor.hpp>
 #include <ast/equation.h>
@@ -27,7 +27,7 @@ namespace Modelica {
 
     using namespace Modelica::AST;
 
-    class ExpandForVisitor: public boost::static_visitor<EquationList> {
+    class SplitForVisitor: public boost::static_visitor<EquationList> {
     public:
 
         EquationList operator()(Connect eq) const;
