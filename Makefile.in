@@ -21,7 +21,7 @@ include antialias/Makefile.include
 include mmo/Makefile.include
 include flatter/Makefile.include
 include causalize/Makefile.include
-include expandfor/Makefile.include
+include splitfor/Makefile.include
 
 lib/libmodelica.a: $(OBJS_COMMON)
 	$(AR) rcs lib/libmodelica.a $(OBJS_COMMON)
@@ -30,4 +30,4 @@ lib/libmodelica.a: $(OBJS_COMMON)
 	$(CXX) -c $(CXXFLAGS) $*.cpp -o $*.o
 
 clean:
-	$(RM) $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(OBJS_EXPANDFOR) lib/libmodelica.a
+	$(RM) $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(OBJS_SPLITFOR) lib/libmodelica.a
