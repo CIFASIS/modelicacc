@@ -6,3 +6,4 @@ Makefile
 *.log
 *.status
 configure
+CMakeLists.txt
