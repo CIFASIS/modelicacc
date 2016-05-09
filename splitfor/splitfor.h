@@ -17,35 +17,17 @@
 
 ******************************************************************************/
 
-#include <iostream>
-#include <ast/class.h>
-#include <cstdlib>
-#include <parser/parser.h>
-#include <util/debug.h>
-#include <boost/variant/get.hpp>
-#include <expandfor/expandfor.h>
+#ifndef SPLIT_FOR_H
+#define SPLIT_FOR_H
+#include <mmo/mmo_class.h>
 
-
-int main(int argc, char ** argv)
-{
-  using namespace std;
-  using namespace Modelica::AST;
-  using namespace Modelica;
-
-  bool ret;
-  StoredDef sd;
-  
-  if (argv[optind]!=NULL) 
-    sd=parseFile(argv[optind],ret);
-  else
-    sd=parseFile("",ret);
- 
-  if (!ret)
-    return -1;
-  Class ast_c = boost::get<Class>(sd.classes().front());
-  MMO_Class mmo(ast_c);
-  ExpandFor ef(mmo);
-  ef.expandFor();
-  cout << mmo << "\n";
-  return 0;
+namespace Modelica {
+    class SplitFor {
+      MMO_Class &_c;
+    public:
+      SplitFor(MMO_Class &c);
+      void splitFor();
+    };
 }
+
+#endif

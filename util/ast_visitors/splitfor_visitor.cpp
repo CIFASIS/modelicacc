@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/expandfor_visitor.h>
+#include <util/ast_visitors/splitfor_visitor.h>
 #include <util/debug.h>
 
 
@@ -25,27 +25,27 @@ namespace Modelica {
 
     using namespace boost;
  
-    EquationList ExpandForVisitor::operator()(Connect eq) const {
+    EquationList SplitForVisitor::operator()(Connect eq) const {
         return EquationList(1, eq);
     };
 
-    EquationList ExpandForVisitor::operator()(Equality eq) const {
+    EquationList SplitForVisitor::operator()(Equality eq) const {
         return EquationList(1, eq);
     };
 
-    EquationList ExpandForVisitor::operator()(CallEq eq) const {
+    EquationList SplitForVisitor::operator()(CallEq eq) const {
         return EquationList(1, eq);
     };
 
-    EquationList ExpandForVisitor::operator()(IfEq eq) const {
+    EquationList SplitForVisitor::operator()(IfEq eq) const {
         return EquationList(1, eq);
     };
 
-    EquationList ExpandForVisitor::operator()(WhenEq eq) const {
+    EquationList SplitForVisitor::operator()(WhenEq eq) const {
         return EquationList(1, eq);
     };
 
-    EquationList ExpandForVisitor::operator()(ForEq eq) const {
+    EquationList SplitForVisitor::operator()(ForEq eq) const {
         EquationList eql;
         foreach_(Equation e, eq.els) {
             if (is<ForEq>(e)) {

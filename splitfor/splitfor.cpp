@@ -17,11 +17,11 @@
 
 ******************************************************************************/
 
-#include <expandfor/expandfor.h>
+#include <splitfor/splitfor.h>
 #include <ast/equation.h>
 #include <ast/queries.h>
 #include <boost/variant/get.hpp>
-#include <util/ast_visitors/expandfor_visitor.h>
+#include <util/ast_visitors/splitfor_visitor.h>
 #include <causalize/state_variables_finder.h>
 #include <algorithm>
 #include <vector>
@@ -29,12 +29,12 @@
 
 namespace Modelica {
     
-    ExpandFor::ExpandFor(MMO_Class &c): _c(c) {
+    SplitFor::SplitFor(MMO_Class &c): _c(c) {
     }
     
-    void ExpandFor::expandFor() {
+    void SplitFor::splitFor() {
         EquationList &el = _c.equations_ref().equations_ref();
-        ExpandForVisitor efv;
+        SplitForVisitor efv;
         EquationList el_new;
         foreach_(Equation e1, el) {
             EquationList eql = boost::apply_visitor(efv, e1);

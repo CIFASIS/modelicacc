@@ -1,0 +1,16 @@
+OBJS_SPLITFOR := splitfor/main.o \
+	mmo/mmo_class.o \
+	util/table.o \
+	util/type.o \
+	util/debug.o \
+	util/ast_visitors/evalexp.o \
+	util/ast_visitors/part_evalexp.o \
+	util/ast_visitors/splitfor_visitor.o \
+	splitfor/splitfor.o
+LIBS=-L./lib -lginac -lmodelica 
+bin/splitfor: $(OBJS_SPLITFOR) lib/libmodelica.a
+	$(CXX) $(CXXFLAGS) $(OBJS_SPLITFOR) -o bin/splitfor $(LIBS)
+
+
+
+	
