@@ -1,9 +1,10 @@
 *.[oa]
 *~
 bin/*
+doc/
 *.cache
 Makefile
 *.log
 *.status
 configure
-CMakeLists.txt
+
