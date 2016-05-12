@@ -16,7 +16,7 @@ AC_LANG([C++])
 AC_CHECK_HEADERS([ginac/ginac.h],[],[AC_MSG_ERROR([ModelicaCC needs libginac.])],[])
 
 # Checks for header files.
-AX_BOOST_BASE([1.6.0],[], AC_MSG_ERROR([ModelicaCC needs boost library.]))
+AX_BOOST_BASE([105800],[], AC_MSG_ERROR([ModelicaCC needs boost library.]))
 AC_FUNC_ALLOCA
 AC_CHECK_HEADERS([malloc.h stdlib.h string.h unistd.h])
 
