@@ -18,7 +18,7 @@ OBJS_CAUSALIZE := causalize/main.o \
                   causalize/vector/contains_vector.o \
                   causalize/vector/graph_builder.o \
                   causalize/vector/causalization_algorithm.o \
-                  splitfor/splitfor.o \
+                  causalize/vector/splitfor.o \
                   mmo/mmo_class.o
 
 LIB_CAUSALIZE = -L./lib -lmodelica -lginac

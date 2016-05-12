@@ -21,7 +21,6 @@ include antialias/Makefile.include
 include mmo/Makefile.include
 include flatter/Makefile.include
 include causalize/Makefile.include
-include splitfor/Makefile.include
 
 lib/libmodelica.a: $(OBJS_COMMON)
 	$(AR) rcs lib/libmodelica.a $(OBJS_COMMON)

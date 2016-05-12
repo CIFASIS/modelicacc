@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <boost/variant/get.hpp>
-#include <splitfor/splitfor.h>
+#include <causalize/vector/splitfor.h>
 
 
 using namespace std;
