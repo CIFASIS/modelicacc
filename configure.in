@@ -3,20 +3,23 @@
 
 AC_PREREQ([2.68])
 AC_LANG([C++])
-AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
+AC_INIT([ModelicaCC], [0.1], [fedebergero@gmail.com])
 AC_CONFIG_MACRO_DIR([macros])
 m4_include([macros/ax_boost_base.m4])
+m4_include([macros/ax_cxx_compile_stdcxx.m4])
 
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+AX_CXX_COMPILE_STDCXX(11,noext,optional)
+AX_CXX_COMPILE_STDCXX(14,noext,optional)
 
 # Checks for libraries.
 AC_LANG([C++])
 AC_CHECK_HEADERS([ginac/ginac.h],[],[AC_MSG_ERROR([ModelicaCC needs libginac.])],[])
 
 # Checks for header files.
-AX_BOOST_BASE([105800],[], AC_MSG_ERROR([ModelicaCC needs boost library.]))
+AX_BOOST_BASE(["1.58"],[], AC_MSG_ERROR([ModelicaCC needs boost library.]))
 AC_FUNC_ALLOCA
 AC_CHECK_HEADERS([malloc.h stdlib.h string.h unistd.h])
 
