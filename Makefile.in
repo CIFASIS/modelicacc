@@ -15,7 +15,7 @@ OBJS_COMMON :=  ast/expression.o \
 		parser/class.o \
 		parser/parser.o
 
-all:lib/libmodelica.a bin/antialias bin/flatter bin/mmo bin/causalize
+all:lib/libmodelica.a bin/antialias bin/flatter bin/mmo bin/causalize doc
 
 include antialias/Makefile.include
 include mmo/Makefile.include
@@ -28,5 +28,8 @@ lib/libmodelica.a: $(OBJS_COMMON)
 %.o: %.cpp %.h
 	$(CXX) -c $(CXXFLAGS) $*.cpp -o $*.o
 
+doc: Doxyfile
+	doxygen doc
+
 clean:
-	$(RM) $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(OBJS_SPLITFOR) lib/libmodelica.a
+	$(RM) -rf $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(OBJS_SPLITFOR) lib/libmodelica.a odc
