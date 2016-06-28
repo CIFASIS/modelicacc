@@ -33,8 +33,7 @@ namespace Modelica {
       Expression l=v.left(); 
       Expression r=v.left(); 
       OptExp opt_r=v.right(); 
-      unsigned int i=0;
-      toMicroExp tom(mmo_class, i, false,true);
+      toMicroExp tom(mmo_class, disc_count, false,true);
       l = boost::apply_visitor(tom, l);
       if (opt_r) 
         opt_r = boost::apply_visitor(tom, opt_r.get());
@@ -52,14 +51,30 @@ namespace Modelica {
     }
 
     Statement toMicroSt::operator()(CallSt v) const { 
+      ERROR("Call statement not supported yet");
       return v;
     }
 
     Statement toMicroSt::operator()(IfSt v) const { 
+      //toMicroExp tom(mmo_class, i, false,true);
+      //v.cond_ref() = boost::apply_visitor(tom, v.cond_ref());
+      if (is<Reference>(v.cond())) {
+        v.cond_ref() = BinOp(v.cond(), Greater, 0.5);
+      } 
+      foreach_(Statement &s, v.elements_ref()) 
+        s=apply(s);
+      foreach_(Statement &s, v.ifnot_ref()) 
+        s=apply(s);
+      foreach_(IfSt::Else &es, v.elseif_ref()) {
+        foreach_(Statement &s, get<1>(es)) 
+          s=apply(s);
+        es=IfSt::Else(get<0>(es),get<1>(es));
+      }
       return v;
     }
 
     Statement toMicroSt::operator()(ForSt v) const { 
+      ERROR("For statement not supported yet");
       return v;
     }
 
@@ -71,6 +86,12 @@ namespace Modelica {
             v.cond_ref() = BinOp(Reference("time"),Greater,Call("pre",ExpList(1,d)));
             v.elements_ref().insert(v.elements_ref().begin(), Assign(d,OptExp(BinOp(Reference("time"),Add, c.args().at(1)))));
         }
+      } else if (is<Reference>(v.cond())) {
+        v.cond_ref() = BinOp(v.cond(), Greater, 0.5);
+      }
+      if (!isRelation(v.cond())) {
+        std::cerr << v.cond();
+        WARNING("Condition in when is not a relational");
       }
       foreach_(Statement &s, v.elements_ref()) 
         s=apply(s);
@@ -78,6 +99,7 @@ namespace Modelica {
     }
 
     Statement toMicroSt::operator()(WhileSt v) const { 
+      ERROR("While statement not supported yet");
       return v;
     }
 
