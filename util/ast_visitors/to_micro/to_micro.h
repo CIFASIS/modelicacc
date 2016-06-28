@@ -22,6 +22,7 @@
 #include <boost/variant/static_visitor.hpp>
 #include <ast/expression.h>
 #include <mmo/mmo_class.h>
+#include <util/ast_visitors/to_micro/to_micro_exp.h>
 
 namespace Modelica {
 
@@ -39,6 +40,7 @@ namespace Modelica {
   private:
     unsigned int disc_count;
     MMO_Class & mmo_class;
+    toMicroExp tomicro_exp;
   }; 
 }
 #endif 

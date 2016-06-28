@@ -56,6 +56,8 @@ namespace Modelica {
     unsigned int &disc_count;
     bool when;
     bool in_algorithm;
+    mutable ExpList rels;
+    mutable ExpList disc;
   }; 
 }
 #endif 

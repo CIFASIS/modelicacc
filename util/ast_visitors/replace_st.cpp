@@ -33,8 +33,12 @@ namespace Modelica {
       return v;
     };
     Statement replace_st::operator()(Assign v) const {
-      if (v.rl()) 
-        ERROR("Replace statement of output not implmented");
+      if (v.rl()) {
+        ExpList & el = v.rl_ref().get();
+        foreach_(Expression &e, el) {
+          e =boost::apply_visitor(replace_exp, e);
+        }
+      }
       v.left_ref()=boost::apply_visitor(replace_exp, v.left_ref());
       if (v.right()) 
         v.right_ref()=boost::apply_visitor(replace_exp, v.right_ref().get());

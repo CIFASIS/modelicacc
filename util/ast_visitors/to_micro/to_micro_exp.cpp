@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <boost/variant/apply_visitor.hpp>
 #define apply(X) boost::apply_visitor(*this,X)
+#include <map>
 
 namespace Modelica {
 
@@ -56,13 +57,24 @@ namespace Modelica {
       if (in_algorithm) 
         return v;
       if (isRelation(v)) { 
+        ExpList::iterator it = std::find(rels.begin(),rels.end(),Expression(v));
         v.left_ref()=apply(v.left_ref());
         v.right_ref()=apply(v.right_ref());
-        Expression d=newDiscrete();
-        WhenSt::ElseList l(1,WhenSt::Else(negate(v),StatementList(1,Assign(d,Expression(0)))));
-        WhenSt st(Expression(v),StatementList(1,Assign(d,Expression(1.0))),l);
-        mmo_class.statements_ref().statements_ref().push_back(st);
-        return Call("pre",d);
+        if (it == rels.end()) {
+          Expression d=newDiscrete();
+          WhenSt::ElseList l(1,WhenSt::Else(negate(v),StatementList(1,Assign(d,Expression(0)))));
+          WhenSt st(Expression(v),StatementList(1,Assign(d,Expression(1.0))),l);
+          IfSt::ElseList el;
+          IfSt ifst(Expression(v),StatementList(1,Assign(d,Expression(1.0))),el ,StatementList(1,Assign(d,Expression(0.0)))); 
+          mmo_class.addInitStatement(ifst);
+          mmo_class.statements_ref().statements_ref().push_back(st);
+          rels.push_back(Expression(v));
+          disc.push_back(d);
+          return Call("pre",d);
+        } else {
+          it =disc.begin()+(it-rels.begin());
+          return Call("pre",*it);
+        }
       } else if (v.op()==And) {
         Expression l=v.left(), r=v.right();
         return BinOp(apply(l), Mult, apply(r));
@@ -75,7 +87,7 @@ namespace Modelica {
     } 
     Expression toMicroExp::operator()(UnaryOp v) const { 
       if (v.op()==Not) {
-        return BinOp(1,Sub,apply(v.exp_ref()));
+        return Output(BinOp(1,Sub,apply(v.exp_ref())));
       } 
       return UnaryOp(apply(v.exp_ref()), v.op());
     } 
@@ -85,21 +97,33 @@ namespace Modelica {
       Expression then = apply(v.then_ref());
       Expression elseexp = apply(v.elseexp_ref());
       Expression cond = apply(v.cond_ref());
+      // Check if there is already a disc variable
+      ExpList::iterator it = std::find(rels.begin(),rels.end(),cond);
+      if (it != rels.end()) {
+          it =disc.begin()+(it-rels.begin());
+          return Call("pre",*it);
+      }
       if (is<Reference>(cond)) {
         Expression d=newDiscrete();
         //Expression d = Call("pre",ExpList(1,newDiscrete()));
         WhenSt::ElseList l(1,WhenSt::Else(BinOp(cond,Lower,0.5),StatementList(1,Assign(d,Expression(0)))));
         WhenSt st(BinOp(cond,Greater,0.5),StatementList(1,Assign(d,Expression(1.0))),l);
         mmo_class.statements_ref().statements_ref().push_back(st);
+        IfSt::ElseList el;
+        IfSt ifst(BinOp(cond,Greater,0.5),StatementList(1,Assign(d,Expression(1.0))),el ,StatementList(1,Assign(d,Expression(0.0)))); 
+        mmo_class.addInitStatement(ifst);
+        rels.push_back(cond);
         cond=Call("pre",d);
+        disc.push_back(d);
       } else if (is<BinOp>(cond)) {
         Expression d=newDiscrete();
         //Expression d = Call("pre",ExpList(1,newDiscrete()));
         WhenSt::ElseList l(1,WhenSt::Else(negate(get<BinOp>(cond)),StatementList(1,Assign(d,Expression(0)))));
         WhenSt st(cond,StatementList(1,Assign(d,Expression(1.0))),l);
         mmo_class.statements_ref().statements_ref().push_back(st);
+        rels.push_back(cond);
+        disc.push_back(d);
       }
- 
       return BinOp(BinOp(cond,Mult, Output(then)), Add, BinOp(Output(BinOp(1,Sub,cond)),Mult,Output(elseexp)));
     }
     Expression toMicroExp::operator()(Range v) const { 

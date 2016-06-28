@@ -19,14 +19,13 @@
 
 #include <util/ast_visitors/to_micro/to_micro.h>
 #include <util/ast_visitors/to_micro/to_micro_st.h>
-#include <util/ast_visitors/to_micro/to_micro_exp.h>
 #include <ast/queries.h>
 #include <boost/variant/apply_visitor.hpp>
 #include <util/ast_visitors/part_evalexp.h>
 #define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
-  toMicro::toMicro(MMO_Class &cl): mmo_class(cl) {
+  toMicro::toMicro(MMO_Class &cl): mmo_class(cl), tomicro_exp(cl,disc_count) {
     disc_count=0;
   } 
   void toMicro::convert() {
@@ -96,20 +95,20 @@ namespace Modelica {
         //  vinfo.prefixes_ref().push_back(discrete);
         if (vinfo.type()=="Boolean" && vinfo.modification()) {
           Modification &mod = boost::get<Modification>(vinfo.modification_ref());
-          toMicroExp exp(mmo_class,disc_count);
+          //toMicroExp exp(mmo_class,disc_count);
           if (is<ModEq>(mod)) {
-            get<ModEq>(mod).exp_ref()=boost::apply_visitor(exp,get<ModEq>(mod).exp_ref());
+            get<ModEq>(mod).exp_ref()=boost::apply_visitor(tomicro_exp,get<ModEq>(mod).exp_ref());
           } else if (is<ModAssign>(mod)) {
-            get<ModEq>(mod).exp_ref()=boost::apply_visitor(exp,get<ModAssign>(mod).exp_ref());
+            get<ModEq>(mod).exp_ref()=boost::apply_visitor(tomicro_exp,get<ModAssign>(mod).exp_ref());
           } else {
             ModClass &mc = get<ModClass>(mod);
             if (mc.exp())
-              mc.exp_ref()=boost::apply_visitor(exp, mc.exp_ref().get());
+              mc.exp_ref()=boost::apply_visitor(tomicro_exp, mc.exp_ref().get());
             foreach_(Argument &arg, mc.modification_ref()) {
               if (is<ElMod>(arg) && get<ElMod>(arg).name()=="start" && get<ElMod>(arg).modification()) {
                 ERROR_UNLESS(is<ModEq>(get<ElMod>(arg).modification_ref().get()), "Modification for start value not supported");
                 Expression start = get<ModEq>(get<ElMod>(arg).modification_ref().get()).exp();
-                get<ElMod>(arg).modification_ref() = Modification(ModEq(boost::apply_visitor(exp,start)));
+                get<ElMod>(arg).modification_ref() = Modification(ModEq(boost::apply_visitor(tomicro_exp,start)));
               }
             }
           } 
@@ -122,8 +121,8 @@ namespace Modelica {
         Modification &mod = boost::get<Modification>(vinfo.modification_ref());
         if (is<ModEq>(mod)) {
           Expression exp=get<ModEq>(mod).exp();
-          toMicroExp exp_visit(mmo_class,disc_count);
-          get<ModEq>(mod).exp_ref()=boost::apply_visitor(exp_visit,exp);
+          //toMicroExp exp_visit(mmo_class,disc_count);
+          get<ModEq>(mod).exp_ref()=boost::apply_visitor(tomicro_exp,exp);
           if (is<Brace>(exp)) {
             DEBUG('m', "Removing brace modification");
 //            vinfo.modification_ref()=Option<Modification>();
@@ -180,21 +179,24 @@ namespace Modelica {
  
       mmo_class.syms_ref().insert(var,vinfo);
     }    
+    // Convert everything to a model
+    mmo_class.prefixes_ref().clear(); 
+    mmo_class.prefixes_ref().push_back(model);
   }
   Equation toMicro::operator() (Connect c) {
     ERROR("Can not convert connect equation. ");
     return c;
   }
   Equation toMicro::operator() (Equality eqeq) {
-    toMicroExp exp(mmo_class,disc_count);
-    return Equality(boost::apply_visitor(exp, eqeq.left_ref()), boost::apply_visitor(exp,eqeq.right_ref()));
+    //toMicroExp exp(mmo_class,disc_count);
+    return Equality(boost::apply_visitor(tomicro_exp, eqeq.left_ref()), boost::apply_visitor(tomicro_exp,eqeq.right_ref()));
   }
   Equation toMicro::operator() (CallEq c) {
     return c;
   }
   Equation toMicro::operator() (WhenEq c) { 
-    toMicroExp exp(mmo_class,disc_count,true);
-    Expression cond = boost::apply_visitor(exp,c.cond_ref());
+    //toMicroExp exp(mmo_class,disc_count,true);
+    Expression cond = boost::apply_visitor(tomicro_exp,c.cond_ref());
     StatementList sls;
     if (is<Brace>(cond)) {
       // This is sample 
