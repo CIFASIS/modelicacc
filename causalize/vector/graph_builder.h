@@ -6,29 +6,23 @@
 * implementations.
 */
 #include <mmo/mmo_class.h>
-#include <causalize/vector/graph_definition.h>
+#include <causalize/vector/vector_graph_definition.h>
 #include <causalize/state_variables_finder.h>
 
 
-class GraphBuilder {
-public: 
-		GraphBuilder(MMO_Class &mmo_cl):mmo_class(mmo_cl){};
-		~GraphBuilder(){};
-		virtual CausalizationGraph makeGraph() = 0;
-protected:
-		MMO_Class &mmo_class;
-		CausalizationGraph graph;
-};
-
-class ReducedGraphBuilder: public GraphBuilder{
+namespace Causalize {
+class ReducedGraphBuilder {
 public:
 		ReducedGraphBuilder(MMO_Class &mmo_cl);
 		~ReducedGraphBuilder(){};
-		virtual CausalizationGraph makeGraph();
+		virtual VectorCausalizationGraph makeGraph();
 private:
 		int getForRangeSize(Modelica::AST::ForEq);
-		list<Vertex> equationDescriptorList;
-		list<Vertex> unknownDescriptorList;
+		list<Causalize::VectorEquationVertex> equationDescriptorList;
+		list<Causalize::VectorUnknownVertex> unknownDescriptorList;
 		StateVariablesFinder state_finder;	
+		MMO_Class &mmo_class;
+		Causalize::VectorCausalizationGraph graph;
 };
 
+}

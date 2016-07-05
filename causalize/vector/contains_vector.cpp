@@ -21,17 +21,18 @@
 #include <util/debug.h>
 #include <boost/variant/get.hpp>
 #include <boost/icl/discrete_interval.hpp>
-#include <causalize/vector/graph_definition.h>
+#include <causalize/vector/vector_graph_definition.h>
 #include <util/ast_visitors/evalexp.h>
 #include <boost/variant/apply_visitor.hpp>
 #include <util/ast_visitors/part_evalexp.h>
 
 using namespace boost;
 using namespace boost::icl;
+using namespace Modelica::AST ;
 
-namespace Modelica {
-    contains_vector::contains_vector(Expression e, VertexProperties v, const VarSymbolTable &s): exp(e), var(v), syms(s), foreq(false) {};
-    bool contains_vector::operator()(Integer v) const { return exp==Expression(v); } 
+namespace Causalize {
+    contains_vector::contains_vector(Expression e, VectorVertexProperties v, const VarSymbolTable &s): exp(e), var(v), syms(s), foreq(false) {};
+    bool contains_vector::operator()(Modelica::AST::Integer v) const { return exp==Expression(v); } 
     bool contains_vector::operator()(Boolean v) const { return exp==Expression(v); } 
     bool contains_vector::operator()(String v) const { return exp==Expression(v); } 
     bool contains_vector::operator()(Name v) const { return exp==Expression(v); }
@@ -81,8 +82,9 @@ namespace Modelica {
           Reference vv=get<Reference>(v.args().front());
           Reference r=get<Reference>(call.args().front());
           if (get<0>(vv.ref().front())==get<0>(r.ref().front())) {
-            if (var.count==0) {
-              EdgeProperties newEdge;
+            //TODO: 
+            if (/*var.count==*/0) {
+              VectorEdgeProperties newEdge;
               if (!foreq)
                 newEdge.p_e +=discrete_interval<int>::closed(1, 1);
               else
@@ -96,11 +98,11 @@ namespace Modelica {
                 ERROR("Derivative of array not suported");
               }
               Expression i = el.front();
-              PartEvalExp pe(syms);
+              Modelica::PartEvalExp pe(syms);
               Expression ind = boost::apply_visitor(pe,i);
-              if (is<Integer>(ind)) {
-                EdgeProperties newEdge;
-                newEdge.p_v += discrete_interval<int>::closed(get<Integer>(ind), get<Integer>(ind));
+              if (is<Modelica::AST::Integer>(ind)) {
+                VectorEdgeProperties newEdge;
+                newEdge.p_v += discrete_interval<int>::closed(get<Modelica::AST::Integer>(ind), get<Modelica::AST::Integer>(ind));
                 if (!foreq)
                   newEdge.p_e +=discrete_interval<int>::closed(1, 1);
                 else
@@ -109,7 +111,7 @@ namespace Modelica {
                 return true;
               } else if (is<Reference>(ind)) {
                 ERROR_UNLESS(foreq, "Generic index used outside for equation");
-                EdgeProperties newEdge;
+                VectorEdgeProperties newEdge;
                 if (!foreq)
                   newEdge.p_e +=discrete_interval<int>::closed(1, 1);
                 else
@@ -151,9 +153,10 @@ namespace Modelica {
       if (is<Reference>(exp)) {
         if (get<0>(v.ref().front())==get<0>(get<Reference>(exp).ref().front())) {
           //std::cerr << "Checking " << v << " againt " << exp << " count= " << var.count << "\n";
-          if (var.count==0) {
+          //TODO: 
+          if (/*var.count==*/0) {
             // The variabl is a scalar
-            EdgeProperties newEdge;
+            VectorEdgeProperties newEdge;
             if (!foreq)
               newEdge.p_e +=discrete_interval<int>::closed(1, 1);
             else
@@ -164,8 +167,9 @@ namespace Modelica {
           } else {
             ExpList el = get<1>(v.ref().front());
             if (el.size()==0) { // If there are no sub-indices the complete array is used
-              EdgeProperties newEdge;
-              newEdge.p_v += discrete_interval<int>::closed(1, var.count);
+              VectorEdgeProperties newEdge;
+              //TODO: 
+              newEdge.p_v += discrete_interval<int>::closed(1, /*var.count*/0);
               if (!foreq)
                 newEdge.p_e +=discrete_interval<int>::closed(1, 1);
               else
@@ -174,11 +178,11 @@ namespace Modelica {
               return true;
             } 
             Expression i = el.front();
-            PartEvalExp pe(syms);
+            Modelica::PartEvalExp pe(syms);
             Expression ind = boost::apply_visitor(pe,i);
-            if (is<Integer>(ind)) {
-              EdgeProperties newEdge;
-              newEdge.p_v += discrete_interval<int>::closed(get<Integer>(ind),get<Integer>(ind));
+            if (is<Modelica::AST::Integer>(ind)) {
+              VectorEdgeProperties newEdge;
+              newEdge.p_v += discrete_interval<int>::closed(get<Modelica::AST::Integer>(ind),get<Modelica::AST::Integer>(ind));
               if (!foreq)
                 newEdge.p_e +=discrete_interval<int>::closed(1, 1);
               else
@@ -187,7 +191,7 @@ namespace Modelica {
               return true;
             } else if (is<Reference>(ind)) {
               ERROR_UNLESS(foreq, "Generic index used outside for equation");
-              EdgeProperties newEdge;
+              VectorEdgeProperties newEdge;
               newEdge.p_v += forIndexInterval;
               newEdge.p_e += forIndexInterval;
               edgeList.insert(newEdge);
@@ -197,21 +201,21 @@ namespace Modelica {
               if (is<Output>(bop.right())) {
                 ERROR_UNLESS(get<Output>(bop.right()).args().size()==1, "BinOp index expression not supported yet");
                 Expression plus = get<Output>(bop.right()).args().front().get();
-                ERROR_UNLESS(is<Integer>(plus), "BinOp index expression not supported yet");
-                int val = get<Integer>(plus);
+                ERROR_UNLESS(is<Modelica::AST::Integer>(plus), "BinOp index expression not supported yet");
+                int val = get<Modelica::AST::Integer>(plus);
                 if (val <0 && bop.op() == Sub) {
                   bop.op_ref()=Add;
                   bop.right_ref()=-val;
                 }
               }
-              ERROR_UNLESS(is<Integer>(bop.right()), "BinOp index expression not supported yet");
-              int offset = get<Integer>(bop.right());
+              ERROR_UNLESS(is<Modelica::AST::Integer>(bop.right()), "BinOp index expression not supported yet");
+              int offset = get<Modelica::AST::Integer>(bop.right());
               if (bop.op()==Sub) {
                 bop = BinOp(bop.left(),Add, -offset);
                 offset*=-1;
               }
               ERROR_UNLESS(bop.op()==Add, "BinOp index expression not supported yet");
-              EdgeProperties newEdge;
+              VectorEdgeProperties newEdge;
               newEdge.p_e += forIndexInterval;
               int l = forIndexInterval.lower();
               int u = forIndexInterval.upper();
@@ -229,7 +233,7 @@ namespace Modelica {
     }
 
     void contains_vector::setForIndex(Expression a, Expression b) {
-       EvalExp ev(syms); 
+       Modelica::EvalExp ev(syms); 
        int start=boost::apply_visitor(ev,a);
        int end=boost::apply_visitor(ev,b);
        forIndexInterval =  discrete_interval<int>::closed(start,end);
@@ -242,12 +246,12 @@ namespace Modelica {
       int a=0,b=0;
       EvalExp ev(syms); 
       if (binop.op()==Add || binop.op()==Sub) {
-        if (is<Reference>(binop.left()) && is<Integer>(binop.right())) {
+        if (is<Reference>(binop.left()) && is<Modelica::AST::Integer>(binop.right())) {
           a  = 1;
           b  = boost::apply_visitor(ev,binop.right_ref());
           b *= (binop.op()==Add ? 1 : -1);
         }
-        if (is<Reference>(binop.right()) && is<Integer>(binop.left())) {
+        if (is<Reference>(binop.right()) && is<Modelica::AST::Integer>(binop.left())) {
           a  = 1;
           b  = boost::apply_visitor(ev,binop.left_ref());
           b *= (binop.op()==Add ? 1 : -1);

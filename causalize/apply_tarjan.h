@@ -8,21 +8,19 @@
 #ifndef APPLY_TARJAN_H_
 #define APPLY_TARJAN_H_
 
-#include <causalize/vector/graph_definition.h>
+#include <causalize/graph/graph_definition.h>
 #include <utility>
 #include <list>
 #include <map>
 
-namespace causalize {
-
+namespace Causalize {
   struct _Component {
     std::list<Vertex> *uVertices;
     std::list<Vertex> *eqVertices;
   };
-
   typedef _Component *Component;
+  int apply_tarjan(CausalizationGraph &graph, std::map<int, Component> &components);
 }
 
-int apply_tarjan(CausalizationGraph &graph, std::map<int, causalize::Component> &components);
 
 #endif /* APPLY_TARJAN_H_ */

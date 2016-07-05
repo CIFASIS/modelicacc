@@ -1,6 +1,6 @@
 #include <causalize/vector/causalization_algorithm.h>
-#include <causalize/vector/graph_definition.h>
-#include <causalize/vector/graph_printer.h>
+#include <causalize/vector/vector_graph_definition.h>
+//#include <causalize/vector/graph_printer.h>
 #include <util/debug.h>
 #include <util/solve/solve.h>
 
@@ -18,18 +18,21 @@ using namespace std;
 using namespace boost;
 using namespace boost::icl;
 
-CausalizationStrategyVector::CausalizationStrategyVector(CausalizationGraph g, MMO_Class &m): mmo(m){
+namespace Causalize {
+CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGraph g, MMO_Class &m): mmo(m){
 	graph = g;
-	CausalizationGraph::vertex_iterator vi, vi_end;
+	VectorCausalizationGraph::vertex_iterator vi, vi_end;
 	equationNumber = unknownNumber = 0;
 	for(boost::tie(vi, vi_end) = vertices(graph); vi != vi_end; vi++){
-		Vertex current_element = *vi;
+		VectorVertex current_element = *vi;
 		if(graph[current_element].type == E){
-			equationNumber += graph[current_element].count;
+      // TODO:
+			//equationNumber += graph[current_element].count;
 			equationDescriptors.push_back(current_element);
 		}
 		else{
-			unknownNumber += ( graph[current_element].count == 0 ) ? 1 : graph[current_element].count;
+      // TODO: 
+			//unknownNumber += ( graph[current_element].count == 0 ) ? 1 : graph[current_element].count;
 			unknownDescriptors.push_back(current_element);
 		}
 	}
@@ -119,7 +122,7 @@ CausalizationStrategyVector::remove_edge_from_array(Vertex unknown, Edge targetE
   */
 
 void 
-CausalizationStrategyVector::causalize1toN(const Vertex &u, const Vertex &eq, const Edge &e){
+CausalizationStrategyVector::causalize1toN(const VectorVertex &u, const VectorVertex &eq, const VectorEdge &e){
 	CausalizedVar c_var;
 	c_var.unknown = graph[u];
 	c_var.equation = graph[eq];
@@ -129,7 +132,7 @@ CausalizationStrategyVector::causalize1toN(const Vertex &u, const Vertex &eq, co
 }
 
 void 
-CausalizationStrategyVector::causalizeNto1(const Vertex &u, const Vertex &eq, const Edge &e){
+CausalizationStrategyVector::causalizeNto1(const VectorVertex &u, const VectorVertex &eq, const VectorEdge &e){
 	CausalizedVar c_var;
 	c_var.unknown = graph[u];
 	c_var.equation = graph[eq];
@@ -166,8 +169,9 @@ CausalizationStrategyVector::causalize(){
           } else {
             //std::cerr <<  "Eq range " << (cv.edge.p_e) << " var range " << cv.edge.p_v << "\n";
           }
-          Expression var= Reference(Ref(1,RefTuple(cv.unknown.variableName, ExpList(1,index))));
-          if (cv.unknown.isState)
+          Expression var; /* =TODO: Reference(Ref(1,RefTuple(cv.unknown.variableName, ExpList(1,index))));*/
+          //TODO:
+          if (/*cv.unknown.isState*/0)
             var= Call("der",ExpList(1,var));
             std::cerr <<  "Solving variable " << var << "\n";
           //std::cerr <<  "with eq " << feq << "\n";
@@ -193,22 +197,22 @@ CausalizationStrategyVector::causalize(){
     return true;
   }
 	
-	list<Vertex>::size_type numAcausalEqs = equationDescriptors.size();
-	list<Vertex>::iterator iter, auxiliaryIter;
+	list<VectorVertex>::size_type numAcausalEqs = equationDescriptors.size();
+	list<VectorVertex>::iterator iter, auxiliaryIter;
 	auxiliaryIter = equationDescriptors.begin();
 	for(iter = auxiliaryIter; iter != equationDescriptors.end(); iter = auxiliaryIter){
 		auxiliaryIter++;
-		Vertex eq = *iter;
+		VectorVertex eq = *iter;
 		ERROR_UNLESS(out_degree(eq, graph) != 0, "Problem is singular, not supported yet1\n");
 	  if(out_degree(eq,graph) == 1) {
-      Edge e = *out_edges(eq, graph).first;
-			Vertex unknown = target(e,graph);
+      VectorEdge e = *out_edges(eq, graph).first;
+			VectorVertex unknown = target(e,graph);
 	    equationNumber--;
 		  unknownNumber--;
-      std::list<Edge> remove;
+      std::list<VectorEdge> remove;
 		  causalize1toN(unknown, eq, e);
 			remove_edge(e, graph);
-      foreach_(Edge e1, out_edges(unknown,graph)) {
+      foreach_(VectorEdge e1, out_edges(unknown,graph)) {
         graph[e1].p_v -= graph[e].p_v;
         if (graph[e1].isBalanced()) {
           // TODO: I have to update the p_e propertie as well
@@ -217,35 +221,36 @@ CausalizationStrategyVector::causalize(){
         if (graph[e1].p_v.size()==0)  // Remove empty edges
 		      remove.push_back(e1);
       }
-      foreach_(Edge e1, remove) 
+      foreach_(VectorEdge e1, remove) 
 			  remove_edge(e1, graph);
 		  equationDescriptors.erase(iter);
 			unknownDescriptors.remove(unknown);
     } else {
       // Try the intersection
     }
-    int static step=0;
+    /*int static step=0;
     GraphPrinter gp(graph);
     char buff[128];
     sprintf(buff,"graph_%d.dot",step++);
     gp.printGraph(buff);
+    */
 	}
 	
 	//now we process the unknowns' side
 	auxiliaryIter = unknownDescriptors.begin();
 	for(iter = auxiliaryIter; iter != unknownDescriptors.end(); iter = auxiliaryIter){
 		auxiliaryIter++;
-		Vertex unknown = *iter;
+		VectorVertex unknown = *iter;
 		ERROR_UNLESS(out_degree(unknown, graph) != 0, "Problem is singular, not supported yet1\n");
 		if(out_degree(unknown, graph) == 1){
-      Edge e = *out_edges(unknown, graph).first;
-			Vertex eq = target(e,graph);
+      VectorEdge e = *out_edges(unknown, graph).first;
+			VectorVertex eq = target(e,graph);
 	    equationNumber--;
 		  unknownNumber--;
-      std::list<Edge> remove;
+      std::list<VectorEdge> remove;
 		  causalizeNto1(unknown, eq, e);
 			remove_edge(e, graph);
-      foreach_(Edge e1, out_edges(eq,graph)) {
+      foreach_(VectorEdge e1, out_edges(eq,graph)) {
         graph[e1].p_e -= graph[e].p_e;
         if (graph[e1].isBalanced()) {
           // TODO: I have to update the p_e propertie as well
@@ -254,7 +259,7 @@ CausalizationStrategyVector::causalize(){
         if (graph[e1].p_e.size()==0)  // Remove empty edges
 		      remove.push_back(e1);
       }
-      foreach_(Edge e1, remove) 
+      foreach_(VectorEdge e1, remove) 
 			  remove_edge(e1, graph);
 		  equationDescriptors.remove(eq);
 			unknownDescriptors.erase(iter);
@@ -273,13 +278,14 @@ CausalizationStrategyVector::causalize(){
 }
 
 string 
-CausalizationStrategyVector::getName(const VertexProperties &uk, const EdgeProperties &ed){
+CausalizationStrategyVector::getName(const VectorVertexProperties &uk, const VectorEdgeProperties &ed){
 	stringstream name;
 
-	if(uk.count == 0){
-		name << uk.variableName;		
+  // TODO:
+	if(/*uk.count ==*/ 0){
+		name << uk.unknowns.front();
 	} else if (ed.p_v.size()==1) {
-		name << uk.variableName << "[" << ed.p_v.begin()->lower() << "]";		
+		name << uk.unknowns.front() << "[" << ed.p_v.begin()->lower() << "]";		
   }
   /*else if(ed.indexInterval.size() == 1){
 		name << uk.variableName << "[" << ed.genericIndex.first * first(ed.indexInterval) +  ed.genericIndex.second << "]";
@@ -294,8 +300,10 @@ CausalizationStrategyVector::getName(const VertexProperties &uk, const EdgePrope
 	}
   */
 
-	if(uk.isState)
+  //TODO:
+	/*if(uk.isState)
 		return "der(" + name.str() + ")";
+  */
 
 	return name.str();	
 }
@@ -315,4 +323,5 @@ CausalizationStrategyVector::print(){
 		}
 	}
   */
+}
 }

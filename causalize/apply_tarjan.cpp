@@ -14,14 +14,17 @@
 #include <boost/graph/adjacency_list.hpp>
 
 #include <map>
+#include <stdio.h>
 
 
+namespace Causalize {
 typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::directedS> DirectedGraph;
 typedef boost::graph_traits < DirectedGraph >::vertex_descriptor DGVertex;
 typedef boost::graph_traits < DirectedGraph >::edge_descriptor DGEdge;
 
 std::map<Vertex, Vertex> _matching;
 std::map<DGVertex, Vertex> _collapsed2original;
+using namespace Causalize;
 
 DGVertex original2collapsed(Vertex value) {
   std::map<DGVertex, Vertex>::iterator it;
@@ -34,9 +37,9 @@ DGVertex original2collapsed(Vertex value) {
   return (*it).first;
 }
 
-void buildCollapsedGraph(CausalizationGraph& graph, DirectedGraph& digraph) {
+void buildCollapsedGraph(Causalize::CausalizationGraph& graph, DirectedGraph& digraph) {
   // Create the vertices on the directed graph
-  CausalizationGraph::vertex_iterator vi, vi_end;
+  Causalize::CausalizationGraph::vertex_iterator vi, vi_end;
   for(boost::tie(vi,vi_end) = vertices(graph); vi != vi_end; ++vi) {
    if (graph[*vi].type == E) {
      DGVertex v = add_vertex(digraph);
@@ -71,7 +74,7 @@ void buildCollapsedGraph(CausalizationGraph& graph, DirectedGraph& digraph) {
 //  }
 //}
 
-int apply_tarjan(CausalizationGraph &graph, std::map<int, causalize::Component> &components) {
+int apply_tarjan(CausalizationGraph &graph, std::map<int, Causalize::Component> &components) {
 
   boost::associative_property_map< std::map<Vertex, Vertex> >  matching_map(_matching);
 
@@ -139,9 +142,9 @@ int apply_tarjan(CausalizationGraph &graph, std::map<int, causalize::Component> 
         DEBUG('c', "Vertex: %d -- Component: %d\n", dg_vertex2index[dgVertex], componentIndex);
         Vertex eqVertex = _collapsed2original[dgVertex];
         Vertex uVertex = _matching[eqVertex];
-        std::map<int, causalize::Component>::iterator componentsIt = components.find(componentIndex);
+        std::map<int, Causalize::Component>::iterator componentsIt = components.find(componentIndex);
         if(componentsIt == components.end()){
-          causalize::Component component = new causalize::_Component;
+          Causalize::Component component = new Causalize::_Component;
           std::list<Vertex> *uVertices = new std::list<Vertex>;
           uVertices->push_back(uVertex);
           component->uVertices = uVertices;
@@ -150,7 +153,7 @@ int apply_tarjan(CausalizationGraph &graph, std::map<int, causalize::Component> 
           component->eqVertices = eqVertices;
           components[componentIndex] = component;
         } else {
-          causalize::Component component = componentsIt->second;
+          Causalize::Component component = componentsIt->second;
           std::list<Vertex> *uVertices = component->uVertices;
           uVertices->push_back(uVertex);
           std::list<Vertex> *eqVertices = component->eqVertices;
@@ -162,4 +165,5 @@ int apply_tarjan(CausalizationGraph &graph, std::map<int, causalize::Component> 
 
 }
 
+}
 

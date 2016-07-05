@@ -20,20 +20,20 @@
 #ifndef AST_VISITOR_CONTAINS_VECTOR
 #define AST_VISITOR_CONTAINS_VECTOR
 #include <boost/variant/static_visitor.hpp>
-#include <causalize/vector/graph_definition.h>
+#include <causalize/vector/vector_graph_definition.h>
 #include <ast/expression.h>
 #include <util/ast_visitors/contains.h>
 #include <boost/icl/discrete_interval.hpp>
 #include <set>
 #define apply(X) boost::apply_visitor(*this,X)
 
-namespace Modelica {
+namespace Causalize {
 
   using namespace Modelica::AST;
   class contains_vector: public boost::static_visitor<bool> {
   public:
-    contains_vector(Expression, VertexProperties, const VarSymbolTable &);
-    bool operator()(Integer v) const;
+    contains_vector(Expression, VectorVertexProperties, const VarSymbolTable &);
+    bool operator()(Modelica::AST::Integer v) const;
     bool operator()(Boolean v) const;
     bool operator()(String v) const;
     bool operator()(Name v) const;
@@ -52,14 +52,14 @@ namespace Modelica {
     bool operator()(Output) const;
     bool operator()(Reference) const;
     bool operator()(Range) const;
-    std::set<EdgeProperties> getOccurrenceIndexes() { return edgeList; }
+    std::set<VectorEdgeProperties> getOccurrenceIndexes() { return edgeList; }
     void setForIndex(Expression a, Expression b);
   private:
     void addGenericIndex(BinOp b) const;
     Expression exp;
     boost::icl::discrete_interval<int> forIndexInterval;
-    mutable std::set<EdgeProperties> edgeList;
-    VertexProperties var;
+    mutable std::set<VectorEdgeProperties> edgeList;
+    VectorVertexProperties var;
     const VarSymbolTable &syms;
     bool foreq;
   }; 

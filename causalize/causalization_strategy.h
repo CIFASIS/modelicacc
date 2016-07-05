@@ -2,13 +2,14 @@
  * causalization_strategy.h
  *
  *  Created on: 12/05/2013
- *      Author: fede
+ *      Author: fede moya
  */
 
-#include <causalize/vector/graph_definition.h>
+#include <causalize/graph/graph_definition.h>
 #include <mmo/mmo_class.h>
 
 
+namespace Causalize {
 class CausalizationStrategy {
 public:
   CausalizationStrategy(Modelica::MMO_Class &mmo_class);
@@ -17,9 +18,9 @@ private:
   void makeCausalBegining(Modelica::AST::EquationList eqs, Modelica::AST::ExpList unknowns);
   void makeCausalMiddle();
   void makeCausalEnd(Modelica::AST::EquationList eqs, Modelica::AST::ExpList unknowns);
-  CausalizationGraph _graph;
-  std::list<Vertex> _eqVertices;
-  std::list<Vertex> _unknownVertices;
+  Causalize::CausalizationGraph _graph;
+  std::list<Causalize::EquationVertex> _eqVertices;
+  std::list<Causalize::UnknownVertex> _unknownVertices;
   std::string c_path;
   Modelica::MMO_Class &_mmo_class;
   Modelica::AST::EquationList _causalEqsBegining;
@@ -30,5 +31,6 @@ private:
   std::list<std::string> c_code;
   ClassList cl;
 };
+}
 
 

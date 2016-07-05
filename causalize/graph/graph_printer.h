@@ -1,6 +1,5 @@
-#include <causalize/vector/graph_definition.h>
-#include <causalize/vector/graph_printer.h>
-
+#include <causalize/graph/graph_definition.h>
+#include <list>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -17,23 +16,28 @@ using namespace boost::icl;
 #define INSERT_TAB depth += TAB_SPACE;
 #define DELETE_TAB depth -= TAB_SPACE;
 
-GraphPrinter::GraphPrinter(const CausalizationGraph &g): graph(g)
-{
-	CausalizationGraph::vertex_iterator vi, vi_end;
-	for(tie(vi, vi_end) = vertices(graph); vi!= vi_end; vi++){
-		if(graph[*vi].type == E){
-			equationDescriptors.push_back(*vi);
-		}else{
-		unknownDescriptors.push_back(*vi);		
-		}
-	}
-}
-
-string
-GraphPrinter::printGraph(string name){
+namespace Causalize {
+  template <class VertexProperties, class EdgeProperties> 
+  class GraphPrinter{
+    typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VertexProperties, EdgeProperties> Graph;
+    typedef typename boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VertexProperties, EdgeProperties>::vertex_descriptor Vertex;
+    typedef typename boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VertexProperties, EdgeProperties>::out_edge_iterator EdgeIterator;
+	  public:
+		  GraphPrinter(const Graph &g): graph(g) {
+      	typename Graph::vertex_iterator vi, vi_end;
+	      for(tie(vi, vi_end) = vertices(graph); vi!= vi_end; vi++){
+		      if(graph[*vi].type == E){
+      			equationDescriptors.push_back(*vi);
+      		}else{
+      		  unknownDescriptors.push_back(*vi);		
+    		  }
+    	  }
+      };
+		  std::string printGraph(std::string) {
 	stringstream stri;
-	ofstream out(name.c_str());
+	ofstream out("graph");
 	int depth = 0;
+  typedef typename list<Vertex>::iterator Iterator;
 
 	stri << "graph G{" << endl;
 	INSERT_TAB
@@ -46,8 +50,8 @@ GraphPrinter::printGraph(string name){
 			stri << "edge [style=invis];" << endl;
 			MAKE_SPACE
       stringstream colors2;
-			for(list<Vertex>::iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
-				list<Vertex>::iterator aux = it;
+			for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
+				Iterator aux = it;
 				aux++;
 				stri << graph[*it].index;
 				if((aux) != equationDescriptors.end()){
@@ -75,28 +79,15 @@ GraphPrinter::printGraph(string name){
 			stri << "edge [style=invis];" << endl;
 			MAKE_SPACE
       stringstream colors;
-			for(list<Vertex>::iterator it=unknownDescriptors.begin(); it!=unknownDescriptors.end(); it++){
-				list<Vertex>::iterator aux = it;
+			for(Iterator it=unknownDescriptors.begin(); it!=unknownDescriptors.end(); it++){
+				Iterator aux = it;
 				aux++;
-        if (graph[*it].unknowns.size())
-				  stri << "\"" << graph[*it].unknowns.front() << "\"";
-        else {
-				  if(graph[*it].isState){
-					  stri << "\"der(" << graph[*it].variableName << ")\"";
-  				}else{
-	  				stri << "\"" << graph[*it].variableName;
-            if (graph[*it].count)
-	  				  stri << "[" << graph[*it].count << "]";
-            stri << "\"";
-		  		}
-        }
+				stri << "\"" << graph[*it].unknowns.front() << "\"";
 				if((aux) != unknownDescriptors.end()){
 					stri << " -- ";		
 				}else{
 					stri << ";" << endl;		
 				}
-        //if (out_degree(*it,graph)==0)
-          //colors << "    \"" << graph[*it].unknowns.front() << "\" [ color=\"red\" ];" << endl;
 			}
 		DELETE_TAB
 		MAKE_SPACE
@@ -107,8 +98,8 @@ GraphPrinter::printGraph(string name){
 	INSERT_TAB
 		MAKE_SPACE
 		stri << "edge [constraint=false];" << endl;
-		for(list<Vertex>::iterator  eq_it = equationDescriptors.begin(); eq_it != equationDescriptors.end(); eq_it++){
-			CausalizationGraph::out_edge_iterator ei, ei_end;
+		for(Iterator eq_it = equationDescriptors.begin(); eq_it != equationDescriptors.end(); eq_it++){
+			EdgeIterator ei, ei_end;
 			for(tie(ei, ei_end) = out_edges(*eq_it, graph); ei != ei_end; ei++){
 				Vertex unknown = target(*ei, graph);
 				MAKE_SPACE;
@@ -116,7 +107,7 @@ GraphPrinter::printGraph(string name){
        if (graph[unknown].unknowns.size()) {
       	  stri << graph[*eq_it].index << " -- \"" << graph[unknown].unknowns.front() << "\"";
         } else {
-				  if(graph[unknown].isState){
+				  /*if(graph[unknown].isState){
 					  name = "der(" + graph[unknown].variableName + ")";		
 				  }else{
 				    name = graph[unknown].variableName;
@@ -127,13 +118,9 @@ GraphPrinter::printGraph(string name){
             }
 	
 				  }
+          */
       	  stri << graph[*eq_it].index << " -- \"" << name << "\"";
         }
-			stri << "[label = \"";
-			stri << (graph[*ei]).p_e;
-			stri << " <-> ";
-			stri << (graph[*ei]).p_v;
-			stri << "\"]";
 				/*if(graph[*ei].indexInterval.size() == 0){
 					stri << "[label = \"[1:1]\"]";
         } else if(graph[*ei].indexInterval.size() == 1){
@@ -152,7 +139,6 @@ GraphPrinter::printGraph(string name){
 					stri << *isi << "\"]";
 				}
         */
-				stri << ";" << endl;
 			}
 		}
 	DELETE_TAB
@@ -160,4 +146,10 @@ GraphPrinter::printGraph(string name){
 	out << stri.str();
 	out.close();
 	return stri.str();
+}
+	  private:
+		  const Graph &graph;
+		  std::list<Vertex> equationDescriptors;
+		  std::list<Vertex> unknownDescriptors;
+  };
 }

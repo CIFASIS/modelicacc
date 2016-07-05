@@ -14,7 +14,6 @@ OBJS_CAUSALIZE := causalize/main.o \
                   causalize/state_variables_finder.o \
                   causalize/unknowns_collector.o \
                   causalize/causalization_strategy.o \
-                  causalize/vector/graph_printer.o \
                   causalize/vector/contains_vector.o \
                   causalize/vector/graph_builder.o \
                   causalize/vector/causalization_algorithm.o \

@@ -27,7 +27,7 @@
 #include <causalize/causalization_strategy.h>
 #include <causalize/vector/causalization_algorithm.h>
 #include <causalize/vector/graph_builder.h>
-#include <causalize/vector/graph_printer.h>
+#include <causalize/graph/graph_printer.h>
 #include <cstdlib>
 #include <stdio.h>
 #include <iostream>
@@ -46,9 +46,9 @@ int main(int argc, char ** argv)
 
   bool r;
   int opt;
-  //bool for_qss;
+  bool vectorial = false;
 
-  while ((opt = getopt(argc, argv, "d:q")) != -1) {
+  while ((opt = getopt(argc, argv, "d:v")) != -1) {
     switch (opt) {
      case 'd':
        if (optarg != NULL && isDebugParam(optarg)) {
@@ -57,8 +57,8 @@ int main(int argc, char ** argv)
          ERROR("command-line option d has no arguments\n");
        }
        break;
-     case 'q':
-       //for_qss=true;
+     case 'v':
+       vectorial = true;
        break;
     }
   }
@@ -75,35 +75,30 @@ int main(int argc, char ** argv)
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
   
-  SplitFor sf(mmo);
-  sf.splitFor();
-  cout << mmo << endl;
-
-  ReducedGraphBuilder gb(mmo);
-  CausalizationGraph g = gb.makeGraph();
-  GraphPrinter gp(g);
-  gp.printGraph("grafo.dot");
-  CausalizationStrategyVector cs(g,mmo);
-  /*
-  if(cs.causalize()){ // Try vectorial causalization first
-    if(debugIsEnabled('c')){
-     cout << "Result of causalization (variable, [range,] equationID):" << endl;
-       cs.print();
+  if (vectorial) {
+    SplitFor sf(mmo);
+    sf.splitFor();
+    ReducedGraphBuilder gb(mmo);
+    VectorCausalizationGraph g = gb.makeGraph();
+    //GraphPrinter gp(g);
+    //gp.printGraph("initialGraph.dot");
+    CausalizationStrategyVector cs(g,mmo);
+    if(cs.causalize()){ // Try vectorial causalization first
+      if(debugIsEnabled('c')){
+       cout << "Result of causalization (variable, [range,] equationID):" << endl;
+         cs.print();
+      }
+      cout << mmo << endl;
+      return 0;
     }
-    cout << mmo << endl;
-    return 0;
   }
- // return 0;
-  */
- 
   CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize("a");
+  cStrategy.causalize("");
   DEBUG('c', "Causalized Equations:\n");
   foreach_(const Equation &e, mmo.equations_ref().equations_ref()) {
     if (debugIsEnabled('c'))
       cerr << e << std::endl;
   }
   cout << mmo << endl;
-
   return 0;
 }
