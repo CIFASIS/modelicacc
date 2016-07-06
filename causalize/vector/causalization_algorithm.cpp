@@ -169,26 +169,47 @@ CausalizationStrategyVector::causalize(){
           } else {
             //std::cerr <<  "Eq range " << (cv.edge.p_e) << " var range " << cv.edge.p_v << "\n";
           }
-          Expression var; /* =TODO: Reference(Ref(1,RefTuple(cv.unknown.variableName, ExpList(1,index))));*/
-          //TODO:
-          if (/*cv.unknown.isState*/0)
-            var= Call("der",ExpList(1,var));
-            std::cerr <<  "Solving variable " << var << "\n";
-          //std::cerr <<  "with eq " << feq << "\n";
+          Expression var = (is<Call>(cv.unknown.unknowns.front()) ?
+                            Call("der",ExpList(1,Reference(Ref(1,RefTuple(get<0>(get<Reference>(get<Call>(cv.unknown.unknowns.front()).args().front()).ref().front()),ExpList(1,index))))))
+                            : Expression(0));
+            //std::cerr <<  "Solving variable " << var << "\n";
+            //std::cerr <<  "with eq " << feq << "\n";
            std::list<std::string> c_code;
            ClassList cl;
+           if (debugIsEnabled('c')) 
+             std::cerr << "Solving:\n" << e << "\nfor variable " << var << "\n";
            EquationList el = EquationSolver::solve(EquationList(1,feq),ExpList(1,var), syms,c_code,cl);
-           //feq.elements_ref() = el; 
-            e = el.front();
+           e = el.front();
            all.push_back(e);
         } else {
           ERROR("Trying to solve an array variable with a non for equation");
         }
 		  } else{
-	  	  name = getName(cv.unknown, cv.edge);
+	  	  Expression ref;
+	      if(cv.unknown.count == 0)
+		      ref = cv.unknown.unknowns.front();
+	      else if (cv.edge.p_v.size()==1) {
+          Expression var = cv.unknown.unknowns.front();
+          if (is<Call>(var) && get<Call>(var).name()=="der") {
+            Call &call = get<Call>(var);
+            Expression &arg = call.args_ref().front(); 
+            ERROR_UNLESS(is<Reference>(arg),"Argument to der must be a reference");
+            //get<1>(get<Reference>(arg).ref_ref().front()) = cv.edge.p_v.begin()->lower();
+            Reference &ref_arg = get<Reference>(arg);
+            get<1>(ref_arg.ref_ref().front())=  ExpList(1,cv.edge.p_v.begin()->lower());
+		        ref = var;
+          } else if (is<Reference>(var)) {
+            ERROR("Unkonwn of wrong type");
+          } else {
+            ERROR("Unkonwn of wrong type");
+          }
+        } else 
+          ERROR("Trying to solve a single variable with no fixed index");
         std::list<std::string> c_code;
         ClassList cl;
-        EquationList el = EquationSolver::solve(EquationList(1,e),ExpList(1,Reference(name)), mmo.syms_ref(),c_code, cl);
+        if (debugIsEnabled('c')) 
+          std::cerr << "Solving\n" << e << "\nfor variable " << name << "\n";
+        EquationList el = EquationSolver::solve(EquationList(1,e),ExpList(1,ref), mmo.syms_ref(),c_code, cl);
         all.insert(all.end(),el.begin(),el.end());
 		  } 
 	  } 		
@@ -281,8 +302,7 @@ string
 CausalizationStrategyVector::getName(const VectorVertexProperties &uk, const VectorEdgeProperties &ed){
 	stringstream name;
 
-  // TODO:
-	if(/*uk.count ==*/ 0){
+	if(uk.count == 0){
 		name << uk.unknowns.front();
 	} else if (ed.p_v.size()==1) {
 		name << uk.unknowns.front() << "[" << ed.p_v.begin()->lower() << "]";		

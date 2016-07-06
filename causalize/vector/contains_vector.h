@@ -30,9 +30,9 @@
 namespace Causalize {
 
   using namespace Modelica::AST;
-  class contains_vector: public boost::static_visitor<bool> {
+  class ContainsVector: public boost::static_visitor<bool> {
   public:
-    contains_vector(Expression, VectorVertexProperties, const VarSymbolTable &);
+    ContainsVector(Expression, VectorVertexProperties, const VarSymbolTable &);
     bool operator()(Modelica::AST::Integer v) const;
     bool operator()(Boolean v) const;
     bool operator()(String v) const;

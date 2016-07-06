@@ -108,7 +108,6 @@ namespace Modelica {
       if ("exp"==v.name()) {
         return exp(apply(v.args().front()));
       }
-      std::cerr << v << "\n";
       ERROR("EvalExp: trying to evaluate a Call");
       return 0;
     }
@@ -135,9 +134,9 @@ namespace Modelica {
     }
     Real EvalExp::operator()(Reference v) const {
       Ref r=v.ref();
-      ERROR_UNLESS(r.size()==1,"GiNaC conversion of dotted references not implemented");
+      ERROR_UNLESS(r.size()==1,"EvalExp: conversion of dotted references not implemented");
       Option<ExpList> oel = boost::get<1>(r[0]);
-      ERROR_UNLESS(oel,"GiNaC conversion of subscripted references not implemented");
+      ERROR_UNLESS(oel,"EvalExp: conversion of subscripted references not implemented");
       Name s=boost::get<0>(r[0]);
       
       if (name && name.get() == s) return val.get();

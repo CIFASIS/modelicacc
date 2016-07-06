@@ -31,27 +31,27 @@ using namespace boost::icl;
 using namespace Modelica::AST ;
 
 namespace Causalize {
-    contains_vector::contains_vector(Expression e, VectorVertexProperties v, const VarSymbolTable &s): exp(e), var(v), syms(s), foreq(false) {};
-    bool contains_vector::operator()(Modelica::AST::Integer v) const { return exp==Expression(v); } 
-    bool contains_vector::operator()(Boolean v) const { return exp==Expression(v); } 
-    bool contains_vector::operator()(String v) const { return exp==Expression(v); } 
-    bool contains_vector::operator()(Name v) const { return exp==Expression(v); }
-    bool contains_vector::operator()(Real v) const { return exp==Expression(v); } 
-    bool contains_vector::operator()(SubEnd v) const { return exp==Expression(v); } 
-    bool contains_vector::operator()(SubAll v) const { return exp==Expression(v); } 
-    bool contains_vector::operator()(BinOp v) const { 
+    ContainsVector::ContainsVector(Expression e, VectorVertexProperties v, const VarSymbolTable &s): exp(e), var(v), syms(s), foreq(false) {};
+    bool ContainsVector::operator()(Modelica::AST::Integer v) const { return exp==Expression(v); } 
+    bool ContainsVector::operator()(Boolean v) const { return exp==Expression(v); } 
+    bool ContainsVector::operator()(String v) const { return exp==Expression(v); } 
+    bool ContainsVector::operator()(Name v) const { return exp==Expression(v); }
+    bool ContainsVector::operator()(Real v) const { return exp==Expression(v); } 
+    bool ContainsVector::operator()(SubEnd v) const { return exp==Expression(v); } 
+    bool ContainsVector::operator()(SubAll v) const { return exp==Expression(v); } 
+    bool ContainsVector::operator()(BinOp v) const { 
       if (exp==Expression(v)) return true; 
       Expression l=v.left(), r=v.right();
       bool rl = apply(l);
       bool rr = apply(r);
       return rr || rl;
       } 
-      bool contains_vector::operator()(UnaryOp v) const { 
+      bool ContainsVector::operator()(UnaryOp v) const { 
         if (exp==Expression(v)) return true; 
         Expression e=v.exp();
         return apply(e);
       } 
-      bool contains_vector::operator()(IfExp v) const { 
+      bool ContainsVector::operator()(IfExp v) const { 
         if (exp==Expression(v)) return true; 
         Expression cond=v.cond(), then=v.then(), elseexp=v.elseexp();
         const bool rc = apply(cond);
@@ -59,43 +59,43 @@ namespace Causalize {
         const bool re = apply(elseexp);
         return rc || rt || re;
       }
-      bool contains_vector::operator()(Range v) const { 
+      bool ContainsVector::operator()(Range v) const { 
         if (exp==Expression(v)) return true; 
         Expression start=v.start(), end=v.end();
         bool rs = apply(start);
         bool re = apply(end);
         return rs || re;
       }
-      bool contains_vector::operator()(Brace v) const { 
+      bool ContainsVector::operator()(Brace v) const { 
         if (exp==Expression(v)) return true; 
         return false;
       }
-      bool contains_vector::operator()(Bracket v) const { 
+      bool ContainsVector::operator()(Bracket v) const { 
         if (exp==Expression(v)) return true; 
         return false;
       }
-    bool contains_vector::operator()(Call v) const { 
+    bool ContainsVector::operator()(Call v) const { 
       if (is<Call>(exp)) {
         Call call=get<Call>(exp);
         if (v.name()=="der" && call.name()=="der") {
           ERROR_UNLESS(is<Reference>(v.args().front()) && is<Reference>(call.args().front()), "Arguments to call must be a reference");
           Reference vv=get<Reference>(v.args().front());
           Reference r=get<Reference>(call.args().front());
+          //std::cerr << v << ":" << exp << "\n";
           if (get<0>(vv.ref().front())==get<0>(r.ref().front())) {
-            //TODO: 
-            if (/*var.count==*/0) {
+            if (var.count==0) {
               VectorEdgeProperties newEdge;
               if (!foreq)
                 newEdge.p_e +=discrete_interval<int>::closed(1, 1);
               else
                 newEdge.p_e += forIndexInterval;
-              newEdge.p_v += discrete_interval<int>::closed(1, 1);
+              newEdge.p_v += discrete_interval<int>::closed(0, 0);
               edgeList.insert(newEdge);
               return true;
             } else {
               ExpList el = get<1>(vv.ref().front());
               if (el.size()==0) { // If there are no sub-indices the complete array is used
-                ERROR("Derivative of array not suported");
+                //ERROR("Derivative of array not suported");
               }
               Expression i = el.front();
               Modelica::PartEvalExp pe(syms);
@@ -131,45 +131,44 @@ namespace Causalize {
       if (exp==Expression(v)) return true; 
       return false;
     }
-      bool contains_vector::operator()(FunctionExp v) const { 
+      bool ContainsVector::operator()(FunctionExp v) const { 
         if (exp==Expression(v)) return true; 
         return false;
       }
-      bool contains_vector::operator()(ForExp v) const {
+      bool ContainsVector::operator()(ForExp v) const {
         if (exp==Expression(v)) return true; 
         return false;
       }
-      bool contains_vector::operator()(Named v) const {
+      bool ContainsVector::operator()(Named v) const {
         if (exp==Expression(v)) return true; 
         return false;
       }
-      bool contains_vector::operator()(Output v) const {
+      bool ContainsVector::operator()(Output v) const {
         if (exp==Expression(v)) return true; 
         foreach_(OptExp oe, v.args()) 
           if (oe && apply(oe.get())) return true;
         return false;
       }
-    bool contains_vector::operator()(Reference v) const {
+    bool ContainsVector::operator()(Reference v) const {
       if (is<Reference>(exp)) {
         if (get<0>(v.ref().front())==get<0>(get<Reference>(exp).ref().front())) {
           //std::cerr << "Checking " << v << " againt " << exp << " count= " << var.count << "\n";
-          //TODO: 
-          if (/*var.count==*/0) {
+          if (var.count==0) {
             // The variabl is a scalar
             VectorEdgeProperties newEdge;
             if (!foreq)
               newEdge.p_e +=discrete_interval<int>::closed(1, 1);
             else
               newEdge.p_e += forIndexInterval;
-            newEdge.p_v += discrete_interval<int>::closed(1, 1);
+            newEdge.p_v += discrete_interval<int>::closed(0, 0);
             edgeList.insert(newEdge);
             return true;
           } else {
             ExpList el = get<1>(v.ref().front());
             if (el.size()==0) { // If there are no sub-indices the complete array is used
               VectorEdgeProperties newEdge;
-              //TODO: 
-              newEdge.p_v += discrete_interval<int>::closed(1, /*var.count*/0);
+              // TODO:
+              //newEdge.p_v += discrete_interval<int>::closed(1 var.count);
               if (!foreq)
                 newEdge.p_e +=discrete_interval<int>::closed(1, 1);
               else
@@ -232,7 +231,7 @@ namespace Causalize {
       return false;
     }
 
-    void contains_vector::setForIndex(Expression a, Expression b) {
+    void ContainsVector::setForIndex(Expression a, Expression b) {
        Modelica::EvalExp ev(syms); 
        int start=boost::apply_visitor(ev,a);
        int end=boost::apply_visitor(ev,b);
@@ -240,7 +239,7 @@ namespace Causalize {
        foreq=true;
     }
 
-    void contains_vector::addGenericIndex(BinOp binop) const {
+    void ContainsVector::addGenericIndex(BinOp binop) const {
       ERROR("addGenericIndex not implemented");
       /*
       int a=0,b=0;

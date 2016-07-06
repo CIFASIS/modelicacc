@@ -1,4 +1,4 @@
-CXXFLAGS = -I. -Wall -Wno-reorder -O3 
+CXXFLAGS = -I. -Wall -Werror -Wno-reorder -O3 
 
 OBJS_COMMON :=  ast/expression.o \
 		ast/class.o \
@@ -29,7 +29,7 @@ lib/libmodelica.a: $(OBJS_COMMON)
 	$(CXX) -c $(CXXFLAGS) $*.cpp -o $*.o
 
 doc: Doxyfile
-	doxygen doc
+	doxygen
 
 clean:
-	$(RM) -rf $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(OBJS_SPLITFOR) lib/libmodelica.a odc
+	$(RM) -rf $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(OBJS_SPLITFOR) lib/libmodelica.a doc

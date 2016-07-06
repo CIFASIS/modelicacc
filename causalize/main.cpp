@@ -80,8 +80,8 @@ int main(int argc, char ** argv)
     sf.splitFor();
     ReducedGraphBuilder gb(mmo);
     VectorCausalizationGraph g = gb.makeGraph();
-    //GraphPrinter gp(g);
-    //gp.printGraph("initialGraph.dot");
+    GraphPrinter<VectorVertexProperties,VectorEdgeProperties>  gp(g);
+    gp.printGraph("initial_graph.dot");
     CausalizationStrategyVector cs(g,mmo);
     if(cs.causalize()){ // Try vectorial causalization first
       if(debugIsEnabled('c')){

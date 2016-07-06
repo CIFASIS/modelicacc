@@ -35,6 +35,10 @@ namespace Causalize {
     bool isBalanced() {
       return p_e.size()==p_v.size();
     }
+    friend std::ostream & operator << (std::ostream &os, const VectorEdgeProperties &ep) {
+      os << ep.p_e << "->" << ep.p_v;
+      return os;
+    }
   };
 
   /// @brief This is the definition of the Incidence graph for the vector case.
@@ -47,7 +51,7 @@ namespace Causalize {
   typedef VectorVertex VectorUnknownVertex;
   /// @brief This is an edge of the vectorized causalization graph
   typedef VectorCausalizationGraph::edge_descriptor VectorEdge;
-/// @brief This struct represents a set of causalized vars for the vector algorithm
+  /// @brief This struct represents a set of causalized vars for the vector algorithm
   struct CausalizedVar{
     VectorVertexProperties unknown;
     VectorVertexProperties equation;

@@ -35,11 +35,9 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
     vp.type = E;
     vp.eqs.push_back(e);
     if (is<ForEq>(e)) {
-      //TODO:
-      //vp.count=getForRangeSize(get<ForEq>(e));
+      vp.count=getForRangeSize(get<ForEq>(e));
     } else if (is<Equality>(e)) {
-      //TODO:
-      //vp.count=1;
+      vp.count=1;
     } else {
       ERROR("Only causalization of for and equality equations");
     }
@@ -60,14 +58,17 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
       vp.index=index++;
       //TODO: 
       //vp.isState=varInfo.state();
+      if (varInfo.state()) {
+        vp.unknowns.push_back(Call("der",Reference(var)));
+      } else {
+        vp.unknowns.push_back(Reference(var));
+      }
       if ("Real"==varInfo.type()) {
         if (!varInfo.indices())  {
-          //TODO:
-          //vp.count=0;
+          vp.count=0;
         } else if (varInfo.indices().get().size()==1) {
           EvalExp ev(mmo_class.syms_ref()); 
-          // TODO:
-          //vp.count = boost::apply_visitor(ev,varInfo.indices().get().front());
+          vp.count = boost::apply_visitor(ev,varInfo.indices().get().front());
         } else {
           ERROR("ReducedGraphBuilder::makeGraph Arrays of arrays are not supported yet\n");  
         }
@@ -91,8 +92,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
     foreach_(VectorUnknownVertex un, unknownDescriptorList){
       Expression ref = graph[un].unknowns.front();
       VarSymbolTable syms = mmo_class.syms_ref();
-      //TODO:
-      if (/*graph[eq].count >*/ 1) {
+      if (graph[eq].count > 1) {
         // is a for equation
         ForEq fe = get<ForEq>(graph[eq].eqs.front());
         Index i = fe.range().indexes().front();
@@ -100,10 +100,11 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         VarInfo v(TypePrefixes(0),"Real");
         syms.insert(var,v);
       }
-      Causalize::contains_vector occurrs(ref,graph[un], syms);
+      Causalize::ContainsVector occurrs(ref,graph[un], syms);
       Equation e = graph[eq].eqs.front();
       if (is<Equality>(e)) {
         Equality eqq = boost::get<Equality>(e);
+        //std::cerr << "Checking var: " << ref ;
         //std::cerr << eqq.left_ref() << "***********\n";
         const bool rl = boost::apply_visitor(occurrs,eqq.left_ref());
         //std::cerr << eqq.right_ref() << "***********\n";
@@ -132,7 +133,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
 
         VarSymbolTable syms_for = mmo_class.syms_ref();
         syms_for.insert(i.name(),VarInfo(TypePrefixes(0),"Integer"));
-        Causalize::contains_vector occurrs_for(ref,graph[un], syms_for);
+        Causalize::ContainsVector occurrs_for(ref,graph[un], syms_for);
         occurrs_for.setForIndex(range.start(),range.end());
         
         const bool rl = boost::apply_visitor(occurrs_for,eqq.left_ref());

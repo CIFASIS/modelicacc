@@ -26,7 +26,6 @@ using namespace Modelica::AST;
 namespace Causalize {
 CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(mmo_class) {
 
-  char buff[1024];
   Causalize::process_for_equations(mmo_class);
 
   EquationList &equations = mmo_class.equations_ref().equations_ref();
@@ -98,19 +97,16 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   DEBUG('c', "\n");
 
   char *path = get_current_dir_name();
-
-  sprintf(buff,"%s/%s.c",path,_mmo_class.name().c_str());
+  std::stringstream filename;
+  filename << path << "/" << _mmo_class.name().c_str() << ".c";
   free(path);
-  c_path = buff;
+  c_path = filename.str();
+
+  GraphPrinter<VertexProperties,EdgeProperties> gp(_graph);
+  gp.printGraph("initial_graph.dot");
 }
 
 void CausalizationStrategy::causalize(Name name) {
-
-  static int step=0;
-  GraphPrinter<VertexProperties,EdgeProperties> gp(_graph);
-  char buff[1024];
-  sprintf(buff,"graph_%d.dot",step++);
-  gp.printGraph(buff);
 
   list<EquationVertex>::size_type acausalEqsSize;
 
@@ -145,9 +141,6 @@ void CausalizationStrategy::causalize(Name name) {
         remove_vertex(eq,_graph);
         _eqVertices.erase(iter);
         _unknownVertices.remove(unknown);
-        //GraphPrinter gpp(_graph);
-        //sprintf(buff,"graph_%d.dot",step++);
-        //gpp.printGraph(buff);
       } else if (out_degree(eq, _graph) == 0) {
         cout << "Causalizing " << _graph[eq].eqs.front() << std::endl;
         ERROR("Problem is singular. Not supported yet.\n");
@@ -173,10 +166,6 @@ void CausalizationStrategy::causalize(Name name) {
         remove_vertex(eq,_graph);
         _eqVertices.remove(eq);
         _unknownVertices.erase(iter);
-        //sprintf(buff,"graph_%d.dot",step++);
-        //GraphPrinter gpp(_graph);
-        //gpp.printGraph(buff);
-
       } else if (out_degree(unknown, _graph) == 0) {
         cout << "Causalizing " << _graph[unknown].unknowns.size() << " variables " << _graph[unknown].unknowns.front() << std::endl;
         ERROR("Problem is singular. Not supported yet.\n");

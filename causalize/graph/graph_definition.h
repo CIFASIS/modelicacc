@@ -1,6 +1,7 @@
 #ifndef GRAPH_DEFINITION_
 #define GRAPH_DEFINITION_
 
+#include <iostream>
 #include <utility>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -24,7 +25,10 @@ namespace Causalize {
 
   /// @brief Empty edge properties for incidence graph 
   struct EdgeProperties {
-
+    friend std::ostream & operator << (std::ostream &os, const EdgeProperties &ep) {
+      os << "(1,1)";
+      return os;
+    }
   };
   
   /// @brief This is the definition of the Incidence graph for the scalar case.
