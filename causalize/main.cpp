@@ -80,7 +80,7 @@ int main(int argc, char ** argv)
     sf.splitFor();
     ReducedGraphBuilder gb(mmo);
     VectorCausalizationGraph g = gb.makeGraph();
-    GraphPrinter<VectorVertexProperties,VectorEdgeProperties>  gp(g);
+    GraphPrinter<VectorVertexProperty,VectorEdgeProperty>  gp(g);
     gp.printGraph("initial_graph.dot");
     CausalizationStrategyVector cs(g,mmo);
     if(cs.causalize()){ // Try vectorial causalization first
@@ -91,6 +91,7 @@ int main(int argc, char ** argv)
       cout << mmo << endl;
       return 0;
     }
+    return 0;
   }
   CausalizationStrategy cStrategy(mmo);
   cStrategy.causalize("");

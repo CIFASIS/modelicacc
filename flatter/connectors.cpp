@@ -227,7 +227,7 @@ void Connectors::expandConnect(Vertex l, OptExp lIndex,Vertex r, OptExp rIndex, 
 void Connectors::createEdge(Vertex s , Vertex c,OptExp i)
 {
 	Expression uno = 1;
-	EdgeProperties * ep = new EdgeProperties;
+	EdgeProperty * ep = new EdgeProperty;
 	ep->index = (i ? i : OptExp(uno));
 	ep->visited = false;
 	boost::add_edge(s,c,*ep,G);
@@ -236,7 +236,7 @@ void Connectors::createEdge(Vertex s , Vertex c,OptExp i)
 
 Vertex Connectors::createConnect(OptExp i)
 {
-	VertexProperties * vp = new VertexProperties;
+	VertexProperty * vp = new VertexProperty;
 	vp->name = OptExp();
 	vp->hasIndex = false;
 	vp->range = i;
@@ -259,7 +259,7 @@ Vertex Connectors::createElements(Expression e,OptExp i)
 		}	
 	}
 	
-	VertexProperties * vp = new VertexProperties;
+	VertexProperty * vp = new VertexProperty;
 	vp->name = e;
 	vp->hasIndex = i ? true : false;
 	vp->range = OptExp();

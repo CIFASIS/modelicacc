@@ -31,7 +31,7 @@ using namespace boost::icl;
 using namespace Modelica::AST ;
 
 namespace Causalize {
-    ContainsVector::ContainsVector(Expression e, VectorVertexProperties v, const VarSymbolTable &s): exp(e), var(v), syms(s), foreq(false) {};
+    ContainsVector::ContainsVector(Expression e, VectorVertexProperty v, const VarSymbolTable &s): exp(e), var(v), syms(s), foreq(false) {};
     bool ContainsVector::operator()(Modelica::AST::Integer v) const { return exp==Expression(v); } 
     bool ContainsVector::operator()(Boolean v) const { return exp==Expression(v); } 
     bool ContainsVector::operator()(String v) const { return exp==Expression(v); } 
@@ -81,43 +81,48 @@ namespace Causalize {
           ERROR_UNLESS(is<Reference>(v.args().front()) && is<Reference>(call.args().front()), "Arguments to call must be a reference");
           Reference vv=get<Reference>(v.args().front());
           Reference r=get<Reference>(call.args().front());
-          //std::cerr << v << ":" << exp << "\n";
           if (get<0>(vv.ref().front())==get<0>(r.ref().front())) {
-            if (var.count==0) {
-              VectorEdgeProperties newEdge;
-              if (!foreq)
-                newEdge.p_e +=discrete_interval<int>::closed(1, 1);
-              else
-                newEdge.p_e += forIndexInterval;
-              newEdge.p_v += discrete_interval<int>::closed(0, 0);
-              edgeList.insert(newEdge);
+            if (var.count==1) { // The unknonw is a scalar (or array of size 1)
+              VectorEdgeProperty newEdge;
+              if (!foreq) {
+                labels.insert(std::make_pair(1,1));
+              } else {
+                for (int i=forIndexInterval.lower();i<=forIndexInterval.upper();i++) 
+                  labels.insert(std::make_pair(i,1));
+              }
               return true;
-            } else {
+            } else { // The unknown is an array
               ExpList el = get<1>(vv.ref().front());
               if (el.size()==0) { // If there are no sub-indices the complete array is used
-                //ERROR("Derivative of array not suported");
+                if (!foreq) {
+                  for (int i=1;i<=var.count;i++)
+                    labels.insert(std::make_pair(1,i));
+                } else {
+                  for (int i=forIndexInterval.lower();i<=forIndexInterval.upper();i++) 
+                    for (int j=1;j<=var.count;j++)
+                      labels.insert(std::make_pair(i,j));
+                }
+                return true;
               }
               Expression i = el.front();
               Modelica::PartEvalExp pe(syms);
               Expression ind = boost::apply_visitor(pe,i);
-              if (is<Modelica::AST::Integer>(ind)) {
-                VectorEdgeProperties newEdge;
-                newEdge.p_v += discrete_interval<int>::closed(get<Modelica::AST::Integer>(ind), get<Modelica::AST::Integer>(ind));
-                if (!foreq)
-                  newEdge.p_e +=discrete_interval<int>::closed(1, 1);
-                else
-                  newEdge.p_e += forIndexInterval;
-                edgeList.insert(newEdge);
+              if (is<Modelica::AST::Integer>(ind)) { // The index is a constant value
+              
+                int index = get<Modelica::AST::Integer>(ind);
+                ERROR_UNLESS(index<=var.count && index >= 1,"Index out of range");
+                if (!foreq) {
+                  labels.insert(std::make_pair(1,index));
+                } else {
+                  for (int i=forIndexInterval.lower();i<=forIndexInterval.upper();i++) 
+                    labels.insert(std::make_pair(i,index));
+                }
                 return true;
               } else if (is<Reference>(ind)) {
                 ERROR_UNLESS(foreq, "Generic index used outside for equation");
-                VectorEdgeProperties newEdge;
-                if (!foreq)
-                  newEdge.p_e +=discrete_interval<int>::closed(1, 1);
-                else
-                  newEdge.p_e += 
-                newEdge.p_v += forIndexInterval;
-                edgeList.insert(newEdge);
+                //TODO: Check that the index is the same variable than the for 
+                for (int i=forIndexInterval.lower();i<=forIndexInterval.upper();i++) 
+                  labels.insert(std::make_pair(i,i));
                 return true;
               } else if (is<BinOp>(ind)) {
                  ERROR("BinOp Indexed expression not supported yet");
@@ -150,12 +155,14 @@ namespace Causalize {
         return false;
       }
     bool ContainsVector::operator()(Reference v) const {
+      return false;
+      ERROR("Contains for non states not supported yet");
       if (is<Reference>(exp)) {
         if (get<0>(v.ref().front())==get<0>(get<Reference>(exp).ref().front())) {
           //std::cerr << "Checking " << v << " againt " << exp << " count= " << var.count << "\n";
           if (var.count==0) {
             // The variabl is a scalar
-            VectorEdgeProperties newEdge;
+            VectorEdgeProperty newEdge;
             if (!foreq)
               newEdge.p_e +=discrete_interval<int>::closed(1, 1);
             else
@@ -166,7 +173,7 @@ namespace Causalize {
           } else {
             ExpList el = get<1>(v.ref().front());
             if (el.size()==0) { // If there are no sub-indices the complete array is used
-              VectorEdgeProperties newEdge;
+              VectorEdgeProperty newEdge;
               // TODO:
               //newEdge.p_v += discrete_interval<int>::closed(1 var.count);
               if (!foreq)
@@ -180,7 +187,7 @@ namespace Causalize {
             Modelica::PartEvalExp pe(syms);
             Expression ind = boost::apply_visitor(pe,i);
             if (is<Modelica::AST::Integer>(ind)) {
-              VectorEdgeProperties newEdge;
+              VectorEdgeProperty newEdge;
               newEdge.p_v += discrete_interval<int>::closed(get<Modelica::AST::Integer>(ind),get<Modelica::AST::Integer>(ind));
               if (!foreq)
                 newEdge.p_e +=discrete_interval<int>::closed(1, 1);
@@ -190,7 +197,7 @@ namespace Causalize {
               return true;
             } else if (is<Reference>(ind)) {
               ERROR_UNLESS(foreq, "Generic index used outside for equation");
-              VectorEdgeProperties newEdge;
+              VectorEdgeProperty newEdge;
               newEdge.p_v += forIndexInterval;
               newEdge.p_e += forIndexInterval;
               edgeList.insert(newEdge);
@@ -214,7 +221,7 @@ namespace Causalize {
                 offset*=-1;
               }
               ERROR_UNLESS(bop.op()==Add, "BinOp index expression not supported yet");
-              VectorEdgeProperties newEdge;
+              VectorEdgeProperty newEdge;
               newEdge.p_e += forIndexInterval;
               int l = forIndexInterval.lower();
               int u = forIndexInterval.upper();
@@ -257,7 +264,7 @@ namespace Causalize {
         }
  
       }
-      EdgeProperties newEdge;
+      EdgeProperty newEdge;
       newEdge.genericIndex = std::pair<int,int>(a,b);
       newEdge.indexInterval.add(forIndexInterval);
       edgeList.insert(newEdge);

@@ -32,7 +32,7 @@ namespace Causalize {
   using namespace Modelica::AST;
   class ContainsVector: public boost::static_visitor<bool> {
   public:
-    ContainsVector(Expression, VectorVertexProperties, const VarSymbolTable &);
+    ContainsVector(Expression, VectorVertexProperty, const VarSymbolTable &);
     bool operator()(Modelica::AST::Integer v) const;
     bool operator()(Boolean v) const;
     bool operator()(String v) const;
@@ -52,14 +52,15 @@ namespace Causalize {
     bool operator()(Output) const;
     bool operator()(Reference) const;
     bool operator()(Range) const;
-    std::set<VectorEdgeProperties> getOccurrenceIndexes() { return edgeList; }
+    IndexPairSet getOccurrenceIndexes() { return labels; }
     void setForIndex(Expression a, Expression b);
   private:
     void addGenericIndex(BinOp b) const;
     Expression exp;
     boost::icl::discrete_interval<int> forIndexInterval;
-    mutable std::set<VectorEdgeProperties> edgeList;
-    VectorVertexProperties var;
+    mutable std::set<VectorEdgeProperty> edgeList;
+    mutable IndexPairSet labels;
+    VectorVertexProperty var;
     const VarSymbolTable &syms;
     bool foreq;
   }; 

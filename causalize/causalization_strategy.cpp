@@ -48,7 +48,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   DEBUG('c', "Equation indexes:\n");
 
   foreach_(Equation &e, equations) {
-    VertexProperties vp;
+    VertexProperty vp;
     Equality &eq = get<Equality>(e);
     PartEvalExp eval(_mmo_class.syms_ref(),false);
     eq.left_ref()=boost::apply_visitor(eval ,eq.left_ref());
@@ -66,7 +66,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
 
   index = 0;
   foreach_(Expression e, unknowns) {
-    VertexProperties vp;
+    VertexProperty vp;
     vp.unknowns = ExpList(1, e);
     vp.type = U;
     vp.index = index++;
@@ -102,7 +102,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   free(path);
   c_path = filename.str();
 
-  GraphPrinter<VertexProperties,EdgeProperties> gp(_graph);
+  GraphPrinter<VertexProperty,EdgeProperty> gp(_graph);
   gp.printGraph("initial_graph.dot");
 }
 

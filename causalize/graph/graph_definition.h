@@ -13,7 +13,7 @@ namespace Causalize {
   enum VertexType {E, U};
 
   /// @brief This is the property for a vertex in the incidence graph. Nodes can be of two types: Equation or Unknow.
-  struct VertexProperties {
+  struct VertexProperty {
 	  VertexType type;
   /// @brief This is used for debugin purposes
 	  int  index; 
@@ -24,15 +24,15 @@ namespace Causalize {
   };
 
   /// @brief Empty edge properties for incidence graph 
-  struct EdgeProperties {
-    friend std::ostream & operator << (std::ostream &os, const EdgeProperties &ep) {
-      os << "(1,1)";
+  struct EdgeProperty {
+    friend std::ostream & operator << (std::ostream &os, const EdgeProperty &ep) {
+      os << "";
       return os;
     }
   };
   
   /// @brief This is the definition of the Incidence graph for the scalar case.
-  typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VertexProperties,EdgeProperties> CausalizationGraph;
+  typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VertexProperty,EdgeProperty> CausalizationGraph;
   /// @brief A vertex of the Incidence graph
   typedef Causalize::CausalizationGraph::vertex_descriptor Vertex;
   /// @brief An equation vertex is the same as a regular vertex
