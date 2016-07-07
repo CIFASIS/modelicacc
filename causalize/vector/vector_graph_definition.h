@@ -52,7 +52,7 @@ namespace Causalize {
       foreach_(IndexPair ip, ips) 
         labels.erase(ip);
     } 
-    void RemoveUnknonws(IndexPairSet ips_remove) {
+    void RemoveUnknowns(IndexPairSet ips_remove) {
       IndexPairSet new_labels;
       foreach_(IndexPair ip, labels)  {
         bool found=false;
@@ -82,7 +82,7 @@ namespace Causalize {
       }
       labels = new_labels;
     }
-    bool isEmpty() {
+    bool IsEmpty() {
       return labels.size()==0;
     }
   };

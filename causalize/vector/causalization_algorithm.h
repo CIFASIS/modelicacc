@@ -13,6 +13,7 @@ class CausalizationStrategyVector{
 		void print();
 	private:
 		//void remove_edge_from_array(Vertex, Edge);
+    int step;
 		Causalize::VectorCausalizationGraph graph;
 		int equationNumber;
 		int unknownNumber;

@@ -1,6 +1,6 @@
 #include <causalize/vector/causalization_algorithm.h>
 #include <causalize/vector/vector_graph_definition.h>
-//#include <causalize/vector/graph_printer.h>
+#include <causalize/graph/graph_printer.h>
 #include <util/debug.h>
 #include <util/solve/solve.h>
 #include <boost/tuple/tuple.hpp>
@@ -22,6 +22,7 @@ using namespace boost::icl;
 namespace Causalize {
 CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGraph g, MMO_Class &m): mmo(m){
 	graph = g;
+  step = 0;
 	VectorCausalizationGraph::vertex_iterator vi, vi_end;
 	equationNumber = unknownNumber = 0;
 	for(boost::tie(vi, vi_end) = vertices(graph); vi != vi_end; vi++){
@@ -222,52 +223,76 @@ CausalizationStrategyVector::causalize(){
 	list<VectorVertex>::size_type numAcausalEqs = equationDescriptors.size();
 	list<VectorVertex>::iterator iter, auxiliaryIter;
 	auxiliaryIter = equationDescriptors.begin();
-	/*for(iter = auxiliaryIter; iter != equationDescriptors.end(); iter = auxiliaryIter){
+  // Process the equation side vertices
+	for(iter = auxiliaryIter; iter != equationDescriptors.end(); iter = auxiliaryIter){
+    // Additional iterator to erase while traversing
 		auxiliaryIter++;
 		VectorVertex eq = *iter;
 		ERROR_UNLESS(out_degree(eq, graph) != 0, "Problem is singular, not supported yet\n");
-    if(out_degree(eq,graph) == 1) {
-      VectorEdge e = *out_edges(eq, graph).first;
+    // Try to look for a set of indexes to causlize
+    Option<std::pair<VectorEdge,IndexPairSet> > op = CanCausalizeEquation(eq);
+    // If we can causalize something
+    if (op) {
+      // This pair holds which edge(the first component) to use for causalization and which indexes(the second component)
+      std::pair<VectorEdge,IndexPairSet> causal_pair = op.get(); 
+      VectorEdge e = causal_pair.first;
+      // This is the unknown node connecting to the edge
 			VectorVertex unknown = target(e,graph);
 	    equationNumber--;
 		  unknownNumber--;
-      std::list<VectorEdge> remove;
+      // Save the result of this step of causalization
 		  causalize1toN(unknown, eq, e);
-			remove_edge(e, graph);
-      foreach_(VectorEdge e1, out_edges(unknown,graph)) {
-        graph[e1].p_v -= graph[e].p_v;
-        if (graph[e1].isBalanced()) {
-          // TODO: I have to update the p_e propertie as well
-          WARNING("Have to update p_e also\n");
-        }
-        if (graph[e1].p_v.size()==0)  // Remove empty edges
-		      remove.push_back(e1);
+      // Update the pairs in the edge that is being causalized
+      graph[e].RemovePairs(causal_pair.second);
+      // Decrement the number of uncauzalized equations/unknowns
+      graph[eq].count -= causal_pair.second.size();
+      graph[unknown].count -= causal_pair.second.size();
+      // If the edge has no more pairs in it remove it
+      if (graph[e].IsEmpty()) {
+			  remove_edge(e, graph);
       }
-      foreach_(VectorEdge e1, remove) 
+      // Auxiliary list to later remove empty edges 
+      std::list<VectorEdge> remove;
+      foreach_(VectorEdge e1, out_edges(unknown,graph)) {
+        // Update the labels from all the edges adjacent to the unknown
+        graph[e1].RemoveUnknowns(causal_pair.second);
+        // If the edge is now empty schedule it for removal
+        if (graph[e1].IsEmpty()) {
+		      remove.push_back(e1);
+        }
+      }
+      // Now remove all shcheduled edges
+      foreach_(VectorEdge e1, remove) {
+        ERROR_UNLESS(out_degree(source(e1,graph),graph)>1, "Disconecting equation node");
 			  remove_edge(e1, graph);
-		  equationDescriptors.erase(iter);
-			unknownDescriptors.remove(unknown);
-    } else {
-      // Try the intersection
-    }
+      }
+      // If the equation node is now unconnected and with count==0 we can remove it
+      if (out_degree(eq,graph)==0) {
+        ERROR_UNLESS(graph[eq].count==0, "Disconected node with uncausalized equations");
+        remove_vertex(eq,graph);
+		    equationDescriptors.erase(iter);
+      }
+      // If the unknown node is now unconnected and with count==0 we can remove it
+      if (out_degree(unknown,graph)==0) {
+        ERROR_UNLESS(graph[unknown].count==0, "Disconected node with uncausalized unknowns");
+        remove_vertex(unknown,graph);
+			  unknownDescriptors.remove(unknown);
+      }
+    } 
+    stringstream ss;
+    ss << "graph_" << step++ << ".dot";
+    GraphPrinter<VectorVertexProperty,VectorEdgeProperty>  gp(graph);
+    gp.printGraph(ss.str());
 	}
-  */
+  abort();
 	
 	//now we process the unknowns' side
 	auxiliaryIter = unknownDescriptors.begin();
-	for(iter = auxiliaryIter; iter != unknownDescriptors.end(); iter = auxiliaryIter){
+	for(iter = auxiliaryIter; iter != unknownDescriptors.end(); iter = auxiliaryIter) {
 		auxiliaryIter++;
 		VectorVertex unknown = *iter;
 		ERROR_UNLESS(out_degree(unknown, graph) != 0, "Problem is singular, not supported yet\n");
-    Option<std::pair<VectorEdge,IndexPairSet> > op = CanCausalizeUnknown(unknown);
-    if (op) {
-      std::pair<VectorEdge,IndexPairSet> p = op.get(); 
-      cout << graph[p.first];
-      //cout << graph[p.second];
-    }
-    abort();
-	
-		if(out_degree(unknown, graph) == 1){
+   	if(out_degree(unknown, graph) == 1){
       VectorEdge e = *out_edges(unknown, graph).first;
 			VectorVertex eq = target(e,graph);
 	    equationNumber--;
@@ -350,48 +375,57 @@ Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCaus
         // Skip the same pair in the same edge
         if (*candidate_pair==*test) 
           continue;
-        // If other pair in the same edge uses the same equation we cannot use this pair
-        if (candidate_pair->first==test->first) 
+        // If other pair in the same edge uses the same unknown we cannot use this pair
+        if (candidate_pair->first==test->first) {
           break;
-      }
-      // If the candidate pair is allowed in this edge continue with the comparison with other edges
-      if (test==ep.labels.end()) { 
-        break;
-      }
-    }
-    // If we found a candidate_pair on the candidate_edge
-    if (candidate_pair!=ep.labels.end() && test==ep.labels.end()) { 
-      bool try_other_candidate=false;
-      cout << "Checking with other edges\n";
-      // Check with other edges that this candidate works
-      for(boost::tie(others,others_end) = out_edges(eq,graph); others != others_end; ++others) {
-        // Skip the candidate_edge
-        if (candidate_edge==*others)
-          continue;
-        VectorEdgeProperty ep = graph[*others]; 
-        // Check that for all pairs in the other edges do not collision with the candidate_pair
-        for (test = ep.labels.begin(); test !=ep.labels.end(); test++) {
-          if (candidate_pair->first==test->first) { 
-            try_other_candidate=true;
-            break;
-          }
         }
-        // If we found a colission try another candidate_pair on candidate_edge
-        if (try_other_candidate)
-          break;
       }
-      // We traversed all the other edges and the pair seems to be causalizable
-      if (others==others_end) 
-        break;
+      // If the candidate pair is not allowed in this edge continue with the next pair
+      if (test!=ep.labels.end()) { 
+        continue;
+      }
+      cout << "That pair is OK with the candidate edge \n";
+      // First check on ONE edge
+      // If we found a candidate_pair on the candidate_edge
+      if (candidate_pair!=ep.labels.end() && test==ep.labels.end()) { 
+        bool collision=false;
+        cout << "Checking with other edges\n";
+        // Check with other edges that this candidate works
+        for(boost::tie(others,others_end) = out_edges(eq,graph); others != others_end; ++others) {
+          // Skip the candidate_edge
+          if (candidate_edge==*others)
+            continue;
+          VectorEdgeProperty ep = graph[*others]; 
+          // Check that for all pairs in the other edges do not collision with the candidate_pair
+          cout << "Checking against " << ep << "\n";
+          for (test = ep.labels.begin(); test !=ep.labels.end(); test++) {
+            if (candidate_pair->first==test->first) { 
+              collision=true;
+              break;
+            }
+          }
+          // If we found a colission try another candidate_pair on candidate_edge
+          if (collision)
+            break;
+        }
+        // We traversed all the other edges and the pair seems to be causalizable
+        if (others==others_end)  {
+          cout << "Pair (" << candidate_pair->first << "," << candidate_pair->second << ") works!\n";
+          ret.insert(*candidate_pair);
+          return std::make_pair(candidate_edge,ret);
+        }
+      }
     }
   }
   // We traversed all the edges and found an edge and a pair with out collsion => candidates
   if (vi!=vi_end) {
+    cout << "Pair (" << candidate_pair->first << "," << candidate_pair->second << ") works!\n";
     // Return the candidates
     ret.insert(*candidate_pair);
     return std::make_pair(candidate_edge,ret);
   }
   return Option<std::pair<VectorEdge,IndexPairSet> >();
+
 }
 
 Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCausalizeUnknown(VectorUnknownVertex un) {
@@ -412,42 +446,50 @@ Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCaus
         if (*candidate_pair==*test) 
           continue;
         // If other pair in the same edge uses the same unknown we cannot use this pair
-        if (candidate_pair->second==test->second) 
+        if (candidate_pair->second==test->second) {
           break;
-      }
-      // If the candidate pair is allowed in this edge continue with the comparison with other edges
-      if (test==ep.labels.end()) { 
-        break;
-      }
-    }
-    // If we found a candidate_pair on the candidate_edge
-    if (candidate_pair!=ep.labels.end() && test==ep.labels.end()) { 
-      bool try_other_candidate=false;
-      cout << "Checking with other edges\n";
-      // Check with other edges that this candidate works
-      for(boost::tie(others,others_end) = out_edges(un,graph); others != others_end; ++others) {
-        // Skip the candidate_edge
-        if (candidate_edge==*others)
-          continue;
-        VectorEdgeProperty ep = graph[*others]; 
-        // Check that for all pairs in the other edges do not collision with the candidate_pair
-        for (test = ep.labels.begin(); test !=ep.labels.end(); test++) {
-          if (candidate_pair->second==test->second) { 
-            try_other_candidate=true;
-            break;
-          }
         }
-        // If we found a colission try another candidate_pair on candidate_edge
-        if (try_other_candidate)
-          break;
       }
-      // We traversed all the other edges and the pair seems to be causalizable
-      if (others==others_end) 
-        break;
+      // If the candidate pair is not allowed in this edge continue with the next pair
+      if (test!=ep.labels.end()) { 
+        continue;
+      }
+      cout << "That pair is OK with the candidate edge \n";
+      // First check on ONE edge
+      // If we found a candidate_pair on the candidate_edge
+      if (candidate_pair!=ep.labels.end() && test==ep.labels.end()) { 
+        bool collision=false;
+        cout << "Checking with other edges\n";
+        // Check with other edges that this candidate works
+        for(boost::tie(others,others_end) = out_edges(un,graph); others != others_end; ++others) {
+          // Skip the candidate_edge
+          if (candidate_edge==*others)
+            continue;
+          VectorEdgeProperty ep = graph[*others]; 
+          // Check that for all pairs in the other edges do not collision with the candidate_pair
+          cout << "Checking against " << ep << "\n";
+          for (test = ep.labels.begin(); test !=ep.labels.end(); test++) {
+            if (candidate_pair->second==test->second) { 
+              collision=true;
+              break;
+            }
+          }
+          // If we found a colission try another candidate_pair on candidate_edge
+          if (collision)
+            break;
+        }
+        // We traversed all the other edges and the pair seems to be causalizable
+        if (others==others_end)  {
+          cout << "Pair (" << candidate_pair->first << "," << candidate_pair->second << ") works!\n";
+          ret.insert(*candidate_pair);
+          return std::make_pair(candidate_edge,ret);
+        }
+      }
     }
   }
   // We traversed all the edges and found an edge and a pair with out collsion => candidates
   if (vi!=vi_end) {
+    cout << "Pair (" << candidate_pair->first << "," << candidate_pair->second << ") works!\n";
     // Return the candidates
     ret.insert(*candidate_pair);
     return std::make_pair(candidate_edge,ret);
