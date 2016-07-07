@@ -20,7 +20,7 @@ class CausalizationStrategyVector{
 		std::list<Causalize::VectorVertex> equationDescriptors, unknownDescriptors;
 		std::vector<Causalize::CausalizedVar> equations1toN;
 		std::vector<Causalize::CausalizedVar> equationsNto1;
-		void causalize1toN(const Causalize::VectorVertex &unknown, const Causalize::VectorVertex &equation, const Causalize::VectorEdge &e);
+		void causalize1toN(const Causalize::VectorVertex &unknown, const Causalize::VectorVertex &equation, const IndexPairSet &ips);
 		void causalizeNto1(const Causalize::VectorVertex &unknown, const Causalize::VectorVertex &equation, const Causalize::VectorEdge &e);
 		//int test_intersection(const Edge&, const Edge&);
 		std::string getName(const Causalize::VectorVertexProperty&, const Causalize::VectorEdgeProperty&);
