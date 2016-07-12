@@ -124,22 +124,21 @@ CausalizationStrategyVector::remove_edge_from_array(Vertex unknown, Edge targetE
   */
 
 void 
-CausalizationStrategyVector::causalize1toN(const VectorVertex &u, const VectorVertex &eq, const IndexPairSet &ips){
+CausalizationStrategyVector::causalize1toN(const VectorVertex &unk, const VectorVertex &eq, const IndexPairSet &ips){
 	CausalizedVar c_var;
-	c_var.unknown = graph[u];
+	c_var.unknown = graph[unk];
 	c_var.equation = graph[eq];
 	c_var.pairs = ips;
 	equations1toN.push_back(c_var);
 }
 
 void 
-CausalizationStrategyVector::causalizeNto1(const VectorVertex &u, const VectorVertex &eq, const VectorEdge &e){
+CausalizationStrategyVector::causalizeNto1(const VectorVertex &unk, const VectorVertex &eq, const IndexPairSet &ips){
 	CausalizedVar c_var;
-	c_var.unknown = graph[u];
+	c_var.unknown = graph[unk];
 	c_var.equation = graph[eq];
-	c_var.edge = graph[e];
-  //std::cerr << "Causalizing " << c_var.unknown.variableName << " with eq " << graph[eq].equation << "\n";
-	equationsNto1.insert(begin(equationsNto1), c_var);		
+	c_var.pairs = ips;
+  equationsNto1.insert(begin(equationsNto1), c_var);		
 }
 
 bool
@@ -234,9 +233,11 @@ CausalizationStrategyVector::causalize() {
 	
 	list<VectorVertex>::size_type numAcausalEqs = equationDescriptors.size();
 	list<VectorVertex>::iterator iter, auxiliaryIter;
+	
+  
+  //First, we proccess the equations' side
 	auxiliaryIter = equationDescriptors.begin();
-  // Process the equation side vertices
-	for(iter = auxiliaryIter; iter != equationDescriptors.end(); iter = auxiliaryIter){
+  for(iter = auxiliaryIter; iter != equationDescriptors.end(); iter = auxiliaryIter){
     // Additional iterator to erase while traversing
 		auxiliaryIter++;
 		VectorVertex eq = *iter;
@@ -251,23 +252,23 @@ CausalizationStrategyVector::causalize() {
       std::pair<VectorEdge,IndexPairSet> causal_pair = op.get(); 
       VectorEdge e = causal_pair.first;
       // This is the unknown node connecting to the edge
-			VectorVertex unknown = target(e,graph);
+			VectorVertex unk = getUnknown(e);
 	    equationNumber--;
 		  unknownNumber--;
       // Save the result of this step of causalization
-		  causalize1toN(unknown, eq, causal_pair.second);
+		  causalize1toN(unk, eq, causal_pair.second);
       // Update the pairs in the edge that is being causalized
       graph[e].RemovePairs(causal_pair.second);
       // Decrement the number of uncauzalized equations/unknowns
       graph[eq].count -= causal_pair.second.size();
-      graph[unknown].count -= causal_pair.second.size();
+      graph[unk].count -= causal_pair.second.size();
       // If the edge has no more pairs in it remove it
       if (graph[e].IsEmpty()) {
 			  remove_edge(e, graph);
       }
       // Auxiliary list to later remove empty edges 
       std::list<VectorEdge> remove;
-      foreach_(VectorEdge e1, out_edges(unknown,graph)) {
+      foreach_(VectorEdge e1, out_edges(unk,graph)) {
         // Update the labels from all the edges adjacent to the unknown
         graph[e1].RemoveUnknowns(causal_pair.second);
         // If the edge is now empty schedule it for removal
@@ -275,9 +276,79 @@ CausalizationStrategyVector::causalize() {
 		      remove.push_back(e1);
         }
       }
+      // Now remove all scheduled edges
+      foreach_(VectorEdge e1, remove) {
+        WARNING_UNLESS(out_degree(getEquation(e1),graph)>1, "Disconnecting equation node");
+			  remove_edge(e1, graph);
+      }
+      // If the equation node is now unconnected and with count==0 we can remove it
+      if (out_degree(eq,graph)==0) {
+        ERROR_UNLESS(graph[eq].count==0, "Disconnected node with uncausalized equations");
+        remove_vertex(eq,graph);
+		    equationDescriptors.erase(iter);
+      }
+      // If the unknown node is now unconnected and with count==0 we can remove it
+      if (out_degree(unk,graph)==0) {
+        ERROR_UNLESS(graph[unk].count==0, "Disconnected node with uncausalized unknowns");
+        remove_vertex(unk,graph);
+			  unknownDescriptors.remove(unk);
+      }
+      stringstream ss;
+      ss << "graph_" << step++ << ".dot";
+      GraphPrinter<VectorVertexProperty,VectorEdgeProperty>  gp(graph);
+      gp.printGraph(ss.str());
+    } 
+	}
+	
+	
+  //Now, we process the unknowns' side
+ 	auxiliaryIter = unknownDescriptors.begin();
+  for(iter = auxiliaryIter; iter != unknownDescriptors.end(); iter = auxiliaryIter){
+    // Additional iterator to erase while traversing
+		auxiliaryIter++;
+		VectorVertex unk = *iter;
+		ERROR_UNLESS(out_degree(unk, graph) != 0, "Problem is singular, not supported yet\n");
+    // Try to look for a set of indexes to causlize
+    Option<std::pair<VectorEdge,IndexPairSet> > op = CanCausalizeUnknown(unk);
+    // If we can causalize something
+    if (op) {
+      // We are going to causalize something
+      causalize_some=true;
+      // This pair holds which edge(the first component) to use for causalization and which indexes(the second component)
+      std::pair<VectorEdge,IndexPairSet> causal_pair = op.get(); 
+      VectorEdge e = causal_pair.first;
+      // This is the equation node connecting to the edge
+			VectorVertex eq = getEquation(e);
+      std::cout << "Eq vertex =  " << graph[eq].type << /*" " << graph[eq].eqs.front() << */"\n";
+	    equationNumber--;
+		  unknownNumber--;
+      // Save the result of this step of causalization
+		  causalizeNto1(unk, eq, causal_pair.second);
+      // Update the pairs in the edge that is being causalized
+      graph[e].RemovePairs(causal_pair.second);
+      // Decrement the number of uncauzalized equations/unknowns
+      graph[eq].count -= causal_pair.second.size();
+      graph[unk].count -= causal_pair.second.size();
+      // If the edge has no more pairs in it remove it
+      if (graph[e].IsEmpty()) {
+			  remove_edge(e, graph);
+      }
+      // Auxiliary list to later remove empty edges 
+      std::list<VectorEdge> remove;
+      foreach_(VectorEdge e1, out_edges(eq,graph)) {
+        // Update the labels from all the edges adjacent to the equation
+        std::cout << "Removing equations from " << graph[e1]<<"\n";
+        graph[e1].RemoveEquations(causal_pair.second);
+        // If the edge is now empty schedule it for removal
+        if (graph[e1].IsEmpty()) {
+          std::cout << "Removing the edge\n";
+		      remove.push_back(e1);
+        }
+      }
       // Now remove all shcheduled edges
       foreach_(VectorEdge e1, remove) {
-        ERROR_UNLESS(out_degree(source(e1,graph),graph)>1, "Disconecting equation node");
+        if (e1!=e)
+          WARNING_UNLESS(out_degree(getUnknown(e1),graph)>1, "Disconecting unknown node"); //TODO: Review this condition and error message
 			  remove_edge(e1, graph);
       }
       // If the equation node is now unconnected and with count==0 we can remove it
@@ -287,10 +358,10 @@ CausalizationStrategyVector::causalize() {
 		    equationDescriptors.erase(iter);
       }
       // If the unknown node is now unconnected and with count==0 we can remove it
-      if (out_degree(unknown,graph)==0) {
-        ERROR_UNLESS(graph[unknown].count==0, "Disconected node with uncausalized unknowns");
-        remove_vertex(unknown,graph);
-			  unknownDescriptors.remove(unknown);
+      if (out_degree(unk,graph)==0) {
+        ERROR_UNLESS(graph[unk].count==0, "Disconected node with uncausalized unknowns");
+        remove_vertex(unk,graph);
+			  unknownDescriptors.remove(unk);
       }
       stringstream ss;
       ss << "graph_" << step++ << ".dot";
@@ -298,8 +369,7 @@ CausalizationStrategyVector::causalize() {
       gp.printGraph(ss.str());
     } 
 	}
-	
-	//now we process the unknowns' side
+  
   /*
 	auxiliaryIter = unknownDescriptors.begin();
 	for(iter = auxiliaryIter; iter != unknownDescriptors.end(); iter = auxiliaryIter) {
@@ -512,6 +582,15 @@ Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCaus
   return Option<std::pair<VectorEdge,IndexPairSet> >();
 }
 
+
+Vertex CausalizationStrategyVector::getEquation(Edge e) {
+  return ((graph[(source(e,graph))].type==E))?source(e,graph):target(e,graph);
+}
+
+
+Vertex CausalizationStrategyVector::getUnknown(Edge e) {
+  return ((graph[(target(e,graph))].type==U))?target(e,graph):source(e,graph);
+}
 
 
 void

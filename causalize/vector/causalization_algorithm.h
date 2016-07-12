@@ -21,11 +21,13 @@ class CausalizationStrategyVector{
 		std::vector<Causalize::CausalizedVar> equations1toN;
 		std::vector<Causalize::CausalizedVar> equationsNto1;
 		void causalize1toN(const Causalize::VectorVertex &unknown, const Causalize::VectorVertex &equation, const IndexPairSet &ips);
-		void causalizeNto1(const Causalize::VectorVertex &unknown, const Causalize::VectorVertex &equation, const Causalize::VectorEdge &e);
+		void causalizeNto1(const Causalize::VectorVertex &unknown, const Causalize::VectorVertex &equation, const IndexPairSet &ips);
 		//int test_intersection(const Edge&, const Edge&);
 		std::string getName(const Causalize::VectorVertexProperty&, const Causalize::VectorEdgeProperty&);
     Modelica::MMO_Class &mmo;
     Option<std::pair<VectorEdge,IndexPairSet> > CanCausalizeEquation(VectorEquationVertex eq);
     Option<std::pair<VectorEdge,IndexPairSet> > CanCausalizeUnknown(VectorUnknownVertex eq);
+    Vertex getEquation(Edge e);
+    Vertex getUnknown(Edge e);
 };
 }
