@@ -278,7 +278,7 @@ CausalizationStrategyVector::causalize() {
       }
       // Now remove all scheduled edges
       foreach_(VectorEdge e1, remove) {
-        WARNING_UNLESS(out_degree(getEquation(e1),graph)>1, "Disconnecting equation node");
+    	  WARNING_UNLESS(out_degree(getEquation(e1),graph)>1, "Disconnecting equation node");
 			  remove_edge(e1, graph);
       }
       // If the equation node is now unconnected and with count==0 we can remove it

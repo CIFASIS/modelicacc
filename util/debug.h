@@ -56,3 +56,9 @@ void ERROR_UNLESS(bool condition, const char *format, ...);
  * Print an Warning message. 
  */
 void WARNING(const char *format, ...);
+
+/**
+ * Print an WARNING message if condition is false.
+ * Then continues with the execution.
+ */
+void WARNING_UNLESS(bool condition, const char *format, ...);
