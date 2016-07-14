@@ -11,6 +11,7 @@
 #include <boost/icl/discrete_interval.hpp>
 #include <sstream>
 #include <mmo/mmo_class.h>
+#include <ast/queries.h>
 
 #define sz(a) int((a).size())
 
@@ -199,7 +200,14 @@ CausalizationStrategyVector::causalize() {
         }
 		  } else{
 	  	  Expression ref;
-	      if(cv.unknown.count == 0)
+	  	  bool isRefScalar;
+	  	  if (is<Call>(cv.unknown.unknowns.front())) {
+	  	    isRefScalar=isScalar(refName(get<Reference>(get<Call>(cv.unknown.unknowns.front()).args().front())),mmo.syms());
+	  	  }
+	  	  else {
+	  	    isRefScalar=isScalar(refName(get<Reference>(cv.unknown.unknowns.front())),mmo.syms());
+	  	  }
+	  	  if(isRefScalar)
 		      ref = cv.unknown.unknowns.front();
 	      else if (cv.edge.p_v.size()==1) {
           Expression var = cv.unknown.unknowns.front();
@@ -355,13 +363,13 @@ CausalizationStrategyVector::causalize() {
       if (out_degree(eq,graph)==0) {
         ERROR_UNLESS(graph[eq].count==0, "Disconected node with uncausalized equations");
         remove_vertex(eq,graph);
-		    equationDescriptors.erase(iter);
+		    equationDescriptors.remove(eq);
       }
       // If the unknown node is now unconnected and with count==0 we can remove it
       if (out_degree(unk,graph)==0) {
         ERROR_UNLESS(graph[unk].count==0, "Disconected node with uncausalized unknowns");
         remove_vertex(unk,graph);
-			  unknownDescriptors.remove(unk);
+			  unknownDescriptors.erase(iter);
       }
       stringstream ss;
       ss << "graph_" << step++ << ".dot";

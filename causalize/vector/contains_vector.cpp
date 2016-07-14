@@ -25,6 +25,7 @@
 #include <util/ast_visitors/evalexp.h>
 #include <boost/variant/apply_visitor.hpp>
 #include <util/ast_visitors/part_evalexp.h>
+#include <ast/queries.h>
 
 using namespace boost;
 using namespace boost::icl;
@@ -38,6 +39,7 @@ namespace Causalize {
 		syms(s),
 		foreq(false),
 		indexes() {};
+
   /**
    * Builds a ContainsVector class to find occurrences of the Expression 'e'
    * using the table of symbols 's' and index list 'indexes' in 'for-equations'.
@@ -55,13 +57,21 @@ namespace Causalize {
       EvalExp ev(syms);
       forIndexInterval =  discrete_interval<int>::closed(boost::apply_visitor(ev,range.start_ref()), boost::apply_visitor(ev,range.end_ref()));
   };
+
   bool ContainsVector::operator()(Modelica::AST::Integer v) const { return exp==Expression(v); }
+
   bool ContainsVector::operator()(Boolean v) const { return exp==Expression(v); }
+
   bool ContainsVector::operator()(String v) const { return exp==Expression(v); }
+
   bool ContainsVector::operator()(Name v) const { return exp==Expression(v); }
+
   bool ContainsVector::operator()(Real v) const { return exp==Expression(v); }
+
   bool ContainsVector::operator()(SubEnd v) const { return exp==Expression(v); }
+
   bool ContainsVector::operator()(SubAll v) const { return exp==Expression(v); }
+
   bool ContainsVector::operator()(BinOp v) const {
     if (exp==Expression(v)) return true;
     Expression l=v.left(), r=v.right();
@@ -69,11 +79,13 @@ namespace Causalize {
     bool rr = apply(r);
     return rr || rl;
   }
+
   bool ContainsVector::operator()(UnaryOp v) const {
     if (exp==Expression(v)) return true;
     Expression e=v.exp();
     return apply(e);
   }
+
   bool ContainsVector::operator()(IfExp v) const {
     if (exp==Expression(v)) return true;
     Expression cond=v.cond(), then=v.then(), elseexp=v.elseexp();
@@ -82,6 +94,7 @@ namespace Causalize {
     const bool re = apply(elseexp);
     return rc || rt || re;
   }
+
   bool ContainsVector::operator()(Range v) const {
     if (exp==Expression(v)) return true;
     Expression start=v.start(), end=v.end();
@@ -89,147 +102,76 @@ namespace Causalize {
     bool re = apply(end);
     return rs || re;
   }
+
   bool ContainsVector::operator()(Brace v) const {
     if (exp==Expression(v)) return true;
     return false;
   }
+
   bool ContainsVector::operator()(Bracket v) const {
     if (exp==Expression(v)) return true;
     return false;
   }
-  bool ContainsVector::operator()(Call expr) const {
-    if (exp==Expression(expr)) return true;
+
+  bool ContainsVector::operator()(Call call) const {
     if (is<Call>(exp)) {
-      Call call=get<Call>(exp);
-      if (expr.name()=="der" && call.name()=="der") {  //Is a derivative expression
-        ERROR_UNLESS(is<Reference>(expr.args().front()) && is<Reference>(call.args().front()), "Arguments to call must be a reference");
-        Reference vRef=get<Reference>(expr.args().front());
+      Call callExpr=get<Call>(exp);
+      if (call.name()=="der" && callExpr.name()=="der") {  //Is a derivative expression
+        ERROR_UNLESS(is<Reference>(call.args().front()) && is<Reference>(callExpr.args().front()), "Arguments to call must be a reference");
         Reference callRef=get<Reference>(call.args().front());
-        if (get<0>(vRef.ref().front())==get<0>(callRef.ref().front())) { //The references are the same
-          buildPairs(vRef);
+        Reference callExprRef=get<Reference>(callExpr.args().front());
+        if (get<0>(callRef.ref().front())==get<0>(callExprRef.ref().front())) { //The references are the same
+          buildPairs(callRef);
           return true;
         }
         //The references are not the same
         return false;
       }
       else { //Is not a derivative expression, find the occurrence inside the parameters
-
-
-
+        bool findOccur = false;
+        foreach_ (Expression e, call.args()) {
+          findOccur|=(apply(e));
+        }
+        return findOccur;
       }
     }
+    if (exp==Expression(call)) return true;
+
     return false;
   }
+
   bool ContainsVector::operator()(FunctionExp v) const {
     if (exp==Expression(v)) return true;
     return false;
   }
+
   bool ContainsVector::operator()(ForExp v) const {
     if (exp==Expression(v)) return true;
     return false;
   }
+
   bool ContainsVector::operator()(Named v) const {
     if (exp==Expression(v)) return true;
     return false;
   }
+
   bool ContainsVector::operator()(Output v) const {
     if (exp==Expression(v)) return true;
     foreach_(OptExp oe, v.args())
       if (oe && apply(oe.get())) return true;
     return false;
   }
-  bool ContainsVector::operator()(Reference v) const {
-    return false;
-    ERROR("Contains for non states not supported yet");
+
+  bool ContainsVector::operator()(Reference ref) const {
     if (is<Reference>(exp)) {
-      if (get<0>(v.ref().front())==get<0>(get<Reference>(exp).ref().front())) {
-        //std::cerr << "Checking " << v << " againt " << exp << " count= " << var.count << "\n";
-        if (unk2find.count==0) {
-          // The variabl is a scalar
-          VectorEdgeProperty newEdge;
-          if (!foreq)
-            newEdge.p_e +=discrete_interval<int>::closed(1, 1);
-          else
-            newEdge.p_e += forIndexInterval;
-          newEdge.p_v += discrete_interval<int>::closed(0, 0);
-          edgeList.insert(newEdge);
-          return true;
-        } else {
-          ExpList el = get<1>(v.ref().front());
-          if (el.size()==0) { // If there are no sub-indices the complete array is used
-            VectorEdgeProperty newEdge;
-            // TODO:
-            //newEdge.p_v += discrete_interval<int>::closed(1 var.count);
-            if (!foreq)
-              newEdge.p_e +=discrete_interval<int>::closed(1, 1);
-            else
-              newEdge.p_e += forIndexInterval;
-            edgeList.insert(newEdge);
-            return true;
-          }
-          Expression i = el.front();
-          Modelica::PartEvalExp pe(syms);
-          Expression ind = boost::apply_visitor(pe,i);
-          if (is<Modelica::AST::Integer>(ind)) {
-            VectorEdgeProperty newEdge;
-            newEdge.p_v += discrete_interval<int>::closed(get<Modelica::AST::Integer>(ind),get<Modelica::AST::Integer>(ind));
-            if (!foreq)
-              newEdge.p_e +=discrete_interval<int>::closed(1, 1);
-            else
-              newEdge.p_e += forIndexInterval;
-            edgeList.insert(newEdge);
-            return true;
-          } else if (is<Reference>(ind)) {
-            ERROR_UNLESS(foreq, "Generic index used outside for equation");
-            VectorEdgeProperty newEdge;
-            newEdge.p_v += forIndexInterval;
-            newEdge.p_e += forIndexInterval;
-            edgeList.insert(newEdge);
-            return true;
-          } else if (is<BinOp>(ind)) {
-            BinOp bop = get<BinOp>(ind);
-            if (is<Output>(bop.right())) {
-              ERROR_UNLESS(get<Output>(bop.right()).args().size()==1, "BinOp index expression not supported yet");
-              Expression plus = get<Output>(bop.right()).args().front().get();
-              ERROR_UNLESS(is<Modelica::AST::Integer>(plus), "BinOp index expression not supported yet");
-              int val = get<Modelica::AST::Integer>(plus);
-              if (val <0 && bop.op() == Sub) {
-                bop.op_ref()=Add;
-                bop.right_ref()=-val;
-              }
-            }
-            ERROR_UNLESS(is<Modelica::AST::Integer>(bop.right()), "BinOp index expression not supported yet");
-            int offset = get<Modelica::AST::Integer>(bop.right());
-            if (bop.op()==Sub) {
-              bop = BinOp(bop.left(),Add, -offset);
-              offset*=-1;
-            }
-            ERROR_UNLESS(bop.op()==Add, "BinOp index expression not supported yet");
-            VectorEdgeProperty newEdge;
-            newEdge.p_e += forIndexInterval;
-            int l = forIndexInterval.lower();
-            int u = forIndexInterval.upper();
-            newEdge.p_v += discrete_interval<int>::closed(l+offset, u+offset);
-            edgeList.insert(newEdge);
-            return true;
-          } else {
-            std::cerr << ind << "\n";
-            ERROR("Indexed expression not supported yet");
-          }
-        }
+      if (get<0>(ref.ref().front())==get<0>(get<Reference>(exp).ref().front())) { //The references are the same
+        buildPairs(ref);
+        return true;
       }
     }
     return false;
   }
 
-//  void ContainsVector::setForIndex(Expression a, Expression b, Name v) {
-//     Modelica::EvalExp ev(syms);
-//     forStart=boost::apply_visitor(ev,a);
-//     forEnd=boost::apply_visitor(ev,b);
-//     forIndexVar=v;
-//     forIndexInterval =  discrete_interval<int>::closed(forStart,forEnd);
-//     foreq=true;
-//  }
 
   void ContainsVector::buildPairs(Reference unkRef) const {
     if (unk2find.count==1) { // The unknown is a scalar (or array of size 1)
@@ -267,6 +209,8 @@ namespace Causalize {
         }
         else if (is<Reference>(ind)) { // The index is a reference
           ERROR_UNLESS(foreq, "Generic index used outside for equation");
+          Reference indRef = get<Reference>(ind);
+          ERROR_UNLESS(refName(indRef)==indexes.front().name(),"Array index reference and for index variable are not the same");
           //TODO: Check that the index is the same variable than the for
           buildPairsNtoN();
         }

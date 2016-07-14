@@ -125,6 +125,15 @@ inline bool isState(Name n, const VarSymbolTable & syms) {
   return var_info.get().state();
 }
 
+inline bool isScalar(Name n, const VarSymbolTable & syms) {
+  Option<VarInfo> var_info = syms[n];
+  if (!var_info)
+    ERROR("No symbol %s", n.c_str());
+  if (!var_info.get().indices())
+    return true;
+  return false;
+}
+
 inline bool isArray1(Name n, const VarSymbolTable & syms) {
   Option<VarInfo> var_info = syms[n];
   if (!var_info) 
@@ -133,6 +142,7 @@ inline bool isArray1(Name n, const VarSymbolTable & syms) {
     return false;
   return var_info.get().indices().get().size()==1;
 }
+
 inline Expression arraySize(Name n, const VarSymbolTable & syms) {
   Option<VarInfo> var_info = syms[n];
   if (!var_info) 
