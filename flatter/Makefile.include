@@ -1,21 +1,26 @@
-OBJS_FLATTER := flatter/main.o \
-	mmo/mmo_class.o \
-	util/table.o \
-	util/type.o  \
-	util/debug.o  \
-	flatter/classFinder.o \
-	flatter/remove_composition.o \
-	util/ast_visitors/dotExpression.o \
-	util/ast_visitors/markConnector.o \
-	util/ast_visitors/evalexp.o \
-	util/ast_visitors/part_evalexp.o \
-	util/ast_visitors/constExp.o \
-	util/ast_visitors/replace.o \
-	flatter/flatter.o \
-	flatter/connectors.o \
-	mmo/mmo_tree.o
+all: bin/flatter 
+SRC_FLATTER := flatter/main.cpp \
+	mmo/mmo_class.cpp \
+	util/table.cpp \
+	util/type.cpp  \
+	util/debug.cpp  \
+	flatter/classFinder.cpp \
+	flatter/remove_composition.cpp \
+	util/ast_visitors/dotExpression.cpp \
+	util/ast_visitors/markConnector.cpp \
+	util/ast_visitors/evalexp.cpp \
+	util/ast_visitors/part_evalexp.cpp \
+	util/ast_visitors/constExp.cpp \
+	util/ast_visitors/replace.cpp \
+	flatter/flatter.cpp \
+	flatter/connectors.cpp \
+	mmo/mmo_tree.cpp
 
-bin/flatter: $(OBJS_FLATTER) lib/libmodelica.a
+
+OBJS_FLATTER= $(SRC_FLATTER:.cpp=.o)
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_FLATTER)))
+
+bin/flatter: $(OBJS_FLATTER) $(LIBMODELICA)
 	$(CXX) $(CXXFLAGS) -o bin/flatter $(OBJS_FLATTER) -L./lib -lmodelica
 
 

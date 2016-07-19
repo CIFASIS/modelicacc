@@ -1,17 +1,22 @@
-OBJS_ANTIALIAS := antialias/main.o \
-	mmo/mmo_class.o \
-	util/table.o \
-	util/type.o \
-	util/debug.o \
-	util/ast_visitors/evalexp.o \
-	util/ast_visitors/part_evalexp.o \
-	util/ast_visitors/replace.o \
-	util/ast_visitors/replace_eq.o \
-	util/ast_visitors/replace_st.o \
-	causalize/state_variables_finder.o \
-	antialias/remove_alias.o
+all: bin/antialias
+SRC_ANTIALIAS := antialias/main.cpp \
+	mmo/mmo_class.cpp \
+	util/table.cpp \
+	util/type.cpp \
+	util/debug.cpp \
+	util/ast_visitors/evalexp.cpp \
+	util/ast_visitors/part_evalexp.cpp \
+	util/ast_visitors/replace.cpp \
+	util/ast_visitors/replace_eq.cpp \
+	util/ast_visitors/replace_st.cpp \
+	causalize/state_variables_finder.cpp \
+	antialias/remove_alias.cpp
+
 LIBS=-L./lib -lginac -lmodelica 
-bin/antialias: $(OBJS_ANTIALIAS) lib/libmodelica.a
+OBJS_ANTIALIAS = $(SRC_ANTIALIAS:.cpp=.o)
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_ANTIALIAS)))
+
+bin/antialias: $(OBJS_ANTIALIAS) $(LIBMODELICA) 
 	$(CXX) $(CXXFLAGS) $(OBJS_ANTIALIAS) -o bin/antialias $(LIBS)
 
 
