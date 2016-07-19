@@ -110,10 +110,10 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         const bool rr = boost::apply_visitor(occurrs,eqq.right_ref()); 
         //std::cerr << "Result: " << rl << " " << rr << "\n";
         if(rl || rr) {
-            VectorEdgeProperty ep;
-            ep.labels = occurrs.getOccurrenceIndexes();
-            add_edge(eq, un, ep, graph);
-            DEBUG('c', "(%d, %d) ", graph[eq].index, graph[un].index);
+          VectorEdgeProperty ep;
+          ep.labels = occurrs.getOccurrenceIndexes();
+          add_edge(eq, un, ep, graph);
+          DEBUG('c', "(%d, %d) ", graph[eq].index, graph[un].index);
         } 
       } else if (is<ForEq>(e)) {
         ForEq feq = get<ForEq>(e);
@@ -137,15 +137,10 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         const bool rl = boost::apply_visitor(occurrs_for,eqq.left_ref());
         const bool rr = boost::apply_visitor(occurrs_for,eqq.right_ref()); 
         if(rl || rr) {
-          //std::cerr << "Var: " << graph[un].variableName << "\n";
-          //std::cerr << "Eq: " << e << "\nleft=" << rl << " right = " << rr << "\n";
-          //ERROR_UNLESS(occurrs.getOccurrenceIndexes().size()!=1,"More than one edge property found");
-          //foreach_(VectorEdgeProperty ep, occurrs_for.getOccurrenceIndexes()) {
-            VectorEdgeProperty ep;  
-            ep.labels = occurrs_for.getOccurrenceIndexes();
-            add_edge(eq, un, ep, graph);
-            DEBUG('c', "(%d, %d) ", graph[eq].index, graph[un].index);
-          //}
+          VectorEdgeProperty ep;
+          ep.labels = occurrs_for.getOccurrenceIndexes();
+          add_edge(eq, un, ep, graph);
+          DEBUG('c', "(%d, %d) ", graph[eq].index, graph[un].index);
         } 
       } else
         ERROR_UNLESS(is<Equality>(e), "Only causalization of equality and for equation is supported");

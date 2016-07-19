@@ -24,15 +24,18 @@ namespace Causalize {
 
   struct VectorEdgeProperty {
 	  //TODO: remove old fields
-	  boost::icl::interval_set<int> p_e;
-	  boost::icl::interval_set<int> p_v;
+//	  boost::icl::interval_set<int> p_e;
+//	  boost::icl::interval_set<int> p_v;
     bool operator<  (const VectorEdgeProperty & rhs) const {
-      if (p_e <rhs.p_e) return true;
-      if (p_v < rhs.p_v ) return true; 
+      if (getDom().size() < rhs.getDom().size()) return true;
+      if (getRan().size() < rhs.getRan().size()) return true;
+//      if (p_e < rhs.p_e) return true;
+//      if (p_v < rhs.p_v) return true;
       return false;
     }
-    bool isBalanced() {
-      return p_e.size()==p_v.size();
+    bool isBalanced() const {
+      return getDom().size()==getRan().size();
+//      return p_e.size()==p_v.size();
     }
 
     friend std::ostream & operator << (std::ostream &os, const VectorEdgeProperty &ep) {
@@ -42,9 +45,22 @@ namespace Causalize {
       os << "}";
       return os;
     }
-    
+
     /* This is the new version */
     IndexPairSet labels;
+    std::set<int> getDom() const {
+      std::set<int> dom;
+      foreach_(IndexPair ip, labels)
+        dom.insert(ip.first);
+      return dom;
+    }
+    std::set<int> getRan() const {
+      std::set<int> ran;
+      foreach_(IndexPair ip, labels)
+        ran.insert(ip.second);
+      return ran;
+    }
+
 /// @brief This function removes a set of pairs from this Edge
 ///
 /// @param ips set of pairs to remove
@@ -102,7 +118,7 @@ namespace Causalize {
     VectorVertexProperty unknown;
     VectorVertexProperty equation;
     //TODO: Remove this prop
-    VectorEdgeProperty edge;
+//    VectorEdgeProperty edge;
     IndexPairSet pairs;
   };
 }

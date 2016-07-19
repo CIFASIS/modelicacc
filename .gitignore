@@ -8,3 +8,5 @@ Makefile
 *.status
 configure
 
+/.cproject
+/.project

@@ -114,9 +114,9 @@ namespace Causalize {
   }
 
   bool ContainsVector::operator()(Call call) const {
-    if (is<Call>(exp)) {
+    if (is<Call>(exp)) { //exp must be a derivative expression
       Call callExpr=get<Call>(exp);
-      if (call.name()=="der" && callExpr.name()=="der") {  //Is a derivative expression
+      if (call.name()=="der" && callExpr.name()=="der") {  //call and exp are derivative expressions
         ERROR_UNLESS(is<Reference>(call.args().front()) && is<Reference>(callExpr.args().front()), "Arguments to call must be a reference");
         Reference callRef=get<Reference>(call.args().front());
         Reference callExprRef=get<Reference>(callExpr.args().front());
@@ -127,15 +127,14 @@ namespace Causalize {
         //The references are not the same
         return false;
       }
-      else { //Is not a derivative expression, find the occurrence inside the parameters
-        bool findOccur = false;
-        foreach_ (Expression e, call.args()) {
-          findOccur|=(apply(e));
-        }
-        return findOccur;
+    } else { //exp is not a derivative expression, find the occurrence of exp inside the call arguments
+      if (exp==Expression(call)) return true;
+      bool findOccur = false;
+      foreach_ (Expression e, call.args()) {
+        findOccur|=(apply(e));
       }
+      return findOccur;
     }
-    if (exp==Expression(call)) return true;
 
     return false;
   }

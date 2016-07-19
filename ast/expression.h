@@ -206,6 +206,10 @@ namespace Modelica {
       Reference(){};
       Reference(Option<Name> dot, Name n, Option<ExpList> i);
       Reference(Reference, Name n, Option<ExpList> i);
+
+      Reference(Name n, ExpList i);
+      Reference(Name n, Expression i);
+
       Reference(Name n);
       Reference(Ref r);
       printable(Reference); 

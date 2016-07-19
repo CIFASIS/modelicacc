@@ -348,3 +348,7 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
   return ret;
 }
 
+EquationList EquationSolver::solve(Equation eq, Expression exp, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &cl, const std::string path) {
+  return solve(EquationList(1,eq), ExpList(1,exp), syms,c_code,cl,path);
+}
+

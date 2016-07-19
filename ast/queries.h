@@ -131,6 +131,10 @@ inline bool isScalar(Name n, const VarSymbolTable & syms) {
     ERROR("No symbol %s", n.c_str());
   if (!var_info.get().indices())
     return true;
+  if (var_info.get().indices() && var_info.get().indices().get().size()==0)
+
+      return true;
+  std::cout << n << " has " << var_info.get().indices().get().size() << " indexes\n";
   return false;
 }
 

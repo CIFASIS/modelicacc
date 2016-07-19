@@ -7,4 +7,5 @@
 
 namespace Causalize {
   void process_for_equations(Modelica::MMO_Class &mmo_class);
+  Equation instantiate_equation(Equation, Name, Real, VarSymbolTable &);
 }
