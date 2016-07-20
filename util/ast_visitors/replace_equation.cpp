@@ -20,7 +20,6 @@
 #include <util/debug.h>
 #include <util/ast_visitors/replace_equation.h>
 #include <boost/variant/apply_visitor.hpp>
-#define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
 
@@ -33,8 +32,8 @@ namespace Modelica {
       return v;
     };
     Equation ReplaceEquation::operator()(Equality v) const {
-      v.left_ref()=boost::apply_visitor(replace_exp, v.left_ref());
-      v.right_ref()=boost::apply_visitor(replace_exp, v.right_ref());
+      v.left_ref()=Apply(replace_exp, v.left_ref());
+      v.right_ref()=Apply(replace_exp, v.right_ref());
       return v;
     };
     Equation ReplaceEquation::operator()(IfEq v) const {
@@ -48,11 +47,11 @@ namespace Modelica {
     Equation ReplaceEquation::operator()(ForEq v) const {
       foreach_(Index &i, v.range_ref().indexes_ref()) {
         if (i.exp()) {
-          i.exp_ref()=boost::apply_visitor(replace_exp, i.exp_ref().get());
+          i.exp_ref()=Apply(replace_exp, i.exp_ref().get());
         }
       }
       foreach_(Equation &e, v.elements_ref()) {
-        e = apply(e);
+        e = ApplyThis(e);
       }
       //ERROR("Replace in for equation not implemented\n");
       return v;

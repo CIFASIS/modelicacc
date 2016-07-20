@@ -19,7 +19,6 @@
 
 #include <util/ast_visitors/constant_expression.h>
 #include <boost/variant/apply_visitor.hpp>
-#define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
 
@@ -55,12 +54,12 @@ namespace Modelica {
     
     bool ConstantExpression::operator()(BinOp v) const { 
       Expression l=v.left(), r=v.right();
-      return apply(l) && apply(r);
+      return ApplyThis(l) && ApplyThis(r);
     }
      
     bool ConstantExpression::operator()(UnaryOp v) const { 
       Expression e =v.exp();
-      return apply(e);
+      return ApplyThis(e);
     } 
     
     bool ConstantExpression::operator()(IfExp v) const { 
@@ -69,23 +68,23 @@ namespace Modelica {
       Expression elseexp = v.elseexp();
       bool list = true;
       foreach_(ExpPair p, v.elseif())
-		list = list &&  apply(get<0>(p)) && apply(get<1>(p));
-      return apply(cond) && apply(then) && list && apply(elseexp);
+		list = list &&  ApplyThis(get<0>(p)) && ApplyThis(get<1>(p));
+      return ApplyThis(cond) && ApplyThis(then) && list && ApplyThis(elseexp);
     }
     
     bool ConstantExpression::operator()(Range v) const { 
 	  Expression start = v.start(),end=v.end();	
 	  if (v.step()) {
 		Expression step = v.step().get();  
-		return apply(start) && apply(step) && apply(end);
+		return ApplyThis(start) && ApplyThis(step) && ApplyThis(end);
 	  } else 
-		return apply(start) && apply(end);
+		return ApplyThis(start) && ApplyThis(end);
     }
     
     bool ConstantExpression::operator()(Brace v) const { 
       bool list = true;
       foreach_(Expression e, v.args())
-		list = list && apply(e);
+		list = list && ApplyThis(e);
       return list;
     }
     
@@ -93,21 +92,21 @@ namespace Modelica {
 	  bool list = true;
 	  foreach_(ExpList els, v.args()) 
 		  foreach_(Expression e, els)
-			list  &= apply(e);
+			list  &= ApplyThis(e);
       return list;
     }
     
     bool ConstantExpression::operator()(Call v) const { 
       bool list = true;
       foreach_(Expression e, v.args())
-		list &= apply(e);
+		list &= ApplyThis(e);
       return list;
     }
     
     bool ConstantExpression::operator()(FunctionExp v) const { 
       bool list = false;
       foreach_(Expression e, v.args())
-		list &= apply(e);
+		list &= ApplyThis(e);
       return list;
     }
     
@@ -116,21 +115,21 @@ namespace Modelica {
       bool indices = true;
       foreach_(Index i, v.indices().indexes()) {
         if (i.exp())
-		      indices &= apply(i.exp().get());
+		      indices &= ApplyThis(i.exp().get());
       } 
       return indices;
     }
     
     bool ConstantExpression::operator()(Named v) const {
 	  Expression exp = v.exp();	
-      return apply(exp);
+      return ApplyThis(exp);
     }
     
     bool ConstantExpression::operator()(Output v) const {
       bool list = true;
       foreach_(OptExp e, v.args())
 	     if (e)	
-			list &= apply(e.get()); 
+			list &= ApplyThis(e.get()); 
       return list;
     }
     

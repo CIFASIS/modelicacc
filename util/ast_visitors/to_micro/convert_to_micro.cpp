@@ -22,7 +22,6 @@
 #include <ast/queries.h>
 #include <boost/variant/apply_visitor.hpp>
 #include <util/ast_visitors/partial_eval_expression.h>
-#define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
   ConvertToMicro::ConvertToMicro(MMO_Class &cl): mmo_class(cl), tomicro_exp(cl,disc_count) {
@@ -33,13 +32,13 @@ namespace Modelica {
     EquationList remove;
     foreach_(Equation &eq, eqs) {
       if (is<Equality>(eq)) {
-        eq = apply(eq);
+        eq = ApplyThis(eq);
       } else if (is<Connect>(eq)) {
         ERROR("Cannot convert non-flat models. There are connect equations!");
       } else if (is<IfEq>(eq)) {
         ERROR("If equation not supported yet!");
       } else if (is<WhenEq>(eq)) {
-        apply(eq);
+        ApplyThis(eq);
         remove.push_back(eq);
       } else if (is<CallEq>(eq)) {
         if (get<CallEq>(eq).name()=="assert")
@@ -49,7 +48,7 @@ namespace Modelica {
         Option<Expression> oe = feq.range().indexes().front().exp();
         if (oe) {
           PartialEvalExpression ev(mmo_class.syms_ref());
-          Expression exp = boost::apply_visitor(ev,oe.get());
+          Expression exp = Apply(ev,oe.get());
           if (is<Range>(exp)) {
             Range range = get<Range>(exp);
             if (is<Integer>(range.end()) && is<Integer>(range.start()) && (get<Integer>(range.end()) < get<Integer>(range.start()))) { // Removing empty for eq
@@ -80,7 +79,7 @@ namespace Modelica {
     }
     ConvertToMicroStatement tom(mmo_class,disc_count);
     foreach_(Statement &st, mmo_class.statements_ref().statements_ref()) {
-      st=boost::apply_visitor(tom, st);
+      st=Apply(tom, st);
     }
     // Add new statements
     foreach_(Statement st, tom.statements()) {
@@ -97,18 +96,18 @@ namespace Modelica {
           Modification &mod = boost::get<Modification>(vinfo.modification_ref());
           //ConvertToMicroExpression exp(mmo_class,disc_count);
           if (is<ModEq>(mod)) {
-            get<ModEq>(mod).exp_ref()=boost::apply_visitor(tomicro_exp,get<ModEq>(mod).exp_ref());
+            get<ModEq>(mod).exp_ref()=Apply(tomicro_exp,get<ModEq>(mod).exp_ref());
           } else if (is<ModAssign>(mod)) {
-            get<ModEq>(mod).exp_ref()=boost::apply_visitor(tomicro_exp,get<ModAssign>(mod).exp_ref());
+            get<ModEq>(mod).exp_ref()=Apply(tomicro_exp,get<ModAssign>(mod).exp_ref());
           } else {
             ModClass &mc = get<ModClass>(mod);
             if (mc.exp())
-              mc.exp_ref()=boost::apply_visitor(tomicro_exp, mc.exp_ref().get());
+              mc.exp_ref()=Apply(tomicro_exp, mc.exp_ref().get());
             foreach_(Argument &arg, mc.modification_ref()) {
               if (is<ElMod>(arg) && get<ElMod>(arg).name()=="start" && get<ElMod>(arg).modification()) {
                 ERROR_UNLESS(is<ModEq>(get<ElMod>(arg).modification_ref().get()), "Modification for start value not supported");
                 Expression start = get<ModEq>(get<ElMod>(arg).modification_ref().get()).exp();
-                get<ElMod>(arg).modification_ref() = Modification(ModEq(boost::apply_visitor(tomicro_exp,start)));
+                get<ElMod>(arg).modification_ref() = Modification(ModEq(Apply(tomicro_exp,start)));
               }
             }
           } 
@@ -122,7 +121,7 @@ namespace Modelica {
         if (is<ModEq>(mod)) {
           Expression exp=get<ModEq>(mod).exp();
           //ConvertToMicroExpression exp_visit(mmo_class,disc_count);
-          get<ModEq>(mod).exp_ref()=boost::apply_visitor(tomicro_exp,exp);
+          get<ModEq>(mod).exp_ref()=Apply(tomicro_exp,exp);
           if (is<Brace>(exp)) {
             DEBUG('m', "Removing brace modification");
 //            vinfo.modification_ref()=Option<Modification>();
@@ -189,14 +188,14 @@ namespace Modelica {
   }
   Equation ConvertToMicro::operator() (Equality eqeq) {
     //ConvertToMicroExpression exp(mmo_class,disc_count);
-    return Equality(boost::apply_visitor(tomicro_exp, eqeq.left_ref()), boost::apply_visitor(tomicro_exp,eqeq.right_ref()));
+    return Equality(Apply(tomicro_exp, eqeq.left_ref()), Apply(tomicro_exp,eqeq.right_ref()));
   }
   Equation ConvertToMicro::operator() (CallEq c) {
     return c;
   }
   Equation ConvertToMicro::operator() (WhenEq c) { 
     //ConvertToMicroExpression exp(mmo_class,disc_count,true);
-    Expression cond = boost::apply_visitor(tomicro_exp,c.cond_ref());
+    Expression cond = Apply(tomicro_exp,c.cond_ref());
     StatementList sls;
     if (is<Brace>(cond)) {
       // This is sample 

@@ -27,16 +27,16 @@
 #include <ast/statement.h>
 #include <ast/element.h>
 #include <util/type.h>
-#include <util/ast_visitors/eq_visitor.h>
-#include <util/ast_visitors/st_visitor.h>
+#include <util/ast_visitors/equation_visitor.h>
+#include <util/ast_visitors/statement_visitor.h>
 #include <util/ast_visitors/dot_expression.h>
-#include <util/ast_visitors/markConnector.h>
+#include <util/ast_visitors/mark_connector.h>
 #include <boost/variant/get.hpp>
 
 class Flatter {
 public:
-	typedef EqVisitor<DotExpression> EqDotExpression;
-	typedef StVisitor<DotExpression> StDotExpression;
+	typedef EquationVisitor<DotExpression> EqDotExpression;
+	typedef StatementVisitor<DotExpression> StDotExpression;
 
 	Flatter();
 	void 			Flat(MMO_Class &c,bool flatConnector,bool initial);

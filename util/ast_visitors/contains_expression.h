@@ -21,7 +21,6 @@
 #define AST_VISITOR_CONTAINS
 #include <boost/variant/static_visitor.hpp>
 #include <ast/expression.h>
-#define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
 

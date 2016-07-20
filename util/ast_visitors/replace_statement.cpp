@@ -20,7 +20,6 @@
 #include <util/debug.h>
 #include <util/ast_visitors/replace_statement.h>
 #include <boost/variant/apply_visitor.hpp>
-#define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
 
@@ -36,60 +35,60 @@ namespace Modelica {
       if (v.rl()) {
         ExpList & el = v.rl_ref().get();
         foreach_(Expression &e, el) {
-          e =boost::apply_visitor(replace_exp, e);
+          e =Apply(replace_exp, e);
         }
       }
-      v.left_ref()=boost::apply_visitor(replace_exp, v.left_ref());
+      v.left_ref()=Apply(replace_exp, v.left_ref());
       if (v.right()) 
-        v.right_ref()=boost::apply_visitor(replace_exp, v.right_ref().get());
+        v.right_ref()=Apply(replace_exp, v.right_ref().get());
       return v;
     };
     Statement ReplaceStatement::operator()(IfSt v) const {
-      v.cond_ref()=boost::apply_visitor(replace_exp, v.cond_ref());
+      v.cond_ref()=Apply(replace_exp, v.cond_ref());
       foreach_ (Statement &st, v.elements_ref()) {
-        st=apply(st);
+        st=ApplyThis(st);
       }
       foreach_ (Statement &st, v.ifnot_ref()) {
-        st=apply(st);
+        st=ApplyThis(st);
       }
       foreach_ (If<Statement>::Else &els, v.elseif_ref()) {
-        get<0>(els) = boost::apply_visitor(replace_exp, get<0>(els));
+        get<0>(els) = Apply(replace_exp, get<0>(els));
         foreach_ (Statement &st, get<1>(els)) 
-          st=apply(st);
+          st=ApplyThis(st);
       }
       return v;
     }
     Statement ReplaceStatement::operator()(CallSt v) const {
-      v.n_ref()=boost::apply_visitor(replace_exp, v.n_ref());
+      v.n_ref()=Apply(replace_exp, v.n_ref());
       foreach_(Expression &e, v.arg_ref()) {
-        e=boost::apply_visitor(replace_exp, e);
+        e=Apply(replace_exp, e);
       }
       foreach_(OptExp &oe, v.out_ref()) {
         if (oe) 
-            oe=boost::apply_visitor(replace_exp, oe.get());
+            oe=Apply(replace_exp, oe.get());
       }
       return v;
     };
     Statement ReplaceStatement::operator()(ForSt v) const {
       foreach_(Index &i, v.range_ref().indexes_ref()) {
         if (i.exp()) {
-          i.exp_ref()=boost::apply_visitor(replace_exp, i.exp_ref().get());
+          i.exp_ref()=Apply(replace_exp, i.exp_ref().get());
         }
       }
       foreach_(Statement &s, v.elements_ref()) {
-        s = apply(s);
+        s = ApplyThis(s);
       }
       return v;
     };
     Statement ReplaceStatement::operator()(WhenSt v) const {
-      v.cond_ref()=boost::apply_visitor(replace_exp, v.cond_ref());
+      v.cond_ref()=Apply(replace_exp, v.cond_ref());
       foreach_ (Statement &st, v.elements_ref()) {
-        st=apply(st);
+        st=ApplyThis(st);
       }
       foreach_ (When<Statement>::Else &els, v.elsewhen_ref()) {
-        get<0>(els) = boost::apply_visitor(replace_exp, get<0>(els));
+        get<0>(els) = Apply(replace_exp, get<0>(els));
         foreach_ (Statement &st, get<1>(els)) 
-          st=apply(st);
+          st=ApplyThis(st);
       }
       return v;
     }

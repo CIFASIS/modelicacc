@@ -23,8 +23,6 @@
 #include <util/ast_visitors/eval_expression.h>
 #include <ast/queries.h>
 #include <boost/variant/apply_visitor.hpp>
-#define apply(X) boost::apply_visitor(*this,X)
-#define Visit(X,Y) boost::apply_visitor(X,Y)
 
 namespace Modelica {
 
@@ -58,14 +56,14 @@ namespace Modelica {
     }
     Expression PartialEvalExpression::operator()(BinOp v) const { 
       Expression l=v.left(), r=v.right();
-      l=apply(l);r=apply(r);
+      l=ApplyThis(l);r=ApplyThis(r);
       if ((is<Real>(l) || is<Integer>(l)) && (is<Real>(r) || is<Integer>(r))) {
         Expression binop = BinOp(l,v.op(),r);
-        Expression e = Visit(EvalExpression(vtable),binop);
+        Expression e = Apply(EvalExpression(vtable),binop);
         if (!is<Real>(l) && !is<Real>(r) && is<Real>(e)) {
           return Integer(get<Real>(e));
         }
-        return Visit(EvalExpression(vtable),binop);
+        return Apply(EvalExpression(vtable),binop);
       }
       if (v.op()==Add && isZero(l)) 
         return r;
@@ -85,7 +83,7 @@ namespace Modelica {
     } 
     Expression PartialEvalExpression::operator()(UnaryOp v) const { 
       Expression e=v.exp();
-      Expression res= apply(e);
+      Expression res= ApplyThis(e);
       if (v.op()==Not && is<Boolean>(res)) {
         if (get<Boolean>(res)==TRUE) 
           return Boolean(FALSE);  
@@ -108,9 +106,9 @@ namespace Modelica {
       Expression s=v.start(); 
       Expression e=v.end(); 
       if (!v.step()) 
-        return Range(apply(s),apply(e));
+        return Range(ApplyThis(s),ApplyThis(e));
       Expression st=v.step().get();
-      return Range(apply(s),apply(st),apply(e));
+      return Range(ApplyThis(s),ApplyThis(st),ApplyThis(e));
     }
     Expression PartialEvalExpression::operator()(Brace v) const { 
       WARNING("Not evaluating brace exp");
@@ -122,7 +120,7 @@ namespace Modelica {
     Expression PartialEvalExpression::operator()(Call v) const { 
       ExpList &args = v.args_ref();
       foreach_ (Expression &e, args) 
-        e = apply(e);
+        e = ApplyThis(e);
       return v;
     }
     Expression PartialEvalExpression::operator()(FunctionExp v) const { 
@@ -139,8 +137,8 @@ namespace Modelica {
         Expression e=v.args().front().get();
         if (is<Real>(e)) return e;
         if (is<Integer>(e)) return e;
-        if (is<UnaryOp>(e)) return apply(e);
-        return Output(apply(e));
+        if (is<UnaryOp>(e)) return ApplyThis(e);
+        return Output(ApplyThis(e));
       }
       return v;
     }
@@ -155,7 +153,7 @@ namespace Modelica {
           ERROR("Variable %s not found",s.c_str());
         if (vinfo.get().type()=="Integer" && vinfo.get().modification()) { // evaluate integer parameters
           Expression vv=v;
-          Real ret=Visit(EvalExpression(vtable),vv);
+          Real ret=Apply(EvalExpression(vtable),vv);
           const int i=ret;
           if (i==ret) {
             if (i<0) return Output(i);
@@ -165,13 +163,13 @@ namespace Modelica {
           return Real(ret);
         } else if (vinfo.get().type()=="Boolean" && vinfo.get().modification()) { // evaluate boolean parameters
           Expression vv=v;
-          Real ret=Visit(EvalExpression(vtable),vv);
+          Real ret=Apply(EvalExpression(vtable),vv);
           if (ret==1.0)    
             return Boolean(TRUE);
           return Boolean(FALSE);
         } else if (eval_parameters && vinfo.get().type()=="Real" && !vinfo.get().indices() && vinfo.get().modification()) { // evaluate scalar parameters
           Expression vv=v;
-          Real ret=Visit(EvalExpression(vtable),vv);
+          Real ret=Apply(EvalExpression(vtable),vv);
           if (ret<0) return Output(Real(ret));
           return Real(ret);
         } else {
@@ -181,7 +179,7 @@ namespace Modelica {
       if (oel) {
         ExpList nl;
         foreach_(Expression e, oel.get()) {
-          nl.push_back(apply(e));
+          nl.push_back(ApplyThis(e));
         }
         return Ref(1,RefTuple(s,nl));
       }

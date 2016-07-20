@@ -22,7 +22,6 @@
 #include <ast/queries.h>
 #include <stdio.h>
 #include <boost/variant/apply_visitor.hpp>
-#define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
 
@@ -34,9 +33,9 @@ namespace Modelica {
       Expression r=v.left(); 
       OptExp opt_r=v.right(); 
       ConvertToMicroExpression tom(mmo_class, disc_count, false,true);
-      l = boost::apply_visitor(tom, l);
+      l = Apply(tom, l);
       if (opt_r) 
-        opt_r = boost::apply_visitor(tom, opt_r.get());
+        opt_r = Apply(tom, opt_r.get());
       v.left_ref() = l; 
       v.right_ref() = opt_r; 
       return v;
@@ -57,17 +56,17 @@ namespace Modelica {
 
     Statement ConvertToMicroStatement::operator()(IfSt v) const { 
       //ConvertToMicroExpression tom(mmo_class, i, false,true);
-      //v.cond_ref() = boost::apply_visitor(tom, v.cond_ref());
+      //v.cond_ref() = boost::ApplyThis_visitor(tom, v.cond_ref());
       if (is<Reference>(v.cond())) {
         v.cond_ref() = BinOp(v.cond(), Greater, 0.5);
       } 
       foreach_(Statement &s, v.elements_ref()) 
-        s=apply(s);
+        s=ApplyThis(s);
       foreach_(Statement &s, v.ifnot_ref()) 
-        s=apply(s);
+        s=ApplyThis(s);
       foreach_(IfSt::Else &es, v.elseif_ref()) {
         foreach_(Statement &s, get<1>(es)) 
-          s=apply(s);
+          s=ApplyThis(s);
         es=IfSt::Else(get<0>(es),get<1>(es));
       }
       return v;
@@ -94,7 +93,7 @@ namespace Modelica {
         WARNING("Condition in when is not a relational");
       }
       foreach_(Statement &s, v.elements_ref()) 
-        s=apply(s);
+        s=ApplyThis(s);
       return v;
     }
 

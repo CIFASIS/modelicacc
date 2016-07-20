@@ -21,7 +21,6 @@
 #include <ast/queries.h>
 #include <stdio.h>
 #include <boost/variant/apply_visitor.hpp>
-#define apply(X) boost::apply_visitor(*this,X)
 #include <map>
 
 namespace Modelica {
@@ -58,8 +57,8 @@ namespace Modelica {
         return v;
       if (isRelation(v)) { 
         ExpList::iterator it = std::find(rels.begin(),rels.end(),Expression(v));
-        v.left_ref()=apply(v.left_ref());
-        v.right_ref()=apply(v.right_ref());
+        v.left_ref()=ApplyThis(v.left_ref());
+        v.right_ref()=ApplyThis(v.right_ref());
         if (it == rels.end()) {
           Expression d=newDiscrete();
           WhenSt::ElseList l(1,WhenSt::Else(negate(v),StatementList(1,Assign(d,Expression(0)))));
@@ -77,26 +76,26 @@ namespace Modelica {
         }
       } else if (v.op()==And) {
         Expression l=v.left(), r=v.right();
-        return BinOp(apply(l), Mult, apply(r));
+        return BinOp(ApplyThis(l), Mult, ApplyThis(r));
       } else if (v.op()==Or) {
         Expression l=v.left(), r=v.right();
-        return Output(BinOp(1,Sub,BinOp(Output(BinOp(1,Sub,apply(l))),Mult,Output(BinOp(1,Sub,apply(r))))));
+        return Output(BinOp(1,Sub,BinOp(Output(BinOp(1,Sub,ApplyThis(l))),Mult,Output(BinOp(1,Sub,ApplyThis(r))))));
       }
       Expression l=v.left(), r=v.right();
-      return BinOp(apply(l), v.op(), apply(r));
+      return BinOp(ApplyThis(l), v.op(), ApplyThis(r));
     } 
     Expression ConvertToMicroExpression::operator()(UnaryOp v) const { 
       if (v.op()==Not) {
-        return Output(BinOp(1,Sub,apply(v.exp_ref())));
+        return Output(BinOp(1,Sub,ApplyThis(v.exp_ref())));
       } 
-      return UnaryOp(apply(v.exp_ref()), v.op());
+      return UnaryOp(ApplyThis(v.exp_ref()), v.op());
     } 
     Expression ConvertToMicroExpression::operator()(IfExp v) const { 
       if (in_algorithm) 
         return v;
-      Expression then = apply(v.then_ref());
-      Expression elseexp = apply(v.elseexp_ref());
-      Expression cond = apply(v.cond_ref());
+      Expression then = ApplyThis(v.then_ref());
+      Expression elseexp = ApplyThis(v.elseexp_ref());
+      Expression cond = ApplyThis(v.cond_ref());
       // Check if there is already a disc variable
       ExpList::iterator it = std::find(rels.begin(),rels.end(),cond);
       if (it != rels.end()) {
@@ -140,7 +139,7 @@ namespace Modelica {
         return v;
       if ("abs"==v.name()) {
         ERROR_UNLESS (v.args().size()==1, "Call to abs with more than one or zero arguments");
-        Expression arg = apply(v.args_ref().front());
+        Expression arg = ApplyThis(v.args_ref().front());
         Expression d=newDiscrete();
         //Expression d = Call("pre",ExpList(1,newDiscrete()));
         WhenSt::ElseList l(1,WhenSt::Else(BinOp(arg,Lower,0) ,StatementList(1,Assign(d,Expression(UnaryOp(arg,Minus)))))); 
@@ -150,7 +149,7 @@ namespace Modelica {
       } else if ("sign"==v.name()) {
         ERROR_UNLESS (v.args().size()==1, "Call to sign with more than one or less arguments");
         Expression l=v.args().front();
-        l=apply(l);
+        l=ApplyThis(l);
         Expression d=newDiscrete();
         //Expression d = Call("pre",ExpList(1,newDiscrete()));
         WhenSt::ElseList el(1,WhenSt::Else(BinOp(l,LowerEq,0) ,StatementList(1,Assign(d,Expression(UnaryOp(1,Minus))))));
@@ -161,8 +160,8 @@ namespace Modelica {
         ERROR_UNLESS (v.args().size()==2, "Call to min with more than two or less arguments");
         Expression l=v.args().front();
         Expression r=v.args().at(1);
-        l=apply(l);
-        r=apply(r);
+        l=ApplyThis(l);
+        r=ApplyThis(r);
         Expression d=newDiscrete();
         //Expression d = Call("pre",ExpList(1,newDiscrete()));
         WhenSt::ElseList el(1,WhenSt::Else(BinOp(l,GreaterEq,r) ,StatementList(1,Assign(d,r))));
@@ -173,8 +172,8 @@ namespace Modelica {
         ERROR_UNLESS (v.args().size()==2, "Call to max with more than two or less arguments");
         Expression l=v.args().front();
         Expression r=v.args().at(1);
-        l=apply(l);
-        r=apply(r);
+        l=ApplyThis(l);
+        r=ApplyThis(r);
         Expression d=newDiscrete();
         //Expression d = Call("pre",ExpList(1,newDiscrete()));
         WhenSt::ElseList el(1,WhenSt::Else(BinOp(l,LowerEq,r) ,StatementList(1,Assign(d,r))));
@@ -186,14 +185,14 @@ namespace Modelica {
         return v.args().front();
       } else if ("edge"==v.name()) {
         ERROR_UNLESS (v.args().size()==1, "Call to edge with more than one or zero arguments");
-        return BinOp(apply(v.args_ref().front()),Greater,Expression(0.5));
+        return BinOp(ApplyThis(v.args_ref().front()),Greater,Expression(0.5));
       } else if ("sample"==v.name()) {
         ERROR_UNLESS (v.args().size()==2, "Call to sample with more than two or less arguments");
         if (!when)
           ERROR("Call to sample in dynamic equation");
         // This is a hack to return multiple expressions in one expression
-        Expression start = apply(v.args().front());
-        Expression period = apply(v.args().at(1));
+        Expression start = ApplyThis(v.args().front());
+        Expression period = ApplyThis(v.args().at(1));
         Expression d=newDiscrete(start);
         Expression cond = BinOp(Reference("time"),Greater,Call("pre",ExpList(1,d)));
         ExpList el;
@@ -219,7 +218,7 @@ namespace Modelica {
     Expression ConvertToMicroExpression::operator()(Output v) const {
       foreach_ (OptExp &oe, v.args_ref())
         if (oe)
-          oe=apply(oe.get());
+          oe=ApplyThis(oe.get());
       if (v.args().size()==1 && v.args().front() && is<Reference>(v.args().front().get()))
         return v.args().front().get();
       return v;

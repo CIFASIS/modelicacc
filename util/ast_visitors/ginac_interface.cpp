@@ -30,7 +30,6 @@
 #include <ast/queries.h>
 #include <parser/parser.h>
 #include <boost/variant/apply_visitor.hpp>
-#define apply(X) boost::apply_visitor(*this,X)
 
 using namespace GiNaC;
 REGISTER_FUNCTION(der, dummy())
@@ -109,15 +108,15 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
       Expression l=v.left(),r=v.right();
       switch (v.op()) {
         case Add:
-          return apply(l)+apply(r);
+          return ApplyThis(l)+ApplyThis(r);
         case Sub:
-          return apply(l)-apply(r);
+          return ApplyThis(l)-ApplyThis(r);
         case Mult:
-          return apply(l)*apply(r);
+          return ApplyThis(l)*ApplyThis(r);
         case Div:
-          return apply(l)/apply(r);
+          return ApplyThis(l)/ApplyThis(r);
         case Exp:
-          return pow(apply(l),apply(r));
+          return pow(ApplyThis(l),ApplyThis(r));
         default:
           WARNING("ConvertToGiNaC: BinOp conversion not implemented. Returning 0");
           return 0;
@@ -126,7 +125,7 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
     GiNaC::ex ConvertToGiNaC::operator()(UnaryOp v) const { 
       Expression e=v.exp();
       if (v.op()==Minus) 
-        return -apply(e);
+        return -ApplyThis(e);
       WARNING("ConvertToGiNaC: Not conversion not implemented. Returning 0");
       return 0;
     } 
@@ -148,10 +147,10 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
     }
     GiNaC::ex ConvertToGiNaC::operator()(Call v) const { 
       if ("sin"==v.name()) {
-        return sin(apply(v.args()[0]));
+        return sin(ApplyThis(v.args()[0]));
       } 
       if ("pre"==v.name()) {
-        return apply(v.args()[0]);
+        return ApplyThis(v.args()[0]);
       } 
       if ("der"==v.name()) {
         Expression arg = v.args().front();
@@ -163,7 +162,7 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
         return getSymbol(ss.str());
       } 
       if ("exp"==v.name()) {
-        return exp(apply(v.args()[0]));
+        return exp(ApplyThis(v.args()[0]));
       } 
       if ("sum"==v.name()) {
         std::stringstream ss;
@@ -171,10 +170,10 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
         return getSymbol(ss.str());
       } 
       if ("log"==v.name()) {
-        return log(apply(v.args()[0]));
+        return log(ApplyThis(v.args()[0]));
       } 
       if ("log10"==v.name()) {
-        return log(apply(v.args()[0]))/log(10);
+        return log(ApplyThis(v.args()[0]))/log(10);
       } 
       WARNING("ConvertToGiNaC: conversion of function %s implemented. Returning 0.\n", v.name().c_str());
       return 0;
@@ -195,7 +194,7 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
       OptExpList el = v.args();
       ERROR_UNLESS(el.size()==1,"GiNaC conversion of output expression not implemented");
       if (el[0]) {
-        return apply(el[0].get());
+        return ApplyThis(el[0].get());
       }
       WARNING("ConvertToGiNaC: conversion of output expression. Returning 0");
       return 0;

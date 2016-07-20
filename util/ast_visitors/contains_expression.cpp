@@ -33,28 +33,28 @@ namespace Modelica {
     bool ContainsExpression::operator()(BinOp v) const { 
       if (exp==Expression(v)) return true; 
       Expression l=v.left(), r=v.right();
-      bool rl = apply(l);
-      bool ll = apply(r);
+      bool rl = ApplyThis(l);
+      bool ll = ApplyThis(r);
       return rl || ll;
     } 
     bool ContainsExpression::operator()(UnaryOp v) const { 
       if (exp==Expression(v)) return true; 
       Expression e=v.exp();
-      return apply(e);
+      return ApplyThis(e);
     } 
     bool ContainsExpression::operator()(IfExp v) const { 
       if (exp==Expression(v)) return true; 
       Expression cond=v.cond(), then=v.then(), elseexp=v.elseexp();
-      const bool rc = apply(cond);
-      const bool rt = apply(then);
-      const bool re = apply(elseexp);
+      const bool rc = ApplyThis(cond);
+      const bool rt = ApplyThis(then);
+      const bool re = ApplyThis(elseexp);
       return rc || rt || re;
     }
     bool ContainsExpression::operator()(Range v) const { 
       if (exp==Expression(v)) return true; 
       Expression start=v.start(), end=v.end();
-      bool rs = apply(start);
-      bool re = apply(end);
+      bool rs = ApplyThis(start);
+      bool re = ApplyThis(end);
       return rs || re;
     }
     bool ContainsExpression::operator()(Brace v) const { 
@@ -72,7 +72,7 @@ namespace Modelica {
     bool ContainsExpression::operator()(Call v) const { 
       if (exp==Expression(v)) return true; 
       foreach_ (Expression e, v.args()) 
-        if (apply(e)) return true;
+        if (ApplyThis(e)) return true;
       return false;
     }
     bool ContainsExpression::operator()(FunctionExp v) const { 
@@ -94,7 +94,7 @@ namespace Modelica {
     bool ContainsExpression::operator()(Output v) const {
       if (exp==Expression(v)) return true; 
       foreach_ (OptExp oe, v.args()) 
-        if (oe && apply(oe.get())) return true;
+        if (oe && ApplyThis(oe.get())) return true;
       return false;
     }
     bool ContainsExpression::operator()(Reference v) const {

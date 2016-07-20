@@ -14,7 +14,6 @@
 #include <util/table.h>
 #include <util/debug.h>
 #include <cassert>
-#define apply(X) boost::apply_visitor(*this,X)
 
 StateVariablesFinder::StateVariablesFinder(MMO_Class &c): _c(c) { }
 
@@ -23,16 +22,16 @@ void StateVariablesFinder::findStateVariables() {
     if (is<Equality>(e)) {
       Equality eq=boost::get<Equality>(e);
       Expression left=eq.left(),right=eq.right();
-      apply(left);
-      apply(right);
+      ApplyThis(left);
+      ApplyThis(right);
     } else if (is<ForEq>(e)) {
       ForEq fe = boost::get<ForEq>(e);    
       foreach_(Equation feq,fe.elements()) {
         if (is<Equality>(feq)) {
           Equality eq=boost::get<Equality>(feq);
           Expression left=eq.left(),right=eq.right();
-          apply(left);
-          apply(right);
+          ApplyThis(left);
+          ApplyThis(right);
         } else {
           ERROR("StateVariablesFinder::findStateVariablesInEquations:\n" "Equation type not supported.\n");
         } 
@@ -53,23 +52,23 @@ void StateVariablesFinder::findStateVariables() {
     void StateVariablesFinder::operator()(SubAll v) const { return ; } 
     void StateVariablesFinder::operator()(BinOp v) const { 
       Expression l=v.left(), r=v.right();
-      apply(l);
-      apply(r);
+      ApplyThis(l);
+      ApplyThis(r);
     } 
     void StateVariablesFinder::operator()(UnaryOp v) const { 
       Expression e=v.exp();
-      apply(e);
+      ApplyThis(e);
     } 
     void StateVariablesFinder::operator()(IfExp v) const { 
       Expression cond=v.cond(), then=v.then(), elseexp=v.elseexp();
-      apply(cond);
-      apply(then);
-      apply(elseexp);
+      ApplyThis(cond);
+      ApplyThis(then);
+      ApplyThis(elseexp);
     }
     void StateVariablesFinder::operator()(Range v) const { 
       Expression start=v.start(), end=v.end();
-      apply(start);
-      apply(end);
+      ApplyThis(start);
+      ApplyThis(end);
     }
     void StateVariablesFinder::operator()(Brace v) const { 
       abort();
@@ -94,7 +93,7 @@ void StateVariablesFinder::findStateVariables() {
         vars.insert(name,vinfo);
       } else {
         foreach_ (Expression e, v.args()) 
-          apply(e);
+          ApplyThis(e);
       }
     }
     void StateVariablesFinder::operator()(FunctionExp v) const { 
@@ -109,7 +108,7 @@ void StateVariablesFinder::findStateVariables() {
     void StateVariablesFinder::operator()(Output v) const {
       foreach_(OptExp oe, v.args()) {
         if (oe)
-          apply(oe.get());
+          ApplyThis(oe.get());
       }
     }
     void StateVariablesFinder::operator()(Reference v) const {

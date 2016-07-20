@@ -70,56 +70,6 @@ std::vector<T> &operator+=(std::vector<T> &A, const std::vector<T> &B)
     return A;                                        // here A could be named AB
 }
 
-/*
-template <typename T> 
-std::set<std::set<T> > powerset(std::set<T> const& set)
-{
-  typedef std::set<T>::const_iterator set_iter;
-  typedef std::vector<std::set<T> > vec;
-  typedef vec::iterator vec_iter;
- 
-  struct local
-  {
-    static int dereference(std::set<T> v) { return *v; }
-  };
- 
-  std::set<std::set<T> > result;
- 
-  vec elements;
-  do
-  {
-    std::set<T> tmp;
-    std::transform(elements.begin(), elements.end(),
-                   std::inserter(tmp, tmp.end()),
-                   local::dereference);
-    result.insert(tmp);
-    if (!elements.empty() && ++elements.back() == set.end())
-    {
-      elements.pop_back();
-    }
-    else
-    {
-      set_iter iter;
-      if (elements.empty())
-      {
-        iter = set.begin();
-      }
-      else
-      {
-        iter = elements.back();
-        ++iter;
-      }
-      for (; iter != set.end(); ++iter)
-      {
-        elements.push_back(iter);
-      }
-    }
-  } while (!elements.empty());
- 
-  return result;
-}
-*/
-
 namespace Modelica {
   namespace AST {
     enum TypePrefix {input, output, discrete, parameter, flow, stream, constant};
@@ -132,6 +82,9 @@ namespace Modelica {
   }
 }
 
+// Some helpful macros
+#define ApplyThis(X) boost::apply_visitor(*this,X)
+#define Apply(X,Y) boost::apply_visitor(X,Y)
 #define foreach_ BOOST_FOREACH
 #define member_(X,Y) X Y##_; X Y() const; void set_##Y(X x); X &Y##_ref();
 #define member_imp(C,X,Y) X C::Y() const { return Y##_;} void C::set_##Y(X x) { Y##_=x; } X &C::Y##_ref() { return Y##_; }

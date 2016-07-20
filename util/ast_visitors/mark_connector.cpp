@@ -17,10 +17,9 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/markConnector.h>
+#include <util/ast_visitors/mark_connector.h>
 #include <boost/variant/get.hpp>
 
-#define apply(X) boost::apply_visitor(*this,X)
 using namespace Modelica;
 using namespace Modelica::AST;
 
@@ -57,7 +56,7 @@ Equation MarkConnector::operator()(ForEq eq) const {
 	EquationList eqs;
 	IndexList index;
 	foreach_(Equation e,eq.elements())
-		eqs.push_back(apply(e));	
+		eqs.push_back(ApplyThis(e));	
 	return ForEq(eq.range(),eqs);
 };
 
@@ -69,15 +68,15 @@ Equation MarkConnector::operator()(IfEq eq) const {
 	ElseList elseIf;
 		
 	foreach_(Equation e, eq.elements() )
-		elements.push_back(apply(e));
+		elements.push_back(ApplyThis(e));
 			
 	foreach_(Equation e, eq.ifnot() )
-		elses.push_back(apply(e));	
+		elses.push_back(ApplyThis(e));	
 			
 	foreach_(Else el, eq.elseif()) {
 		EquationList list;
 		foreach_(Equation e, get<1>(el))
-			list.push_back(apply(e));
+			list.push_back(ApplyThis(e));
 		elseIf.push_back(Else(get<0>(el),list));		
 	}			
 	return IfEq(cond, elements, elseIf,elses);
@@ -91,12 +90,12 @@ Equation MarkConnector::operator()(WhenEq eq) const {
 	ElseList elsewhen;
 		
 	foreach_(Equation e, eq.elements() )
-		elements.push_back(apply(e));
+		elements.push_back(ApplyThis(e));
 			
 	foreach_(Else el, eq.elsewhen()) {
 		EquationList list;
 		foreach_(Equation e, get<1>(el))
-			list.push_back(apply(e));
+			list.push_back(ApplyThis(e));
 		elsewhen.push_back(Else(get<0>(el),list));		
 	}			
 	return WhenEq(cond, elements, elsewhen);

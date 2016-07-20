@@ -23,7 +23,6 @@
 #include <boost/variant/get.hpp>
 #include <ast/modification.h>
 #include <boost/variant/apply_visitor.hpp>
-#define apply(X) boost::apply_visitor((*this),(X))
 
 namespace Modelica {
 
@@ -60,15 +59,15 @@ namespace Modelica {
       Expression l=v.left(), r=v.right();
       switch (v.op()) {
         case Add:   
-          return apply(l)+apply(r);
+          return ApplyThis(l)+ApplyThis(r);
         case Sub:   
-          return apply(l)-apply(r);
+          return ApplyThis(l)-ApplyThis(r);
         case Div:   
-          return apply(l)/apply(r);
+          return ApplyThis(l)/ApplyThis(r);
         case Mult:   
-          return apply(l)*apply(r);
+          return ApplyThis(l)*ApplyThis(r);
         case Exp:   
-          return pow(apply(l),apply(r));
+          return pow(ApplyThis(l),ApplyThis(r));
         default:
           ERROR("EvalExpression: BinOp %s not supported.", BinOpTypeName[v.op()]);
           return 0;
@@ -77,10 +76,10 @@ namespace Modelica {
     Real EvalExpression::operator()(UnaryOp v) const { 
       if (v.op()==Minus) {
         Expression e=v.exp();
-        return -apply(e);
+        return -ApplyThis(e);
       } else if (v.op()==Plus) {
 		Expression e=v.exp();
-        return apply(e);  
+        return ApplyThis(e);  
 	  }
       ERROR("EvalExpression: trying to evaluate a UnaryOp");
       return 0;
@@ -103,10 +102,10 @@ namespace Modelica {
     }
     Real EvalExpression::operator()(Call v) const { 
       if ("integer"==v.name()) {
-        return apply(v.args().front());
+        return ApplyThis(v.args().front());
       }
       if ("exp"==v.name()) {
-        return exp(apply(v.args().front()));
+        return exp(ApplyThis(v.args().front()));
       }
       ERROR("EvalExpression: trying to evaluate a Call");
       return 0;
@@ -127,7 +126,7 @@ namespace Modelica {
       ERROR_UNLESS(v.args().size()==1, "EvalExpression: Output expression with more than one element are not supported");
       if (v.args().front()) {
         Expression e=v.args().front().get();
-        return apply(e);
+        return ApplyThis(e);
       }
       ERROR("EvalExpression: Output with no expression");
       return 0;
@@ -150,23 +149,23 @@ namespace Modelica {
       Modification m=vinfo.get().modification().get();
       if (is<ModEq>(m)) {
         Expression meq = boost::get<ModEq>(m).exp();
-        return apply(meq);
+        return ApplyThis(meq);
       }
       if (is<ModAssign>(m)) {
         Expression meq = boost::get<ModAssign>(m).exp();
-        return apply(meq);
+        return ApplyThis(meq);
       } 
       if (is<ModClass>(m)) {
         OptExp oe = get<ModClass>(m).exp();
         if (oe) {
-          return apply(oe.get());
+          return ApplyThis(oe.get());
         }
         foreach_(Argument a, get<ModClass>(m).modification_ref()) {
           if (is<ElMod>(a)) {     
             ElMod em = boost::get<ElMod>(a);
             if (em.name()=="start" && (em.modification()) && is<ModEq>(em.modification_ref().get())) {
               Expression e = get<ModEq>(em.modification_ref().get()).exp();
-              return apply(e);
+              return ApplyThis(e);
             }
           }
         } 

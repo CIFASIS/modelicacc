@@ -20,7 +20,6 @@
 #include <ast/queries.h>
 #include <util/ast_visitors/replace_expression.h>
 #include <boost/variant/apply_visitor.hpp>
-#define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
 
@@ -65,20 +64,20 @@ namespace Modelica {
       if (look==Expression(v))
         return rep; 
       Expression l=v.left(), r=v.right();
-      return BinOp(apply(l), v.op(), apply(r));
+      return BinOp(ApplyThis(l), v.op(), ApplyThis(r));
     } 
     Expression ReplaceExpression::operator()(UnaryOp v) const { 
       // TODO
       if (look==Expression(v))
         return rep; 
       Expression exp = v.exp();  
-      return UnaryOp(apply(exp),v.op());
+      return UnaryOp(ApplyThis(exp),v.op());
     } 
     Expression ReplaceExpression::operator()(IfExp v) const { 
       if (look==Expression(v))
         return rep; 
       Expression c=v.cond(),then=v.then(),elseexp=v.elseexp();
-      return IfExp(apply(c), apply(then), List<ExpPair>(),apply(elseexp));
+      return IfExp(ApplyThis(c), ApplyThis(then), List<ExpPair>(),ApplyThis(elseexp));
     }
     Expression ReplaceExpression::operator()(Range v) const { 
       // TODO
@@ -103,7 +102,7 @@ namespace Modelica {
       if (look==Expression(v))
         return rep; 
       foreach_ (Expression &e, v.args_ref()) 
-        e = apply(e);
+        e = ApplyThis(e);
       return v;
     }
     Expression ReplaceExpression::operator()(FunctionExp v) const { 
@@ -129,7 +128,7 @@ namespace Modelica {
         return rep; 
       foreach_ (OptExp &oe, v.args_ref()) {
         if (oe)    
-          oe = apply(oe.get());
+          oe = ApplyThis(oe.get());
       }
       return v;
     }
@@ -149,7 +148,7 @@ namespace Modelica {
 		  Name n = get<0>(rt);
 		  ExpList exps;
 		  foreach_(Expression e, get<1>(rt))
-			exps.push_back(apply(e));
+			exps.push_back(ApplyThis(e));
 		  aux.push_back(RefTuple(n,exps));
 	  }
       return Reference(aux);

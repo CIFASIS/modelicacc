@@ -23,15 +23,14 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <ast/equation.h>
 
-#define apply(X) boost::apply_visitor(*this,X)
 #define applyExp(X) boost::apply_visitor(v,X)
 namespace Modelica {
 
   using namespace Modelica::AST;
   template <typename Visit>
-  class EqVisitor: public boost::static_visitor<Equation> {
+  class EquationVisitor: public boost::static_visitor<Equation> {
   public:
-    EqVisitor(Visit visit): v(visit) {
+    EquationVisitor(Visit visit): v(visit) {
 
     };
     Equation operator()(Connect eq) const {
@@ -54,7 +53,7 @@ namespace Modelica {
 	  EquationList eqs;
 	  IndexList index;
 	  foreach_(Equation e,eq.elements())
-		eqs.push_back(apply(e));			
+		eqs.push_back(ApplyThis(e));			
 	  foreach_(Index i,eq.range().indexes())	
 		if (i.exp()) index.push_back(Index(i.name(), OptExp(applyExp(i.exp().get())))); 
 		else index.push_back(Index(i.name(), OptExp())); 
@@ -68,15 +67,15 @@ namespace Modelica {
 		ElseList elseIf;
 		
 		foreach_(Equation e, eq.elements() )
-			elements.push_back(apply(e));
+			elements.push_back(ApplyThis(e));
 			
 		foreach_(Equation e, eq.ifnot() )
-			elses.push_back(apply(e));	
+			elses.push_back(ApplyThis(e));	
 			
 		foreach_(Else el, eq.elseif()) {
 			EquationList list;
 			foreach_(Equation e, get<1>(el))
-				list.push_back(apply(e));
+				list.push_back(ApplyThis(e));
 			elseIf.push_back(Else(applyExp(get<0>(el)),list));		
 		}			
 			
@@ -90,12 +89,12 @@ namespace Modelica {
 		ElseList elsewhen;
 		
 		foreach_(Equation e, eq.elements() )
-			elements.push_back(apply(e));
+			elements.push_back(ApplyThis(e));
 			
 		foreach_(Else el, eq.elsewhen()) {
 			EquationList list;
 			foreach_(Equation e, get<1>(el))
-				list.push_back(apply(e));
+				list.push_back(ApplyThis(e));
 			elsewhen.push_back(Else(applyExp(get<0>(el)),list));		
 		}			
 			

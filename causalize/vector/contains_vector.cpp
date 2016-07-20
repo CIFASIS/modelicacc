@@ -42,28 +42,28 @@ namespace Causalize {
     bool ContainsVector::operator()(BinOp v) const { 
       if (exp==Expression(v)) return true; 
       Expression l=v.left(), r=v.right();
-      bool rl = apply(l);
-      bool rr = apply(r);
+      bool rl = ApplyThis(l);
+      bool rr = ApplyThis(r);
       return rr || rl;
       } 
       bool ContainsVector::operator()(UnaryOp v) const { 
         if (exp==Expression(v)) return true; 
         Expression e=v.exp();
-        return apply(e);
+        return ApplyThis(e);
       } 
       bool ContainsVector::operator()(IfExp v) const { 
         if (exp==Expression(v)) return true; 
         Expression cond=v.cond(), then=v.then(), elseexp=v.elseexp();
-        const bool rc = apply(cond);
-        const bool rt = apply(then);
-        const bool re = apply(elseexp);
+        const bool rc = ApplyThis(cond);
+        const bool rt = ApplyThis(then);
+        const bool re = ApplyThis(elseexp);
         return rc || rt || re;
       }
       bool ContainsVector::operator()(Range v) const { 
         if (exp==Expression(v)) return true; 
         Expression start=v.start(), end=v.end();
-        bool rs = apply(start);
-        bool re = apply(end);
+        bool rs = ApplyThis(start);
+        bool re = ApplyThis(end);
         return rs || re;
       }
       bool ContainsVector::operator()(Brace v) const { 
@@ -146,7 +146,7 @@ namespace Causalize {
       bool ContainsVector::operator()(Output v) const {
         if (exp==Expression(v)) return true; 
         foreach_(OptExp oe, v.args()) 
-          if (oe && apply(oe.get())) return true;
+          if (oe && ApplyThis(oe.get())) return true;
         return false;
       }
     bool ContainsVector::operator()(Reference v) const {

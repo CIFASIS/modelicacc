@@ -25,7 +25,6 @@
 #include <util/ast_visitors/contains_expression.h>
 #include <boost/icl/discrete_interval.hpp>
 #include <set>
-#define apply(X) boost::apply_visitor(*this,X)
 
 namespace Causalize {
 

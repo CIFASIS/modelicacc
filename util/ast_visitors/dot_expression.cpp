@@ -21,7 +21,6 @@
 #include <ast/queries.h>
 #include <boost/variant/apply_visitor.hpp>
 #include <util/type.h>
-#define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
 
@@ -54,11 +53,11 @@ namespace Modelica {
     }
     Expression DotExpression::operator()(BinOp v) const { 
       Expression l=v.left(), r=v.right();
-      return BinOp(apply(l), v.op(), apply(r));
+      return BinOp(ApplyThis(l), v.op(), ApplyThis(r));
     } 
     Expression DotExpression::operator()(UnaryOp v) const { 
       Expression e =v.exp();
-      return UnaryOp(apply(e),v.op());
+      return UnaryOp(ApplyThis(e),v.op());
     } 
     
     Expression DotExpression::operator()(IfExp v) const { 
@@ -67,23 +66,23 @@ namespace Modelica {
       Expression elseexp = v.elseexp();
       List<ExpPair> list;
       foreach_(ExpPair p, v.elseif())
-		list.push_back( ExpPair( apply(get<0>(p)) , apply(get<1>(p))  ) );
-      return IfExp(apply(cond),apply(then),list,apply(elseexp));
+		list.push_back( ExpPair( ApplyThis(get<0>(p)) , ApplyThis(get<1>(p))  ) );
+      return IfExp(ApplyThis(cond),ApplyThis(then),list,ApplyThis(elseexp));
     }
     
     Expression DotExpression::operator()(Range v) const { 
 	  Expression start = v.start(),end=v.end();	
 	  if (v.step()) {
 		Expression step = v.step().get();  
-		return Range(apply(start),apply(step),apply(end));
+		return Range(ApplyThis(start),ApplyThis(step),ApplyThis(end));
 	  } else 
-		return Range(apply(start),apply(end));
+		return Range(ApplyThis(start),ApplyThis(end));
 	  return v;
     }
     Expression DotExpression::operator()(Brace v) const { 
       ExpList list;
       foreach_(Expression e, v.args())
-		list.push_back(apply(e));
+		list.push_back(ApplyThis(e));
       return Brace(list);
     }
     Expression DotExpression::operator()(Bracket v) const { 
@@ -91,7 +90,7 @@ namespace Modelica {
 	  foreach_(ExpList els, v.args()) {
 		  ExpList l;
 		  foreach_(Expression e, els)
-			l.push_back(apply(e));
+			l.push_back(ApplyThis(e));
 		  list.push_back(l); 	
 	  }	  
       return Bracket(list);
@@ -99,13 +98,13 @@ namespace Modelica {
     Expression DotExpression::operator()(Call v) const { 
       ExpList list;
       foreach_(Expression e, v.args())
-		list.push_back(apply(e));
+		list.push_back(ApplyThis(e));
       return Call(v.name(),list);
     }
     Expression DotExpression::operator()(FunctionExp v) const { 
       ExpList list;
       foreach_(Expression e, v.args())
-		list.push_back(apply(e));
+		list.push_back(ApplyThis(e));
       return FunctionExp(v.name(),list);
     }
 
@@ -114,23 +113,23 @@ namespace Modelica {
       IndexList indices;
       foreach_(Index i, v.indices().indexes()) {
         if (i.exp()) 
-		      indices.push_back(Index(i.name(),apply(i.exp().get())));
+		      indices.push_back(Index(i.name(),ApplyThis(i.exp().get())));
         else
 		      indices.push_back(Index(i.name(),OptExp()));
       }
-      return ForExp(apply(exp),Indexes(indices));
+      return ForExp(ApplyThis(exp),Indexes(indices));
     }
     
     Expression DotExpression::operator()(Named v) const {
 	  Expression exp = v.exp();
-      return Named(v.name(),apply(exp));
+      return Named(v.name(),ApplyThis(exp));
     }
     
     Expression DotExpression::operator()(Output v) const {
       OptExpList list;
       foreach_(OptExp e, v.args())
 	     if (e)
-			list.push_back(apply(e.get()));
+			list.push_back(ApplyThis(e.get()));
 		 else
 			list.push_back(OptExp());
       return Output(list);
@@ -187,7 +186,7 @@ namespace Modelica {
 				if (vv.modification() && is<ModEq>(vv.modification().get()))  {
 					Expression exp = get<ModEq>(vv.modification().get()).exp();
 					DotExpression  visitor = DotExpression(Option<MMO_Class &>(c),"",ExpList() );
-					Expression ret = boost::apply_visitor(visitor,exp);
+					Expression ret = Apply(visitor,exp);
 					return OptExp(ret);
 					//std::cerr << "Encontre al objetivo " << ret << std::endl;
 				}
