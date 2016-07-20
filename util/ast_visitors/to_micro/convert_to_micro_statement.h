@@ -17,27 +17,32 @@
 
 ******************************************************************************/
 
-#ifndef AST_VISITOR_REPLACE_EQ
-#define AST_VISITOR_REPLACE_EQ
+#ifndef AST_VISITOR_TO_MICRO_ST
+#define AST_VISITOR_TO_MICRO_ST
 #include <boost/variant/static_visitor.hpp>
-#include <ast/equation.h>
-#include <util/ast_visitors/replace.h>
+#include <ast/statement.h>
+#include <mmo/mmo_class.h>
 
 namespace Modelica {
 
   using namespace Modelica::AST;
-  class replace_eq: public boost::static_visitor<Equation> {
+  class ConvertToMicroStatement: public boost::static_visitor<Statement> {
   public:
-    replace_eq(Expression, Expression);
-    Equation operator()(Connect) const;
-    Equation operator()(Equality) const;
-    Equation operator()(CallEq) const;
-    Equation operator()(ForEq) const;
-    Equation operator()(IfEq) const;
-    Equation operator()(WhenEq) const;
- 
-    Expression look,rep;
-    replace replace_exp;
+    ConvertToMicroStatement(MMO_Class &cl, unsigned int &discont);
+    Statement operator()(Assign v) const ;
+    Statement operator()(Break v) const ;
+    Statement operator()(Return v) const ;
+    Statement operator()(CallSt v) const ;
+    Statement operator()(IfSt v) const ;
+    Statement operator()(ForSt v) const ;
+    Statement operator()(WhenSt v) const ;
+    Statement operator()(WhileSt v) const ;
+    StatementList statements() const ;
+  private:
+    StatementList statements_;
+    Expression newDiscrete(Option<Expression> s=Option<Expression>()) const;
+    MMO_Class & mmo_class;
+    unsigned int &disc_count;
   }; 
 }
 #endif 

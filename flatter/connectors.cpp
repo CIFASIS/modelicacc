@@ -167,7 +167,7 @@ void Connectors::createGraph(EquationList & eqs, Option<Name> name , OptExp rang
 			Connect co = boost::get<Connect>(eq);			
 			Expression eleft=co.left(), eright=co.right();
 			if (name) {
-				Modelica::replace r = Modelica::replace(NameToRef(name.get()), NameToRef("i"));
+				Modelica::ReplaceExpression r = Modelica::ReplaceExpression(NameToRef(name.get()), NameToRef("i"));
 				eleft = apply(r,eleft);
 				eright = apply(r,eright);
 			}
@@ -207,12 +207,12 @@ void Connectors::expandConnect(Vertex l, OptExp lIndex,Vertex r, OptExp rIndex, 
 {
 	if (range && is<Range>(range.get())) {
 		Range rge = boost::get<Range>(range.get());
-		EvalExp evalIndex = EvalExp(class_.syms_ref());
+		EvalExpression evalIndex = EvalExpression(class_.syms_ref());
 		Real step = 1;
 		if (rge.step()) 
 			step = boost::apply_visitor(evalIndex,rge.step().get());
 		for(Real i = boost::apply_visitor(evalIndex,rge.start_ref()); i <= boost::apply_visitor(evalIndex,rge.end_ref()); i = i + step  ){
-			EvalExp eval = EvalExp(class_.syms_ref(),"i",i);
+			EvalExpression eval = EvalExpression(class_.syms_ref(),"i",i);
 			OptExp opl,opr; 
 			if (lIndex) opl = OptExp(boost::apply_visitor(eval,lIndex.get()));
 			if (rIndex) opr = OptExp(boost::apply_visitor(eval,rIndex.get()));
@@ -365,7 +365,7 @@ Edge Connectors::getSinkEdge(Edge e)
 
 bool Connectors::isEneUno(Edge e)
 {
-	constExp ce = constExp();
+	ConstantExpression ce = ConstantExpression();
 	Expression i1 = getIndex(e).get();
 	Expression i2 = getIndex(getSinkEdge(e)).get();
 	return  (apply(ce,i1) ^ apply(ce,i2)) && getRange(e);
@@ -394,9 +394,9 @@ OptExp Connectors::getIntervalo(Edge e)
  	if (G[e].visited) return OptExp();
 	if (index && range) {
 		Range r = boost::get<Range>(range.get());
-		EvalExp val = EvalExp(class_.syms_ref());
-		EvalExp sval = EvalExp(class_.syms_ref(),"i",apply(val,r.start_ref()));
-		EvalExp eval = EvalExp(class_.syms_ref(),"i",apply(val,r.end_ref()));
+		EvalExpression val = EvalExpression(class_.syms_ref());
+		EvalExpression sval = EvalExpression(class_.syms_ref(),"i",apply(val,r.start_ref()));
+		EvalExpression eval = EvalExpression(class_.syms_ref(),"i",apply(val,r.end_ref()));
 		
 		Expression start = apply(sval,index.get());
 		Expression end = apply(eval,index.get());
@@ -416,7 +416,7 @@ OptExp Connectors::intersectionIntervals(OptExp a, OptExp b)
 {
 	if (!a) return a;
 	if (!b) return b;
-	EvalExp eval = EvalExp(class_.syms_ref());
+	EvalExpression eval = EvalExpression(class_.syms_ref());
 	Real start1,start2,end1,end2;
 	
 	if (!is<Range>(a.get())) {
@@ -455,7 +455,7 @@ OptExp Connectors::intersectionIntervals(OptExp a, OptExp b)
 OptExp Connectors::proyInter(Expression inter,Edge e)
 {
 	if (isEneUno(e)) {
-		constExp ce = constExp();
+		ConstantExpression ce = ConstantExpression();
 		Expression i1 = getIndex(e).get();
 		/*if (apply(ce,i1)) */ return applyIntervalo(getIntervalo(e).get(),getIndex(e));
 	} 
@@ -488,17 +488,17 @@ OptExp Connectors::applyIntervalo(Expression inter,OptExp index)
 {
 	if (index && is<Range>(inter)) {
 		Range r = boost::get<Range>(inter);
-		EvalExp val = EvalExp(class_.syms_ref());
-		EvalExp sval = EvalExp(class_.syms_ref(),"i",apply(val,r.start_ref()));
-		EvalExp eval = EvalExp(class_.syms_ref(),"i",apply(val,r.end_ref()));
+		EvalExpression val = EvalExpression(class_.syms_ref());
+		EvalExpression sval = EvalExpression(class_.syms_ref(),"i",apply(val,r.start_ref()));
+		EvalExpression eval = EvalExpression(class_.syms_ref(),"i",apply(val,r.end_ref()));
 		Expression start = apply(sval,index.get());
 		Expression end = apply(eval,index.get());
 		if (start == end) return OptExp(start);
 		Range result = Range(start,end);
 		return OptExp(result);
 	} else if (index) {
-		EvalExp val = EvalExp(class_.syms_ref());
-		EvalExp sval = EvalExp(class_.syms_ref(),"i",apply(val,inter));
+		EvalExpression val = EvalExpression(class_.syms_ref());
+		EvalExpression sval = EvalExpression(class_.syms_ref(),"i",apply(val,inter));
 		Expression start = apply(sval,index.get());
 		return OptExp(start);
 	}
@@ -513,7 +513,7 @@ OptExp Connectors::applyIntervalo(Expression inter,OptExp index)
  
 Expression Connectors::applyIndex(Expression index,Expression e)
 {
-	Modelica::replace r = Modelica::replace(NameToRef("i"),index);
+	Modelica::ReplaceExpression r = Modelica::ReplaceExpression(NameToRef("i"),index);
 	return apply(r,e);
 }
 
@@ -530,7 +530,7 @@ Expression Connectors::applyIndexInv(Expression index,Expression e)
 		else b.op_ref() = Add;
 		index = b;
 	}
-	Modelica::replace r = Modelica::replace(NameToRef("i"),index);
+	Modelica::ReplaceExpression r = Modelica::ReplaceExpression(NameToRef("i"),index);
 	return apply(r,e);
 }
 
@@ -591,7 +591,7 @@ OptExpList Connectors::cutRange(OptExp a,OptExp b)
 	if (!a) return OptExpList();
 	if (is<Range>(a.get())) {
 		Range r = boost::get<Range>(a.get());
-		EvalExp val = EvalExp(class_.syms_ref());
+		EvalExpression val = EvalExpression(class_.syms_ref());
 		Real start = apply(val,r.start_ref());
 		Real end = apply(val,r.end_ref());
 		if (is<Range>(b.get())) {
@@ -881,14 +881,14 @@ Expression Connectors::addSufix(Expression name,Name var)
 }
 
 
-Expression Connectors::putIndex(Vars v,Option<EvalExp> eval)
+Expression Connectors::putIndex(Vars v,Option<EvalExpression> eval)
 {
 	Expression name = get<0>(v);
 	OptExp i = get<1>(v);
 	return addIndex(name,i,eval);
 }	
 
-Expression Connectors::addIndex(Expression name,OptExp i,Option<EvalExp> eval)
+Expression Connectors::addIndex(Expression name,OptExp i,Option<EvalExpression> eval)
 {
 	UnaryOpType op = Plus;
 	bool isU = false;
@@ -1024,12 +1024,12 @@ void Connectors::createFlowEquation(OptExp iter,VarsList vars,MMO_Class & conect
 			Range r = boost::get<Range>(iter.get());
 			Expression eq1 = get<0>(v);
 			if (isArray(get<0>(v))) 
-				eq1 = putIndex(v,Option<EvalExp>());
+				eq1 = putIndex(v,Option<EvalExpression>());
 			eq1 = addSufix(eq1,e);	
 			foreach_(Vars ve,vars) {
 				Expression eq2 = get<0>(ve);
 				if (isArray(get<0>(ve))) 
-					eq2 = putIndex(ve,Option<EvalExp>());
+					eq2 = putIndex(ve,Option<EvalExpression>());
 				eq2 = addSufix(eq2,e);	
 				eq1 = BinOp(eq1,Add,eq2);
 			}
@@ -1037,9 +1037,9 @@ void Connectors::createFlowEquation(OptExp iter,VarsList vars,MMO_Class & conect
 			eqs.push_back(Equality(eq1,cero));
 			class_.addEquation(makeForEq(r,eqs));	
 		} else {
-			EvalExp eval = EvalExp(class_.syms_ref());
+			EvalExpression eval = EvalExpression(class_.syms_ref());
 			Real i = apply(eval,iter.get());
-			EvalExp ieval = EvalExp(class_.syms_ref(),"i",i);
+			EvalExpression ieval = EvalExpression(class_.syms_ref(),"i",i);
 			
 			EquationList eqs;
 			Expression eq1 = get<0>(v);
@@ -1062,7 +1062,7 @@ void Connectors::createFlowEquation(OptExp iter,VarsList vars,MMO_Class & conect
 			if (is<Range>(get<2>(v).get())) {
 				Range range = boost::get<Range>(get<2>(v).get());
 				Expression t = get<0>(v);
-                               	t = addIndex(t,get<2>(v), Option<EvalExp>());
+                               	t = addIndex(t,get<2>(v), Option<EvalExpression>());
 				t = Call("sum",addSufix(t,e));
 				if (!eq1) eq1 = t;
 				else {
@@ -1070,11 +1070,11 @@ void Connectors::createFlowEquation(OptExp iter,VarsList vars,MMO_Class & conect
 					eq1 = temp;
 				}
 
-				//EvalExp eval = EvalExp(class_.syms_ref());
+				//EvalExpression eval = EvalExpression(class_.syms_ref());
 				//Real start = apply(eval,range.start_ref());
 				//Real end = apply(eval,range.end_ref());
 				//for (Real i = start; i <= end;i++) {
-				//	EvalExp ieval = EvalExp(class_.syms_ref(),"i",i);
+				//	EvalExpression ieval = EvalExpression(class_.syms_ref(),"i",i);
 				//	Expression t = get<0>(v);
 				//	if (isArray(get<0>(v))) 
 				//		t = putIndex(v,ieval);
@@ -1087,9 +1087,9 @@ void Connectors::createFlowEquation(OptExp iter,VarsList vars,MMO_Class & conect
 					
 				//}
 			} else {
-				EvalExp eval = EvalExp(class_.syms_ref());
+				EvalExpression eval = EvalExpression(class_.syms_ref());
 				Real i = apply(eval,get<2>(v).get());
-				EvalExp ieval = EvalExp(class_.syms_ref(),"i",i);
+				EvalExpression ieval = EvalExpression(class_.syms_ref(),"i",i);
 				Expression t = get<0>(v);
 				if (isArray(get<0>(v))) 
 					t = putIndex(v,ieval);
@@ -1118,20 +1118,20 @@ void Connectors::createEqualityEquation(OptExp iter,VarsList vars , Name e,bool 
 			Range r = boost::get<Range>(iter.get());
 			Expression eq1 = get<0>(v);
 			if (isArray(get<0>(v))) 
-				eq1 = putIndex(v,Option<EvalExp>());
+				eq1 = putIndex(v,Option<EvalExpression>());
 			eq1 = addSufix(removeUnary(eq1),e);	
 			foreach_(Vars ve,vars) {
 				Expression eq2 = get<0>(ve);
 				if (isArray(get<0>(ve))) 
-					eq2 = putIndex(ve,Option<EvalExp>());
+					eq2 = putIndex(ve,Option<EvalExpression>());
 				eq2 = addSufix(removeUnary(eq2),e);	
 				eqs.push_back(Equality(eq1,eq2));
 			}
 			class_.addEquation(makeForEq(r,eqs));	
 		} else {
-			EvalExp eval = EvalExp(class_.syms_ref());
+			EvalExpression eval = EvalExpression(class_.syms_ref());
 			Real i = apply(eval,iter.get());
-			EvalExp ieval = EvalExp(class_.syms_ref(),"i",i);
+			EvalExpression ieval = EvalExpression(class_.syms_ref(),"i",i);
 			EquationList eqs;
 			Expression eq1 = get<0>(v);
 			if (isArray(get<0>(v))) 
@@ -1150,12 +1150,12 @@ void Connectors::createEqualityEquation(OptExp iter,VarsList vars , Name e,bool 
 		foreach_(Vars v,vars) {
 			if (is<Range>(get<2>(v).get())) {
 				Range range = boost::get<Range>(get<2>(v).get());
-				EvalExp eval = EvalExp(class_.syms_ref());
+				EvalExpression eval = EvalExpression(class_.syms_ref());
 				Real start = apply(eval,range.start_ref());
 				Real end = apply(eval,range.end_ref());
 				Expression istart = start + 1;
 				Expression iend = end;
-				EvalExp ieval = EvalExp(class_.syms_ref(),"i",start);
+				EvalExpression ieval = EvalExpression(class_.syms_ref(),"i",start);
 				if (!eq1) {
 					EquationList eqs;					
 					Range r2 = Range(istart , iend );
@@ -1166,7 +1166,7 @@ void Connectors::createEqualityEquation(OptExp iter,VarsList vars , Name e,bool 
 
 					Expression eq2 = get<0>(v);
                                         if (isArray(get<0>(v))) 
-                                                eq2 = putIndex(v,Option<EvalExp>());
+                                                eq2 = putIndex(v,Option<EvalExpression>());
                                         eq2 = addSufix(removeUnary(eq2),e);     
                                         eqs.push_back(Equality(eq1.get(),eq2));
                                         class_.addEquation(makeForEq(r2,eqs)); 
@@ -1174,13 +1174,13 @@ void Connectors::createEqualityEquation(OptExp iter,VarsList vars , Name e,bool 
 					EquationList eqs;
 					Expression eq2 = get<0>(v);
 	                                if (isArray(get<0>(v))) 
-        	                                eq2 = putIndex(v,Option<EvalExp>());
+        	                                eq2 = putIndex(v,Option<EvalExpression>());
                 	                eq2 = addSufix(removeUnary(eq2),e);     
                         	        eqs.push_back(Equality(eq1.get(),eq2));
 					class_.addEquation(makeForEq(range,eqs)); 
 				}
 				/*for (Real i = start; i <= end;i++) {
-					EvalExp ieval = EvalExp(class_.syms_ref(),"i",i);
+					EvalExpression ieval = EvalExpression(class_.syms_ref(),"i",i);
 					Expression t = get<0>(v);
 					if (isArray(get<0>(v))) 
 						t = putIndex(v,ieval);
@@ -1190,9 +1190,9 @@ void Connectors::createEqualityEquation(OptExp iter,VarsList vars , Name e,bool 
 						class_.addEquation(Equality(eq1.get(),t));											
 				}*/
 			} else {
-				EvalExp eval = EvalExp(class_.syms_ref());
+				EvalExpression eval = EvalExpression(class_.syms_ref());
 				Real i = apply(eval,get<2>(v).get());
-				EvalExp ieval = EvalExp(class_.syms_ref(),"i",i);
+				EvalExpression ieval = EvalExpression(class_.syms_ref(),"i",i);
 				Expression t = get<0>(v);
 				if (isArray(get<0>(v))) 
 					t = putIndex(v,ieval);

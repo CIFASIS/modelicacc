@@ -25,9 +25,9 @@
 namespace Modelica {
 
   using namespace Modelica::AST;
-  class replace: public boost::static_visitor<Expression> {
+  class ReplaceExpression: public boost::static_visitor<Expression> {
   public:
-    replace(Expression, Expression);
+    ReplaceExpression(Expression, Expression);
     Expression operator()(Integer v) const;
     Expression operator()(Boolean v) const;
     Expression operator()(String v) const;

@@ -26,9 +26,9 @@
 namespace Modelica {
 
   using namespace Modelica::AST;
-  class toMicroExp: public boost::static_visitor<Expression> {
+  class ConvertToMicroExpression: public boost::static_visitor<Expression> {
   public:
-    toMicroExp(MMO_Class &cl, unsigned int &discont, bool for_when=false, bool in_algorithm=false);
+    ConvertToMicroExpression(MMO_Class &cl, unsigned int &discont, bool for_when=false, bool in_algorithm=false);
     Expression operator()(Integer v) const;
     Expression operator()(Boolean v) const;
     Expression operator()(String v) const;

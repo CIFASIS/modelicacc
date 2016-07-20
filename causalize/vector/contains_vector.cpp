@@ -22,9 +22,9 @@
 #include <boost/variant/get.hpp>
 #include <boost/icl/discrete_interval.hpp>
 #include <causalize/vector/vector_graph_definition.h>
-#include <util/ast_visitors/evalexp.h>
+#include <util/ast_visitors/eval_expression.h>
 #include <boost/variant/apply_visitor.hpp>
-#include <util/ast_visitors/part_evalexp.h>
+#include <util/ast_visitors/partial_eval_expression.h>
 
 using namespace boost;
 using namespace boost::icl;
@@ -98,7 +98,7 @@ namespace Causalize {
                 //ERROR("Derivative of array not suported");
               }
               Expression i = el.front();
-              Modelica::PartEvalExp pe(syms);
+              Modelica::PartialEvalExpression pe(syms);
               Expression ind = boost::apply_visitor(pe,i);
               if (is<Modelica::AST::Integer>(ind)) {
                 VectorEdgeProperties newEdge;
@@ -177,7 +177,7 @@ namespace Causalize {
               return true;
             } 
             Expression i = el.front();
-            Modelica::PartEvalExp pe(syms);
+            Modelica::PartialEvalExpression pe(syms);
             Expression ind = boost::apply_visitor(pe,i);
             if (is<Modelica::AST::Integer>(ind)) {
               VectorEdgeProperties newEdge;
@@ -232,7 +232,7 @@ namespace Causalize {
     }
 
     void ContainsVector::setForIndex(Expression a, Expression b) {
-       Modelica::EvalExp ev(syms); 
+       Modelica::EvalExpression ev(syms); 
        int start=boost::apply_visitor(ev,a);
        int end=boost::apply_visitor(ev,b);
        forIndexInterval =  discrete_interval<int>::closed(start,end);

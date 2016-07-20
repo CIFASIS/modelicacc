@@ -7,7 +7,7 @@
 
 #include <ast/queries.h>
 #include <causalize/unknowns_collector.h>
-#include <util/ast_visitors/evalexp.h>
+#include <util/ast_visitors/eval_expression.h>
 #include <util/table.h>
 #include <util/type.h>
 #include <util/debug.h>
@@ -33,7 +33,7 @@ ExpList UnknownsCollector::collectUnknowns() {
             if (!varInfo.indices())
               _unknowns.push_back(Call("der",ExpList(1,Reference(Ref(1,RefTuple(name,ExpList(0)))))));
             else if (varInfo.indices().get().size()==1) {
-              EvalExp ev(_c.syms_ref());
+              EvalExpression ev(_c.syms_ref());
               Expression lim=varInfo.indices().get().front();
               const int limit=boost::apply_visitor(ev,lim);
               for (int i=1;i<=limit;i++)
@@ -45,7 +45,7 @@ ExpList UnknownsCollector::collectUnknowns() {
             if (!varInfo.indices())
               _unknowns.push_back(Reference(Ref(1,RefTuple(name,ExpList(0)))));
             else if (varInfo.indices().get().size()==1) {
-              EvalExp ev(_c.syms_ref());
+              EvalExpression ev(_c.syms_ref());
               Expression lim=varInfo.indices().get().front();
               const int limit=boost::apply_visitor(ev,lim);
               for (int i=1;i<=limit;i++) 

@@ -1,7 +1,7 @@
 #include <causalize/vector/graph_builder.h>
 #include <causalize/vector/vector_graph_definition.h>
 #include <causalize/vector/contains_vector.h>
-#include <util/ast_visitors/evalexp.h>
+#include <util/ast_visitors/eval_expression.h>
 
 
 #include <boost/graph/adjacency_list.hpp>
@@ -67,7 +67,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         if (!varInfo.indices())  {
           vp.count=0;
         } else if (varInfo.indices().get().size()==1) {
-          EvalExp ev(mmo_class.syms_ref()); 
+          EvalExpression ev(mmo_class.syms_ref()); 
           vp.count = boost::apply_visitor(ev,varInfo.indices().get().front());
         } else {
           ERROR("ReducedGraphBuilder::makeGraph Arrays of arrays are not supported yet\n");  
@@ -171,7 +171,7 @@ int ReducedGraphBuilder::getForRangeSize(ForEq feq) {
   if (is<Range>(exp)) {
     Range range = get<Range>(exp);
     ERROR_UNLESS(!range.step(), "graph_builder: FOR ranges with leaps not supported yet");
-    EvalExp ev(mmo_class.syms_ref()); 
+    EvalExpression ev(mmo_class.syms_ref()); 
     return boost::apply_visitor(ev,range.end_ref())-boost::apply_visitor(ev,range.start_ref())+1;
   }
   ERROR("Expression in FOR Index not supported\n");

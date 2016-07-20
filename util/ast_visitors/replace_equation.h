@@ -17,41 +17,27 @@
 
 ******************************************************************************/
 
-#ifndef AST_VISITOR_EVALEXP
-#define AST_VISITOR_EVALEXP
+#ifndef AST_VISITOR_REPLACE_EQ
+#define AST_VISITOR_REPLACE_EQ
 #include <boost/variant/static_visitor.hpp>
-#include <ast/expression.h>
-#include <util/table.h>
+#include <ast/equation.h>
+#include <util/ast_visitors/replace_expression.h>
 
 namespace Modelica {
 
   using namespace Modelica::AST;
-  class EvalExp: public boost::static_visitor<Real> {
+  class ReplaceEquation: public boost::static_visitor<Equation> {
   public:
-    EvalExp(const VarSymbolTable &);
-    EvalExp(const VarSymbolTable &,Name,Real);
-    Real operator()(Integer v) const;
-    Real operator()(Boolean v) const;
-    Real operator()(String v) const;
-    Real operator()(Name v) const;
-    Real operator()(Real v) const;
-    Real operator()(SubEnd v) const;
-    Real operator()(SubAll v) const;
-    Real operator()(BinOp) const;
-    Real operator()(UnaryOp) const;
-    Real operator()(Brace) const;
-    Real operator()(Bracket) const;
-    Real operator()(Call) const;
-    Real operator()(FunctionExp) const;
-    Real operator()(ForExp) const;
-    Real operator()(IfExp) const;
-    Real operator()(Named) const;
-    Real operator()(Output) const;
-    Real operator()(Reference) const;
-    Real operator()(Range) const;
-    const VarSymbolTable &vtable; 
-    Option<Name> name;
-    Option<Real> val;
+    ReplaceEquation(Expression, Expression);
+    Equation operator()(Connect) const;
+    Equation operator()(Equality) const;
+    Equation operator()(CallEq) const;
+    Equation operator()(ForEq) const;
+    Equation operator()(IfEq) const;
+    Equation operator()(WhenEq) const;
+ 
+    Expression look,rep;
+    ReplaceExpression replace_exp;
   }; 
 }
 #endif 

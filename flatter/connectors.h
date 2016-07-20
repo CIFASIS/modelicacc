@@ -28,9 +28,9 @@
 #include <ast/element.h>
 #include <util/type.h>
 #include <boost/variant/get.hpp>
-#include <util/ast_visitors/evalexp.h>
-#include <util/ast_visitors/replace.h>
-#include <util/ast_visitors/constExp.h>
+#include <util/ast_visitors/eval_expression.h>
+#include <util/ast_visitors/replace_expression.h>
+#include <util/ast_visitors/constant_expression.h>
 #include <flatter/classFinder.h>
 #include <set>
 
@@ -109,8 +109,8 @@ private:
 	void 		createFlowEquation(OptExp iter,VarsList vars,MMO_Class & conector,Name e,bool);
 	void 		createEquation(Solution sol);
 	void 		ceroEquations();
-	Expression 	putIndex(Vars v,Option<EvalExp> eval);
-	Expression 	addIndex(Expression name, OptExp i ,Option<EvalExp> eval);
+	Expression 	putIndex(Vars v,Option<EvalExpression> eval);
+	Expression 	addIndex(Expression name, OptExp i ,Option<EvalExpression> eval);
 	bool 		isArray(Expression name);
 	Name 		getName(Expression name);
 	Expression 	addSufix(Expression name,Name var);

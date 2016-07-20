@@ -17,18 +17,18 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/to_micro/to_micro.h>
-#include <util/ast_visitors/to_micro/to_micro_st.h>
+#include <util/ast_visitors/to_micro/convert_to_micro.h>
+#include <util/ast_visitors/to_micro/convert_to_micro_statement.h>
 #include <ast/queries.h>
 #include <boost/variant/apply_visitor.hpp>
-#include <util/ast_visitors/part_evalexp.h>
+#include <util/ast_visitors/partial_eval_expression.h>
 #define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
-  toMicro::toMicro(MMO_Class &cl): mmo_class(cl), tomicro_exp(cl,disc_count) {
+  ConvertToMicro::ConvertToMicro(MMO_Class &cl): mmo_class(cl), tomicro_exp(cl,disc_count) {
     disc_count=0;
   } 
-  void toMicro::convert() {
+  void ConvertToMicro::convert() {
     EquationList &eqs = mmo_class.equations_ref().equations_ref();
     EquationList remove;
     foreach_(Equation &eq, eqs) {
@@ -48,7 +48,7 @@ namespace Modelica {
         ForEq feq = get<ForEq>(eq);
         Option<Expression> oe = feq.range().indexes().front().exp();
         if (oe) {
-          PartEvalExp ev(mmo_class.syms_ref());
+          PartialEvalExpression ev(mmo_class.syms_ref());
           Expression exp = boost::apply_visitor(ev,oe.get());
           if (is<Range>(exp)) {
             Range range = get<Range>(exp);
@@ -78,7 +78,7 @@ namespace Modelica {
     foreach_(Equation eq, remove) {
       init_eqs.erase(std::find(init_eqs.begin(),init_eqs.end(), eq));
     }
-    toMicroSt tom(mmo_class,disc_count);
+    ConvertToMicroStatement tom(mmo_class,disc_count);
     foreach_(Statement &st, mmo_class.statements_ref().statements_ref()) {
       st=boost::apply_visitor(tom, st);
     }
@@ -95,7 +95,7 @@ namespace Modelica {
         //  vinfo.prefixes_ref().push_back(discrete);
         if (vinfo.type()=="Boolean" && vinfo.modification()) {
           Modification &mod = boost::get<Modification>(vinfo.modification_ref());
-          //toMicroExp exp(mmo_class,disc_count);
+          //ConvertToMicroExpression exp(mmo_class,disc_count);
           if (is<ModEq>(mod)) {
             get<ModEq>(mod).exp_ref()=boost::apply_visitor(tomicro_exp,get<ModEq>(mod).exp_ref());
           } else if (is<ModAssign>(mod)) {
@@ -121,7 +121,7 @@ namespace Modelica {
         Modification &mod = boost::get<Modification>(vinfo.modification_ref());
         if (is<ModEq>(mod)) {
           Expression exp=get<ModEq>(mod).exp();
-          //toMicroExp exp_visit(mmo_class,disc_count);
+          //ConvertToMicroExpression exp_visit(mmo_class,disc_count);
           get<ModEq>(mod).exp_ref()=boost::apply_visitor(tomicro_exp,exp);
           if (is<Brace>(exp)) {
             DEBUG('m', "Removing brace modification");
@@ -183,19 +183,19 @@ namespace Modelica {
     mmo_class.prefixes_ref().clear(); 
     mmo_class.prefixes_ref().push_back(model);
   }
-  Equation toMicro::operator() (Connect c) {
+  Equation ConvertToMicro::operator() (Connect c) {
     ERROR("Can not convert connect equation. ");
     return c;
   }
-  Equation toMicro::operator() (Equality eqeq) {
-    //toMicroExp exp(mmo_class,disc_count);
+  Equation ConvertToMicro::operator() (Equality eqeq) {
+    //ConvertToMicroExpression exp(mmo_class,disc_count);
     return Equality(boost::apply_visitor(tomicro_exp, eqeq.left_ref()), boost::apply_visitor(tomicro_exp,eqeq.right_ref()));
   }
-  Equation toMicro::operator() (CallEq c) {
+  Equation ConvertToMicro::operator() (CallEq c) {
     return c;
   }
-  Equation toMicro::operator() (WhenEq c) { 
-    //toMicroExp exp(mmo_class,disc_count,true);
+  Equation ConvertToMicro::operator() (WhenEq c) { 
+    //ConvertToMicroExpression exp(mmo_class,disc_count,true);
     Expression cond = boost::apply_visitor(tomicro_exp,c.cond_ref());
     StatementList sls;
     if (is<Brace>(cond)) {
@@ -226,10 +226,10 @@ namespace Modelica {
     mmo_class.statements_ref().statements_ref().push_back(st);
     return c;
   }
-  Equation toMicro::operator() (ForEq c) {
+  Equation ConvertToMicro::operator() (ForEq c) {
     return c;
   }
-  Equation toMicro::operator() (IfEq c) {
+  Equation ConvertToMicro::operator() (IfEq c) {
     return c;
   }
 }

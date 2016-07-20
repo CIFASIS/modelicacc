@@ -26,7 +26,7 @@
 #include <util/type.h>
 #include <util/ast_visitors/eq_visitor.h>
 #include <util/ast_visitors/st_visitor.h>
-#include <util/ast_visitors/dotExpression.h>
+#include <util/ast_visitors/dot_expression.h>
 
 #include <iostream>
 #include <sstream> 
@@ -40,8 +40,8 @@ using namespace Modelica::AST;
 
 struct Remove_Composition {
 public:
-	typedef EqVisitor<dotExpression> EqdotExpression;
-	typedef StVisitor<dotExpression> StdotExpression;
+	typedef EqVisitor<DotExpression> EqDotExpression;
+	typedef StVisitor<DotExpression> StDotExpression;
 	Remove_Composition();
 	void 		LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarInfo viUp);
 private:

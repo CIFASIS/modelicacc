@@ -4,11 +4,11 @@ SRC_ANTIALIAS := antialias/main.cpp \
 	util/table.cpp \
 	util/type.cpp \
 	util/debug.cpp \
-	util/ast_visitors/evalexp.cpp \
-	util/ast_visitors/part_evalexp.cpp \
-	util/ast_visitors/replace.cpp \
-	util/ast_visitors/replace_eq.cpp \
-	util/ast_visitors/replace_st.cpp \
+	util/ast_visitors/eval_expression.cpp \
+	util/ast_visitors/partial_eval_expression.cpp \
+	util/ast_visitors/replace_expression.cpp \
+	util/ast_visitors/replace_equation.cpp \
+	util/ast_visitors/replace_statement.cpp \
 	causalize/state_variables_finder.cpp \
 	antialias/remove_alias.cpp
 

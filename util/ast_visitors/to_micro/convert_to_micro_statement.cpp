@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/to_micro/to_micro_st.h>
-#include <util/ast_visitors/to_micro/to_micro_exp.h>
+#include <util/ast_visitors/to_micro/convert_to_micro_statement.h>
+#include <util/ast_visitors/to_micro/convert_to_micro_expression.h>
 #include <ast/queries.h>
 #include <stdio.h>
 #include <boost/variant/apply_visitor.hpp>
@@ -27,13 +27,13 @@
 namespace Modelica {
 
     using namespace boost;
-    toMicroSt::toMicroSt(MMO_Class &cl, unsigned int &discont): mmo_class(cl), disc_count(discont) {
+    ConvertToMicroStatement::ConvertToMicroStatement(MMO_Class &cl, unsigned int &discont): mmo_class(cl), disc_count(discont) {
     };
-    Statement toMicroSt::operator()(Assign v) const { 
+    Statement ConvertToMicroStatement::operator()(Assign v) const { 
       Expression l=v.left(); 
       Expression r=v.left(); 
       OptExp opt_r=v.right(); 
-      toMicroExp tom(mmo_class, disc_count, false,true);
+      ConvertToMicroExpression tom(mmo_class, disc_count, false,true);
       l = boost::apply_visitor(tom, l);
       if (opt_r) 
         opt_r = boost::apply_visitor(tom, opt_r.get());
@@ -42,21 +42,21 @@ namespace Modelica {
       return v;
     }
 
-    Statement toMicroSt::operator()(Break v) const { 
+    Statement ConvertToMicroStatement::operator()(Break v) const { 
       return v;
     }
 
-    Statement toMicroSt::operator()(Return v) const { 
+    Statement ConvertToMicroStatement::operator()(Return v) const { 
       return v;
     }
 
-    Statement toMicroSt::operator()(CallSt v) const { 
+    Statement ConvertToMicroStatement::operator()(CallSt v) const { 
       ERROR("Call statement not supported yet");
       return v;
     }
 
-    Statement toMicroSt::operator()(IfSt v) const { 
-      //toMicroExp tom(mmo_class, i, false,true);
+    Statement ConvertToMicroStatement::operator()(IfSt v) const { 
+      //ConvertToMicroExpression tom(mmo_class, i, false,true);
       //v.cond_ref() = boost::apply_visitor(tom, v.cond_ref());
       if (is<Reference>(v.cond())) {
         v.cond_ref() = BinOp(v.cond(), Greater, 0.5);
@@ -73,12 +73,12 @@ namespace Modelica {
       return v;
     }
 
-    Statement toMicroSt::operator()(ForSt v) const { 
+    Statement ConvertToMicroStatement::operator()(ForSt v) const { 
       ERROR("For statement not supported yet");
       return v;
     }
 
-    Statement toMicroSt::operator()(WhenSt v) const { 
+    Statement ConvertToMicroStatement::operator()(WhenSt v) const { 
       if (is<Call>(v.cond())) {
         Call c = get<Call>(v.cond());
         if ("sample"==c.name()) {
@@ -98,14 +98,14 @@ namespace Modelica {
       return v;
     }
 
-    Statement toMicroSt::operator()(WhileSt v) const { 
+    Statement ConvertToMicroStatement::operator()(WhileSt v) const { 
       ERROR("While statement not supported yet");
       return v;
     }
 
-    StatementList toMicroSt::statements() const { return statements_; }
+    StatementList ConvertToMicroStatement::statements() const { return statements_; }
 
-    Expression toMicroSt::newDiscrete(Option<Expression> oe) const {
+    Expression ConvertToMicroStatement::newDiscrete(Option<Expression> oe) const {
         char buff[1024];
         sprintf(buff,"d%d",disc_count++);
         Name name(buff);

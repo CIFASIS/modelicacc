@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/to_micro/to_micro_exp.h>
+#include <util/ast_visitors/to_micro/convert_to_micro_expression.h>
 #include <ast/queries.h>
 #include <stdio.h>
 #include <boost/variant/apply_visitor.hpp>
@@ -27,33 +27,33 @@
 namespace Modelica {
 
     using namespace boost;
-    toMicroExp::toMicroExp(MMO_Class &cl, unsigned int &discont, bool w, bool in_alg): mmo_class(cl), 
+    ConvertToMicroExpression::ConvertToMicroExpression(MMO_Class &cl, unsigned int &discont, bool w, bool in_alg): mmo_class(cl), 
                                                 disc_count(discont), when(w), in_algorithm(in_alg) {
     };
-    Expression toMicroExp::operator()(Integer v) const { 
+    Expression ConvertToMicroExpression::operator()(Integer v) const { 
       return v;
     }
-    Expression toMicroExp::operator()(Boolean v) const { 
+    Expression ConvertToMicroExpression::operator()(Boolean v) const { 
       if (v==TRUE) return 1.0;
       return 0.0;
     }
-    Expression toMicroExp::operator()(String v) const {
+    Expression ConvertToMicroExpression::operator()(String v) const {
       WARNING("uModelica does not supports strings\n");
       return v;
     }
-    Expression toMicroExp::operator()(Name v) const { 
+    Expression ConvertToMicroExpression::operator()(Name v) const { 
       return v;
     }
-    Expression toMicroExp::operator()(Real v) const { 
+    Expression ConvertToMicroExpression::operator()(Real v) const { 
       return v;
     }
-    Expression toMicroExp::operator()(SubEnd v) const { 
+    Expression ConvertToMicroExpression::operator()(SubEnd v) const { 
       return v;
     }
-    Expression toMicroExp::operator()(SubAll v) const { 
+    Expression ConvertToMicroExpression::operator()(SubAll v) const { 
       return v;
     }
-    Expression toMicroExp::operator()(BinOp v) const { 
+    Expression ConvertToMicroExpression::operator()(BinOp v) const { 
       if (in_algorithm) 
         return v;
       if (isRelation(v)) { 
@@ -85,13 +85,13 @@ namespace Modelica {
       Expression l=v.left(), r=v.right();
       return BinOp(apply(l), v.op(), apply(r));
     } 
-    Expression toMicroExp::operator()(UnaryOp v) const { 
+    Expression ConvertToMicroExpression::operator()(UnaryOp v) const { 
       if (v.op()==Not) {
         return Output(BinOp(1,Sub,apply(v.exp_ref())));
       } 
       return UnaryOp(apply(v.exp_ref()), v.op());
     } 
-    Expression toMicroExp::operator()(IfExp v) const { 
+    Expression ConvertToMicroExpression::operator()(IfExp v) const { 
       if (in_algorithm) 
         return v;
       Expression then = apply(v.then_ref());
@@ -126,16 +126,16 @@ namespace Modelica {
       }
       return BinOp(BinOp(cond,Mult, Output(then)), Add, BinOp(Output(BinOp(1,Sub,cond)),Mult,Output(elseexp)));
     }
-    Expression toMicroExp::operator()(Range v) const { 
+    Expression ConvertToMicroExpression::operator()(Range v) const { 
       return v;
     }
-    Expression toMicroExp::operator()(Brace v) const { 
+    Expression ConvertToMicroExpression::operator()(Brace v) const { 
       return v;
     }
-    Expression toMicroExp::operator()(Bracket v) const { 
+    Expression ConvertToMicroExpression::operator()(Bracket v) const { 
       return v;
     }
-    Expression toMicroExp::operator()(Call v) const { 
+    Expression ConvertToMicroExpression::operator()(Call v) const { 
       if (in_algorithm) 
         return v;
       if ("abs"==v.name()) {
@@ -207,16 +207,16 @@ namespace Modelica {
       }
       return v;
     }
-    Expression toMicroExp::operator()(FunctionExp v) const { 
+    Expression ConvertToMicroExpression::operator()(FunctionExp v) const { 
       return v;
     }
-    Expression toMicroExp::operator()(ForExp v) const {
+    Expression ConvertToMicroExpression::operator()(ForExp v) const {
       return v;
     }
-    Expression toMicroExp::operator()(Named v) const {
+    Expression ConvertToMicroExpression::operator()(Named v) const {
       return v;
     }
-    Expression toMicroExp::operator()(Output v) const {
+    Expression ConvertToMicroExpression::operator()(Output v) const {
       foreach_ (OptExp &oe, v.args_ref())
         if (oe)
           oe=apply(oe.get());
@@ -224,10 +224,10 @@ namespace Modelica {
         return v.args().front().get();
       return v;
     }
-    Expression toMicroExp::operator()(Reference v) const {
+    Expression ConvertToMicroExpression::operator()(Reference v) const {
       return v;
     }
-    Expression toMicroExp::newDiscrete(Option<Expression> oe) const {
+    Expression ConvertToMicroExpression::newDiscrete(Option<Expression> oe) const {
         char buff[1024];
         sprintf(buff,"d%d",disc_count++);
         Name name(buff);
@@ -244,7 +244,7 @@ namespace Modelica {
         return Reference(Ref(1,RefTuple(name,ExpList())));
     
     }
-    Expression toMicroExp::negate(BinOp v) const {
+    Expression ConvertToMicroExpression::negate(BinOp v) const {
       if (isRelation(v)) { 
         switch (v.op()) {
           case Lower: 

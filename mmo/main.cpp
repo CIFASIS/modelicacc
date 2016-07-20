@@ -24,7 +24,7 @@
 #include <mmo/mmo_class.h>
 #include <util/table.h>
 #include <util/debug.h>
-#include <util/ast_visitors/to_micro/to_micro.h>
+#include <util/ast_visitors/to_micro/convert_to_micro.h>
 #include <cstdlib>
 
 
@@ -62,7 +62,7 @@ int main(int argc, char ** argv)
 
   if (ret) {
 	  MMO_Class mmo(get<Class>(sd.classes().front()));
-    toMicro tm(mmo);
+    ConvertToMicro tm(mmo);
     tm.convert();
 	  std::cout << mmo << std::endl;
   } else std::cout << "Error parser" <<  std::endl;

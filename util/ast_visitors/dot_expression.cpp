@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/dotExpression.h>
+#include <util/ast_visitors/dot_expression.h>
 #include <ast/queries.h>
 #include <boost/variant/apply_visitor.hpp>
 #include <util/type.h>
@@ -26,42 +26,42 @@
 namespace Modelica {
 
     using namespace boost;
-    dotExpression::dotExpression(Option<MMO_Class &> m, Name n, ExpList xs): _class(m), prefix(n), index(xs) 
+    DotExpression::DotExpression(Option<MMO_Class &> m, Name n, ExpList xs): _class(m), prefix(n), index(xs) 
     {
 	if (m)
 		syms = m.get().syms_ref();
     };
-    Expression dotExpression::operator()(Integer v) const { 
+    Expression DotExpression::operator()(Integer v) const { 
       return v;
     }
-    Expression dotExpression::operator()(Boolean v) const { 
+    Expression DotExpression::operator()(Boolean v) const { 
       return v;
     }
-    Expression dotExpression::operator()(String v) const {
+    Expression DotExpression::operator()(String v) const {
       return v;
     }
-    Expression dotExpression::operator()(Name v) const { 
+    Expression DotExpression::operator()(Name v) const { 
       return v;
     }
-    Expression dotExpression::operator()(Real v) const { 
+    Expression DotExpression::operator()(Real v) const { 
       return v;
     }
-    Expression dotExpression::operator()(SubEnd v) const { 
+    Expression DotExpression::operator()(SubEnd v) const { 
       return v;
     }
-    Expression dotExpression::operator()(SubAll v) const { 
+    Expression DotExpression::operator()(SubAll v) const { 
       return v;
     }
-    Expression dotExpression::operator()(BinOp v) const { 
+    Expression DotExpression::operator()(BinOp v) const { 
       Expression l=v.left(), r=v.right();
       return BinOp(apply(l), v.op(), apply(r));
     } 
-    Expression dotExpression::operator()(UnaryOp v) const { 
+    Expression DotExpression::operator()(UnaryOp v) const { 
       Expression e =v.exp();
       return UnaryOp(apply(e),v.op());
     } 
     
-    Expression dotExpression::operator()(IfExp v) const { 
+    Expression DotExpression::operator()(IfExp v) const { 
       Expression cond = v.cond();
       Expression then = v.then();
       Expression elseexp = v.elseexp();
@@ -71,7 +71,7 @@ namespace Modelica {
       return IfExp(apply(cond),apply(then),list,apply(elseexp));
     }
     
-    Expression dotExpression::operator()(Range v) const { 
+    Expression DotExpression::operator()(Range v) const { 
 	  Expression start = v.start(),end=v.end();	
 	  if (v.step()) {
 		Expression step = v.step().get();  
@@ -80,13 +80,13 @@ namespace Modelica {
 		return Range(apply(start),apply(end));
 	  return v;
     }
-    Expression dotExpression::operator()(Brace v) const { 
+    Expression DotExpression::operator()(Brace v) const { 
       ExpList list;
       foreach_(Expression e, v.args())
 		list.push_back(apply(e));
       return Brace(list);
     }
-    Expression dotExpression::operator()(Bracket v) const { 
+    Expression DotExpression::operator()(Bracket v) const { 
 	  ExpListList list;
 	  foreach_(ExpList els, v.args()) {
 		  ExpList l;
@@ -96,20 +96,20 @@ namespace Modelica {
 	  }	  
       return Bracket(list);
     }
-    Expression dotExpression::operator()(Call v) const { 
+    Expression DotExpression::operator()(Call v) const { 
       ExpList list;
       foreach_(Expression e, v.args())
 		list.push_back(apply(e));
       return Call(v.name(),list);
     }
-    Expression dotExpression::operator()(FunctionExp v) const { 
+    Expression DotExpression::operator()(FunctionExp v) const { 
       ExpList list;
       foreach_(Expression e, v.args())
 		list.push_back(apply(e));
       return FunctionExp(v.name(),list);
     }
 
-    Expression dotExpression::operator()(ForExp v) const {
+    Expression DotExpression::operator()(ForExp v) const {
       Expression exp = v.exp();
       IndexList indices;
       foreach_(Index i, v.indices().indexes()) {
@@ -121,12 +121,12 @@ namespace Modelica {
       return ForExp(apply(exp),Indexes(indices));
     }
     
-    Expression dotExpression::operator()(Named v) const {
+    Expression DotExpression::operator()(Named v) const {
 	  Expression exp = v.exp();
       return Named(v.name(),apply(exp));
     }
     
-    Expression dotExpression::operator()(Output v) const {
+    Expression DotExpression::operator()(Output v) const {
       OptExpList list;
       foreach_(OptExp e, v.args())
 	     if (e)
@@ -135,7 +135,7 @@ namespace Modelica {
 			list.push_back(OptExp());
       return Output(list);
     }
-  Expression dotExpression::operator()(Reference v) const {
+  Expression DotExpression::operator()(Reference v) const {
 	int i = 0,j = v.ref().size();
 	Ref ref;
 	Name name;
@@ -166,7 +166,7 @@ namespace Modelica {
       	return Reference(ref);
   }
 
-  Option<Expression> dotExpression::findConst(Reference v) const {
+  Option<Expression> DotExpression::findConst(Reference v) const {
 	ClassFinder cf = ClassFinder();
 	MMO_Class c = _class.get();
 	int i = 0;
@@ -186,7 +186,7 @@ namespace Modelica {
 				VarInfo vv = Opvv.get();
 				if (vv.modification() && is<ModEq>(vv.modification().get()))  {
 					Expression exp = get<ModEq>(vv.modification().get()).exp();
-					dotExpression  visitor = dotExpression(Option<MMO_Class &>(c),"",ExpList() );
+					DotExpression  visitor = DotExpression(Option<MMO_Class &>(c),"",ExpList() );
 					Expression ret = boost::apply_visitor(visitor,exp);
 					return OptExp(ret);
 					//std::cerr << "Encontre al objetivo " << ret << std::endl;

@@ -19,7 +19,7 @@
 
 #include <math.h>
 #include <util/debug.h>
-#include <util/ast_visitors/evalexp.h>
+#include <util/ast_visitors/eval_expression.h>
 #include <boost/variant/get.hpp>
 #include <ast/modification.h>
 #include <boost/variant/apply_visitor.hpp>
@@ -28,35 +28,35 @@
 namespace Modelica {
 
     using namespace boost;
-    EvalExp::EvalExp(const VarSymbolTable &v):vtable(v) {};
-    EvalExp::EvalExp(const VarSymbolTable &v,Name n, Real r):vtable(v),name(n),val(r) {};
-    Real EvalExp::operator()(Integer v) const { 
+    EvalExpression::EvalExpression(const VarSymbolTable &v):vtable(v) {};
+    EvalExpression::EvalExpression(const VarSymbolTable &v,Name n, Real r):vtable(v),name(n),val(r) {};
+    Real EvalExpression::operator()(Integer v) const { 
       return v;
     }
-    Real EvalExp::operator()(Boolean v) const { 
+    Real EvalExpression::operator()(Boolean v) const { 
       if (v.val()) return 1.0;
       return 0.0;
     }
-    Real EvalExp::operator()(String v) const {
-      ERROR("EvalExp: trying to evaluate a String");
+    Real EvalExpression::operator()(String v) const {
+      ERROR("EvalExpression: trying to evaluate a String");
       return 0;
     }
-    Real EvalExp::operator()(Name v) const { 
-      ERROR("EvalExp: trying to evaluate a Name");
+    Real EvalExpression::operator()(Name v) const { 
+      ERROR("EvalExpression: trying to evaluate a Name");
       return 0;
     }
-    Real EvalExp::operator()(Real v) const { 
+    Real EvalExpression::operator()(Real v) const { 
       return v;
     }
-    Real EvalExp::operator()(SubAll v) const { 
-      ERROR("EvalExp: trying to evaluate a SubAll");
+    Real EvalExpression::operator()(SubAll v) const { 
+      ERROR("EvalExpression: trying to evaluate a SubAll");
       return 0;
     }
-    Real EvalExp::operator()(SubEnd v) const { 
-      ERROR("EvalExp: trying to evaluate a SubEnd");
+    Real EvalExpression::operator()(SubEnd v) const { 
+      ERROR("EvalExpression: trying to evaluate a SubEnd");
       return 0;
     }
-    Real EvalExp::operator()(BinOp v) const { 
+    Real EvalExpression::operator()(BinOp v) const { 
       Expression l=v.left(), r=v.right();
       switch (v.op()) {
         case Add:   
@@ -70,11 +70,11 @@ namespace Modelica {
         case Exp:   
           return pow(apply(l),apply(r));
         default:
-          ERROR("EvalExp: BinOp %s not supported.", BinOpTypeName[v.op()]);
+          ERROR("EvalExpression: BinOp %s not supported.", BinOpTypeName[v.op()]);
           return 0;
       }
     } 
-    Real EvalExp::operator()(UnaryOp v) const { 
+    Real EvalExpression::operator()(UnaryOp v) const { 
       if (v.op()==Minus) {
         Expression e=v.exp();
         return -apply(e);
@@ -82,70 +82,70 @@ namespace Modelica {
 		Expression e=v.exp();
         return apply(e);  
 	  }
-      ERROR("EvalExp: trying to evaluate a UnaryOp");
+      ERROR("EvalExpression: trying to evaluate a UnaryOp");
       return 0;
     } 
-    Real EvalExp::operator()(IfExp v) const { 
-      ERROR("EvalExp: trying to evaluate a IfExp");
+    Real EvalExpression::operator()(IfExp v) const { 
+      ERROR("EvalExpression: trying to evaluate a IfExp");
       return 0;
     }
-    Real EvalExp::operator()(Range v) const { 	
-      ERROR("EvalExp: trying to evaluate a Range");
+    Real EvalExpression::operator()(Range v) const { 	
+      ERROR("EvalExpression: trying to evaluate a Range");
       return 0;
     }
-    Real EvalExp::operator()(Brace v) const { 
-      WARNING("EvalExp: trying to evaluate a Brace");
+    Real EvalExpression::operator()(Brace v) const { 
+      WARNING("EvalExpression: trying to evaluate a Brace");
       return 0;
     }
-    Real EvalExp::operator()(Bracket v) const { 
-      ERROR("EvalExp: trying to evaluate a Bracket");
+    Real EvalExpression::operator()(Bracket v) const { 
+      ERROR("EvalExpression: trying to evaluate a Bracket");
       return 0;
     }
-    Real EvalExp::operator()(Call v) const { 
+    Real EvalExpression::operator()(Call v) const { 
       if ("integer"==v.name()) {
         return apply(v.args().front());
       }
       if ("exp"==v.name()) {
         return exp(apply(v.args().front()));
       }
-      ERROR("EvalExp: trying to evaluate a Call");
+      ERROR("EvalExpression: trying to evaluate a Call");
       return 0;
     }
-    Real EvalExp::operator()(FunctionExp v) const { 
-      ERROR("EvalExp: trying to evaluate a FunctionExp");
+    Real EvalExpression::operator()(FunctionExp v) const { 
+      ERROR("EvalExpression: trying to evaluate a FunctionExp");
       return 0;
     }
-    Real EvalExp::operator()(ForExp v) const {
-      ERROR("EvalExp: trying to evaluate a ForExp");
+    Real EvalExpression::operator()(ForExp v) const {
+      ERROR("EvalExpression: trying to evaluate a ForExp");
       return 0;
     }
-    Real EvalExp::operator()(Named v) const {
-      ERROR("EvalExp: trying to evaluate a Named");
+    Real EvalExpression::operator()(Named v) const {
+      ERROR("EvalExpression: trying to evaluate a Named");
       return 0;
     }
-    Real EvalExp::operator()(Output v) const {
-      ERROR_UNLESS(v.args().size()==1, "EvalExp: Output expression with more than one element are not supported");
+    Real EvalExpression::operator()(Output v) const {
+      ERROR_UNLESS(v.args().size()==1, "EvalExpression: Output expression with more than one element are not supported");
       if (v.args().front()) {
         Expression e=v.args().front().get();
         return apply(e);
       }
-      ERROR("EvalExp: Output with no expression");
+      ERROR("EvalExpression: Output with no expression");
       return 0;
     }
-    Real EvalExp::operator()(Reference v) const {
+    Real EvalExpression::operator()(Reference v) const {
       Ref r=v.ref();
-      ERROR_UNLESS(r.size()==1,"EvalExp: conversion of dotted references not implemented");
+      ERROR_UNLESS(r.size()==1,"EvalExpression: conversion of dotted references not implemented");
       Option<ExpList> oel = boost::get<1>(r[0]);
-      ERROR_UNLESS(oel,"EvalExp: conversion of subscripted references not implemented");
+      ERROR_UNLESS(oel,"EvalExpression: conversion of subscripted references not implemented");
       Name s=boost::get<0>(r[0]);
       
       if (name && name.get() == s) return val.get();
 			      
       Option<VarInfo> vinfo = vtable[s];
       if (!vinfo)
-        ERROR("EvalExp: Variable %s not found !", s.c_str());
+        ERROR("EvalExpression: Variable %s not found !", s.c_str());
       if (!vinfo.get().modification()) {
-        ERROR("EvalExp: Variable %s without initial value!", s.c_str());
+        ERROR("EvalExpression: Variable %s without initial value!", s.c_str());
       } 
       Modification m=vinfo.get().modification().get();
       if (is<ModEq>(m)) {
@@ -172,7 +172,7 @@ namespace Modelica {
         } 
       }
       std::cerr << m << "\n";
-      ERROR("EvalExp: cannot evaluate class modification");
+      ERROR("EvalExpression: cannot evaluate class modification");
       return 0;
 
         

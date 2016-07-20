@@ -36,7 +36,7 @@ Remove_Composition::Remove_Composition() {}
 
 void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarInfo viUp)
 {
-	dotExpression _dot = dotExpression(Option<MMO_Class &> (down) ,nUp,ExpList());
+	DotExpression _dot = DotExpression(Option<MMO_Class &> (down) ,nUp,ExpList());
 	foreach_(Name n,down.variables()) {
 		Option<VarInfo> viDown = down.syms_ref()[n];
 		if (viDown) {
@@ -97,9 +97,9 @@ void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarI
 	// MODIFICACIONES A LAS ECUACIONES Y LOS STATEMENTS 
 	
 	if (!viUp.indices()) {
-		dotExpression dot = dotExpression(Option<MMO_Class &> (down),nUp,ExpList());
-		EqdotExpression eqChange = EqdotExpression(dot);	
-		StdotExpression stChange = StdotExpression(dot);
+		DotExpression dot = DotExpression(Option<MMO_Class &> (down),nUp,ExpList());
+		EqDotExpression eqChange = EqDotExpression(dot);	
+		StDotExpression stChange = StDotExpression(dot);
 		
 		foreach_(Equation eq,down.equations_ref().equations())	
 			up.addEquation(Visit(eqChange,eq)); 
@@ -121,9 +121,9 @@ void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarI
 			indexString.push_back(n);
 		}
 		
-		dotExpression dot = dotExpression(Option<MMO_Class &> (down) ,nUp,indexVar);
-		EqdotExpression eqChange = EqdotExpression(dot);	
-		StdotExpression stChange = StdotExpression(dot);
+		DotExpression dot = DotExpression(Option<MMO_Class &> (down) ,nUp,indexVar);
+		EqDotExpression eqChange = EqDotExpression(dot);	
+		StDotExpression stChange = StDotExpression(dot);
 		
 		EquationList eqs = down.equations_ref().equations();
 		EquationList eqsI = down.initial_eqs_ref().equations();

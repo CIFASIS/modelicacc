@@ -28,9 +28,9 @@
 #include <ast/queries.h>
 #include <ast/equation.h>
 #include <util/ast_visitors/ginac_interface.h>
-#include <util/ast_visitors/contains.h>
-#include <util/ast_visitors/part_evalexp.h>
-#include <util/ast_visitors/evalexp.h>
+#include <util/ast_visitors/contains_expression.h>
+#include <util/ast_visitors/partial_eval_expression.h>
+#include <util/ast_visitors/eval_expression.h>
 #include <util/solve/solve.h>
 #include <util/debug.h>
 #include <parser/parser.h>
@@ -61,8 +61,8 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
   using namespace std;
   static int fsolve=1;
   Modelica::ConvertToGiNaC tog(syms);
-  Modelica::PartEvalExp peval(syms,true);
-  Modelica::EvalExp eval(syms);
+  Modelica::PartialEvalExpression peval(syms,true);
+  Modelica::EvalExpression eval(syms);
 
   const int size=eqs.size();
   if (size==1 && is<Equality>(eqs.front())) { // Trivial solve
@@ -70,10 +70,10 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
     Expression l=boost::apply_visitor(peval,eq.left_ref());
     Expression r=boost::apply_visitor(peval,eq.right_ref());
     if (l==crs.front()) {
-      if (!apply_visitor(Modelica::contains(crs.front()), eq.right_ref())) 
+      if (!apply_visitor(Modelica::ContainsExpression(crs.front()), eq.right_ref())) 
         return eqs;
     } else if (r==crs.front()) {
-      if (!apply_visitor(Modelica::contains(crs.front()), eq.left_ref()))  {
+      if (!apply_visitor(Modelica::ContainsExpression(crs.front()), eq.left_ref()))  {
         return EquationList(1,Equality(r,l));
       }
     }
@@ -157,7 +157,7 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
           continue;
         if (crs.end()!=std::find(crs.begin(),crs.end(),Expression( Reference(val.first))) )
           continue;
-        Modelica::contains con(Reference(val.first));
+        Modelica::ContainsExpression con(Reference(val.first));
         foreach_ (Equation &e, eqs) {
           ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
           Equality eq = get<Equality>(e);

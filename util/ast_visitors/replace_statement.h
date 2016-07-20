@@ -17,37 +17,29 @@
 
 ******************************************************************************/
 
+#ifndef AST_VISITOR_REPLACE_ST
+#define AST_VISITOR_REPLACE_ST
 #include <boost/variant/static_visitor.hpp>
-#include <ast/expression.h>
-
-#ifndef AST_VISITOR_CONSTANTEXP
-#define AST_VISITOR_CONSTANTEXP
+#include <ast/statement.h>
+#include <util/ast_visitors/replace_expression.h>
 
 namespace Modelica {
 
   using namespace Modelica::AST;
-  class constExp: public boost::static_visitor<bool> {
+  class ReplaceStatement: public boost::static_visitor<Statement> {
   public:
-    constExp();
-    bool operator()(Integer v) const;
-    bool operator()(Boolean v) const;
-    bool operator()(String v) const;
-    bool operator()(Name v) const;
-    bool operator()(Real v) const;
-    bool operator()(SubEnd v) const;
-    bool operator()(SubAll v) const;
-    bool operator()(BinOp) const;
-    bool operator()(UnaryOp) const;
-    bool operator()(Brace) const;
-    bool operator()(Bracket) const;
-    bool operator()(Call) const;
-    bool operator()(FunctionExp) const;
-    bool operator()(ForExp) const;
-    bool operator()(IfExp) const;
-    bool operator()(Named) const;
-    bool operator()(Output) const;
-    bool operator()(Reference) const;
-    bool operator()(Range) const;
+    ReplaceStatement(Expression, Expression);
+    Statement operator()(Assign) const;
+    Statement operator()(Break) const;
+    Statement operator()(Return) const;
+    Statement operator()(CallSt) const;
+    Statement operator()(IfSt) const;
+    Statement operator()(WhenSt) const;
+    Statement operator()(WhileSt) const;
+    Statement operator()(ForSt) const;
+ 
+    Expression look,rep;
+    ReplaceExpression replace_exp;
   }; 
 }
 #endif 

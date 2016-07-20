@@ -23,7 +23,7 @@
 
 #include <util/debug.h>
 #include <util/table.h>
-#include <util/ast_visitors/part_evalexp.h>
+#include <util/ast_visitors/partial_eval_expression.h>
 
 #include <causalize/for_unrolling/process_for_equations.h>
 #include <causalize/for_unrolling/for_index_iterator.h>
@@ -40,7 +40,7 @@ Equation instantiate_equation(Equation innerEq, Name variable, Real index, VarSy
       Equality eqeq = boost::get<Equality>(innerEq);
       Expression l=eqeq.left(), r=eqeq.right();
       //std::cout << "Left= " << l << " right " << r << std::endl;
-      return Equality(Visit(Modelica::PartEvalExp(v),l),Visit(Modelica::PartEvalExp(v),r));
+      return Equality(Visit(Modelica::PartialEvalExpression(v),l),Visit(Modelica::PartialEvalExpression(v),r));
   } else {
       ERROR("process_for_equations - instantiate_equation:\n"
             "Incorrect equation type or not supported yet.\n");

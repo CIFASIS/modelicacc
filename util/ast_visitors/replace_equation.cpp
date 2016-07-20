@@ -18,34 +18,34 @@
 ******************************************************************************/
 
 #include <util/debug.h>
-#include <util/ast_visitors/replace_eq.h>
+#include <util/ast_visitors/replace_equation.h>
 #include <boost/variant/apply_visitor.hpp>
 #define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
 
     using namespace boost;
-    replace_eq::replace_eq(Expression l, Expression r): look(l), rep(r), replace_exp(look,rep) {
+    ReplaceEquation::ReplaceEquation(Expression l, Expression r): look(l), rep(r), replace_exp(look,rep) {
       replace_exp.ignoreIndexes();
     };
-    Equation replace_eq::operator()(Connect v) const {
+    Equation ReplaceEquation::operator()(Connect v) const {
       ERROR("Replace in connect equation not implemented\n");
       return v;
     };
-    Equation replace_eq::operator()(Equality v) const {
+    Equation ReplaceEquation::operator()(Equality v) const {
       v.left_ref()=boost::apply_visitor(replace_exp, v.left_ref());
       v.right_ref()=boost::apply_visitor(replace_exp, v.right_ref());
       return v;
     };
-    Equation replace_eq::operator()(IfEq v) const {
+    Equation ReplaceEquation::operator()(IfEq v) const {
       ERROR("Replace in if equation not implemented\n");
       return v;
     }
-    Equation replace_eq::operator()(CallEq v) const {
+    Equation ReplaceEquation::operator()(CallEq v) const {
       ERROR("Replace in call equation not implemented\n");
       return v;
     };
-    Equation replace_eq::operator()(ForEq v) const {
+    Equation ReplaceEquation::operator()(ForEq v) const {
       foreach_(Index &i, v.range_ref().indexes_ref()) {
         if (i.exp()) {
           i.exp_ref()=boost::apply_visitor(replace_exp, i.exp_ref().get());
@@ -57,7 +57,7 @@ namespace Modelica {
       //ERROR("Replace in for equation not implemented\n");
       return v;
     };
-    Equation replace_eq::operator()(WhenEq v) const {
+    Equation ReplaceEquation::operator()(WhenEq v) const {
       ERROR("Replace in when equation not implemented\n");
       return v;
     }

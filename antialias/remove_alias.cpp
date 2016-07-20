@@ -21,9 +21,9 @@
 #include <ast/equation.h>
 #include <ast/queries.h>
 #include <boost/variant/get.hpp>
-#include <util/ast_visitors/part_evalexp.h>
-#include <util/ast_visitors/replace_eq.h>
-#include <util/ast_visitors/replace_st.h>
+#include <util/ast_visitors/partial_eval_expression.h>
+#include <util/ast_visitors/replace_equation.h>
+#include <util/ast_visitors/replace_statement.h>
 #include <causalize/state_variables_finder.h>
 #include <algorithm>
 #include <vector>
@@ -43,7 +43,7 @@ void RemoveAlias::removeAliasEquations() {
   foreach_(Equation &e, el) {
     if (is<Equality>(e)) {
       Equality &eq = boost::get<Equality>(e);
-      PartEvalExp eval(syms, true);
+      PartialEvalExpression eval(syms, true);
       Expression left= boost::apply_visitor(eval,eq.left_ref());      
       Expression right= boost::apply_visitor(eval,eq.right_ref());      
       eq.left_ref()=left;
@@ -143,7 +143,7 @@ void RemoveAlias::removeAliasEquations() {
         right=left;
         left=t;
       }
-      PartEvalExp eval(syms);
+      PartialEvalExpression eval(syms);
       OptExp o_ind =  feq.range().indexes().front().exp();
       if (!o_ind) continue;
       if (!is<Range>(o_ind.get())) continue;
@@ -195,7 +195,7 @@ void RemoveAlias::alias(Reference a, Expression b) { // Remove a from the model 
   std::vector<Name>::iterator pos = std::find(vars.begin(),vars.end(), refName(a));
   if (pos!=vars.end())
     vars.erase(pos);
-  replace_eq req(a,b);
+  ReplaceEquation req(a,b);
   foreach_ (Equation &eq, _c.equations_ref().equations_ref()) {
     //std::cerr << eq << " is now ";
     eq=boost::apply_visitor(req,eq);
@@ -203,7 +203,7 @@ void RemoveAlias::alias(Reference a, Expression b) { // Remove a from the model 
   }
   foreach_ (Equation &eq, _c.initial_eqs_ref().equations_ref()) 
     eq=boost::apply_visitor(req,eq);
-  replace_st rst(a,b);
+  ReplaceStatement rst(a,b);
   foreach_ (Statement &st, _c.statements_ref().statements_ref()) 
     st=boost::apply_visitor(rst,st);
   foreach_ (Statement &st, _c.initial_sts_ref().statements_ref()) 

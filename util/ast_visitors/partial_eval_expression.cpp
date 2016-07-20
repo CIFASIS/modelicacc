@@ -19,8 +19,8 @@
 
 #include <math.h>
 #include <util/debug.h>
-#include <util/ast_visitors/part_evalexp.h>
-#include <util/ast_visitors/evalexp.h>
+#include <util/ast_visitors/partial_eval_expression.h>
+#include <util/ast_visitors/eval_expression.h>
 #include <ast/queries.h>
 #include <boost/variant/apply_visitor.hpp>
 #define apply(X) boost::apply_visitor(*this,X)
@@ -29,43 +29,43 @@
 namespace Modelica {
 
     using namespace boost;
-    PartEvalExp::PartEvalExp(const VarSymbolTable &v, bool eval):vtable(v),eval_parameters(eval) {};
-    Expression PartEvalExp::operator()(Integer v) const { 
+    PartialEvalExpression::PartialEvalExpression(const VarSymbolTable &v, bool eval):vtable(v),eval_parameters(eval) {};
+    Expression PartialEvalExpression::operator()(Integer v) const { 
       if (v<0) return Output(v);
       return v;
     }
-    Expression PartEvalExp::operator()(Real v) const { 
+    Expression PartialEvalExpression::operator()(Real v) const { 
       if (v<0) return Output(v);
       return v;
     }
-    Expression PartEvalExp::operator()(Boolean v) const { 
+    Expression PartialEvalExpression::operator()(Boolean v) const { 
       return v;
     }
-    Expression PartEvalExp::operator()(String v) const {
+    Expression PartialEvalExpression::operator()(String v) const {
       return v;
     }
-    Expression PartEvalExp::operator()(Name v) const { 
+    Expression PartialEvalExpression::operator()(Name v) const { 
       return v;
     }
-    Expression PartEvalExp::operator()(Expression v) const { 
+    Expression PartialEvalExpression::operator()(Expression v) const { 
       return v;
     }
-    Expression PartEvalExp::operator()(SubAll v) const { 
+    Expression PartialEvalExpression::operator()(SubAll v) const { 
       return v;
     }
-    Expression PartEvalExp::operator()(SubEnd v) const { 
+    Expression PartialEvalExpression::operator()(SubEnd v) const { 
       return v;
     }
-    Expression PartEvalExp::operator()(BinOp v) const { 
+    Expression PartialEvalExpression::operator()(BinOp v) const { 
       Expression l=v.left(), r=v.right();
       l=apply(l);r=apply(r);
       if ((is<Real>(l) || is<Integer>(l)) && (is<Real>(r) || is<Integer>(r))) {
         Expression binop = BinOp(l,v.op(),r);
-        Expression e = Visit(EvalExp(vtable),binop);
+        Expression e = Visit(EvalExpression(vtable),binop);
         if (!is<Real>(l) && !is<Real>(r) && is<Real>(e)) {
           return Integer(get<Real>(e));
         }
-        return Visit(EvalExp(vtable),binop);
+        return Visit(EvalExpression(vtable),binop);
       }
       if (v.op()==Add && isZero(l)) 
         return r;
@@ -83,7 +83,7 @@ namespace Modelica {
         return 0;
       return BinOp(l,v.op(),r);
     } 
-    Expression PartEvalExp::operator()(UnaryOp v) const { 
+    Expression PartialEvalExpression::operator()(UnaryOp v) const { 
       Expression e=v.exp();
       Expression res= apply(e);
       if (v.op()==Not && is<Boolean>(res)) {
@@ -100,11 +100,11 @@ namespace Modelica {
         return get<UnaryOp>(res).exp();
       return UnaryOp(res, v.op());
     } 
-    Expression PartEvalExp::operator()(IfExp v) const { 
+    Expression PartialEvalExpression::operator()(IfExp v) const { 
       WARNING("Not evaluating If exp");
       return v;
     }
-    Expression PartEvalExp::operator()(Range v) const { 
+    Expression PartialEvalExpression::operator()(Range v) const { 
       Expression s=v.start(); 
       Expression e=v.end(); 
       if (!v.step()) 
@@ -112,29 +112,29 @@ namespace Modelica {
       Expression st=v.step().get();
       return Range(apply(s),apply(st),apply(e));
     }
-    Expression PartEvalExp::operator()(Brace v) const { 
+    Expression PartialEvalExpression::operator()(Brace v) const { 
       WARNING("Not evaluating brace exp");
       return v;
     }
-    Expression PartEvalExp::operator()(Bracket v) const { 
+    Expression PartialEvalExpression::operator()(Bracket v) const { 
       return v;
     }
-    Expression PartEvalExp::operator()(Call v) const { 
+    Expression PartialEvalExpression::operator()(Call v) const { 
       ExpList &args = v.args_ref();
       foreach_ (Expression &e, args) 
         e = apply(e);
       return v;
     }
-    Expression PartEvalExp::operator()(FunctionExp v) const { 
+    Expression PartialEvalExpression::operator()(FunctionExp v) const { 
       return v;
     }
-    Expression PartEvalExp::operator()(ForExp v) const {
+    Expression PartialEvalExpression::operator()(ForExp v) const {
       return v;
     }
-    Expression PartEvalExp::operator()(Named v) const {
+    Expression PartialEvalExpression::operator()(Named v) const {
       return v;
     }
-    Expression PartEvalExp::operator()(Output v) const {
+    Expression PartialEvalExpression::operator()(Output v) const {
       if (v.args().size()==1 && v.args().front()) {
         Expression e=v.args().front().get();
         if (is<Real>(e)) return e;
@@ -144,9 +144,9 @@ namespace Modelica {
       }
       return v;
     }
-    Expression PartEvalExp::operator()(Reference v) const {
+    Expression PartialEvalExpression::operator()(Reference v) const {
       Ref r=v.ref();
-      ERROR_UNLESS(r.size()==1,"PartEvalExp conversion of dotted references not implemented");
+      ERROR_UNLESS(r.size()==1,"PartialEvalExpression conversion of dotted references not implemented");
       Option<ExpList> oel = boost::get<1>(r[0]);
       Name s=boost::get<0>(r[0]);
       if ((isConstant(s,vtable) || isParameter(s,vtable)) && (!oel || (oel && oel.get().size()==0))) {
@@ -155,7 +155,7 @@ namespace Modelica {
           ERROR("Variable %s not found",s.c_str());
         if (vinfo.get().type()=="Integer" && vinfo.get().modification()) { // evaluate integer parameters
           Expression vv=v;
-          Real ret=Visit(EvalExp(vtable),vv);
+          Real ret=Visit(EvalExpression(vtable),vv);
           const int i=ret;
           if (i==ret) {
             if (i<0) return Output(i);
@@ -165,13 +165,13 @@ namespace Modelica {
           return Real(ret);
         } else if (vinfo.get().type()=="Boolean" && vinfo.get().modification()) { // evaluate boolean parameters
           Expression vv=v;
-          Real ret=Visit(EvalExp(vtable),vv);
+          Real ret=Visit(EvalExpression(vtable),vv);
           if (ret==1.0)    
             return Boolean(TRUE);
           return Boolean(FALSE);
         } else if (eval_parameters && vinfo.get().type()=="Real" && !vinfo.get().indices() && vinfo.get().modification()) { // evaluate scalar parameters
           Expression vv=v;
-          Real ret=Visit(EvalExp(vtable),vv);
+          Real ret=Visit(EvalExpression(vtable),vv);
           if (ret<0) return Output(Real(ret));
           return Real(ret);
         } else {

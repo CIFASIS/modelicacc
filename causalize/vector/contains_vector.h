@@ -22,7 +22,7 @@
 #include <boost/variant/static_visitor.hpp>
 #include <causalize/vector/vector_graph_definition.h>
 #include <ast/expression.h>
-#include <util/ast_visitors/contains.h>
+#include <util/ast_visitors/contains_expression.h>
 #include <boost/icl/discrete_interval.hpp>
 #include <set>
 #define apply(X) boost::apply_visitor(*this,X)

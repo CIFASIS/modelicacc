@@ -17,53 +17,53 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/constExp.h>
+#include <util/ast_visitors/constant_expression.h>
 #include <boost/variant/apply_visitor.hpp>
 #define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
 
     using namespace boost;
-    constExp::constExp() {};
-    bool constExp::operator()(Integer v) const { 
+    ConstantExpression::ConstantExpression() {};
+    bool ConstantExpression::operator()(Integer v) const { 
       return true;
     }
     
-    bool constExp::operator()(Boolean v) const { 
+    bool ConstantExpression::operator()(Boolean v) const { 
       return true;
     }
     
-    bool constExp::operator()(String v) const {
+    bool ConstantExpression::operator()(String v) const {
       return true;
     }
     
-    bool constExp::operator()(Name v) const { 
+    bool ConstantExpression::operator()(Name v) const { 
       return true;
     }
     
-    bool constExp::operator()(Real v) const { 
+    bool ConstantExpression::operator()(Real v) const { 
       return true;
     }
     
-    bool constExp::operator()(SubEnd v) const { 
+    bool ConstantExpression::operator()(SubEnd v) const { 
       return false;
     }
     
-    bool constExp::operator()(SubAll v) const { 
+    bool ConstantExpression::operator()(SubAll v) const { 
       return false;
     }
     
-    bool constExp::operator()(BinOp v) const { 
+    bool ConstantExpression::operator()(BinOp v) const { 
       Expression l=v.left(), r=v.right();
       return apply(l) && apply(r);
     }
      
-    bool constExp::operator()(UnaryOp v) const { 
+    bool ConstantExpression::operator()(UnaryOp v) const { 
       Expression e =v.exp();
       return apply(e);
     } 
     
-    bool constExp::operator()(IfExp v) const { 
+    bool ConstantExpression::operator()(IfExp v) const { 
       Expression cond = v.cond();
       Expression then = v.then();
       Expression elseexp = v.elseexp();
@@ -73,7 +73,7 @@ namespace Modelica {
       return apply(cond) && apply(then) && list && apply(elseexp);
     }
     
-    bool constExp::operator()(Range v) const { 
+    bool ConstantExpression::operator()(Range v) const { 
 	  Expression start = v.start(),end=v.end();	
 	  if (v.step()) {
 		Expression step = v.step().get();  
@@ -82,14 +82,14 @@ namespace Modelica {
 		return apply(start) && apply(end);
     }
     
-    bool constExp::operator()(Brace v) const { 
+    bool ConstantExpression::operator()(Brace v) const { 
       bool list = true;
       foreach_(Expression e, v.args())
 		list = list && apply(e);
       return list;
     }
     
-    bool constExp::operator()(Bracket v) const { 
+    bool ConstantExpression::operator()(Bracket v) const { 
 	  bool list = true;
 	  foreach_(ExpList els, v.args()) 
 		  foreach_(Expression e, els)
@@ -97,21 +97,21 @@ namespace Modelica {
       return list;
     }
     
-    bool constExp::operator()(Call v) const { 
+    bool ConstantExpression::operator()(Call v) const { 
       bool list = true;
       foreach_(Expression e, v.args())
 		list &= apply(e);
       return list;
     }
     
-    bool constExp::operator()(FunctionExp v) const { 
+    bool ConstantExpression::operator()(FunctionExp v) const { 
       bool list = false;
       foreach_(Expression e, v.args())
 		list &= apply(e);
       return list;
     }
     
-    bool constExp::operator()(ForExp v) const {
+    bool ConstantExpression::operator()(ForExp v) const {
       Expression exp = v.exp();
       bool indices = true;
       foreach_(Index i, v.indices().indexes()) {
@@ -121,12 +121,12 @@ namespace Modelica {
       return indices;
     }
     
-    bool constExp::operator()(Named v) const {
+    bool ConstantExpression::operator()(Named v) const {
 	  Expression exp = v.exp();	
       return apply(exp);
     }
     
-    bool constExp::operator()(Output v) const {
+    bool ConstantExpression::operator()(Output v) const {
       bool list = true;
       foreach_(OptExp e, v.args())
 	     if (e)	
@@ -134,7 +134,7 @@ namespace Modelica {
       return list;
     }
     
-    bool constExp::operator()(Reference v) const {
+    bool ConstantExpression::operator()(Reference v) const {
 		return false;
     }
 }

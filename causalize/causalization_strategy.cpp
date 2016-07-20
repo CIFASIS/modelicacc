@@ -17,8 +17,8 @@
 #include <ast/equation.h>
 #include <boost/variant/get.hpp>
 #include <mmo/mmo_class.h>
-#include <util/ast_visitors/contains.h>
-#include <util/ast_visitors/part_evalexp.h>
+#include <util/ast_visitors/contains_expression.h>
+#include <util/ast_visitors/partial_eval_expression.h>
 #include <util/solve/solve.h>
 #include <fstream> 
 
@@ -50,7 +50,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   foreach_(Equation &e, equations) {
     VertexProperties vp;
     Equality &eq = get<Equality>(e);
-    PartEvalExp eval(_mmo_class.syms_ref(),false);
+    PartialEvalExpression eval(_mmo_class.syms_ref(),false);
     eq.left_ref()=boost::apply_visitor(eval ,eq.left_ref());
     eq.right_ref()=boost::apply_visitor(eval ,eq.right_ref());
     vp.eqs = EquationList(1,e);
@@ -82,7 +82,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   list<UnknownVertex>::iterator unknownsIter;
   foreach_(EquationVertex eqVertex, _eqVertices) {
     foreach_(UnknownVertex unknownVertex , _unknownVertices) {
-      Modelica::contains occurrs(_graph[unknownVertex].unknowns.front()); 
+      Modelica::ContainsExpression occurrs(_graph[unknownVertex].unknowns.front()); 
       Equation e = _graph[eqVertex].eqs.front();
       ERROR_UNLESS(is<Equality>(e), "Causalization of non-equality equation is not supported");
       Equality eq = boost::get<Equality>(e);

@@ -4,10 +4,10 @@ SRC_CAUSALIZE := causalize/main.cpp \
                   util/table.cpp \
                   util/type.cpp \
                   util/solve/solve.cpp \
-                  util/ast_visitors/evalexp.cpp \
-                  util/ast_visitors/part_evalexp.cpp \
+                  util/ast_visitors/eval_expression.cpp \
+                  util/ast_visitors/partial_eval_expression.cpp \
                   util/ast_visitors/ginac_interface.cpp \
-                  util/ast_visitors/contains.cpp \
+                  util/ast_visitors/contains_expression.cpp \
                   util/ast_visitors/splitfor_visitor.cpp \
                   causalize/for_unrolling/for_index_iterator.cpp \
                   causalize/apply_tarjan.cpp \

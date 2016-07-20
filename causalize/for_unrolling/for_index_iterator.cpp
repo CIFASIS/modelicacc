@@ -20,7 +20,7 @@
 #include <causalize/for_unrolling/for_index_iterator.h>
 #include <ast/expression.h>
 #include <boost/variant/apply_visitor.hpp>
-#include <util/ast_visitors/evalexp.h>
+#include <util/ast_visitors/eval_expression.h>
 #include <ast/modification.h>
 #include <util/debug.h>
 #define Visit(X,Y) boost::apply_visitor(X,Y)
@@ -38,7 +38,7 @@ RangeIterator::RangeIterator(Range range, VarSymbolTable symbolTable) {
 }
 
 Real RangeIterator::eval(Expression exp, VarSymbolTable symbolTable) {
-  return Visit(Modelica::EvalExp(symbolTable),exp);
+  return Visit(Modelica::EvalExpression(symbolTable),exp);
 }
 
 bool RangeIterator::hasNext() {
@@ -63,6 +63,6 @@ bool BraceIterator::hasNext() {
 Real BraceIterator::next() {
   Expression exp = *_braceExpElementsIter;
   _braceExpElementsIter++;
-  return Visit(Modelica::EvalExp(vtable),exp);
+  return Visit(Modelica::EvalExpression(vtable),exp);
 }
 }

@@ -18,21 +18,21 @@
 ******************************************************************************/
 
 #include <util/debug.h>
-#include <util/ast_visitors/replace_st.h>
+#include <util/ast_visitors/replace_statement.h>
 #include <boost/variant/apply_visitor.hpp>
 #define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
 
     using namespace boost;
-    replace_st::replace_st(Expression l, Expression r): look(l), rep(r), replace_exp(look,rep) {};
-    Statement replace_st::operator()(Break v) const {
+    ReplaceStatement::ReplaceStatement(Expression l, Expression r): look(l), rep(r), replace_exp(look,rep) {};
+    Statement ReplaceStatement::operator()(Break v) const {
       return v;
     };
-    Statement replace_st::operator()(Return v) const {
+    Statement ReplaceStatement::operator()(Return v) const {
       return v;
     };
-    Statement replace_st::operator()(Assign v) const {
+    Statement ReplaceStatement::operator()(Assign v) const {
       if (v.rl()) {
         ExpList & el = v.rl_ref().get();
         foreach_(Expression &e, el) {
@@ -44,7 +44,7 @@ namespace Modelica {
         v.right_ref()=boost::apply_visitor(replace_exp, v.right_ref().get());
       return v;
     };
-    Statement replace_st::operator()(IfSt v) const {
+    Statement ReplaceStatement::operator()(IfSt v) const {
       v.cond_ref()=boost::apply_visitor(replace_exp, v.cond_ref());
       foreach_ (Statement &st, v.elements_ref()) {
         st=apply(st);
@@ -59,7 +59,7 @@ namespace Modelica {
       }
       return v;
     }
-    Statement replace_st::operator()(CallSt v) const {
+    Statement ReplaceStatement::operator()(CallSt v) const {
       v.n_ref()=boost::apply_visitor(replace_exp, v.n_ref());
       foreach_(Expression &e, v.arg_ref()) {
         e=boost::apply_visitor(replace_exp, e);
@@ -70,7 +70,7 @@ namespace Modelica {
       }
       return v;
     };
-    Statement replace_st::operator()(ForSt v) const {
+    Statement ReplaceStatement::operator()(ForSt v) const {
       foreach_(Index &i, v.range_ref().indexes_ref()) {
         if (i.exp()) {
           i.exp_ref()=boost::apply_visitor(replace_exp, i.exp_ref().get());
@@ -81,7 +81,7 @@ namespace Modelica {
       }
       return v;
     };
-    Statement replace_st::operator()(WhenSt v) const {
+    Statement ReplaceStatement::operator()(WhenSt v) const {
       v.cond_ref()=boost::apply_visitor(replace_exp, v.cond_ref());
       foreach_ (Statement &st, v.elements_ref()) {
         st=apply(st);
@@ -93,7 +93,7 @@ namespace Modelica {
       }
       return v;
     }
-    Statement replace_st::operator()(WhileSt v) const {
+    Statement ReplaceStatement::operator()(WhileSt v) const {
       ERROR("Replace in while statement not implemented\n");
       return v;
     }

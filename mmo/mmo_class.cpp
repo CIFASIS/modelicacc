@@ -20,7 +20,7 @@
 #include <mmo/mmo_class.h>
 #include <boost/variant/get.hpp>
 #include <util/debug.h>
-#include <util/ast_visitors/evalexp.h>
+#include <util/ast_visitors/eval_expression.h>
 
 #include <iostream>
 
@@ -49,7 +49,7 @@ namespace Modelica {
         Component comp = boost::get<Component>(ce);
         foreach_ (Declaration d, comp.declarations()) {
           if (d.conditional()) {
-            EvalExp ev(syms_);
+            EvalExpression ev(syms_);
             Real res = boost::apply_visitor(ev,d.conditional().get());
             if (res==0) {
               Name name = d.name();

@@ -26,9 +26,9 @@
 namespace Modelica {
 
   using namespace Modelica::AST;
-  class contains: public boost::static_visitor<bool> {
+  class ContainsExpression: public boost::static_visitor<bool> {
   public:
-    contains(Expression);
+    ContainsExpression(Expression);
     bool operator()(Integer v) const;
     bool operator()(Boolean v) const;
     bool operator()(String v) const;

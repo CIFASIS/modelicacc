@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#ifndef AST_VISITOR_PARTEVALEXP
-#define AST_VISITOR_PARTEVALEXP
+#ifndef AST_VISITOR_EVALEXP
+#define AST_VISITOR_EVALEXP
 #include <boost/variant/static_visitor.hpp>
 #include <ast/expression.h>
 #include <util/table.h>
@@ -26,31 +26,32 @@
 namespace Modelica {
 
   using namespace Modelica::AST;
-  class PartEvalExp: public boost::static_visitor<Expression> {
+  class EvalExpression: public boost::static_visitor<Real> {
   public:
-    PartEvalExp(const VarSymbolTable &, bool eval=false);
-    Expression operator()(Integer v) const;
-    Expression operator()(Real v) const;
-    Expression operator()(Boolean v) const;
-    Expression operator()(String v) const;
-    Expression operator()(Name v) const;
-    Expression operator()(Expression v) const;
-    Expression operator()(SubEnd v) const;
-    Expression operator()(SubAll v) const;
-    Expression operator()(BinOp) const;
-    Expression operator()(UnaryOp) const;
-    Expression operator()(Brace) const;
-    Expression operator()(Bracket) const;
-    Expression operator()(Call) const;
-    Expression operator()(FunctionExp) const;
-    Expression operator()(ForExp) const;
-    Expression operator()(IfExp) const;
-    Expression operator()(Named) const;
-    Expression operator()(Output) const;
-    Expression operator()(Reference) const;
-    Expression operator()(Range) const;
+    EvalExpression(const VarSymbolTable &);
+    EvalExpression(const VarSymbolTable &,Name,Real);
+    Real operator()(Integer v) const;
+    Real operator()(Boolean v) const;
+    Real operator()(String v) const;
+    Real operator()(Name v) const;
+    Real operator()(Real v) const;
+    Real operator()(SubEnd v) const;
+    Real operator()(SubAll v) const;
+    Real operator()(BinOp) const;
+    Real operator()(UnaryOp) const;
+    Real operator()(Brace) const;
+    Real operator()(Bracket) const;
+    Real operator()(Call) const;
+    Real operator()(FunctionExp) const;
+    Real operator()(ForExp) const;
+    Real operator()(IfExp) const;
+    Real operator()(Named) const;
+    Real operator()(Output) const;
+    Real operator()(Reference) const;
+    Real operator()(Range) const;
     const VarSymbolTable &vtable; 
-    bool eval_parameters;
+    Option<Name> name;
+    Option<Real> val;
   }; 
 }
 #endif 

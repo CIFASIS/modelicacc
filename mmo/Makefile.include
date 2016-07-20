@@ -3,11 +3,11 @@ SRC_MMO := mmo/main.cpp \
 	mmo/mmo_class.cpp \
 	util/table.cpp \
 	util/debug.cpp \
-	util/ast_visitors/evalexp.cpp \
-	util/ast_visitors/part_evalexp.cpp \
-	util/ast_visitors/to_micro/to_micro.cpp \
-	util/ast_visitors/to_micro/to_micro_st.cpp \
-	util/ast_visitors/to_micro/to_micro_exp.cpp \
+	util/ast_visitors/eval_expression.cpp \
+	util/ast_visitors/partial_eval_expression.cpp \
+	util/ast_visitors/to_micro/convert_to_micro.cpp \
+	util/ast_visitors/to_micro/convert_to_micro_statement.cpp \
+	util/ast_visitors/to_micro/convert_to_micro_expression.cpp \
 	util/type.cpp  
 
 

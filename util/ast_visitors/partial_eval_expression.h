@@ -17,26 +17,24 @@
 
 ******************************************************************************/
 
+#ifndef AST_VISITOR_PARTEVALEXP
+#define AST_VISITOR_PARTEVALEXP
 #include <boost/variant/static_visitor.hpp>
 #include <ast/expression.h>
 #include <util/table.h>
-#include <mmo/mmo_class.h>
-#include <flatter/classFinder.h>
-
-#ifndef AST_VISITOR_DOTEXPRESSION
-#define AST_VISITOR_DOTEXPRESSION
 
 namespace Modelica {
 
   using namespace Modelica::AST;
-  class dotExpression: public boost::static_visitor<Expression> {
+  class PartialEvalExpression: public boost::static_visitor<Expression> {
   public:
-    dotExpression(Option<MMO_Class &> c, Name n, ExpList xs);
+    PartialEvalExpression(const VarSymbolTable &, bool eval=false);
     Expression operator()(Integer v) const;
+    Expression operator()(Real v) const;
     Expression operator()(Boolean v) const;
     Expression operator()(String v) const;
     Expression operator()(Name v) const;
-    Expression operator()(Real v) const;
+    Expression operator()(Expression v) const;
     Expression operator()(SubEnd v) const;
     Expression operator()(SubAll v) const;
     Expression operator()(BinOp) const;
@@ -51,11 +49,8 @@ namespace Modelica {
     Expression operator()(Output) const;
     Expression operator()(Reference) const;
     Expression operator()(Range) const;
-	OptExp findConst(Reference v) const;
-	Option<VarSymbolTable &> syms;
-	Option<MMO_Class &> _class;
-    Name prefix;
-    ExpList index;
+    const VarSymbolTable &vtable; 
+    bool eval_parameters;
   }; 
 }
 #endif 

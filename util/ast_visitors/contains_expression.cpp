@@ -18,31 +18,31 @@
 ******************************************************************************/
 
 #include <util/debug.h>
-#include <util/ast_visitors/contains.h>
+#include <util/ast_visitors/contains_expression.h>
 #include <boost/variant/apply_visitor.hpp>
 
 namespace Modelica {
-    contains::contains(Expression e): exp(e) {};
-    bool contains::operator()(Integer v) const { return exp==Expression(v); } 
-    bool contains::operator()(Boolean v) const { return exp==Expression(v); } 
-    bool contains::operator()(String v) const { return exp==Expression(v); } 
-    bool contains::operator()(Name v) const { return exp==Expression(v); }
-    bool contains::operator()(Real v) const { return exp==Expression(v); } 
-    bool contains::operator()(SubEnd v) const { return exp==Expression(v); } 
-    bool contains::operator()(SubAll v) const { return exp==Expression(v); } 
-    bool contains::operator()(BinOp v) const { 
+    ContainsExpression::ContainsExpression(Expression e): exp(e) {};
+    bool ContainsExpression::operator()(Integer v) const { return exp==Expression(v); } 
+    bool ContainsExpression::operator()(Boolean v) const { return exp==Expression(v); } 
+    bool ContainsExpression::operator()(String v) const { return exp==Expression(v); } 
+    bool ContainsExpression::operator()(Name v) const { return exp==Expression(v); }
+    bool ContainsExpression::operator()(Real v) const { return exp==Expression(v); } 
+    bool ContainsExpression::operator()(SubEnd v) const { return exp==Expression(v); } 
+    bool ContainsExpression::operator()(SubAll v) const { return exp==Expression(v); } 
+    bool ContainsExpression::operator()(BinOp v) const { 
       if (exp==Expression(v)) return true; 
       Expression l=v.left(), r=v.right();
       bool rl = apply(l);
       bool ll = apply(r);
       return rl || ll;
     } 
-    bool contains::operator()(UnaryOp v) const { 
+    bool ContainsExpression::operator()(UnaryOp v) const { 
       if (exp==Expression(v)) return true; 
       Expression e=v.exp();
       return apply(e);
     } 
-    bool contains::operator()(IfExp v) const { 
+    bool ContainsExpression::operator()(IfExp v) const { 
       if (exp==Expression(v)) return true; 
       Expression cond=v.cond(), then=v.then(), elseexp=v.elseexp();
       const bool rc = apply(cond);
@@ -50,54 +50,54 @@ namespace Modelica {
       const bool re = apply(elseexp);
       return rc || rt || re;
     }
-    bool contains::operator()(Range v) const { 
+    bool ContainsExpression::operator()(Range v) const { 
       if (exp==Expression(v)) return true; 
       Expression start=v.start(), end=v.end();
       bool rs = apply(start);
       bool re = apply(end);
       return rs || re;
     }
-    bool contains::operator()(Brace v) const { 
+    bool ContainsExpression::operator()(Brace v) const { 
       if (exp==Expression(v)) return true; 
-      ERROR("contains: Brace expression not supported");
+      ERROR("ContainsExpression: Brace expression not supported");
       //TODO
       return false;
     }
-    bool contains::operator()(Bracket v) const { 
+    bool ContainsExpression::operator()(Bracket v) const { 
       if (exp==Expression(v)) return true; 
-      ERROR("contains: Bracket expression not supported");
+      ERROR("ContainsExpression: Bracket expression not supported");
       //TODO
       return false;
     }
-    bool contains::operator()(Call v) const { 
+    bool ContainsExpression::operator()(Call v) const { 
       if (exp==Expression(v)) return true; 
       foreach_ (Expression e, v.args()) 
         if (apply(e)) return true;
       return false;
     }
-    bool contains::operator()(FunctionExp v) const { 
+    bool ContainsExpression::operator()(FunctionExp v) const { 
       if (exp==Expression(v)) return true; 
       //TODO
       return false;
     }
-    bool contains::operator()(ForExp v) const {
+    bool ContainsExpression::operator()(ForExp v) const {
       if (exp==Expression(v)) return true; 
-      ERROR("contains: For expression not supported");
+      ERROR("ContainsExpression: For expression not supported");
       //TODO
       return false;
     }
-    bool contains::operator()(Named v) const {
+    bool ContainsExpression::operator()(Named v) const {
       if (exp==Expression(v)) return true; 
       //TODO
       return false;
     }
-    bool contains::operator()(Output v) const {
+    bool ContainsExpression::operator()(Output v) const {
       if (exp==Expression(v)) return true; 
       foreach_ (OptExp oe, v.args()) 
         if (oe && apply(oe.get())) return true;
       return false;
     }
-    bool contains::operator()(Reference v) const {
+    bool ContainsExpression::operator()(Reference v) const {
       if (exp==Expression(v)) return true; 
       return false;
     }

@@ -17,29 +17,30 @@
 
 ******************************************************************************/
 
-#ifndef AST_VISITOR_REPLACE_ST
-#define AST_VISITOR_REPLACE_ST
+#ifndef AST_VISITOR_TO_MICRO
+#define AST_VISITOR_TO_MICRO
 #include <boost/variant/static_visitor.hpp>
-#include <ast/statement.h>
-#include <util/ast_visitors/replace.h>
+#include <ast/expression.h>
+#include <mmo/mmo_class.h>
+#include <util/ast_visitors/to_micro/convert_to_micro_expression.h>
 
 namespace Modelica {
 
   using namespace Modelica::AST;
-  class replace_st: public boost::static_visitor<Statement> {
+  class ConvertToMicro: public boost::static_visitor<Equation> {
   public:
-    replace_st(Expression, Expression);
-    Statement operator()(Assign) const;
-    Statement operator()(Break) const;
-    Statement operator()(Return) const;
-    Statement operator()(CallSt) const;
-    Statement operator()(IfSt) const;
-    Statement operator()(WhenSt) const;
-    Statement operator()(WhileSt) const;
-    Statement operator()(ForSt) const;
- 
-    Expression look,rep;
-    replace replace_exp;
+    ConvertToMicro(MMO_Class &cl);
+    void convert();
+    Equation operator() (Connect c) ;
+    Equation operator() (Equality c) ;
+    Equation operator() (CallEq c) ;
+    Equation operator() (WhenEq c) ;
+    Equation operator() (ForEq c) ;
+    Equation operator() (IfEq c) ;
+  private:
+    unsigned int disc_count;
+    MMO_Class & mmo_class;
+    ConvertToMicroExpression tomicro_exp;
   }; 
 }
 #endif 

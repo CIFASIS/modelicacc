@@ -19,7 +19,7 @@
 ******************************************************************************/
 
 #include <flatter/flatter.h>
-#include <util/ast_visitors/part_evalexp.h>
+#include <util/ast_visitors/partial_eval_expression.h>
 #include <boost/algorithm/string.hpp>
 #include <util/debug.h>
 
@@ -106,9 +106,9 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector,bool initial)
 	
 	//Eliminar Variables
 	if (initial) {
-		dotExpression dot = dotExpression(Option<MMO_Class &> (),"",ExpList());
-		EqdotExpression eqChange = EqdotExpression(dot);	
-		StdotExpression stChange = StdotExpression(dot);
+		DotExpression dot = DotExpression(Option<MMO_Class &> (),"",ExpList());
+		EqDotExpression eqChange = EqDotExpression(dot);	
+		StDotExpression stChange = StDotExpression(dot);
 		
 		foreach_(Equation &eq,c.equations_ref().equations_ref())	
 			eq = Visit(eqChange,eq);
@@ -128,7 +128,7 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector,bool initial)
 			if (is<IfEq>(eq)) {
 				IfEq &ieq = get<IfEq>(eq);
 				if (ieq.ifnot().size()==0 && ieq.elseif().size()==0) {
-				  PartEvalExp pe(c.syms_ref());  
+				  PartialEvalExpression pe(c.syms_ref());  
 				  Expression res = boost::apply_visitor(pe,ieq.cond_ref());
 				  ERROR_UNLESS(is<Boolean>(res), "Error evaluating const if equation condition");
 				  if (get<Boolean>(res).val()) {

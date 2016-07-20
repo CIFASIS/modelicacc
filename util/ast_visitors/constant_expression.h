@@ -17,32 +17,37 @@
 
 ******************************************************************************/
 
-#ifndef AST_VISITOR_TO_MICRO_ST
-#define AST_VISITOR_TO_MICRO_ST
 #include <boost/variant/static_visitor.hpp>
-#include <ast/statement.h>
-#include <mmo/mmo_class.h>
+#include <ast/expression.h>
+
+#ifndef AST_VISITOR_CONSTANTEXP
+#define AST_VISITOR_CONSTANTEXP
 
 namespace Modelica {
 
   using namespace Modelica::AST;
-  class toMicroSt: public boost::static_visitor<Statement> {
+  class ConstantExpression: public boost::static_visitor<bool> {
   public:
-    toMicroSt(MMO_Class &cl, unsigned int &discont);
-    Statement operator()(Assign v) const ;
-    Statement operator()(Break v) const ;
-    Statement operator()(Return v) const ;
-    Statement operator()(CallSt v) const ;
-    Statement operator()(IfSt v) const ;
-    Statement operator()(ForSt v) const ;
-    Statement operator()(WhenSt v) const ;
-    Statement operator()(WhileSt v) const ;
-    StatementList statements() const ;
-  private:
-    StatementList statements_;
-    Expression newDiscrete(Option<Expression> s=Option<Expression>()) const;
-    MMO_Class & mmo_class;
-    unsigned int &disc_count;
+    ConstantExpression();
+    bool operator()(Integer v) const;
+    bool operator()(Boolean v) const;
+    bool operator()(String v) const;
+    bool operator()(Name v) const;
+    bool operator()(Real v) const;
+    bool operator()(SubEnd v) const;
+    bool operator()(SubAll v) const;
+    bool operator()(BinOp) const;
+    bool operator()(UnaryOp) const;
+    bool operator()(Brace) const;
+    bool operator()(Bracket) const;
+    bool operator()(Call) const;
+    bool operator()(FunctionExp) const;
+    bool operator()(ForExp) const;
+    bool operator()(IfExp) const;
+    bool operator()(Named) const;
+    bool operator()(Output) const;
+    bool operator()(Reference) const;
+    bool operator()(Range) const;
   }; 
 }
 #endif 

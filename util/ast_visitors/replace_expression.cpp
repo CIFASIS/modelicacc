@@ -18,87 +18,87 @@
 ******************************************************************************/
 
 #include <ast/queries.h>
-#include <util/ast_visitors/replace.h>
+#include <util/ast_visitors/replace_expression.h>
 #include <boost/variant/apply_visitor.hpp>
 #define apply(X) boost::apply_visitor(*this,X)
 
 namespace Modelica {
 
     using namespace boost;
-    replace::replace(Expression l, Expression r): look(l), rep(r), check_indexes(true) {};
-    Expression replace::operator()(Integer v) const { 
+    ReplaceExpression::ReplaceExpression(Expression l, Expression r): look(l), rep(r), check_indexes(true) {};
+    Expression ReplaceExpression::operator()(Integer v) const { 
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(Boolean v) const { 
+    Expression ReplaceExpression::operator()(Boolean v) const { 
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(String v) const {
+    Expression ReplaceExpression::operator()(String v) const {
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(Name v) const { 
+    Expression ReplaceExpression::operator()(Name v) const { 
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(Real v) const { 
+    Expression ReplaceExpression::operator()(Real v) const { 
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(SubEnd v) const { 
+    Expression ReplaceExpression::operator()(SubEnd v) const { 
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(SubAll v) const { 
+    Expression ReplaceExpression::operator()(SubAll v) const { 
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(BinOp v) const { 
+    Expression ReplaceExpression::operator()(BinOp v) const { 
       if (look==Expression(v))
         return rep; 
       Expression l=v.left(), r=v.right();
       return BinOp(apply(l), v.op(), apply(r));
     } 
-    Expression replace::operator()(UnaryOp v) const { 
+    Expression ReplaceExpression::operator()(UnaryOp v) const { 
       // TODO
       if (look==Expression(v))
         return rep; 
       Expression exp = v.exp();  
       return UnaryOp(apply(exp),v.op());
     } 
-    Expression replace::operator()(IfExp v) const { 
+    Expression ReplaceExpression::operator()(IfExp v) const { 
       if (look==Expression(v))
         return rep; 
       Expression c=v.cond(),then=v.then(),elseexp=v.elseexp();
       return IfExp(apply(c), apply(then), List<ExpPair>(),apply(elseexp));
     }
-    Expression replace::operator()(Range v) const { 
+    Expression ReplaceExpression::operator()(Range v) const { 
       // TODO
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(Brace v) const { 
+    Expression ReplaceExpression::operator()(Brace v) const { 
       // TODO
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(Bracket v) const { 
+    Expression ReplaceExpression::operator()(Bracket v) const { 
       // TODO
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(Call v) const { 
+    Expression ReplaceExpression::operator()(Call v) const { 
       // TODO
       if (look==Expression(v))
         return rep; 
@@ -106,25 +106,25 @@ namespace Modelica {
         e = apply(e);
       return v;
     }
-    Expression replace::operator()(FunctionExp v) const { 
+    Expression ReplaceExpression::operator()(FunctionExp v) const { 
       // TODO
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(ForExp v) const {
+    Expression ReplaceExpression::operator()(ForExp v) const {
       // TODO
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(Named v) const {
+    Expression ReplaceExpression::operator()(Named v) const {
       // TODO
       if (look==Expression(v))
         return rep; 
       return v;
     }
-    Expression replace::operator()(Output v) const {
+    Expression ReplaceExpression::operator()(Output v) const {
       if (look==Expression(v))
         return rep; 
       foreach_ (OptExp &oe, v.args_ref()) {
@@ -133,7 +133,7 @@ namespace Modelica {
       }
       return v;
     }
-    Expression replace::operator()(Reference v) const {
+    Expression ReplaceExpression::operator()(Reference v) const {
       // TODO
       if (look==Expression(v))
         return rep; 
