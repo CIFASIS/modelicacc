@@ -30,39 +30,39 @@
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;
 namespace Modelica {
-  namespace parser {
+  namespace Parser {
 
     template <typename Iterator>
-    struct class_: qi::grammar<Iterator,skipper<Iterator>,StoredDef()>
+    struct ClassRule: qi::grammar<Iterator,Skipper<Iterator>,StoredDef()>
     {
-      class_(Iterator &it);
+      ClassRule(Iterator &it);
 
 
       // Rules
-      qi::rule<Iterator,skipper<Iterator>,ClassType()> class__;
-      modification<Iterator> modification_;
-      expression<Iterator> expression_;
-      equation<Iterator> equation_;
-      statement<Iterator> statement_;
-      qi::rule<Iterator, skipper<Iterator>, Import()> import_clause;
-      qi::rule<Iterator, skipper<Iterator>, Component()> component_clause;
-      qi::rule<Iterator, skipper<Iterator>, Extends()> extends_clause;
-      qi::rule<Iterator, skipper<Iterator>, Declaration()> component_declaration;
-      qi::rule<Iterator, skipper<Iterator>, Expression()> condition_attribute;
-      qi::rule<Iterator, skipper<Iterator>, DeclList()> component_list;
-      qi::rule<Iterator, skipper<Iterator>, Element()> element, element2; 
-      qi::rule<Iterator, skipper<Iterator>, ElemList()> element_list; 
-      qi::rule<Iterator, skipper<Iterator>, CompElement()> comp_element;
-      qi::rule<Iterator, skipper<Iterator>, External()> external_function_call;
-      qi::rule<Iterator, skipper<Iterator>, DefClass()> def_class;
-      qi::rule<Iterator, skipper<Iterator>, EnumClass()> enum_class;
-      qi::rule<Iterator, skipper<Iterator>, DerClass()> deriv_class;
-      qi::rule<Iterator, skipper<Iterator>, ExtendsClass()> extends_class;
-      qi::rule<Iterator, skipper<Iterator>, Class()> class_t;
-      qi::rule<Iterator, skipper<Iterator>, ClassList()> class_list; 
-      qi::rule<Iterator, skipper<Iterator>, Composition()> composition;
-      qi::rule<Iterator, skipper<Iterator>, ClassType()> class_specifier, class_definition, class_def;
-      qi::rule<Iterator, skipper<Iterator>, StoredDef()> stored_definition; 
+      qi::rule<Iterator,Skipper<Iterator>,ClassType()> class_;
+      ModificationRule<Iterator> modification;
+      ExpressionRule<Iterator> expression;
+      EquationRule<Iterator> equation;
+      StatementRule<Iterator> statement;
+      qi::rule<Iterator, Skipper<Iterator>, Import()> import_clause;
+      qi::rule<Iterator, Skipper<Iterator>, Component()> component_clause;
+      qi::rule<Iterator, Skipper<Iterator>, Extends()> extends_clause;
+      qi::rule<Iterator, Skipper<Iterator>, Declaration()> component_declaration;
+      qi::rule<Iterator, Skipper<Iterator>, Expression()> condition_attribute;
+      qi::rule<Iterator, Skipper<Iterator>, DeclList()> component_list;
+      qi::rule<Iterator, Skipper<Iterator>, Element()> element, element2; 
+      qi::rule<Iterator, Skipper<Iterator>, ElemList()> element_list; 
+      qi::rule<Iterator, Skipper<Iterator>, CompElement()> comp_element;
+      qi::rule<Iterator, Skipper<Iterator>, External()> external_function_call;
+      qi::rule<Iterator, Skipper<Iterator>, DefClass()> def_class;
+      qi::rule<Iterator, Skipper<Iterator>, EnumClass()> enum_class;
+      qi::rule<Iterator, Skipper<Iterator>, DerClass()> deriv_class;
+      qi::rule<Iterator, Skipper<Iterator>, ExtendsClass()> extends_class;
+      qi::rule<Iterator, Skipper<Iterator>, Class()> class_t;
+      qi::rule<Iterator, Skipper<Iterator>, ClassList()> class_list; 
+      qi::rule<Iterator, Skipper<Iterator>, Composition()> composition;
+      qi::rule<Iterator, Skipper<Iterator>, ClassType()> class_specifier, class_definition, class_def;
+      qi::rule<Iterator, Skipper<Iterator>, StoredDef()> stored_definition; 
  
 
       /* Operators tokens */

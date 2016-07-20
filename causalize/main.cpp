@@ -65,9 +65,9 @@ int main(int argc, char ** argv)
 
   StoredDef sd;
   if (argv[optind]!=NULL) 
-    sd=parseFile(argv[optind],r);
+    sd=Parser::ParseFile(argv[optind],r);
   else
-    sd=parseFile("",r);
+    sd=Parser::ParseFile("",r);
  
   if (!r) 
     return -1;

@@ -130,7 +130,7 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
       }
       rhs << solved.op(i).op(1);
       bool r;
-      Expression rhs_exp = Modelica::parseExpression(rhs.str(),r);
+      Expression rhs_exp = Modelica::Parser::ParseExpression(rhs.str(),r);
       if (!r)
         ERROR("Could not solve equation\n");
       if (for_eq) {

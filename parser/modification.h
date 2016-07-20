@@ -29,37 +29,37 @@
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;
 namespace Modelica {
-  namespace parser {
+  namespace Parser {
 
     template <typename Iterator>
-    struct modification: qi::grammar<Iterator,skipper<Iterator>,Modification()>
+    struct ModificationRule: qi::grammar<Iterator,Skipper<Iterator>,Modification()>
     {
-      modification(Iterator &it);
+      ModificationRule(Iterator &it);
 
 
       // Rules
-      qi::rule<Iterator, skipper<Iterator>, Modification()> modification_;
-      qi::rule<Iterator, skipper<Iterator>, ModEq()> equal_mod;
-      qi::rule<Iterator, skipper<Iterator>, Declaration()> declaration, component_declaration1;
-      qi::rule<Iterator, skipper<Iterator>, ElRepl()> element_replaceable; 
-      qi::rule<Iterator, skipper<Iterator>, ElMod()> element_modification; 
-      qi::rule<Iterator, skipper<Iterator>, Component1()> component_clause1;
-      qi::rule<Iterator, skipper<Iterator>, ElRedecl()> element_redeclaration;
-      qi::rule<Iterator, skipper<Iterator>, ModAssign()> assign_mod;
-      qi::rule<Iterator, skipper<Iterator>, StringComment()> string_comment;
-      qi::rule<Iterator, skipper<Iterator>, Annotation()> annotation;
-      qi::rule<Iterator, skipper<Iterator>, ModClass()> class_mod;
-      qi::rule<Iterator, skipper<Iterator>, Comment()> comment;
-      qi::rule<Iterator, skipper<Iterator>, ClassPrefixes() > class_prefixes; 
-      qi::rule<Iterator, skipper<Iterator>, TypePrefixes()> type_prefix; 
-      qi::rule<Iterator, skipper<Iterator>, Enum()> enumeration_literal;
-      qi::rule<Iterator, skipper<Iterator>, EnumList()> enum_list;
-      qi::rule<Iterator, skipper<Iterator>, EnumSpec()> enum_spec;
-      qi::rule<Iterator, skipper<Iterator>, ClassModification()> class_modification;
-      qi::rule<Iterator, skipper<Iterator>, ShortClass()> short_class_definition;
-      qi::rule<Iterator, skipper<Iterator>, Argument()> argument;
-      qi::rule<Iterator, skipper<Iterator>, Constrained()> constraining_clause; 
-      expression<Iterator> expression_;
+      qi::rule<Iterator, Skipper<Iterator>, Modification()> modification;
+      qi::rule<Iterator, Skipper<Iterator>, ModEq()> equal_mod;
+      qi::rule<Iterator, Skipper<Iterator>, Declaration()> declaration, component_declaration1;
+      qi::rule<Iterator, Skipper<Iterator>, ElRepl()> element_replaceable; 
+      qi::rule<Iterator, Skipper<Iterator>, ElMod()> element_modification; 
+      qi::rule<Iterator, Skipper<Iterator>, Component1()> component_clause1;
+      qi::rule<Iterator, Skipper<Iterator>, ElRedecl()> element_redeclaration;
+      qi::rule<Iterator, Skipper<Iterator>, ModAssign()> assign_mod;
+      qi::rule<Iterator, Skipper<Iterator>, StringComment()> string_comment;
+      qi::rule<Iterator, Skipper<Iterator>, Annotation()> annotation;
+      qi::rule<Iterator, Skipper<Iterator>, ModClass()> class_mod;
+      qi::rule<Iterator, Skipper<Iterator>, Comment()> comment;
+      qi::rule<Iterator, Skipper<Iterator>, ClassPrefixes() > class_prefixes; 
+      qi::rule<Iterator, Skipper<Iterator>, TypePrefixes()> type_prefix; 
+      qi::rule<Iterator, Skipper<Iterator>, Enum()> enumeration_literal;
+      qi::rule<Iterator, Skipper<Iterator>, EnumList()> enum_list;
+      qi::rule<Iterator, Skipper<Iterator>, EnumSpec()> enum_spec;
+      qi::rule<Iterator, Skipper<Iterator>, ClassModification()> class_modification;
+      qi::rule<Iterator, Skipper<Iterator>, ShortClass()> short_class_definition;
+      qi::rule<Iterator, Skipper<Iterator>, Argument()> argument;
+      qi::rule<Iterator, Skipper<Iterator>, Constrained()> constraining_clause; 
+      ExpressionRule<Iterator> expression;
 
       /* Operators tokens */
       qi::rule<Iterator> EQUAL, ASSIGN, PLUS, ANNOTATION, COMA, COLON, ENUMERATION, OPAREN, CPAREN, REPLACEABLE, CONSTRAINEDBY,

@@ -98,7 +98,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 namespace Modelica
 {
-  namespace parser {
+  namespace Parser {
 
   Declaration add_cond(Declaration d,OptExp cond, Comment c) {
     Declaration ret=d;
@@ -202,8 +202,8 @@ namespace Modelica
  
     std::string at(std::string::const_iterator where, std::string::const_iterator start) ;
     template <typename Iterator>
-    class_<Iterator>::class_(Iterator &it) : class_::base_type(stored_definition), it(it), modification_(it), expression_(it),
-                                                        equation_(it), statement_(it), IMPORT("import"), EXTENDS("extends"),
+    ClassRule<Iterator>::ClassRule(Iterator &it) : ClassRule::base_type(stored_definition), it(it), modification(it), expression(it),
+                                                        equation(it), statement(it), IMPORT("import"), EXTENDS("extends"),
                                                         OUTER("outer"), INNER("inner"), REDECLARE("redeclare"), 
                                                         EXTERNAL("external"), WITHIN("within"),
                                                         EQUAL("="), DOT("."), STAR("*"), OBRACE("{"), CBRACE("}"), COMA(","),
@@ -225,7 +225,7 @@ namespace Modelica
       using qi::omit;
 
       stored_definition = 
-                          (WITHIN >> (-expression_.name) > SEMICOLON > class_list) [_val=construct<StoredDef>(_1,_2) ]
+                          (WITHIN >> (-expression.name) > SEMICOLON > class_list) [_val=construct<StoredDef>(_1,_2) ]
                         | class_list [_val=construct<StoredDef>(_1) ]
                         ;
 
@@ -240,7 +240,7 @@ namespace Modelica
 
  
       class_definition = 
-                         (matches[ENCAPSULATED] >> modification_.class_prefixes > class_specifier) [_val=bind(&add_enc_prefixes,_1,_2)]
+                         (matches[ENCAPSULATED] >> modification.class_prefixes > class_specifier) [_val=bind(&add_enc_prefixes,_1,_2)]
                        ;
       
  
@@ -254,58 +254,58 @@ namespace Modelica
 
  
       class_t  =
-                expression_.ident_ >> modification_.string_comment >> composition >> END > omit[expression_.ident_]
+                expression.ident >> modification.string_comment >> composition >> END > omit[expression.ident]
               ;
 
  
       extends_class =
-                      EXTENDS > expression_.ident_ >> (-modification_.class_modification) >> modification_.string_comment >> composition > END > omit[expression_.ident_]
+                      EXTENDS > expression.ident >> (-modification.class_modification) >> modification.string_comment >> composition > END > omit[expression.ident]
                     ;
 
       deriv_class =
-                    expression_.ident_ >> EQUAL >> DER > OPAREN > expression_.name > COMA > (expression_.ident_ % COMA) > CPAREN > modification_.comment
+                    expression.ident >> EQUAL >> DER > OPAREN > expression.name > COMA > (expression.ident % COMA) > CPAREN > modification.comment
                   ;
 
  
       external_function_call =
-                               (-(expression_.component_reference >> EQUAL)) >> expression_.ident_ >> OPAREN >> (-expression_.expression_list) >> CPAREN
+                               (-(expression.component_reference >> EQUAL)) >> expression.ident >> OPAREN >> (-expression.expression_list) >> CPAREN
                              ;
 
  
       composition = 
                     (element_list >> (*comp_element) 
-                        >> (-(EXTERNAL >> (-expression_.string_) >> (-external_function_call) >> (-modification_.annotation) >> SEMICOLON))
-                    ) [_val=construct<Composition>(_1,_2,_3)] >> (-((modification_.annotation [_val=bind(&add_annot,_val,_1)]>> SEMICOLON) ))
+                        >> (-(EXTERNAL >> (-expression.string_) >> (-external_function_call) >> (-modification.annotation) >> SEMICOLON))
+                    ) [_val=construct<Composition>(_1,_2,_3)] >> (-((modification.annotation [_val=bind(&add_annot,_val,_1)]>> SEMICOLON) ))
                   ;
 
  
       comp_element =
-                     equation_.equation_section   [_val=_1]
-                   | statement_.algorithm_section  [_val=_1]
+                     equation.equation_section   [_val=_1]
+                   | statement.algorithm_section  [_val=_1]
                    | PUBLIC >> element_list [_val=construct<Public>(_1)]
                    | PROTECTED >> element_list [_val=construct<Protected>(_1)]
                    ;
 
 
       enum_class = 
-                   expression_.ident_ >> EQUAL >> ENUMERATION > OPAREN > modification_.enum_spec > CPAREN >> modification_.comment
+                   expression.ident >> EQUAL >> ENUMERATION > OPAREN > modification.enum_spec > CPAREN >> modification.comment
                  ;
 
  
       def_class = 
-                  expression_.ident_ >> EQUAL >> modification_.type_prefix >> expression_.name >> (-expression_.array_subscripts) 
-                  >> (-modification_.class_modification) >> modification_.comment
+                  expression.ident >> EQUAL >> modification.type_prefix >> expression.name >> (-expression.array_subscripts) 
+                  >> (-modification.class_modification) >> modification.comment
                 ;
 
  
       element2 = 
                  (component_clause [_val=_1] | class_definition [_val=construct<ElemClass>(construct<ClassType_>(_1))])
-               | (REPLACEABLE >> (class_definition | component_clause) >> -(modification_.constraining_clause >> modification_.comment)) [_val=bind(&element2_act,_1,_2)]
+               | (REPLACEABLE >> (class_definition | component_clause) >> -(modification.constraining_clause >> modification.comment)) [_val=bind(&element2_act,_1,_2)]
                ;
 
  
       component_clause = 
-                         modification_.type_prefix >> expression_.name >> (-expression_.array_subscripts) >> component_list
+                         modification.type_prefix >> expression.name >> (-expression.array_subscripts) >> component_list
                        ;
     
  
@@ -315,23 +315,23 @@ namespace Modelica
   
  
       component_declaration = 
-                              (modification_.declaration >> (-condition_attribute) >> modification_.comment)
+                              (modification.declaration >> (-condition_attribute) >> modification.comment)
                                [_val=bind(&add_cond,_1,_2,_3)]
                             ;
  
       condition_attribute =
-                            IF > expression_
+                            IF > expression
                           ;
       
  
 
       import_clause = 
-                      (IMPORT >> expression_.ident_ >> EQUAL >> expression_.name >> modification_.comment) [_val=construct<Import>(_1,_2,_3)]
-                    | (IMPORT >> expression_.name >> (-(omit[DOT] >> (STAR | (OBRACE >> (expression_.ident_ % COMA) >> CBRACE)))) >> modification_.comment) [_val=construct<Import>(_1,_2,_3)]
+                      (IMPORT >> expression.ident >> EQUAL >> expression.name >> modification.comment) [_val=construct<Import>(_1,_2,_3)]
+                    | (IMPORT >> expression.name >> (-(omit[DOT] >> (STAR | (OBRACE >> (expression.ident % COMA) >> CBRACE)))) >> modification.comment) [_val=construct<Import>(_1,_2,_3)]
                     ;
 
       extends_clause =
-                      EXTENDS > expression_.name >> (-modification_.class_modification) >> (-modification_.annotation)
+                      EXTENDS > expression.name >> (-modification.class_modification) >> (-modification.annotation)
                     ;
 
       element_list = 

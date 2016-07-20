@@ -77,11 +77,11 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 namespace Modelica
 {
-  namespace parser {
+  namespace Parser {
 
     std::string at(std::string::const_iterator where, std::string::const_iterator start) ;
     template <typename Iterator>
-    equation<Iterator>::equation(Iterator &it) : equation::base_type(equation_), it(it), modification_(it), expression_(it),
+    EquationRule<Iterator>::EquationRule(Iterator &it) : EquationRule::base_type(equation), it(it), modification(it), expression(it),
                                                 OPAREN("("),CPAREN(")"), COMA(","), CONNECT("connect"), SEMICOLON(";"), 
                                                 WHEN("when"), THEN("then"), ELSEWHEN("elsewhen"), END("end"), EQUAL("="),
                                                 FOR("for"), IF("if"), ELSEIF("elseif"), ELSE("else"), LOOP("loop"), 
@@ -102,49 +102,49 @@ namespace Modelica
                        ;
 
  
-      equation_ = (
+      equation = (
                     equality_equation
                   | for_equation
                   | if_equation
                   | connect_equation
                   | when_equation
                   | call_equation
-                  ) > modification_.comment
+                  ) > modification.comment
                   ;
 
       equality_equation = 
-                            (expression_.simple_expression >> EQUAL > expression_.expression_)
+                            (expression.simple_expression >> EQUAL > expression)
                         ;
 
       connect_equation = 
-                         CONNECT > OPAREN > expression_.component_reference > COMA > expression_.component_reference > CPAREN
+                         CONNECT > OPAREN > expression.component_reference > COMA > expression.component_reference > CPAREN
                        ;
 
       when_equation = 
-                      WHEN > expression_.expression_ > THEN > equation_list > *(ELSEWHEN > expression_.expression_ > THEN > equation_list) > END > WHEN 
+                      WHEN > expression > THEN > equation_list > *(ELSEWHEN > expression > THEN > equation_list) > END > WHEN 
                     ;
 
       if_equation = 
-                    IF > modification_.expression_ > THEN > equation_list > *(ELSEIF > modification_.expression_ > THEN > equation_list) > -(ELSE > equation_list) > END > IF
+                    IF > expression > THEN > equation_list > *(ELSEIF > expression > THEN > equation_list) > -(ELSE > equation_list) > END > IF
                   ;
  
       for_equation  = 
-                      FOR > modification_.expression_.for_indices > LOOP > equation_list > END > FOR
+                      FOR > expression.for_indices > LOOP > equation_list > END > FOR
                     ;
    
       equation_list =
-                      *(equation_ > SEMICOLON)
+                      *(equation > SEMICOLON)
                      ;
 
       call_equation = 
-                       modification_.expression_.name >> modification_.expression_.function_call_args
+                       expression.name >> expression.function_call_args
                     ;
 
  
       /* Error and debug */
       on_error<fail>
         (
-            equation_
+            equation
           , std::cerr
                 << val("Parser error. Expecting ")
                 << _4                               // what failed?
@@ -154,7 +154,7 @@ namespace Modelica
  
       equation_list.name("equation_list");
 
-      equation_.name("equation");
+      equation.name("equation");
       equation_section.name("equation_section");
 
       for_equation.name("for equation");

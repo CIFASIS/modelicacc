@@ -241,7 +241,7 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
       std::stringstream s(std::ios_base::out),der_s(std::ios_base::out);
      // set_print_func<power,print_dflt>(my_print_power_dflt);
       s << e;
-      Expression exp = parseExpression(s.str(),r);
+      Expression exp = Parser::ParseExpression(s.str(),r);
       if (!r) {
         WARNING("ConvertToGiNaC: conversion of output expression. Returning 0");
         return 0;

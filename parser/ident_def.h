@@ -21,10 +21,10 @@
 
 namespace Modelica
 {
-  namespace parser {
-    struct quoted_chars_ : qi::symbols<char,char>
+  namespace Parser {
+    struct QuotedChars : qi::symbols<char,char>
     {
-      quoted_chars_()
+      QuotedChars()
         {
         add
           (" ",' ')
@@ -59,9 +59,9 @@ namespace Modelica
         }
     } quoted_chars;
 
-    struct keywords_ : qi::symbols<char, std::string>
+    struct Keywords : qi::symbols<char, std::string>
     {
-      keywords_()
+      Keywords()
       {
         add
            ("algorithm","algorithm")
@@ -128,7 +128,7 @@ namespace Modelica
     } keywords;
     
     template <typename Iterator>
-    ident<Iterator>::ident(Iterator &it) : ident::base_type(ident_) {
+    IdentRule<Iterator>::IdentRule(Iterator &it) : IdentRule::base_type(ident) {
       using qi::char_;
       using qi::alpha;
       using qi::alnum;
@@ -137,13 +137,13 @@ namespace Modelica
       keyword_ident = keywords >> +(alnum | char_('_')) 
                     ;
 
-      ident_ = lexeme[((char_('_') | alpha) >> *(alnum | char_('_'))) - keywords]
+      ident = lexeme[((char_('_') | alpha) >> *(alnum | char_('_'))) - keywords]
              | lexeme[keyword_ident]
              | lexeme[char_('\'') >> *(alnum | char_('_') | quoted_chars) > char_('\'')] 
              ;
 
 
-      ident_.name("identifier"); 
+      ident.name("identifier"); 
       keyword_ident.name("identifier"); 
     }
   }

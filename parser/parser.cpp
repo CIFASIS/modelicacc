@@ -30,10 +30,11 @@
 
 using namespace std;
 namespace Modelica {
+  namespace Parser {
   typedef std::string::const_iterator iterator_type;
-  typedef skipper<iterator_type> space_type;
+  typedef Skipper<iterator_type> space_type;
 
-  AST::StoredDef parseFile(std::string name, bool &r) {
+  AST::StoredDef ParseFile(std::string name, bool &r) {
 
     std::string str, res;
     AST::StoredDef sd;
@@ -48,7 +49,7 @@ namespace Modelica {
       std::string res((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
       std::string::const_iterator iter = res.begin();
       std::string::const_iterator end = res.end();
-      Modelica::parser::class_<iterator_type> p(iter);
+      Modelica::Parser::ClassRule<iterator_type> p(iter);
       r = phrase_parse(iter, end, p.stored_definition, space_type(), sd);
       if (r && iter == end) 
         return sd;
@@ -61,7 +62,7 @@ namespace Modelica {
       }
       std::string::const_iterator iter = res.begin();
       std::string::const_iterator end = res.end();
-      Modelica::parser::class_<iterator_type> p(iter);
+      Modelica::Parser::ClassRule<iterator_type> p(iter);
       r = phrase_parse(iter, end, p.stored_definition, space_type(), sd);
       if (r && iter == end) {
         return sd;
@@ -71,16 +72,17 @@ namespace Modelica {
     }
   }
 
-  AST::Expression parseExpression(std::string exp, bool &r) {
+  AST::Expression ParseExpression(std::string exp, bool &r) {
     std::string::const_iterator iter = exp.begin();
     std::string::const_iterator end = exp.end();
     AST::Expression e;
-    Modelica::parser::expression<iterator_type> p(iter);
-    r = phrase_parse(iter, end, p.expression_, space_type(), e);
+    Modelica::Parser::ExpressionRule<iterator_type> p(iter);
+    r = phrase_parse(iter, end, p.expression, space_type(), e);
     if (r && iter == end) {
       return e;
     } 
     return 0;
   }
 
-};
+} }
+

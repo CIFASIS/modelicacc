@@ -29,26 +29,26 @@
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;
 namespace Modelica {
-  namespace parser {
+  namespace Parser {
 
     template <typename Iterator>
-    struct statement: qi::grammar<Iterator,skipper<Iterator>,Statement()>
+    struct StatementRule: qi::grammar<Iterator,Skipper<Iterator>,Statement()>
     {
-      statement(Iterator &it);
+      StatementRule(Iterator &it);
 
 
       // Rules
-      qi::rule<Iterator,skipper<Iterator>,Statement()> statement_;
-      modification<Iterator> modification_;
-      expression<Iterator> expression_;
-      qi::rule<Iterator, skipper<Iterator>, Assign() > assign_statement;
-      qi::rule<Iterator, skipper<Iterator>, CallSt() > call_statement;
-      qi::rule<Iterator, skipper<Iterator>, ForSt() > for_statement;
-      qi::rule<Iterator, skipper<Iterator>, WhenSt() > when_statement;
-      qi::rule<Iterator, skipper<Iterator>, WhileSt() > while_statement;
-      qi::rule<Iterator, skipper<Iterator>, IfSt() > if_statement;
-      qi::rule<Iterator, skipper<Iterator>, StatementList() > statement_list;
-      qi::rule<Iterator, skipper<Iterator>, StatementSection() > algorithm_section;
+      qi::rule<Iterator,Skipper<Iterator>,Statement()> statement;
+      ModificationRule<Iterator> modification;
+      ExpressionRule<Iterator> expression;
+      qi::rule<Iterator, Skipper<Iterator>, Assign() > assign_statement;
+      qi::rule<Iterator, Skipper<Iterator>, CallSt() > call_statement;
+      qi::rule<Iterator, Skipper<Iterator>, ForSt() > for_statement;
+      qi::rule<Iterator, Skipper<Iterator>, WhenSt() > when_statement;
+      qi::rule<Iterator, Skipper<Iterator>, WhileSt() > while_statement;
+      qi::rule<Iterator, Skipper<Iterator>, IfSt() > if_statement;
+      qi::rule<Iterator, Skipper<Iterator>, StatementList() > statement_list;
+      qi::rule<Iterator, Skipper<Iterator>, StatementSection() > algorithm_section;
  
 
       /* Operators tokens */

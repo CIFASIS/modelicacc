@@ -25,12 +25,12 @@
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;
 namespace Modelica {
-  namespace parser {
+  namespace Parser {
     template <typename Iterator>
-    struct ident: qi::grammar<Iterator,Name()>
+    struct IdentRule: qi::grammar<Iterator,Name()>
     {
-      ident(Iterator &it);
-      qi::rule<Iterator,Name()> ident_, keyword_ident;
+      IdentRule(Iterator &it);
+      qi::rule<Iterator,Name()> ident, keyword_ident;
     };
   }
 }

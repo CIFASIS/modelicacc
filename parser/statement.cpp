@@ -23,8 +23,8 @@
 
 namespace Modelica
 {
-  namespace parser {
+  namespace Parser {
     typedef std::string::const_iterator iterator_type;
-    template struct statement<iterator_type>;
+    template struct StatementRule<iterator_type>;
   }
 }

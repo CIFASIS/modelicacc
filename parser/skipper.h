@@ -21,11 +21,12 @@
 #ifndef SKIPPER_PARSER
 #define SKIPPER_PARSER
 
+namespace Modelica { namespace Parser {
 namespace qi = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;
 template <typename Iterator>
-struct skipper : qi::grammar<Iterator> {
-  skipper() : skipper::base_type(start) {
+struct Skipper : qi::grammar<Iterator> {
+  Skipper() : Skipper::base_type(start) {
     using qi::char_;
     ascii::space_type space;
 
@@ -50,4 +51,6 @@ struct skipper : qi::grammar<Iterator> {
   }
 
 
+}
+}
 #endif

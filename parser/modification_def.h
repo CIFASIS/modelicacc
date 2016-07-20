@@ -76,7 +76,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 namespace Modelica
 {
-  namespace parser {
+  namespace Parser {
   Argument add_each_final_rep(bool each, bool final,boost::variant<ElRepl, ElMod> e) {
     if (e.type()==typeid(ElRepl)) {  
       boost::get<ElRepl>(e).set_each(each);
@@ -221,7 +221,7 @@ namespace Modelica
  
 
     template <typename Iterator>
-    modification<Iterator>::modification(Iterator &it) : modification::base_type(modification_), it(it), expression_(it),
+    ModificationRule<Iterator>::ModificationRule(Iterator &it) : ModificationRule::base_type(modification), it(it), expression(it),
                                                          ASSIGN(":="), EQUAL("="), PLUS("+"), ANNOTATION("annotation"),
                                                           COMA(","), COLON(":"), ENUMERATION("enumeration"), OPAREN("("), CPAREN(")"),
                                                          CONSTRAINEDBY("constrainedby"), REPLACEABLE("replaceable"),
@@ -245,7 +245,7 @@ namespace Modelica
       using qi::fail;
       using qi::lexeme;*/
 
-      modification_= 
+      modification = 
                      equal_mod
                    | assign_mod 
                    | class_mod
@@ -253,11 +253,11 @@ namespace Modelica
 
  
       equal_mod =
-                  EQUAL > expression_
+                  EQUAL > expression
                 ;
       
       assign_mod =
-                   ASSIGN > expression_
+                   ASSIGN > expression
                  ;
     
       annotation =  
@@ -292,7 +292,7 @@ namespace Modelica
 
  
       enumeration_literal =
-                            expression_.ident_ > comment
+                            expression.ident > comment
                           ;
 
 
@@ -313,7 +313,7 @@ namespace Modelica
 
  
       element_modification =
-                              expression_.name >> (-modification_) >> string_comment
+                              expression.name >> (-modification) >> string_comment
                            ; 
                                            
  
@@ -325,7 +325,7 @@ namespace Modelica
 
       // TODO add the + string
       string_comment =
-                       -(expression_.string_ % PLUS)
+                       -(expression.string_ % PLUS)
                      ;
 
 
@@ -335,7 +335,7 @@ namespace Modelica
 
  
       component_clause1 =
-                          type_prefix >> expression_.name >> component_declaration1 
+                          type_prefix >> expression.name >> component_declaration1 
                         ;
 
       component_declaration1 =
@@ -343,30 +343,30 @@ namespace Modelica
                              ;
 
       declaration =
-                    expression_.ident_ >> (-expression_.array_subscripts) >> (-modification_)
+                    expression.ident >> (-expression.array_subscripts) >> (-modification)
                   ;
 
        constraining_clause = 
-                            CONSTRAINEDBY > expression_.name > (-class_modification)
+                            CONSTRAINEDBY > expression.name > (-class_modification)
                           ;
 
        class_mod = 
-                  class_modification >> -(EQUAL > expression_)
+                  class_modification >> -(EQUAL > expression)
                 ;
 
  
 
       // TODO: return something meaningful
       short_class_definition =
-                               (class_prefixes >> expression_.ident_ >> EQUAL >> type_prefix >> expression_.name >> (-expression_.array_subscripts) >> (-class_modification) >> comment) [_val=construct<ShortClass>(_1,_2,_3,_4,_5,_6,_7)]
-                             | (class_prefixes >> expression_.ident_ >> EQUAL >> ENUMERATION >> OPAREN >> enum_spec >> CPAREN >>  comment)  [_val=construct<ShortClass>(_1,_2,_3,_4)]
+                               (class_prefixes >> expression.ident >> EQUAL >> type_prefix >> expression.name >> (-expression.array_subscripts) >> (-class_modification) >> comment) [_val=construct<ShortClass>(_1,_2,_3,_4,_5,_6,_7)]
+                             | (class_prefixes >> expression.ident >> EQUAL >> ENUMERATION >> OPAREN >> enum_spec >> CPAREN >>  comment)  [_val=construct<ShortClass>(_1,_2,_3,_4)]
                              ;
       
  
       /* Error and debug */
       on_error<fail>
         (
-            modification_
+            modification
           , std::cerr
                 << val("Parser error. Expecting ")
                 << _4                               // what failed?
@@ -396,7 +396,7 @@ namespace Modelica
       element_replaceable.name("element_replaceable");
       enumeration_literal.name("enumeration literal");
       enum_list.name("enum list");
-      modification_.name("modification");
+      modification.name("modification");
       short_class_definition.name("short_class_definition");
       string_comment.name("string_comment");
       component_clause1.name("component_clause1");

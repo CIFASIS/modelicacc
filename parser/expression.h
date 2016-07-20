@@ -29,11 +29,11 @@
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;
 namespace Modelica {
-  namespace parser {
+  namespace Parser {
 
    /* Modelica rules for floating point values */
    template <typename T>
-   struct modelica_number_real_policies : qi::strict_ureal_policies<T>
+   struct ModelicaRealNumberPolicy : qi::strict_ureal_policies<T>
    {
      static bool const expect_dot = true;
      static bool const allow_leading_dot = false;
@@ -54,49 +54,46 @@ namespace Modelica {
 
 
     template <typename Iterator>
-    struct expression: qi::grammar<Iterator,skipper<Iterator>,Expression()>
+    struct ExpressionRule: qi::grammar<Iterator,Skipper<Iterator>,Modelica::AST::Expression()>
     {
-      expression(Iterator &it);
+      ExpressionRule(Iterator &it);
 
 
       // Rules
-      qi::rule<Iterator,skipper<Iterator>,Expression()> expression_;
-      qi::rule<Iterator,skipper<Iterator>,Expression()> factor;
-      qi::rule<Iterator,skipper<Iterator>,Expression()> term;
-      qi::rule<Iterator,skipper<Iterator>,Expression()> arithmetic_expression;
-      qi::rule<Iterator,skipper<Iterator>,Expression()> relation;
-      qi::rule<Iterator,skipper<Iterator>,Expression()> logical_expression;
-      qi::rule<Iterator,skipper<Iterator>,Expression()> logical_term;
-      qi::rule<Iterator,skipper<Iterator>,Expression()> logical_factor;
-      qi::rule<Iterator,skipper<Iterator>,Expression()> simple_expression;
-      qi::rule<Iterator,skipper<Iterator>,Expression()> primary;
-      qi::rule<Iterator,skipper<Iterator>,Expression()> subscript;
-      qi::rule<Iterator,skipper<Iterator>,Expression()> function_argument;
-      qi::rule<Iterator, skipper<Iterator>, Reference()> component_reference;
-      qi::rule<Iterator, skipper<Iterator>, Call()> call_exp;
-      qi::rule<Iterator, skipper<Iterator>, Output()> output_exp;
-      qi::rule<Iterator, skipper<Iterator>, IfExp()> if_expression;
-      qi::rule<Iterator, skipper<Iterator>, FunctionExp()> function_exp;
-      qi::rule<Iterator, skipper<Iterator>, Named()> named_argument;
-      qi::rule<Iterator, skipper<Iterator>, Name()> name;
-      qi::rule<Iterator, skipper<Iterator>, Brace()> brace_exp;
-      qi::rule<Iterator, skipper<Iterator>, Index()> for_index;
-      qi::rule<Iterator, skipper<Iterator>, Indexes()> for_indices;
-      qi::rule<Iterator, skipper<Iterator>, Bracket()> bracket_exp;
-      qi::rule<Iterator, skipper<Iterator>, OptExpList()> output_expression_list;
- 
-      qi::rule<Iterator, skipper<Iterator>, ExpList()> 
+      qi::rule<Iterator,Skipper<Iterator>,Expression()> expression;
+      qi::rule<Iterator,Skipper<Iterator>,Expression()> factor;
+      qi::rule<Iterator,Skipper<Iterator>,Expression()> term;
+      qi::rule<Iterator,Skipper<Iterator>,Expression()> arithmetic_expression;
+      qi::rule<Iterator,Skipper<Iterator>,Expression()> relation;
+      qi::rule<Iterator,Skipper<Iterator>,Expression()> logical_expression;
+      qi::rule<Iterator,Skipper<Iterator>,Expression()> logical_term;
+      qi::rule<Iterator,Skipper<Iterator>,Expression()> logical_factor;
+      qi::rule<Iterator,Skipper<Iterator>,Expression()> simple_expression;
+      qi::rule<Iterator,Skipper<Iterator>,Expression()> primary;
+      qi::rule<Iterator,Skipper<Iterator>,Expression()> subscript;
+      qi::rule<Iterator,Skipper<Iterator>,Expression()> function_argument;
+      qi::rule<Iterator, Skipper<Iterator>, Reference()> component_reference;
+      qi::rule<Iterator, Skipper<Iterator>, Call()> call_exp;
+      qi::rule<Iterator, Skipper<Iterator>, Output()> output_exp;
+      qi::rule<Iterator, Skipper<Iterator>, IfExp()> if_expression;
+      qi::rule<Iterator, Skipper<Iterator>, FunctionExp()> function_exp;
+      qi::rule<Iterator, Skipper<Iterator>, Named()> named_argument;
+      qi::rule<Iterator, Skipper<Iterator>, Name()> name;
+      qi::rule<Iterator, Skipper<Iterator>, Brace()> brace_exp;
+      qi::rule<Iterator, Skipper<Iterator>, Index()> for_index;
+      qi::rule<Iterator, Skipper<Iterator>, Indexes()> for_indices;
+      qi::rule<Iterator, Skipper<Iterator>, Bracket()> bracket_exp;
+      qi::rule<Iterator, Skipper<Iterator>, OptExpList()> output_expression_list;
+      qi::rule<Iterator, Skipper<Iterator>, ExpList()> 
           function_call_args, function_arguments, named_arguments, 
           expression_list, array_subscripts;
-                  ;
-
 
       /* Rules with no skip */
       qi::rule<Iterator, String()> string_;
-      ident<Iterator> ident_;
+      IdentRule<Iterator> ident;
 
       /* Modelica rules for floating point and integers values */
-      qi::real_parser<double,modelica_number_real_policies<double> > modelica_double;
+      qi::real_parser<double,ModelicaRealNumberPolicy<double> > modelica_double;
       qi::uint_parser<int> modelica_int;
 
       /* Operators tokens */

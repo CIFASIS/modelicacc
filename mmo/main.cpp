@@ -32,6 +32,7 @@ int main(int argc, char ** argv)
 {
   using namespace std;
   using namespace Modelica::AST;
+  using namespace Modelica::Parser;
   using namespace Modelica;
   using namespace boost;
   bool ret;
@@ -52,9 +53,9 @@ int main(int argc, char ** argv)
 
 
   if (argv[optind]!=NULL) 
-    sd=parseFile(argv[optind],ret);
+    sd=ParseFile(argv[optind],ret);
   else
-    sd=parseFile("",ret);
+    sd=ParseFile("",ret);
  
   if (!ret) 
     return -1;

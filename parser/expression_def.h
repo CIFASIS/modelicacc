@@ -62,7 +62,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 namespace Modelica
 {
-  namespace parser {
+  namespace Parser {
   Expression range1(Expression a, Expression b) {
     return Range(a,b);
   }
@@ -223,7 +223,7 @@ namespace Modelica
  
 
     template <typename Iterator>
-    expression<Iterator>::expression(Iterator &it) : expression::base_type(expression_), ident_(it), QUOTE("\""), OPAREN("("),CPAREN(")"),
+    ExpressionRule<Iterator>::ExpressionRule(Iterator &it) : ExpressionRule::base_type(expression), ident(it), QUOTE("\""), OPAREN("("),CPAREN(")"),
                                                       OBRACKET("["), CBRACKET("]"), OBRACE("{"), CBRACE("}"), COMA(","), it(it), DOT(qi::char_('.')), 
                                                       DER(qi::string("der")),  FOR("for"), INITIAL(qi::string("initial")), EQUAL("="), 
                                                       COLON(":"),SEMICOLON(";"),
@@ -241,13 +241,13 @@ namespace Modelica
       using qi::on_error;
       using qi::lexeme;
 
-      expression_ = 
+      expression = 
                    simple_expression 
                  | if_expression
                  ;
 
       if_expression = 
-                      (IF > expression_ > THEN > expression_ > *(ELSEIF > expression_ > THEN > expression_ ) > ELSE > expression_)
+                      (IF > expression > THEN > expression > *(ELSEIF > expression > THEN > expression ) > ELSE > expression)
                       [_val=construct<IfExp>(_1, _2, _3, _4)]
                     ;
 
@@ -313,7 +313,7 @@ namespace Modelica
                   ;
 
       expression_list = 
-                        expression_ % COMA
+                        expression % COMA
                       ;
 
 
@@ -322,16 +322,16 @@ namespace Modelica
                  ;
 
       output_expression_list = 
-                              (-expression_) % COMA
+                              (-expression) % COMA
                              ;
 
  
       name =
-             (-DOT) >> ident_ [_val+=_1] >> *(DOT >> ident_) [_val+=_1+_2]
+             (-DOT) >> ident [_val+=_1] >> *(DOT >> ident) [_val+=_1+_2]
            ;
 
-      component_reference = ((-DOT) >> ident_ >> (-array_subscripts)) [_val=construct<Reference>(_1,_2,_3)]
-       >> *(DOT >> ident_ >> (-array_subscripts)) [ _val = construct<Reference>(_val,_2,_3) ]
+      component_reference = ((-DOT) >> ident >> (-array_subscripts)) [_val=construct<Reference>(_1,_2,_3)]
+       >> *(DOT >> ident >> (-array_subscripts)) [ _val = construct<Reference>(_val,_2,_3) ]
                           ;
 
       call_exp =
@@ -356,7 +356,7 @@ namespace Modelica
                   ;
 
       for_index = 
-                  ident_ >> -(IN > expression_) 
+                  ident >> -(IN > expression) 
                 ;
  
  
@@ -365,7 +365,7 @@ namespace Modelica
                       ;
 
       named_argument =  
-                        ident_ >> EQUAL >> function_argument 
+                        ident >> EQUAL >> function_argument 
                      ;
 
       array_subscripts = 
@@ -374,7 +374,7 @@ namespace Modelica
  
       function_argument = 
                            function_exp
-                        |  expression_ 
+                        |  expression 
                         ;
 
 
@@ -383,7 +383,7 @@ namespace Modelica
                    ;
       subscript = 
                   colon_exp 
-                | expression_
+                | expression
                 ;
 
 
@@ -393,7 +393,7 @@ namespace Modelica
          /* Error and debug */
       on_error<fail>
         (
-            expression_
+            expression
           , std::cerr
                 << val("Parser error. Expecting ")
                 << _4                               // what failed?
@@ -415,14 +415,14 @@ namespace Modelica
       arithmetic_expression.name("arithmetic_expression");
       array_subscripts.name("array_subscripts");
       expression_list.name("expression list");
-      expression_.name("expression");
+      expression.name("expression");
       factor.name("factor");
       for_index.name("for index");
       for_indices.name("for indices");
       function_argument.name("function_argument");
       function_arguments.name("function_arguments");
       function_call_args.name("function_call_args");
-      ident_.name("identifier");
+      ident.name("identifier");
       logical_expression.name("logical_expression");
       logical_factor.name("logical_factor");
       logical_term.name("logical_term");

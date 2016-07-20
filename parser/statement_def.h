@@ -71,7 +71,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 namespace Modelica
 {
-  namespace parser {
+  namespace Parser {
 
     struct ret_break_st_ : qi::symbols<char, Statement>
     {
@@ -86,7 +86,7 @@ namespace Modelica
  
     std::string at(std::string::const_iterator where, std::string::const_iterator start) ;
     template <typename Iterator>
-    statement<Iterator>::statement(Iterator &it) : statement::base_type(statement_), it(it), modification_(it), expression_(it),
+    StatementRule<Iterator>::StatementRule(Iterator &it) : StatementRule::base_type(statement), it(it), modification(it), expression(it),
                                                 OPAREN("("),CPAREN(")"), COMA(","), SEMICOLON(";"), ASSIGN(":="),
                                                 WHEN("when"), THEN("then"), ELSEWHEN("elsewhen"), END("end"), WHILE("while"),
                                                 FOR("for"), IF("if"), ELSEIF("elseif"), ELSE("else"), LOOP("loop"), 
@@ -107,7 +107,7 @@ namespace Modelica
                            matches[INITIAL] >> ALGORITHM >> statement_list
                         ;
 
-      statement_ = 
+      statement = 
                  (
                    assign_statement
                  | call_statement
@@ -116,51 +116,51 @@ namespace Modelica
                  | for_statement
                  | when_statement
                  | while_statement
-                ) >> modification_.comment
+                ) >> modification.comment
                 ;
 
  
       if_statement = 
-                     IF > expression_ > THEN > statement_list > *(ELSEIF > expression_ > THEN > statement_list) > -(ELSE > statement_list) > END > IF
+                     IF > expression > THEN > statement_list > *(ELSEIF > expression > THEN > statement_list) > -(ELSE > statement_list) > END > IF
                    ;
 
  
       assign_statement =
-                         (expression_.component_reference >> ASSIGN > expression_) [_val=construct<Assign>(_1,_2)]
-                       | (expression_.component_reference >> expression_.function_call_args) [_val=construct<Assign>(_1,_2)]
-                       |  expression_.component_reference [_val=construct<Assign>(_1)]
+                         (expression.component_reference >> ASSIGN > expression) [_val=construct<Assign>(_1,_2)]
+                       | (expression.component_reference >> expression.function_call_args) [_val=construct<Assign>(_1,_2)]
+                       |  expression.component_reference [_val=construct<Assign>(_1)]
                        ;
 
 
       when_statement = 
-                       WHEN > expression_ > THEN > statement_list > *(ELSEWHEN > expression_ > THEN > statement_list) > END > WHEN;
+                       WHEN > expression > THEN > statement_list > *(ELSEWHEN > expression > THEN > statement_list) > END > WHEN;
                      ;
 
       while_statement = 
-                        WHILE > expression_ > LOOP > statement_list > END > WHILE
+                        WHILE > expression > LOOP > statement_list > END > WHILE
                       ;
 
  
  
       call_statement =
-                          (OPAREN > expression_.output_expression_list > CPAREN > ASSIGN > expression_.component_reference > expression_.function_call_args)
+                          (OPAREN > expression.output_expression_list > CPAREN > ASSIGN > expression.component_reference > expression.function_call_args)
                       ;
 
       for_statement = 
-                      FOR > expression_.for_indices > LOOP > statement_list > END > FOR
+                      FOR > expression.for_indices > LOOP > statement_list > END > FOR
                     ;
 
 
  
       statement_list =  
-                        *(statement_ > SEMICOLON)
+                        *(statement > SEMICOLON)
                       ;
 
  
       /* Error and debug */
       on_error<fail>
         (
-            statement_
+            statement
           , std::cerr
                 << val("Parser error. Expecting ")
                 << _4                               // what failed?
@@ -172,7 +172,7 @@ namespace Modelica
       for_statement.name("for statement");
       if_statement.name("if statement");
       statement_list.name("statement_list");
-      statement_.name("statement");
+      statement.name("statement");
       when_statement.name("when_statement");
       while_statement.name("while_statement");
     }
