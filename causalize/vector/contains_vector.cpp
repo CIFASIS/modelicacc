@@ -45,7 +45,7 @@ namespace Causalize {
    * using the table of symbols 's' and index list 'indexes' in 'for-equations'.
    */
   ContainsVector::ContainsVector(VectorVertexProperty unk, VarSymbolTable &s, IndexList indexes):
-    exp(unk.unknowns.front()),
+    exp(unk.unknown),
     unk2find(unk),
     syms(s),
     foreq(true),

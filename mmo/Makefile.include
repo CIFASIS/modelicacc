@@ -1,15 +1,20 @@
-OBJS_MMO := mmo/main.o \
-	mmo/mmo_class.o \
-	util/table.o \
-	util/debug.o \
-	util/ast_visitors/evalexp.o \
-	util/ast_visitors/part_evalexp.o \
-	util/ast_visitors/to_micro/to_micro.o \
-	util/ast_visitors/to_micro/to_micro_st.o \
-	util/ast_visitors/to_micro/to_micro_exp.o \
-	util/type.o  
+all: bin/mmo 
+SRC_MMO := mmo/main.cpp \
+	mmo/mmo_class.cpp \
+	util/table.cpp \
+	util/debug.cpp \
+	util/ast_visitors/evalexp.cpp \
+	util/ast_visitors/part_evalexp.cpp \
+	util/ast_visitors/to_micro/to_micro.cpp \
+	util/ast_visitors/to_micro/to_micro_st.cpp \
+	util/ast_visitors/to_micro/to_micro_exp.cpp \
+	util/type.cpp  
 
-bin/mmo: $(OBJS_MMO) lib/libmodelica.a
+
+OBJS_MMO = $(SRC_MMO:.cpp=.o)
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_MMO)))
+
+bin/mmo: $(OBJS_MMO) $(LIBMODELICA) 
 	$(CXX) $(CXXFLAGS) -o bin/mmo $(OBJS_MMO) -L./lib -lmodelica
 
 

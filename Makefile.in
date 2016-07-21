@@ -1,35 +1,49 @@
 CXXFLAGS = -I. -Wall -Werror -Wno-reorder -O3 
+DEPDIR := .
+DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
+LIBMODELICA = lib/libmodelica.a
+COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 
-OBJS_COMMON :=  ast/expression.o \
-		ast/class.o \
-		ast/equation.o \
-		ast/statement.o \
-		ast/modification.o \
-		ast/element.o \
-		ast/expression.o \
-		parser/ident.o \
-		parser/expression.o \
-		parser/modification.o \
-		parser/equation.o \
-		parser/statement.o \
-		parser/class.o \
-		parser/parser.o
+SRC_COMMON := \
+    ast/expression.cpp \
+		ast/class.cpp \
+		ast/equation.cpp \
+		ast/statement.cpp \
+		ast/modification.cpp \
+		ast/element.cpp \
+		ast/expression.cpp \
+		parser/ident.cpp \
+		parser/expression.cpp \
+		parser/modification.cpp \
+		parser/equation.cpp \
+		parser/statement.cpp \
+		parser/class.cpp \
+		parser/parser.cpp
 
-all:lib/libmodelica.a bin/antialias bin/flatter bin/mmo bin/causalize doc
+all: $(LIBMODELICA) doc
 
 include antialias/Makefile.include
 include mmo/Makefile.include
 include flatter/Makefile.include
 include causalize/Makefile.include
 
-lib/libmodelica.a: $(OBJS_COMMON)
-	$(AR) rcs lib/libmodelica.a $(OBJS_COMMON)
+OBJS_COMMON = $(SRC_COMMON:.cpp=.o)
 
-%.o: %.cpp %.h
-	$(CXX) -c $(CXXFLAGS) $*.cpp -o $*.o
+%.o : %.cpp %.d
+	$(COMPILE.cc) $(OUTPUT_OPTION) $<
+	$(POSTCOMPILE)
+
+$(LIBMODELICA): $(OBJS_COMMON)
+	$(AR) rcs $(LIBMODELICA) $(OBJS_COMMON)
+
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_COMMON)))
+
+$(DEPDIR)/%.d: ;
+.PRECIOUS: $(DEPDIR)/%.d
 
 doc: Doxyfile
 	doxygen
 
 clean:
-	$(RM) -rf $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(OBJS_SPLITFOR) lib/libmodelica.a doc
+	$(RM) -rf $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(LIBMODELICA) doc

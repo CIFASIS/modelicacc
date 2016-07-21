@@ -1,25 +1,30 @@
-OBJS_CAUSALIZE := causalize/main.o \
-                  util/debug.o \
-                  util/table.o \
-                  util/type.o \
-                  util/solve/solve.o \
-                  util/ast_visitors/evalexp.o \
-                  util/ast_visitors/part_evalexp.o \
-                  util/ast_visitors/ginac_interface.o \
-                  util/ast_visitors/contains.o \
-                  util/ast_visitors/splitfor_visitor.o \
-                  causalize/for_unrolling/for_index_iterator.o \
-                  causalize/apply_tarjan.o \
-                  causalize/for_unrolling/process_for_equations.o \
-                  causalize/state_variables_finder.o \
-                  causalize/unknowns_collector.o \
-                  causalize/causalization_strategy.o \
-                  causalize/vector/contains_vector.o \
-                  causalize/vector/graph_builder.o \
-                  causalize/vector/causalization_algorithm.o \
-                  causalize/vector/splitfor.o \
-                  mmo/mmo_class.o
+all: bin/causalize 
+SRC_CAUSALIZE := causalize/main.cpp \
+                  util/debug.cpp \
+                  util/table.cpp \
+                  util/type.cpp \
+                  util/solve/solve.cpp \
+                  util/ast_visitors/evalexp.cpp \
+                  util/ast_visitors/part_evalexp.cpp \
+                  util/ast_visitors/ginac_interface.cpp \
+                  util/ast_visitors/contains.cpp \
+                  util/ast_visitors/splitfor_visitor.cpp \
+                  causalize/for_unrolling/for_index_iterator.cpp \
+                  causalize/apply_tarjan.cpp \
+                  causalize/for_unrolling/process_for_equations.cpp \
+                  causalize/state_variables_finder.cpp \
+                  causalize/unknowns_collector.cpp \
+                  causalize/causalization_strategy.cpp \
+                  causalize/vector/contains_vector.cpp \
+                  causalize/vector/graph_builder.cpp \
+                  causalize/vector/causalization_algorithm.cpp \
+                  causalize/vector/splitfor.cpp \
+                  causalize/graph/graph_definition.cpp \
+                  mmo/mmo_class.cpp
 
+
+OBJS_CAUSALIZE = $(SRC_CAUSALIZE:.cpp=.o)
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_CAUSALIZE)))
 LIB_CAUSALIZE = -L./lib -lmodelica -lginac
 
 bin/causalize: $(OBJS_CAUSALIZE) lib/libmodelica.a

@@ -23,20 +23,13 @@ namespace Causalize {
   typedef std::set<IndexPair> IndexPairSet;
 
   struct VectorEdgeProperty {
-	  //TODO: remove old fields
-//	  boost::icl::interval_set<int> p_e;
-//	  boost::icl::interval_set<int> p_v;
-    bool operator<  (const VectorEdgeProperty & rhs) const {
-      if (getDom().size() < rhs.getDom().size()) return true;
-      if (getRan().size() < rhs.getRan().size()) return true;
-//      if (p_e < rhs.p_e) return true;
-//      if (p_v < rhs.p_v) return true;
-      return false;
-    }
-    bool isBalanced() const {
-      return getDom().size()==getRan().size();
-//      return p_e.size()==p_v.size();
-    }
+//    bool operator<  (const VectorEdgeProperty & rhs) const {
+//      if (getDom().size() < rhs.getDom().size()) return true;
+//      if (getRan().size() < rhs.getRan().size()) return true;
+//      return false;
+//    }
+
+
 
     friend std::ostream & operator << (std::ostream &os, const VectorEdgeProperty &ep) {
       os << "{";
@@ -105,7 +98,7 @@ namespace Causalize {
 
   /// @brief This is the definition of the Incidence graph for the vector case.
   typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VectorVertexProperty, VectorEdgeProperty> VectorCausalizationGraph;
-  /// @brief This a node from the vectorized indicdence graph
+  /// @brief This a node from the vectorized incidence graph
   typedef Causalize::VectorCausalizationGraph::vertex_descriptor VectorVertex;
   /// @brief An equation vertex is the same as a regular vertex
   typedef VectorVertex VectorEquationVertex;
@@ -115,10 +108,10 @@ namespace Causalize {
   typedef VectorCausalizationGraph::edge_descriptor VectorEdge;
   /// @brief This struct represents a set of causalized vars for the vector algorithm
   struct CausalizedVar{
-    VectorVertexProperty unknown;
-    VectorVertexProperty equation;
-    //TODO: Remove this prop
-//    VectorEdgeProperty edge;
+//    VectorVertexProperty unknown;
+//    VectorVertexProperty equation;
+    Expression unknown;
+    Equation equation;
     IndexPairSet pairs;
   };
 }

@@ -12,15 +12,18 @@ namespace Causalize {
   /// @brief Vertex in the incidence graph can be either Equations or Unknowns. This type is used for distinguish between them
   enum VertexType {E, U};
 
-  /// @brief This is the property for a vertex in the incidence graph. Nodes can be of two types: Equation or Unknow.
+  /// @brief This is the property for a vertex in the incidence graph. Nodes can be of two types: Equation or Unknown.
   struct VertexProperty {
 	  VertexType type;
-  /// @brief This is used for debugin purposes
+  /// @brief This is used for debugging purposes
 	  int  index; 
-  /// @brief This list holds the equations in the case of a Equation node. At the beginign the list contains only one equation. In the case a loop is found some nodes are collapsed
+  /// @brief This list holds the equations in the case of a Equation node. At the beginning the list contains only one equation. In the case a loop is found some nodes are collapsed
 	  Modelica::AST::EquationList  eqs;
-  /// @brief This list holds the unknows in the case of a Unknown node. At the beginign the list contains only one unknown. In the case a loop is found some nodes are collapsed
+  /// @brief This list holds the unknowns in the case of a Unknown node. At the beginning the list contains only one unknown. In the case a loop is found some nodes are collapsed
 	  Modelica::AST::ExpList unknowns;
+
+	  Modelica::AST::Expression unknown;
+	  Modelica::AST::Equation equation;
   };
 
   /// @brief Empty edge properties for incidence graph 
@@ -41,5 +44,14 @@ namespace Causalize {
   typedef Vertex UnknownVertex;
   /// @brief This is an edge of the sacalar causalization graph
   typedef CausalizationGraph::edge_descriptor Edge;
+
+  struct Unknown {
+    Modelica::AST::Expression expression;
+    Unknown(Modelica::AST::Expression exp);
+    void SetIndex(Modelica::AST::Expression index);
+//    Modelica::AST::Expression GetIndex();
+//    Name GetName();
+  };
+
 }
 #endif
