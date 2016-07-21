@@ -21,6 +21,8 @@ namespace Causalize {
 	  Modelica::AST::EquationList  eqs;
   /// @brief This list holds the unknows in the case of a Unknown node. At the beginign the list contains only one unknown. In the case a loop is found some nodes are collapsed
 	  Modelica::AST::ExpList unknowns;
+
+    bool visited;
   };
 
   /// @brief Empty edge properties for incidence graph 

@@ -27,6 +27,7 @@ include antialias/Makefile.include
 include mmo/Makefile.include
 include flatter/Makefile.include
 include causalize/Makefile.include
+include test/causalize/Makefile.include
 
 OBJS_COMMON = $(SRC_COMMON:.cpp=.o)
 

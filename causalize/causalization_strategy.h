@@ -2,7 +2,7 @@
  * causalization_strategy.h
  *
  *  Created on: 12/05/2013
- *      Author: fede moya
+ *      Author: fede
  */
 
 #include <causalize/graph/graph_definition.h>
@@ -14,23 +14,23 @@ class CausalizationStrategy {
 public:
   CausalizationStrategy(Modelica::MMO_Class &mmo_class);
   void causalize(Modelica::AST::Name name);
+  void causalize_simple(Modelica::AST::Name name);
+  void causalize_tarjan(Modelica::AST::Name name);
 private:
-  void makeCausalBegining(Modelica::AST::EquationList eqs, Modelica::AST::ExpList unknowns);
+  void simpleCausalizationStrategy();
+  Edge getUniqueEdge(Vertex v);
+  void collectDegree1Verts(Vertex v, std::list<Vertex> &degree1Verts);
+  void makeCausalBegining(Modelica::AST::Equation eq, Modelica::AST::Expression unknown);
   void makeCausalMiddle();
-  void makeCausalEnd(Modelica::AST::EquationList eqs, Modelica::AST::ExpList unknowns);
-  Causalize::CausalizationGraph _graph;
-  std::list<Causalize::EquationVertex> _eqVertices;
-  std::list<Causalize::UnknownVertex> _unknownVertices;
-  std::string c_path;
+  void makeCausalEnd(Modelica::AST::Equation eq, Modelica::AST::Expression unknown);
+  CausalizationGraph _graph;
   Modelica::MMO_Class &_mmo_class;
   Modelica::AST::EquationList _causalEqsBegining;
   Modelica::AST::EquationList _causalEqsMiddle;
-  Modelica::AST::EquationList _causalEqsEnd;
+  std::vector<Modelica::AST::Equation> _causalEqsEnd;
+  int _causalEqsEndIndex;
   Modelica::AST::ClassList _cl;
   Modelica::AST::ExpList _all_unknowns;
   std::list<std::string> c_code;
-  ClassList cl;
 };
 }
-
-

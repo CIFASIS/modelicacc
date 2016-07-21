@@ -14,12 +14,12 @@
 #include <map>
 
 namespace Causalize {
-  struct _Component {
+  struct Component {
     std::list<Vertex> *uVertices;
     std::list<Vertex> *eqVertices;
   };
-  typedef _Component *Component;
-  int apply_tarjan(CausalizationGraph &graph, std::map<int, Component> &components);
+  typedef Component *ComponentPtr;
+  int apply_tarjan(CausalizationGraph &graph, std::map<int, ComponentPtr> &components);
 }
 
 

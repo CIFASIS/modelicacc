@@ -74,7 +74,6 @@ int main(int argc, char ** argv)
 
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
-  
   if (vectorial) {
     SplitFor sf(mmo);
     sf.splitFor();
