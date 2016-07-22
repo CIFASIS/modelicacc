@@ -203,14 +203,14 @@ void CausalizationStrategy::causalize(Name name) {
 }
 
 void CausalizationStrategy::makeCausalBegining(EquationList eqs, ExpList unknowns) {
-  EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl, c_path);
+  EquationList causalEqs = EquationSolver::Solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl, c_path);
   foreach_(Equation e, causalEqs) {
     _causalEqsBegining.push_back(e);
   }
 }
 
 void CausalizationStrategy::makeCausalEnd(EquationList eqs, ExpList unknowns) {
-  EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl, c_path );
+  EquationList causalEqs = EquationSolver::Solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl, c_path );
   foreach_(Equation e, causalEqs) {
     _causalEqsEnd.insert(_causalEqsEnd.begin(),e);
   }
@@ -249,7 +249,7 @@ void CausalizationStrategy::makeCausalMiddle() {
       eqs.push_back(eq);
     }
 
-    EquationList causalEqs = EquationSolver::solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl, c_path );
+    EquationList causalEqs = EquationSolver::Solve(eqs, unknowns, _mmo_class.syms_ref(),c_code,cl, c_path );
 
     _causalEqsMiddle.insert(_causalEqsMiddle.end(), causalEqs.begin(), causalEqs.end());
   }

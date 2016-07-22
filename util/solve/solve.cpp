@@ -57,7 +57,7 @@ void my_print_power_dflt(const power & p, const print_dflt & c, unsigned level) 
 }
 
 
-EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &funs, const std::string path) {
+EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &funs, const std::string path) {
   using namespace std;
   static int fsolve=1;
   Modelica::ConvertToGiNaC tog(syms);
@@ -348,7 +348,7 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
   return ret;
 }
 
-EquationList EquationSolver::solve(Equation eq, Expression exp, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &cl, const std::string path) {
-  return solve(EquationList(1,eq), ExpList(1,exp), syms,c_code,cl,path);
+Equation EquationSolver::Solve(Equation eq, Expression exp, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &cl, const std::string path) {
+  return Solve(EquationList(1,eq), ExpList(1,exp), syms,c_code,cl,path).front();
 }
 

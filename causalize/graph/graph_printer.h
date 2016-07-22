@@ -77,7 +77,7 @@ namespace Causalize {
 		      stri << "subgraph cluster1{" << endl;
 		      INSERT_TAB
 			      MAKE_SPACE
-			      stri << "label = \"Unkowns\";" << endl;
+			      stri << "label = \"Unknowns\";" << endl;
 			      MAKE_SPACE
 			      stri << "edge [style=invis];" << endl;
 			      MAKE_SPACE
@@ -85,7 +85,7 @@ namespace Causalize {
 			      for(Iterator it=unknownDescriptors.begin(); it!=unknownDescriptors.end(); it++){
 				      Iterator aux = it;
 				      aux++;
-				      stri << "\"" << graph[*it].unknown << "\"";
+				      stri << "\"" << graph[*it].unknown() << "\"";
 				      if((aux) != unknownDescriptors.end()){
 					      stri << " -- ";		
 				      }else{
@@ -107,7 +107,7 @@ namespace Causalize {
 				      Vertex unknown = target(*ei, graph);
 				      MAKE_SPACE;
 				      string name;
-    	        stri << graph[*eq_it].index << " -- \"" << graph[unknown].unknown << "\"";
+    	        stri << graph[*eq_it].index << " -- \"" << graph[unknown].unknown() << "\"";
               EdgeProperty ep = graph[*ei];
               stri << "[label = \"" << ep << "\"];";
 			      }

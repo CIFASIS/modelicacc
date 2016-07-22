@@ -44,7 +44,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
     vp.index=index++;
     equationDescriptorList.push_back(add_vertex(vp,graph));
   }
- /* Create nodes for the unkowns: We iterate through the VarSymbolTable 
+ /* Create nodes for the unknowns: We iterate through the VarSymbolTable
   * and create one vertex per unknown */
   state_finder.findStateVariables();
   foreach_ (Name var, mmo_class.variables()) {
@@ -55,11 +55,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
       VectorVertexProperty vp;
       vp.type=U;
       vp.index=index++;
-      if (varInfo.state()) {
-        vp.unknown = Call("der",Reference(var));
-      } else {
-        vp.unknown = Reference(var);
-      }
+      vp.unknown = Unknown(varInfo, var);
       if ("Real"==varInfo.type()) {
         if (!varInfo.indices())  {
           vp.count=1;
@@ -80,28 +76,18 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
      }
      DEBUG_MSG("Unknowns");
      foreach_(VectorUnknownVertex un, unknownDescriptorList){
-       DEBUG_MSG(graph[un].index << ": " << graph[un].unknown) ;
+       DEBUG_MSG(graph[un].index << ": " << graph[un].unknown()) ;
      }
    }
 
 
   foreach_ (VectorEquationVertex eq, equationDescriptorList){
     foreach_(VectorUnknownVertex un, unknownDescriptorList){
-      Expression unknown = graph[un].unknown;
+      Expression unknown = graph[un].unknown();
       VarSymbolTable syms = mmo_class.syms_ref();
-      /* // This seams to be useless
-      if (graph[eq].count > 1) {
-        // is a for equation
-        ForEq fe = get<ForEq>(graph[eq].eqs.front());
-        Index i = fe.range().indexes().front();
-        Name var = i.name();
-        VarInfo v(TypePrefixes(0),"Real");
-        syms.insert(var,v);
-      }
-      */
       Equation e = graph[eq].equation;
       if (is<Equality>(e)) {
-        Causalize::ContainsVector occurrs(unknown,graph[un], syms);
+        Causalize::ContainsVector occurrs(unknown, graph[un], syms);
         Equality eqq = boost::get<Equality>(e);
         //std::cerr << "Checking var: " << unknown ;
         //std::cerr << eqq.left_ref() << "***********\n";

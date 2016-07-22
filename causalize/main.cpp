@@ -80,14 +80,12 @@ int main(int argc, char ** argv)
     sf.splitFor();
     ReducedGraphBuilder gb(mmo);
     VectorCausalizationGraph g = gb.makeGraph();
-    cout << "Graph builded\n";
     GraphPrinter<VectorVertexProperty,VectorEdgeProperty>  gp(g);
     gp.printGraph("initial_graph.dot");
     CausalizationStrategyVector cs(g,mmo);
-    if(cs.causalize()){ // Try vectorial causalization first
+    if(cs.Causalize()){ // Try vectorial causalization first
       if(debugIsEnabled('c')){
-       cout << "Result of causalization (variable, [range,] equationID):" << endl;
-         cs.print();
+        cs.PrintCausalizationResult();
       }
       cout << mmo << endl;
       return 0;

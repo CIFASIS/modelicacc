@@ -23,13 +23,6 @@ namespace Causalize {
   typedef std::set<IndexPair> IndexPairSet;
 
   struct VectorEdgeProperty {
-//    bool operator<  (const VectorEdgeProperty & rhs) const {
-//      if (getDom().size() < rhs.getDom().size()) return true;
-//      if (getRan().size() < rhs.getRan().size()) return true;
-//      return false;
-//    }
-
-
 
     friend std::ostream & operator << (std::ostream &os, const VectorEdgeProperty &ep) {
       os << "{";
@@ -107,10 +100,9 @@ namespace Causalize {
   /// @brief This is an edge of the vectorized causalization graph
   typedef VectorCausalizationGraph::edge_descriptor VectorEdge;
   /// @brief This struct represents a set of causalized vars for the vector algorithm
+
   struct CausalizedVar{
-//    VectorVertexProperty unknown;
-//    VectorVertexProperty equation;
-    Expression unknown;
+    Unknown unknown;
     Equation equation;
     IndexPairSet pairs;
   };

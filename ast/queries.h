@@ -120,22 +120,9 @@ inline bool isVariable(Name n, const VarSymbolTable & syms) {
 
 inline bool isState(Name n, const VarSymbolTable & syms) {
   Option<VarInfo> var_info = syms[n];
-  if (!var_info) 
-    ERROR("No symbol %s", n.c_str());
-  return var_info.get().state();
-}
-
-inline bool isScalar(Name n, const VarSymbolTable & syms) {
-  Option<VarInfo> var_info = syms[n];
   if (!var_info)
     ERROR("No symbol %s", n.c_str());
-  if (!var_info.get().indices())
-    return true;
-  if (var_info.get().indices() && var_info.get().indices().get().size()==0)
-
-      return true;
-  std::cout << n << " has " << var_info.get().indices().get().size() << " indexes\n";
-  return false;
+  return var_info.get().state();
 }
 
 inline bool isArray1(Name n, const VarSymbolTable & syms) {
