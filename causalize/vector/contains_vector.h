@@ -61,12 +61,14 @@ namespace Causalize {
     void buildPairsNto1(int index=1) const;
     void buildPairs1to1(int index=1) const;
     void buildPairsNtoN() const;
+    void buildPairsN() const;
+    void buildPairsNExpression(Expression exp) const;
     Expression exp;
     boost::icl::discrete_interval<int> forIndexInterval;
     mutable std::set<VectorEdgeProperty> edgeList;
     mutable IndexPairSet labels;
     VectorVertexProperty unk2find;
-    const VarSymbolTable &syms;
+    mutable VarSymbolTable syms;
     bool foreq;
     IndexList indexes;
   }; 

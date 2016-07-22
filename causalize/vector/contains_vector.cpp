@@ -48,6 +48,7 @@ namespace Causalize {
     syms(s),
     foreq(true),
     indexes(indexes) {
+      std::cout << "Looking for exp " << exp;
       ERROR_UNLESS(indexes.size()==1, "For Loop with more than one index is not supported yet\n");
       ERROR_UNLESS(indexes.front().exp(), "No index in for equation");
       ERROR_UNLESS(is<Range>(indexes.front().exp().get()), "Only range expressions supported");
@@ -119,6 +120,7 @@ namespace Causalize {
         Reference callRef=get<Reference>(call.args().front());
         Reference callExprRef=get<Reference>(callExpr.args().front());
         if (get<0>(callRef.ref().front())==get<0>(callExprRef.ref().front())) { //The references are the same
+          std::cout << "build pairs with " << callRef;
           buildPairs(callRef);
           return true;
         }
@@ -208,13 +210,11 @@ namespace Causalize {
           ERROR_UNLESS(foreq, "Generic index used outside for equation");
           Reference indRef = get<Reference>(ind);
           ERROR_UNLESS(refName(indRef)==indexes.front().name(),"Array index reference and for index variable are not the same");
-          //TODO: Check that the index is the same variable than the for
-          buildPairsNtoN();
+          buildPairsN();
         }
-        else if (is<BinOp>(ind)) {
-           ERROR("BinOp Indexed expression not supported yet");
+        else { 
+          buildPairsNExpression(ind);
         }
-        else ERROR("Indexed expression not supported yet");
       }
     }
   }
@@ -228,6 +228,24 @@ namespace Causalize {
       labels.insert(std::make_pair(i,index));
     }
   }
+
+  void ContainsVector::buildPairsN() const {
+    for (int i=forIndexInterval.lower();i<=forIndexInterval.upper();i++) {
+      labels.insert(std::make_pair(i,i));
+    }
+  }
+
+
+  void ContainsVector::buildPairsNExpression(Expression exp) const {
+    Modelica::PartialEvalExpression partial_evaluator(syms);
+    for (int i=forIndexInterval.lower();i<=forIndexInterval.upper();i++) {
+      syms.insert(indexes.front().name(), VarInfo(TypePrefixes(1,parameter),"Integer", Option<Comment>(),Modification(ModEq(Expression(i)))));
+      Expression ind = Apply(partial_evaluator,exp);
+      ERROR_UNLESS(is<Modelica::AST::Integer>(ind),"Index Expression is not an integer value");
+      labels.insert(std::make_pair(i,get<Modelica::AST::Integer>(ind)));
+    }
+  }
+
 
   void ContainsVector::buildPairs1toN() const {
     for (int i=1;i<=unk2find.count;i++) {

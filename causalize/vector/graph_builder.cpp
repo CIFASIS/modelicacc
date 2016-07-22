@@ -108,12 +108,12 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
       if (is<Equality>(e)) {
         Causalize::ContainsVector occurrs(unknown, graph[un], syms);
         Equality eqq = boost::get<Equality>(e);
-        //std::cerr << "Checking var: " << unknown ;
-        //std::cerr << eqq.left_ref() << "***********\n";
+        std::cerr << "Checking var: " << unknown ;
+        std::cerr << eqq.left_ref() << "***********\n";
         const bool rl = Apply(occurrs,eqq.left_ref());
-        //std::cerr << eqq.right_ref() << "***********\n";
+        std::cerr << eqq.right_ref() << "***********\n";
         const bool rr = Apply(occurrs,eqq.right_ref()); 
-        //std::cerr << "Result: " << rl << " " << rr << "\n";
+        std::cerr << "Result: " << rl << " " << rr << "\n";
         if(rl || rr) {
           VectorEdgeProperty ep;
           ep.labels = occurrs.getOccurrenceIndexes();
