@@ -42,17 +42,6 @@ namespace Causalize {
   typedef std::set<IndexPair> IndexPairSet;
 
   struct VectorEdgeProperty {
-	  //TODO: remove old fields
-	  boost::icl::interval_set<int> p_e;
-	  boost::icl::interval_set<int> p_v;
-    bool operator<  (const VectorEdgeProperty & rhs) const {
-      if (p_e <rhs.p_e) return true;
-      if (p_v < rhs.p_v ) return true; 
-      return false;
-    }
-    bool isBalanced() {
-      return p_e.size()==p_v.size();
-    }
 
     friend std::ostream & operator << (std::ostream &os, const VectorEdgeProperty &ep) {
       os << "{";
@@ -61,9 +50,22 @@ namespace Causalize {
       os << "}";
       return os;
     }
-    
+
     /* This is the new version */
     IndexPairSet labels;
+    std::set<int> getDom() const {
+      std::set<int> dom;
+      foreach_(IndexPair ip, labels)
+        dom.insert(ip.first);
+      return dom;
+    }
+    std::set<int> getRan() const {
+      std::set<int> ran;
+      foreach_(IndexPair ip, labels)
+        ran.insert(ip.second);
+      return ran;
+    }
+
 /// @brief This function removes a set of pairs from this Edge
 ///
 /// @param ips set of pairs to remove
@@ -108,7 +110,7 @@ namespace Causalize {
 
   /// @brief This is the definition of the Incidence graph for the vector case.
   typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VectorVertexProperty, VectorEdgeProperty> VectorCausalizationGraph;
-  /// @brief This a node from the vectorized indicdence graph
+  /// @brief This a node from the vectorized incidence graph
   typedef Causalize::VectorCausalizationGraph::vertex_descriptor VectorVertex;
   /// @brief An equation vertex is the same as a regular vertex
   typedef VectorVertex VectorEquationVertex;
@@ -117,11 +119,10 @@ namespace Causalize {
   /// @brief This is an edge of the vectorized causalization graph
   typedef VectorCausalizationGraph::edge_descriptor VectorEdge;
   /// @brief This struct represents a set of causalized vars for the vector algorithm
+
   struct CausalizedVar{
-    VectorVertexProperty unknown;
-    VectorVertexProperty equation;
-    //TODO: Remove this prop
-    VectorEdgeProperty edge;
+    Unknown unknown;
+    Equation equation;
     IndexPairSet pairs;
   };
 }

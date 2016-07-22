@@ -25,23 +25,38 @@
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 
+#include <util/table.h>
 #include <ast/equation.h>
 
 namespace Causalize {
   /// @brief Vertex in the incidence graph can be either Equations or Unknowns. This type is used for distinguish between them
   enum VertexType {E, U};
 
-  /// @brief This is the property for a vertex in the incidence graph. Nodes can be of two types: Equation or Unknow.
+  struct Unknown {
+    Modelica::AST::Expression expression;
+    Unknown() {};
+    Unknown(Modelica::AST::Expression exp);
+    Unknown(VarInfo varInfo, Modelica::AST::Reference var);
+    void SetIndex(Modelica::AST::Expression index);
+    Expression operator() () const;
+    int dimension;
+  };
+
+
+  /// @brief This is the property for a vertex in the incidence graph. Nodes can be of two types: Equation or Unknown.
   struct VertexProperty {
 	  VertexType type;
-  /// @brief This is used for debugin purposes
+  /// @brief This is used for debugging purposes
 	  int  index; 
-  /// @brief This list holds the equations in the case of a Equation node. At the beginign the list contains only one equation. In the case a loop is found some nodes are collapsed
+	  //TODO: Delete the following two lists
+  /// @brief This list holds the equations in the case of a Equation node. At the beginning the list contains only one equation. In the case a loop is found some nodes are collapsed
 	  Modelica::AST::EquationList  eqs;
-  /// @brief This list holds the unknows in the case of a Unknown node. At the beginign the list contains only one unknown. In the case a loop is found some nodes are collapsed
+  /// @brief This list holds the unknowns in the case of a Unknown node. At the beginning the list contains only one unknown. In the case a loop is found some nodes are collapsed
 	  Modelica::AST::ExpList unknowns;
 
     bool visited;
+	  Unknown unknown;
+	  Modelica::AST::Equation equation;
   };
 
   /// @brief Empty edge properties for incidence graph 
@@ -60,7 +75,8 @@ namespace Causalize {
   typedef Vertex EquationVertex;
   /// @brief An unknown vertex is the same as a regular vertex
   typedef Vertex UnknownVertex;
-  /// @brief This is an edge of the sacalar causalization graph
+  /// @brief This is an edge of the scalar causalization graph
   typedef CausalizationGraph::edge_descriptor Edge;
+
 }
 #endif

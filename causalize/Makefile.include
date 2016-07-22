@@ -19,6 +19,7 @@ SRC_CAUSALIZE := causalize/main.cpp \
                   causalize/vector/graph_builder.cpp \
                   causalize/vector/causalization_algorithm.cpp \
                   causalize/vector/splitfor.cpp \
+                  causalize/graph/graph_definition.cpp \
                   mmo/mmo_class.cpp
 
 

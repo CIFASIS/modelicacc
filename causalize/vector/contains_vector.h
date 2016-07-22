@@ -32,6 +32,7 @@ namespace Causalize {
   class ContainsVector: public boost::static_visitor<bool> {
   public:
     ContainsVector(Expression, VectorVertexProperty, const VarSymbolTable &);
+    ContainsVector(VectorVertexProperty, VarSymbolTable &, IndexList);
     bool operator()(Modelica::AST::Integer v) const;
     bool operator()(Boolean v) const;
     bool operator()(String v) const;
@@ -52,16 +53,22 @@ namespace Causalize {
     bool operator()(Reference) const;
     bool operator()(Range) const;
     IndexPairSet getOccurrenceIndexes() { return labels; }
-    void setForIndex(Expression a, Expression b);
+//    void setForIndex(Expression a, Expression b, Name v);
   private:
-    void addGenericIndex(BinOp b) const;
+    void addGenericIndex(BinOp) const;
+    void buildPairs(Reference) const;
+    void buildPairs1toN() const;
+    void buildPairsNto1(int index=1) const;
+    void buildPairs1to1(int index=1) const;
+    void buildPairsNtoN() const;
     Expression exp;
     boost::icl::discrete_interval<int> forIndexInterval;
     mutable std::set<VectorEdgeProperty> edgeList;
     mutable IndexPairSet labels;
-    VectorVertexProperty var;
+    VectorVertexProperty unk2find;
     const VarSymbolTable &syms;
     bool foreq;
+    IndexList indexes;
   }; 
 }
 #endif 

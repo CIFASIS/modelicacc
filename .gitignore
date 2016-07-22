@@ -7,3 +7,6 @@ Makefile
 *.log
 *.status
 configure
+.cproject
+.project
+.settings

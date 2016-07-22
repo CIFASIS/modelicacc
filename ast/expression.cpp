@@ -199,9 +199,10 @@ namespace Modelica {
     member_imp(ForExp, Expression, exp);
 
     Reference::Reference(Ref r): ref_(r) { }
-    Reference::Reference(Name n): ref_(Ref(1,RefTuple(n,ExpList(0)))) {
-            
-    }
+    Reference::Reference(Name n): ref_(Ref(1,RefTuple(n,ExpList(0)))) { }
+    Reference::Reference(Name n, ExpList is): ref_(Ref(1,RefTuple(n,is))) { }
+    Reference::Reference(Name n, Expression i): ref_(Ref(1,RefTuple(n,ExpList(1, i)))) { }
+
     Reference::Reference(Reference other, Name cr, Option<ExpList> indices) {
       ref_=other.ref();
       if (indices) 

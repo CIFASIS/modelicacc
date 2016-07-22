@@ -102,4 +102,13 @@ void WARNING(const char *format, ...) {
   va_end(ap);
 }
 
+void WARNING_UNLESS(bool condition, const char *format, ...) {
+  if(!condition) {
+    va_list ap;
+    va_start(ap, format);
+    WARNING(format, ap);
+    va_end(ap);
+  }
+}
+
 

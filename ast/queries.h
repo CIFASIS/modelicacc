@@ -120,7 +120,7 @@ inline bool isVariable(Name n, const VarSymbolTable & syms) {
 
 inline bool isState(Name n, const VarSymbolTable & syms) {
   Option<VarInfo> var_info = syms[n];
-  if (!var_info) 
+  if (!var_info)
     ERROR("No symbol %s", n.c_str());
   return var_info.get().state();
 }
@@ -133,6 +133,7 @@ inline bool isArray1(Name n, const VarSymbolTable & syms) {
     return false;
   return var_info.get().indices().get().size()==1;
 }
+
 inline Expression arraySize(Name n, const VarSymbolTable & syms) {
   Option<VarInfo> var_info = syms[n];
   if (!var_info) 

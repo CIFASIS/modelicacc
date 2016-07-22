@@ -52,7 +52,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
     static int index = 0;
     VectorVertexProperty vp;
     vp.type = E;
-    vp.eqs.push_back(e);
+    vp.equation = e;
     if (is<ForEq>(e)) {
       vp.count=getForRangeSize(get<ForEq>(e));
     } else if (is<Equality>(e)) {
@@ -63,7 +63,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
     vp.index=index++;
     equationDescriptorList.push_back(add_vertex(vp,graph));
   }
- /* Create nodes for the unkowns: We iterate through the VarSymbolTable 
+ /* Create nodes for the unknowns: We iterate through the VarSymbolTable
   * and create one vertex per unknown */
   state_finder.findStateVariables();
   foreach_ (Name var, mmo_class.variables()) {
@@ -74,11 +74,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
       VectorVertexProperty vp;
       vp.type=U;
       vp.index=index++;
-      if (varInfo.state()) {
-        vp.unknowns.push_back(Call("der",Reference(var)));
-      } else {
-        vp.unknowns.push_back(Reference(var));
-      }
+      vp.unknown = Unknown(varInfo, var);
       if ("Real"==varInfo.type()) {
         if (!varInfo.indices())  {
           vp.count=1;
@@ -95,30 +91,22 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
    if(debugIsEnabled('c')){
      DEBUG_MSG("Equations");
      foreach_ (VectorEquationVertex eq, equationDescriptorList){
-       DEBUG_MSG(graph[eq].index << ": " << graph[eq].eqs.front()) ;
+       DEBUG_MSG(graph[eq].index << ": " << graph[eq].equation) ;
      }
      DEBUG_MSG("Unknowns");
      foreach_(VectorUnknownVertex un, unknownDescriptorList){
-       DEBUG_MSG(graph[un].index << ": " << graph[un].unknowns.front()) ;
+       DEBUG_MSG(graph[un].index << ": " << graph[un].unknown()) ;
      }
    }
 
 
   foreach_ (VectorEquationVertex eq, equationDescriptorList){
     foreach_(VectorUnknownVertex un, unknownDescriptorList){
-      Expression unknown = graph[un].unknowns.front();
+      Expression unknown = graph[un].unknown();
       VarSymbolTable syms = mmo_class.syms_ref();
-      if (graph[eq].count > 1) {
-        // is a for equation
-        ForEq fe = get<ForEq>(graph[eq].eqs.front());
-        Index i = fe.range().indexes().front();
-        Name var = i.name();
-        VarInfo v(TypePrefixes(0),"Real");
-        syms.insert(var,v);
-      }
-      Causalize::ContainsVector occurrs(unknown,graph[un], syms);
-      Equation e = graph[eq].eqs.front();
+      Equation e = graph[eq].equation;
       if (is<Equality>(e)) {
+        Causalize::ContainsVector occurrs(unknown, graph[un], syms);
         Equality eqq = boost::get<Equality>(e);
         //std::cerr << "Checking var: " << unknown ;
         //std::cerr << eqq.left_ref() << "***********\n";
@@ -127,10 +115,10 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         const bool rr = Apply(occurrs,eqq.right_ref()); 
         //std::cerr << "Result: " << rl << " " << rr << "\n";
         if(rl || rr) {
-            VectorEdgeProperty ep;
-            ep.labels = occurrs.getOccurrenceIndexes();
-            add_edge(eq, un, ep, graph);
-            DEBUG('c', "(%d, %d) ", graph[eq].index, graph[un].index);
+          VectorEdgeProperty ep;
+          ep.labels = occurrs.getOccurrenceIndexes();
+          add_edge(eq, un, ep, graph);
+          DEBUG('c', "(%d, %d) ", graph[eq].index, graph[un].index);
         } 
       } else if (is<ForEq>(e)) {
         ForEq feq = get<ForEq>(e);
@@ -149,21 +137,15 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
 
         VarSymbolTable syms_for = mmo_class.syms_ref();
         syms_for.insert(i.name(),VarInfo(TypePrefixes(0),"Integer"));
-        Causalize::ContainsVector occurrs_for(unknown,graph[un], syms_for);
-        occurrs_for.setForIndex(range.start(),range.end());
+        Causalize::ContainsVector occurrs_for(graph[un], syms_for, ind);
         
         const bool rl = Apply(occurrs_for,eqq.left_ref());
         const bool rr = Apply(occurrs_for,eqq.right_ref()); 
         if(rl || rr) {
-          //std::cerr << "Var: " << graph[un].variableName << "\n";
-          //std::cerr << "Eq: " << e << "\nleft=" << rl << " right = " << rr << "\n";
-          //ERROR_UNLESS(occurrs.getOccurrenceIndexes().size()!=1,"More than one edge property found");
-          //foreach_(VectorEdgeProperty ep, occurrs_for.getOccurrenceIndexes()) {
-            VectorEdgeProperty ep;  
-            ep.labels = occurrs_for.getOccurrenceIndexes();
-            add_edge(eq, un, ep, graph);
-            DEBUG('c', "(%d, %d) ", graph[eq].index, graph[un].index);
-          //}
+          VectorEdgeProperty ep;
+          ep.labels = occurrs_for.getOccurrenceIndexes();
+          add_edge(eq, un, ep, graph);
+          DEBUG('c', "(%d, %d) ", graph[eq].index, graph[un].index);
         } 
       } else
         ERROR_UNLESS(is<Equality>(e), "Only causalization of equality and for equation is supported");
