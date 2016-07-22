@@ -18,7 +18,7 @@ std::vector<T> toVector(std::set<T> v)
 using namespace Modelica;
 using namespace Modelica::AST;
 
-struct VertexProperties {
+struct VertexProperty {
 public :
     OptExp name; 
     bool hasIndex;
@@ -26,14 +26,14 @@ public :
     OptExpList free;
 };
 
-struct EdgeProperties {
+struct EdgeProperty {
 public :
     OptExp index;   
     bool visited;
 };
 
 typedef boost::adjacency_list<boost::vecS,
-        boost::vecS, boost::undirectedS, VertexProperties, EdgeProperties> MMOGraph;
+        boost::vecS, boost::undirectedS, VertexProperty, EdgeProperty> MMOGraph;
 
 typedef MMOGraph::vertex_descriptor Vertex;
 typedef MMOGraph::edge_descriptor Edge;

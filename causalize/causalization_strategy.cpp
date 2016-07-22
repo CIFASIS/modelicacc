@@ -7,6 +7,7 @@
 
 #include <causalize/causalization_strategy.h>
 #include <causalize/graph/graph_definition.h>
+#include <causalize/graph/graph_printer.h>
 #include <ast/ast_types.h>
 #include <causalize/for_unrolling/process_for_equations.h>
 #include <util/debug.h>
@@ -49,7 +50,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   DEBUG('c', "Equation indexes:\n");
 
   foreach_(Equation e, equations) {
-    VertexProperties vp;
+    VertexProperty vp;
     Equality &eq = get<Equality>(e);
     PartialEvalExpression eval(_mmo_class.syms_ref(),false);
     eq.left_ref()=boost::apply_visitor(eval ,eq.left_ref());
@@ -68,8 +69,8 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
 
   index = 0;
   foreach_(Expression e, unknowns) {
-    VertexProperties vp;
-    vp.unknowns.push_back(e);
+    VertexProperty vp;
+    vp.unknowns = ExpList(1, e);
     vp.type = U;
     vp.index = index++;
     vp.visited = false;
@@ -102,6 +103,8 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   _causalEqsEnd.resize(equations.size());
   _causalEqsEndIndex = equations.size() - 1;
 
+  GraphPrinter<VertexProperty,EdgeProperty> gp(_graph);
+  gp.printGraph("initial_graph.dot");
 }
 
 void CausalizationStrategy::causalize(Modelica::AST::Name name) {

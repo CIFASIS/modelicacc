@@ -17,12 +17,12 @@ using namespace boost::icl;
 #define DELETE_TAB depth -= TAB_SPACE;
 
 namespace Causalize {
-  template <class VertexProperties, class EdgeProperties> 
+  template <class VertexProperty, class EdgeProperty> 
   class GraphPrinter{
 
-    typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VertexProperties, EdgeProperties> Graph;
-    typedef typename boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VertexProperties, EdgeProperties>::vertex_descriptor Vertex;
-    typedef typename boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VertexProperties, EdgeProperties>::out_edge_iterator EdgeIterator;
+    typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VertexProperty, EdgeProperty> Graph;
+    typedef typename boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VertexProperty, EdgeProperty>::vertex_descriptor Vertex;
+    typedef typename boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VertexProperty, EdgeProperty>::out_edge_iterator EdgeIterator;
 
 	  public:
 		  GraphPrinter(const Graph &g): graph(g) {
@@ -108,7 +108,7 @@ namespace Causalize {
 				      MAKE_SPACE;
 				      string name;
     	        stri << graph[*eq_it].index << " -- \"" << graph[unknown].unknowns.front() << "\"";
-              EdgeProperties ep = graph[*ei];
+              EdgeProperty ep = graph[*ei];
               stri << "[label = \"" << ep << "\"];";
 			      }
 		      }
