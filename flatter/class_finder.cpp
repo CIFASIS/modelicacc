@@ -18,7 +18,7 @@
 
 ******************************************************************************/
 
-#include <flatter/classFinder.h>
+#include <flatter/class_finder.h>
 #include <boost/variant/get.hpp>
 #include <iostream>
 #include <util/debug.h>

@@ -21,7 +21,7 @@
 #include <ast/expression.h>
 #include <util/table.h>
 #include <mmo/mmo_class.h>
-#include <flatter/classFinder.h>
+#include <flatter/class_finder.h>
 
 #ifndef AST_VISITOR_DOTEXPRESSION
 #define AST_VISITOR_DOTEXPRESSION

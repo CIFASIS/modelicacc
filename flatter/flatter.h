@@ -21,7 +21,7 @@
 #define FLATTER_H
 
 #include <flatter/remove_composition.h>
-#include <flatter/classFinder.h>
+#include <flatter/class_finder.h>
 #include <mmo/mmo_class.h>
 #include <ast/equation.h>
 #include <ast/statement.h>

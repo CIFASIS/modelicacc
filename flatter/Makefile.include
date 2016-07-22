@@ -4,7 +4,7 @@ SRC_FLATTER := flatter/main.cpp \
 	util/table.cpp \
 	util/type.cpp  \
 	util/debug.cpp  \
-	flatter/classFinder.cpp \
+	flatter/class_finder.cpp \
 	flatter/remove_composition.cpp \
 	util/ast_visitors/dot_expression.cpp \
 	util/ast_visitors/mark_connector.cpp \
