@@ -74,7 +74,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
     PartialEvalExpression eval(_mmo_class.syms_ref(),false);
     eq.left_ref()=Apply(eval ,eq.left_ref());
     eq.right_ref()=Apply(eval ,eq.right_ref());
-    vp.eqs.push_back(e);
+    vp.equation = e;
     vp.type = E;
     vp.index = index++;
     vp.visited = false;
@@ -89,7 +89,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   index = 0;
   foreach_(Expression e, unknowns) {
     VertexProperty vp;
-    vp.unknowns = ExpList(1, e);
+    vp.unknown = Unknown(e);
     vp.type = U;
     vp.index = index++;
     vp.visited = false;
@@ -104,8 +104,8 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   list<Vertex>::iterator acausalEqsIter, unknownsIter;
   foreach_(Vertex eqVertex, eqVerts) {
     foreach_(Vertex unknownVertex , unknownVerts) {
-      Modelica::ContainsExpression occurrs(_graph[unknownVertex].unknowns.front());
-      Equation e = _graph[eqVertex].eqs.front();
+      Modelica::ContainsExpression occurrs(_graph[unknownVertex].unknown());
+      Equation e = _graph[eqVertex].equation;
       ERROR_UNLESS(is<Equality>(e), "Causalization of non-equality equation is not supported");
       Equality eq = boost::get<Equality>(e);
       const bool rl = Apply(occurrs,eq.left_ref());
@@ -126,18 +126,18 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   gp.printGraph("initial_graph.dot");
 }
 
-void CausalizationStrategy::causalize(Modelica::AST::Name name) {
+void CausalizationStrategy::Causalize() {
   
-  DEBUG('p', "Graph size before simple strategy:%d\n", num_vertices(_graph));
+  DEBUG('p', "Graph size before Simple strategy:%d\n", num_vertices(_graph));
 
-  simpleCausalizationStrategy();
+  SimpleCausalizationStrategy();
 
   int graph_size = num_vertices(_graph);
 
-  DEBUG('p', "Graph size after simple strategy:%d\n", graph_size);
+  DEBUG('p', "Graph size after Simple strategy:%d\n", graph_size);
 
   if(graph_size > 0) { // graph still has vertices
-    makeCausalMiddle();
+    MakeCausalMiddle();
     _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsMiddle.begin(),_causalEqsMiddle.end());
   }
 
@@ -164,9 +164,9 @@ void CausalizationStrategy::causalize(Modelica::AST::Name name) {
  fs.close();
 }
 
-void CausalizationStrategy::causalize_simple(Modelica::AST::Name name) {
+void CausalizationStrategy::CausalizeSimple() {
     
-  simpleCausalizationStrategy();
+  SimpleCausalizationStrategy();
 
   for (size_t i = _causalEqsEndIndex + 1; i < _causalEqsEnd.size(); ++i)
   {
@@ -191,9 +191,9 @@ void CausalizationStrategy::causalize_simple(Modelica::AST::Name name) {
  fs.close();
 }
 
-void CausalizationStrategy::causalize_tarjan(Modelica::AST::Name name) {
+void CausalizationStrategy::CausalizeTarjan() {
 
-  makeCausalMiddle();
+  MakeCausalMiddle();
 
   _causalEqsBegining.insert(_causalEqsBegining.end(),_causalEqsMiddle.begin(),_causalEqsMiddle.end());
 
@@ -216,7 +216,7 @@ void CausalizationStrategy::causalize_tarjan(Modelica::AST::Name name) {
 
 }
 
-void CausalizationStrategy::simpleCausalizationStrategy() {
+void CausalizationStrategy::SimpleCausalizationStrategy() {
 
   std::list<Vertex> eqDegree1Verts;
   std::list<Vertex> unknownDegree1Verts;
@@ -225,7 +225,7 @@ void CausalizationStrategy::simpleCausalizationStrategy() {
   for(boost::tie(vi,vi_end) = vertices(_graph); vi != vi_end; ++vi) {
     Vertex v = *vi;
     if (out_degree(v, _graph) == 1 && !_graph[v].visited) {
-      Edge e = getUniqueEdge(v);
+      Edge e = GetUniqueEdge(v);
       Vertex adjacent = target(e, _graph);
       _graph[adjacent].visited = true;
       if (_graph[v].type == E) {
@@ -240,12 +240,12 @@ void CausalizationStrategy::simpleCausalizationStrategy() {
     std::list<Vertex>::iterator eqIter = eqDegree1Verts.begin();
     if (eqIter != eqDegree1Verts.end()) {
       Vertex eq = *eqIter;
-      Edge e = getUniqueEdge(eq);
+      Edge e = GetUniqueEdge(eq);
       Vertex unknown = target(e, _graph);
-      makeCausalBegining(_graph[eq].eqs.front(), _graph[unknown].unknowns.front());
+      MakeCausalBegining(_graph[eq].equation, _graph[unknown].unknown());
       remove_edge(e, _graph);
       remove_vertex(eq,_graph);
-      collectDegree1Verts(unknown, eqDegree1Verts);
+      CollectDegree1Verts(unknown, eqDegree1Verts);
       remove_vertex(unknown,_graph);
       eqDegree1Verts.erase(eqIter);
     }
@@ -253,25 +253,25 @@ void CausalizationStrategy::simpleCausalizationStrategy() {
     std::list<Vertex>::iterator unknownIter = unknownDegree1Verts.begin();
     if(unknownIter != unknownDegree1Verts.end()) {
       Vertex unknown = *unknownIter;
-      Edge e = getUniqueEdge(unknown);
+      Edge e = GetUniqueEdge(unknown);
       Vertex eq = target(e, _graph);
-      makeCausalEnd(_graph[eq].eqs.front(), _graph[unknown].unknowns.front());
+      MakeCausalEnd(_graph[eq].equation, _graph[unknown].unknown());
       remove_edge(e, _graph);
       remove_vertex(unknown, _graph);
-      collectDegree1Verts(eq, unknownDegree1Verts);
+      CollectDegree1Verts(eq, unknownDegree1Verts);
       remove_vertex(eq, _graph);
       unknownDegree1Verts.erase(unknownIter);
     }
   }
 }
 
-Edge CausalizationStrategy::getUniqueEdge(Vertex v) {
+Edge CausalizationStrategy::GetUniqueEdge(Vertex v) {
   CausalizationGraph::out_edge_iterator eqOutEdgeIter, eqOutEdgeIterEnd;
   boost::tie(eqOutEdgeIter, eqOutEdgeIterEnd) = out_edges(v, _graph);
   return *eqOutEdgeIter;
 }
 
-void CausalizationStrategy::collectDegree1Verts(Vertex v, std::list<Vertex> &degree1Verts) {
+void CausalizationStrategy::CollectDegree1Verts(Vertex v, std::list<Vertex> &degree1Verts) {
   CausalizationGraph::out_edge_iterator outEdgeIter, outEdgeIterEnd, next;
   boost::tie(outEdgeIter, outEdgeIterEnd) = out_edges(v, _graph);
   for(next = outEdgeIter; outEdgeIter != outEdgeIterEnd; outEdgeIter = next) {
@@ -280,7 +280,7 @@ void CausalizationStrategy::collectDegree1Verts(Vertex v, std::list<Vertex> &deg
     Vertex adjacent = target(adjEdge, _graph);
     remove_edge(adjEdge, _graph);
     if (out_degree(adjacent, _graph) == 1 && !_graph[adjacent].visited) {
-        Edge e = getUniqueEdge(adjacent);
+        Edge e = GetUniqueEdge(adjacent);
         Vertex adjAdjacent = target(e, _graph);
         _graph[adjAdjacent].visited = true;
         degree1Verts.push_back(adjacent);
@@ -288,9 +288,9 @@ void CausalizationStrategy::collectDegree1Verts(Vertex v, std::list<Vertex> &deg
   }
 }
 
-void CausalizationStrategy::makeCausalBegining(Equation e, Expression unknown) {
+void CausalizationStrategy::MakeCausalBegining(Equation e, Expression unknown) {
   if (debugIsEnabled('c')) {
-      cout << "makeCausalBegining" << endl;
+      cout << "MakeCausalBegining" << endl;
       cout << "Causalizing ";
       cout << " " << unknown;
       cout << std::endl;
@@ -302,9 +302,9 @@ void CausalizationStrategy::makeCausalBegining(Equation e, Expression unknown) {
   _causalEqsBegining.push_back(causalEq);
 }
 
-void CausalizationStrategy::makeCausalEnd(Equation e, Expression unknown) {
+void CausalizationStrategy::MakeCausalEnd(Equation e, Expression unknown) {
   if (debugIsEnabled('c')) {
-    cout << "makeCausalEnd" << endl;
+    cout << "MakeCausalEnd" << endl;
     cout << "Causalizing";
     cout << " " << unknown;
     cout << std::endl;
@@ -319,7 +319,7 @@ void CausalizationStrategy::makeCausalEnd(Equation e, Expression unknown) {
 /**
  * Applies tarjan algorithm
  */
-void CausalizationStrategy::makeCausalMiddle() {
+void CausalizationStrategy::MakeCausalMiddle() {
 
   std::map<int, Causalize::ComponentPtr> components;
 
@@ -334,7 +334,7 @@ void CausalizationStrategy::makeCausalMiddle() {
     std::list<Vertex>::iterator uIt;
     for (uIt = uVertices->begin(); uIt != uVertices->end(); uIt++) {
       Vertex v = *uIt;
-      Expression unknown = _graph[v].unknowns.front();
+      Expression unknown = _graph[v].unknown();
       unknowns.push_back(unknown);
     }
 
@@ -343,7 +343,7 @@ void CausalizationStrategy::makeCausalMiddle() {
     std::list<Vertex>::iterator eqIt;
     for (eqIt = eqVertices->begin(); eqIt != eqVertices->end(); eqIt++) {
       Vertex v = *eqIt;
-      Equation eq = _graph[v].eqs.front();
+      Equation eq = _graph[v].equation;
       eqs.push_back(eq);
     }
 

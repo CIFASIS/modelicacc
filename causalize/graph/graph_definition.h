@@ -46,16 +46,13 @@ namespace Causalize {
   /// @brief This is the property for a vertex in the incidence graph. Nodes can be of two types: Equation or Unknown.
   struct VertexProperty {
 	  VertexType type;
-  /// @brief This is used for debugging purposes
+    /// @brief This is used for debugging purposes
 	  int  index; 
-	  //TODO: Delete the following two lists
-  /// @brief This list holds the equations in the case of a Equation node. At the beginning the list contains only one equation. In the case a loop is found some nodes are collapsed
-	  Modelica::AST::EquationList  eqs;
-  /// @brief This list holds the unknowns in the case of a Unknown node. At the beginning the list contains only one unknown. In the case a loop is found some nodes are collapsed
-	  Modelica::AST::ExpList unknowns;
 
     bool visited;
+    /// @brief This holds the unknown in the case of a Unknown node. 
 	  Unknown unknown;
+    /// @brief This holds the equation in the case of a Equation node. 
 	  Modelica::AST::Equation equation;
   };
 

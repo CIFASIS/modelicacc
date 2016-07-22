@@ -32,16 +32,17 @@ namespace Causalize {
 class CausalizationStrategy {
 public:
   CausalizationStrategy(Modelica::MMO_Class &mmo_class);
-  void causalize(Modelica::AST::Name name);
-  void causalize_simple(Modelica::AST::Name name);
-  void causalize_tarjan(Modelica::AST::Name name);
+  void Causalize();
+  void CausalizeSimple();
+  void CausalizeTarjan();
 private:
-  void simpleCausalizationStrategy();
-  Edge getUniqueEdge(Vertex v);
-  void collectDegree1Verts(Vertex v, std::list<Vertex> &degree1Verts);
-  void makeCausalBegining(Modelica::AST::Equation eq, Modelica::AST::Expression unknown);
-  void makeCausalMiddle();
-  void makeCausalEnd(Modelica::AST::Equation eq, Modelica::AST::Expression unknown);
+  void SimpleCausalizationStrategy();
+  Edge GetUniqueEdge(Vertex v);
+  void CollectDegree1Verts(Vertex v, std::list<Vertex> &degree1Verts);
+  void MakeCausalBegining(Modelica::AST::Equation eq, Modelica::AST::Expression unknown);
+  void MakeCausalMiddle();
+  void MakeCausalEnd(Modelica::AST::Equation eq, Modelica::AST::Expression unknown);
+
   CausalizationGraph _graph;
   Modelica::MMO_Class &_mmo_class;
   Modelica::AST::EquationList _causalEqsBegining;

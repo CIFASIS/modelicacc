@@ -92,7 +92,7 @@ int main(int argc, char ** argv)
     return 0;
   }
   CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize("");
+  cStrategy.Causalize();
   DEBUG('c', "Causalized Equations:\n");
   foreach_(const Equation &e, mmo.equations_ref().equations_ref()) {
     if (debugIsEnabled('c'))
