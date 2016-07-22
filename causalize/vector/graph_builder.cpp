@@ -84,7 +84,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
           vp.count=1;
         } else if (varInfo.indices().get().size()==1) {
           EvalExpression ev(mmo_class.syms_ref()); 
-          vp.count = boost::apply_visitor(ev,varInfo.indices().get().front());
+          vp.count = Apply(ev,varInfo.indices().get().front());
         } else {
           ERROR("ReducedGraphBuilder::makeGraph Arrays of arrays are not supported yet\n");  
         }
@@ -122,9 +122,9 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         Equality eqq = boost::get<Equality>(e);
         //std::cerr << "Checking var: " << unknown ;
         //std::cerr << eqq.left_ref() << "***********\n";
-        const bool rl = boost::apply_visitor(occurrs,eqq.left_ref());
+        const bool rl = Apply(occurrs,eqq.left_ref());
         //std::cerr << eqq.right_ref() << "***********\n";
-        const bool rr = boost::apply_visitor(occurrs,eqq.right_ref()); 
+        const bool rr = Apply(occurrs,eqq.right_ref()); 
         //std::cerr << "Result: " << rl << " " << rr << "\n";
         if(rl || rr) {
             VectorEdgeProperty ep;
@@ -152,8 +152,8 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         Causalize::ContainsVector occurrs_for(unknown,graph[un], syms_for);
         occurrs_for.setForIndex(range.start(),range.end());
         
-        const bool rl = boost::apply_visitor(occurrs_for,eqq.left_ref());
-        const bool rr = boost::apply_visitor(occurrs_for,eqq.right_ref()); 
+        const bool rl = Apply(occurrs_for,eqq.left_ref());
+        const bool rr = Apply(occurrs_for,eqq.right_ref()); 
         if(rl || rr) {
           //std::cerr << "Var: " << graph[un].variableName << "\n";
           //std::cerr << "Eq: " << e << "\nleft=" << rl << " right = " << rr << "\n";
@@ -186,7 +186,7 @@ int ReducedGraphBuilder::getForRangeSize(ForEq feq) {
     Range range = get<Range>(exp);
     ERROR_UNLESS(!range.step(), "graph_builder: FOR ranges with leaps not supported yet");
     EvalExpression ev(mmo_class.syms_ref()); 
-    return boost::apply_visitor(ev,range.end_ref())-boost::apply_visitor(ev,range.start_ref())+1;
+    return Apply(ev,range.end_ref())-Apply(ev,range.start_ref())+1;
   }
   ERROR("Expression in FOR Index not supported\n");
   return 0;

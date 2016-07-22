@@ -19,7 +19,6 @@
 
 #include <util/ast_visitors/dot_expression.h>
 #include <ast/queries.h>
-#include <boost/variant/apply_visitor.hpp>
 #include <util/type.h>
 
 namespace Modelica {

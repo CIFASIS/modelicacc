@@ -21,7 +21,6 @@
 #include <util/ast_visitors/to_micro/convert_to_micro_expression.h>
 #include <ast/queries.h>
 #include <stdio.h>
-#include <boost/variant/apply_visitor.hpp>
 
 namespace Modelica {
 

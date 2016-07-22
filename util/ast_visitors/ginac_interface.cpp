@@ -29,7 +29,6 @@
 #include <util/debug.h>
 #include <ast/queries.h>
 #include <parser/parser.h>
-#include <boost/variant/apply_visitor.hpp>
 
 using namespace GiNaC;
 REGISTER_FUNCTION(der, dummy())

@@ -19,7 +19,6 @@
 
 #include <ast/queries.h>
 #include <util/ast_visitors/replace_expression.h>
-#include <boost/variant/apply_visitor.hpp>
 
 namespace Modelica {
 

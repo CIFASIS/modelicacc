@@ -20,7 +20,6 @@
 #include <util/ast_visitors/to_micro/convert_to_micro.h>
 #include <util/ast_visitors/to_micro/convert_to_micro_statement.h>
 #include <ast/queries.h>
-#include <boost/variant/apply_visitor.hpp>
 #include <util/ast_visitors/partial_eval_expression.h>
 
 namespace Modelica {

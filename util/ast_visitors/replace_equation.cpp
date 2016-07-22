@@ -19,7 +19,6 @@
 
 #include <util/debug.h>
 #include <util/ast_visitors/replace_equation.h>
-#include <boost/variant/apply_visitor.hpp>
 
 namespace Modelica {
 

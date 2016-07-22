@@ -50,7 +50,7 @@ namespace Modelica {
         foreach_ (Declaration d, comp.declarations()) {
           if (d.conditional()) {
             EvalExpression ev(syms_);
-            Real res = boost::apply_visitor(ev,d.conditional().get());
+            Real res = Apply(ev,d.conditional().get());
             if (res==0) {
               Name name = d.name();
               variables_.erase(std::find(variables_.begin(),variables_.end(),name));

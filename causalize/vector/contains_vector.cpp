@@ -23,7 +23,6 @@
 #include <boost/icl/discrete_interval.hpp>
 #include <causalize/vector/vector_graph_definition.h>
 #include <util/ast_visitors/eval_expression.h>
-#include <boost/variant/apply_visitor.hpp>
 #include <util/ast_visitors/partial_eval_expression.h>
 
 using namespace boost;
@@ -106,7 +105,7 @@ namespace Causalize {
               }
               Expression i = el.front();
               Modelica::PartialEvalExpression pe(syms);
-              Expression ind = boost::apply_visitor(pe,i);
+              Expression ind = Apply(pe,i);
               if (is<Modelica::AST::Integer>(ind)) { // The index is a constant value
               
                 int index = get<Modelica::AST::Integer>(ind);
@@ -185,7 +184,7 @@ namespace Causalize {
             } 
             Expression i = el.front();
             Modelica::PartialEvalExpression pe(syms);
-            Expression ind = boost::apply_visitor(pe,i);
+            Expression ind = Apply(pe,i);
             if (is<Modelica::AST::Integer>(ind)) {
               VectorEdgeProperty newEdge;
               newEdge.p_v += discrete_interval<int>::closed(get<Modelica::AST::Integer>(ind),get<Modelica::AST::Integer>(ind));
@@ -240,8 +239,8 @@ namespace Causalize {
 
     void ContainsVector::setForIndex(Expression a, Expression b) {
        Modelica::EvalExpression ev(syms); 
-       int start=boost::apply_visitor(ev,a);
-       int end=boost::apply_visitor(ev,b);
+       int start=Apply(ev,a);
+       int end=Apply(ev,b);
        forIndexInterval =  discrete_interval<int>::closed(start,end);
        foreq=true;
     }
@@ -254,12 +253,12 @@ namespace Causalize {
       if (binop.op()==Add || binop.op()==Sub) {
         if (is<Reference>(binop.left()) && is<Modelica::AST::Integer>(binop.right())) {
           a  = 1;
-          b  = boost::apply_visitor(ev,binop.right_ref());
+          b  = Apply(ev,binop.right_ref());
           b *= (binop.op()==Add ? 1 : -1);
         }
         if (is<Reference>(binop.right()) && is<Modelica::AST::Integer>(binop.left())) {
           a  = 1;
-          b  = boost::apply_visitor(ev,binop.left_ref());
+          b  = Apply(ev,binop.left_ref());
           b *= (binop.op()==Add ? 1 : -1);
         }
  

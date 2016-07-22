@@ -20,14 +20,13 @@
 
 #include <util/derivate.h>
 #include <util/ast_visitors/ginac_interface.h>
-#include <boost/variant/apply_visitor.hpp>
 
 namespace Modelica {
 
   Expression derivate(Expression e, VarSymbolTable varEnv) {
     ConvertToGiNaC tog(varEnv,true);
     GiNaC::symbol time  = tog.getTime();
-    GiNaC::ex ex = boost::apply_visitor(tog,e).diff(time).subs(var(GiNaC::wild(),time)==GiNaC::wild());
+    GiNaC::ex ex = Apply(tog,e).diff(time).subs(var(GiNaC::wild(),time)==GiNaC::wild());
     return ConvertToExp(ex);
   }
 

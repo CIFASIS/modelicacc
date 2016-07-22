@@ -37,7 +37,7 @@ namespace Modelica {
         SplitForVisitor efv;
         EquationList el_new;
         foreach_(Equation e1, el) {
-            EquationList eql = boost::apply_visitor(efv, e1);
+            EquationList eql = Apply(efv, e1);
             foreach_(Equation e2, eql) {
                 el_new.push_back(e2);
             }

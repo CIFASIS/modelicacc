@@ -25,7 +25,6 @@
 #include <iostream>
 #include <parser/parser.h>
 #include <boost/variant/get.hpp>
-#include <boost/variant/apply_visitor.hpp>
 #include <flatter/class_finder.h>
 #include <unistd.h>
 

@@ -19,9 +19,7 @@
 ******************************************************************************/
 
 #include <flatter/remove_composition.h>
-#include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/get.hpp>
-#define Visit(X,Y) boost::apply_visitor(X,Y)
 
 static int label ;
 
@@ -70,10 +68,10 @@ void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarI
 			if (opt_mod) {
 				Modification &mod = opt_mod.get();
 				if (is<ModEq>(mod)) {
-					get<ModEq>(mod).exp_ref() = Visit(_dot,get<ModEq>(mod).exp_ref());
+					get<ModEq>(mod).exp_ref() = Apply(_dot,get<ModEq>(mod).exp_ref());
 				} else if (is<ModClass>(mod)) {				
 					ModClass & mc = get<ModClass>(mod);
-					if (mc.exp()) mc.exp_ref() = Visit(_dot,mc.exp().get());
+					if (mc.exp()) mc.exp_ref() = Apply(_dot,mc.exp().get());
 				}
 			}
 			 
@@ -102,14 +100,14 @@ void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarI
 		StDotExpression stChange = StDotExpression(dot);
 		
 		foreach_(Equation eq,down.equations_ref().equations())	
-			up.addEquation(Visit(eqChange,eq)); 
+			up.addEquation(Apply(eqChange,eq)); 
 		foreach_(Equation eq,down.initial_eqs_ref().equations())	
-			up.addInitEquation(Visit(eqChange,eq)); 
+			up.addInitEquation(Apply(eqChange,eq)); 
 			
 		foreach_(Statement st,down.statements_ref().statements())
-			up.addStatement(Visit(stChange,st));
+			up.addStatement(Apply(stChange,st));
 		foreach_(Statement st,down.initial_sts_ref().statements())
-			up.addInitStatement(Visit(stChange,st));
+			up.addInitStatement(Apply(stChange,st));
 	} else {
 		ExpList index = viUp.indices().get();
 		ExpList indexVar;
@@ -131,14 +129,14 @@ void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarI
 		StatementList stsI = down.initial_sts_ref().statements();
 		
 		foreach_(Equation &eq,eqs)	
-			eq = Visit(eqChange,eq); 
+			eq = Apply(eqChange,eq); 
 		foreach_(Equation &eq,eqsI)	
-			eq = Visit(eqChange,eq);
+			eq = Apply(eqChange,eq);
 		
 		foreach_(Statement &st, sts)
-			st = Visit(stChange,st);
+			st = Apply(stChange,st);
 		foreach_(Statement &st, stsI)
-			st = Visit(stChange,st);
+			st = Apply(stChange,st);
 				
 		if (eqs.size() > 0)	
 			up.addEquation(createForEquation(indexString,index , eqs));	

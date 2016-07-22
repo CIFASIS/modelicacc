@@ -142,7 +142,7 @@ namespace Modelica
 
  
       /* Error and debug */
-      on_error<fail>
+      /*on_error<fail>
         (
             equation
           , std::cerr
@@ -150,7 +150,7 @@ namespace Modelica
                 << _4                               // what failed?
                 << bind(&at,_3,it)
                 << std::endl
-        );
+        );*/
  
       equation_list.name("equation_list");
 

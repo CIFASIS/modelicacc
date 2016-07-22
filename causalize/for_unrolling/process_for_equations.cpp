@@ -28,8 +28,6 @@
 #include <causalize/for_unrolling/process_for_equations.h>
 #include <causalize/for_unrolling/for_index_iterator.h>
 
-#include <boost/variant/apply_visitor.hpp>
-#define Visit(X,Y) boost::apply_visitor(X,Y)
 namespace Causalize {
 
 Equation instantiate_equation(Equation innerEq, Name variable, Real index, VarSymbolTable &symbolTable) {
@@ -40,7 +38,7 @@ Equation instantiate_equation(Equation innerEq, Name variable, Real index, VarSy
       Equality eqeq = boost::get<Equality>(innerEq);
       Expression l=eqeq.left(), r=eqeq.right();
       //std::cout << "Left= " << l << " right " << r << std::endl;
-      return Equality(Visit(Modelica::PartialEvalExpression(v),l),Visit(Modelica::PartialEvalExpression(v),r));
+      return Equality(Apply(Modelica::PartialEvalExpression(v),l),Apply(Modelica::PartialEvalExpression(v),r));
   } else {
       ERROR("process_for_equations - instantiate_equation:\n"
             "Incorrect equation type or not supported yet.\n");

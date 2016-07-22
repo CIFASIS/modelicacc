@@ -20,7 +20,6 @@
 #ifndef AST_VISITOR_EQ
 #define AST_VISITOR_EQ
 #include <boost/variant/static_visitor.hpp>
-#include <boost/variant/apply_visitor.hpp>
 #include <ast/equation.h>
 
 #define applyExp(X) boost::apply_visitor(v,X)

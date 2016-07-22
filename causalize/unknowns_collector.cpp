@@ -54,7 +54,7 @@ ExpList UnknownsCollector::collectUnknowns() {
             else if (varInfo.indices().get().size()==1) {
               EvalExpression ev(_c.syms_ref());
               Expression lim=varInfo.indices().get().front();
-              const int limit=boost::apply_visitor(ev,lim);
+              const int limit=Apply(ev,lim);
               for (int i=1;i<=limit;i++)
                 _unknowns.push_back(Call("der",ExpList(1,Reference(Ref(1,RefTuple(name,ExpList(1,Integer(i))))))));
             } else {
@@ -66,7 +66,7 @@ ExpList UnknownsCollector::collectUnknowns() {
             else if (varInfo.indices().get().size()==1) {
               EvalExpression ev(_c.syms_ref());
               Expression lim=varInfo.indices().get().front();
-              const int limit=boost::apply_visitor(ev,lim);
+              const int limit=Apply(ev,lim);
               for (int i=1;i<=limit;i++) 
                 _unknowns.push_back(Reference(Ref(1,RefTuple(name,ExpList(1,Integer(i))))));
             } else {

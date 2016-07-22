@@ -20,7 +20,6 @@
 #include <iostream>
 #include <parser/parser.h>
 #include <boost/variant/get.hpp>
-#include <boost/variant/apply_visitor.hpp>
 #include <mmo/mmo_class.h>
 #include <util/table.h>
 #include <util/debug.h>

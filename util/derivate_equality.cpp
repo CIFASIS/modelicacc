@@ -33,8 +33,8 @@
 namespace Modelica {
     Equality derivate_equality(Equality eq, VarSymbolTable syms) {
     PartEvalExp eval(syms, true);
-    Expression left= boost::apply_visitor(eval,eq.left_ref());    
-    Expression right= boost::apply_visitor(eval,eq.right_ref());
+    Expression left= Apply(eval,eq.left_ref());    
+    Expression right= Apply(eval,eq.right_ref());
     eq.left_ref()=derivate(left,syms);
     eq.right_ref()=derivate(right,syms);
 // aplicar evaluador al resultado... 

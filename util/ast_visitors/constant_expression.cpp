@@ -18,7 +18,6 @@
 ******************************************************************************/
 
 #include <util/ast_visitors/constant_expression.h>
-#include <boost/variant/apply_visitor.hpp>
 
 namespace Modelica {
 

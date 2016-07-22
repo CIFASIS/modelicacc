@@ -208,12 +208,12 @@ void Connectors::expandConnect(Vertex l, OptExp lIndex,Vertex r, OptExp rIndex, 
 		EvalExpression evalIndex = EvalExpression(class_.syms_ref());
 		Real step = 1;
 		if (rge.step()) 
-			step = boost::apply_visitor(evalIndex,rge.step().get());
-		for(Real i = boost::apply_visitor(evalIndex,rge.start_ref()); i <= boost::apply_visitor(evalIndex,rge.end_ref()); i = i + step  ){
+			step = Apply(evalIndex,rge.step().get());
+		for(Real i = Apply(evalIndex,rge.start_ref()); i <= Apply(evalIndex,rge.end_ref()); i = i + step  ){
 			EvalExpression eval = EvalExpression(class_.syms_ref(),"i",i);
 			OptExp opl,opr; 
-			if (lIndex) opl = OptExp(boost::apply_visitor(eval,lIndex.get()));
-			if (rIndex) opr = OptExp(boost::apply_visitor(eval,rIndex.get()));
+			if (lIndex) opl = OptExp(Apply(eval,lIndex.get()));
+			if (rIndex) opr = OptExp(Apply(eval,rIndex.get()));
 			Vertex c = createConnect(range);
 			createEdge(l,c,opl);
 			createEdge(r,c,opr);

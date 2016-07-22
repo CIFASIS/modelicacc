@@ -50,7 +50,7 @@ void check_causality(MMO_Class &mmoClass, ExpList unknowns) {
 
     foreach_(Expression unknown, unknowns) {
       Modelica::contains occurrs(unknown);
-      if (boost::apply_visitor(occurrs, eqEq.right_ref())) {
+      if (Apply(occurrs, eqEq.right_ref())) {
         bool isKnown = false;
         foreach_(Expression known, knowns) {
           if(known == unknown) {

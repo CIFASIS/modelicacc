@@ -25,7 +25,6 @@
 
 #include <iostream>
 using namespace std;
-#define Visit(X,Y) boost::apply_visitor(X,Y)
 
 Flatter::Flatter(){}
 
@@ -100,9 +99,9 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector,bool initial)
 	
 	MarkConnector mc;
 	foreach_(Equation &eq,c.equations_ref().equations_ref())	
-		eq = Visit(mc,eq);
+		eq = Apply(mc,eq);
 	foreach_(Equation &eq,c.initial_eqs_ref().equations_ref())	
-		eq = Visit(mc,eq);
+		eq = Apply(mc,eq);
 	
 	//Eliminar Variables
 	if (initial) {
@@ -111,14 +110,14 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector,bool initial)
 		StDotExpression stChange = StDotExpression(dot);
 		
 		foreach_(Equation &eq,c.equations_ref().equations_ref())	
-			eq = Visit(eqChange,eq);
+			eq = Apply(eqChange,eq);
 		foreach_(Equation &eq,c.initial_eqs_ref().equations_ref())	
-			eq = Visit(eqChange,eq);
+			eq = Apply(eqChange,eq);
 		
 		foreach_(Statement &st,c.statements_ref().statements_ref())	
-			st = Visit(stChange,st);
+			st = Apply(stChange,st);
 		foreach_(Statement &st,c.initial_sts_ref().statements_ref())	
-			st = Visit(stChange,st);
+			st = Apply(stChange,st);
 		c.types_ref().clear();	
 	
 		// Remove if equation when evauate to false and dont have else 
@@ -129,7 +128,7 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector,bool initial)
 				IfEq &ieq = get<IfEq>(eq);
 				if (ieq.ifnot().size()==0 && ieq.elseif().size()==0) {
 				  PartialEvalExpression pe(c.syms_ref());  
-				  Expression res = boost::apply_visitor(pe,ieq.cond_ref());
+				  Expression res = Apply(pe,ieq.cond_ref());
 				  ERROR_UNLESS(is<Boolean>(res), "Error evaluating const if equation condition");
 				  if (get<Boolean>(res).val()) {
 					to_add.insert(to_add.end(),ieq.elements_ref().begin(), ieq.elements_ref().end());

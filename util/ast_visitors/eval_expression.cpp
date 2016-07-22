@@ -22,7 +22,6 @@
 #include <util/ast_visitors/eval_expression.h>
 #include <boost/variant/get.hpp>
 #include <ast/modification.h>
-#include <boost/variant/apply_visitor.hpp>
 
 namespace Modelica {
 

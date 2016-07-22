@@ -67,20 +67,20 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
   const int size=eqs.size();
   if (size==1 && is<Equality>(eqs.front())) { // Trivial solve
     Equality eq = get<Equality>(eqs.front());
-    Expression l=boost::apply_visitor(peval,eq.left_ref());
-    Expression r=boost::apply_visitor(peval,eq.right_ref());
+    Expression l=Apply(peval,eq.left_ref());
+    Expression r=Apply(peval,eq.right_ref());
     if (l==crs.front()) {
-      if (!apply_visitor(Modelica::ContainsExpression(crs.front()), eq.right_ref())) 
+      if (!Apply(Modelica::ContainsExpression(crs.front()), eq.right_ref())) 
         return eqs;
     } else if (r==crs.front()) {
-      if (!apply_visitor(Modelica::ContainsExpression(crs.front()), eq.left_ref()))  {
+      if (!Apply(Modelica::ContainsExpression(crs.front()), eq.left_ref()))  {
         return EquationList(1,Equality(r,l));
       }
     }
   }    
   GiNaC::lst eqns, vars;
   foreach_(Expression exp,crs)  {
-    vars.append(boost::apply_visitor(tog,exp));
+    vars.append(Apply(tog,exp));
   }
   bool for_eq=false;
   foreach_(Equation e,eqs) {
@@ -89,18 +89,18 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
       ERROR_UNLESS(is<Equality>(feq.elements().front()), "Trying to solve a for loop with a non suported equation inside");
       for_eq=true;
       Equality eq = get<Equality>(feq.elements().front());
-      Expression l=boost::apply_visitor(peval,eq.left_ref());
-      Expression r=boost::apply_visitor(peval,eq.right_ref());
-      GiNaC::ex left=boost::apply_visitor(tog,l);
-      GiNaC::ex right=boost::apply_visitor(tog,r);
+      Expression l=Apply(peval,eq.left_ref());
+      Expression r=Apply(peval,eq.right_ref());
+      GiNaC::ex left=Apply(tog,l);
+      GiNaC::ex right=Apply(tog,r);
       eqns.append(left==right);
     } else {
       ERROR_UNLESS(is<Equality>(e), "Solve: Only equality equations are supported\n");
       Equality eq = get<Equality>(e);
-      Expression l=boost::apply_visitor(peval,eq.left_ref());
-      Expression r=boost::apply_visitor(peval,eq.right_ref());
-      GiNaC::ex left=boost::apply_visitor(tog,l);
-      GiNaC::ex right=boost::apply_visitor(tog,r);
+      Expression l=Apply(peval,eq.left_ref());
+      Expression r=Apply(peval,eq.right_ref());
+      GiNaC::ex left=Apply(tog,l);
+      GiNaC::ex right=Apply(tog,r);
       eqns.append(left==right);
     }
   }
@@ -161,7 +161,7 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
         foreach_ (Equation &e, eqs) {
           ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
           Equality eq = get<Equality>(e);
-          if (boost::apply_visitor(con,eq.left_ref()) || boost::apply_visitor(con,eq.right_ref())) { 
+          if (Apply(con,eq.left_ref()) || Apply(con,eq.right_ref())) { 
               args.insert(val.first);
           }
         }
@@ -181,10 +181,10 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
     foreach_ (Equation &e, eqs) {
           ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
           Equality eq = get<Equality>(e);
-          //loop.push_back(Equality(boost::apply_visitor(peval,eq.left_ref()), boost::apply_visitor(peval,eq.right_ref())));
+          //loop.push_back(Equality(Apply(peval,eq.left_ref()), Apply(peval,eq.right_ref())));
           setCFlag(code,1);
           code << "  gsl_vector_set (__f," << i++ << ", (" << 
-            boost::apply_visitor(peval,eq.left_ref()) << ") - (" << boost::apply_visitor(peval,eq.right_ref()) << "));\n";
+            Apply(peval,eq.left_ref()) << ") - (" << Apply(peval,eq.right_ref()) << "));\n";
     }
     code << "  return GSL_SUCCESS;\n";
     code << "}\n";
@@ -236,7 +236,7 @@ EquationList EquationSolver::solve(EquationList eqs, ExpList crs, VarSymbolTable
                 && get<ElMod>(a).modification() 
                 && is<ModEq>(get<ElMod>(a).modification().get())) {
               Expression exp_mod = get<ModEq>(get<ElMod>(a).modification().get()).exp();
-              Real r=boost::apply_visitor(eval,exp_mod);
+              Real r=Apply(eval,exp_mod);
               code << "    gsl_vector_set (__x, " << i << "," << r <<");\n";
             }
 

@@ -19,7 +19,6 @@
 
 #include <util/debug.h>
 #include <util/ast_visitors/contains_expression.h>
-#include <boost/variant/apply_visitor.hpp>
 
 namespace Modelica {
     ContainsExpression::ContainsExpression(Expression e): exp(e) {};

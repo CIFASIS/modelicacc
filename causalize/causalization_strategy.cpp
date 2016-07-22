@@ -72,8 +72,8 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
     VertexProperty vp;
     Equality &eq = get<Equality>(e);
     PartialEvalExpression eval(_mmo_class.syms_ref(),false);
-    eq.left_ref()=boost::apply_visitor(eval ,eq.left_ref());
-    eq.right_ref()=boost::apply_visitor(eval ,eq.right_ref());
+    eq.left_ref()=Apply(eval ,eq.left_ref());
+    eq.right_ref()=Apply(eval ,eq.right_ref());
     vp.eqs.push_back(e);
     vp.type = E;
     vp.index = index++;
@@ -108,8 +108,8 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
       Equation e = _graph[eqVertex].eqs.front();
       ERROR_UNLESS(is<Equality>(e), "Causalization of non-equality equation is not supported");
       Equality eq = boost::get<Equality>(e);
-      const bool rl = boost::apply_visitor(occurrs,eq.left_ref());
-      const bool ll = boost::apply_visitor(occurrs,eq.right_ref()); 
+      const bool rl = Apply(occurrs,eq.left_ref());
+      const bool ll = Apply(occurrs,eq.right_ref()); 
       if(rl || ll) {
         add_edge(eqVertex, unknownVertex, _graph);
         DEBUG('c', "(%d, %d) ", _graph[eqVertex].index, _graph[unknownVertex].index);
