@@ -116,7 +116,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         std::cerr << "Result: " << rl << " " << rr << "\n";
         if(rl || rr) {
           VectorEdgeProperty ep;
-          ep.labels = occurrs.getOccurrenceIndexes();
+          ep.labels = occurrs.GetOccurrenceIndexes();
           add_edge(eq, un, ep, graph);
           DEBUG('c', "(%d, %d) ", graph[eq].index, graph[un].index);
         } 
@@ -143,7 +143,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         const bool rr = Apply(occurrs_for,eqq.right_ref()); 
         if(rl || rr) {
           VectorEdgeProperty ep;
-          ep.labels = occurrs_for.getOccurrenceIndexes();
+          ep.labels = occurrs_for.GetOccurrenceIndexes();
           add_edge(eq, un, ep, graph);
           DEBUG('c', "(%d, %d) ", graph[eq].index, graph[un].index);
         } 

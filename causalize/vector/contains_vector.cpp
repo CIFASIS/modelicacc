@@ -121,7 +121,7 @@ namespace Causalize {
         Reference callExprRef=get<Reference>(callExpr.args().front());
         if (get<0>(callRef.ref().front())==get<0>(callExprRef.ref().front())) { //The references are the same
           std::cout << "build pairs with " << callRef;
-          buildPairs(callRef);
+          BuildPairs(callRef);
           return true;
         }
         //The references are not the same
@@ -164,7 +164,7 @@ namespace Causalize {
   bool ContainsVector::operator()(Reference ref) const {
     if (is<Reference>(exp)) {
       if (get<0>(ref.ref().front())==get<0>(get<Reference>(exp).ref().front())) { //The references are the same
-        buildPairs(ref);
+        BuildPairs(ref);
         return true;
       }
     }
@@ -172,24 +172,24 @@ namespace Causalize {
   }
 
 
-  void ContainsVector::buildPairs(Reference unkRef) const {
+  void ContainsVector::BuildPairs(Reference unkRef) const {
     if (unk2find.count==1) { // The unknown is a scalar (or array of size 1)
       VectorEdgeProperty newEdge;
       if (foreq) { //The equation is a for-equation
-        buildPairsNto1();
+        BuildPairsNto1();
       }
       else { //The equation is not a for-equation
-        buildPairs1to1();
+        BuildPairs1to1();
       }
     }
     else { // The unknown is an array
       ExpList el = get<1>(unkRef.ref().front());
       if (el.size()==0) { // If there are no sub-indices the complete array is used
         if (foreq) { //The equation is a for-equation
-          buildPairsNtoN();
+          BuildPairsNtoM();
         }
         else { //The equation is not a for-equation
-          buildPairs1toN();
+          BuildPairs1toM();
         }
       }
       else { // The unknown has a sub-index
@@ -200,43 +200,43 @@ namespace Causalize {
           int index = get<Modelica::AST::Integer>(ind);
           ERROR_UNLESS(index<=unk2find.count && index >= 1,"Index out of range");
           if (foreq) { //The equation a for-equation
-            buildPairsNto1(index);
+            BuildPairsNto1(index);
           }
           else {  //The equation is not a for-equation
-            buildPairs1to1(index);
+            BuildPairs1to1(index);
           }
         }
         else if (is<Reference>(ind)) { // The index is a reference
           ERROR_UNLESS(foreq, "Generic index used outside for equation");
           Reference indRef = get<Reference>(ind);
           ERROR_UNLESS(refName(indRef)==indexes.front().name(),"Array index reference and for index variable are not the same");
-          buildPairsN();
+          BuildPairsNtoN();
         }
         else { 
-          buildPairsNExpression(ind);
+          BuildPairsNtoNExpression(ind);
         }
       }
     }
   }
 
-  void ContainsVector::buildPairs1to1(int index) const {
+  void ContainsVector::BuildPairs1to1(int index) const {
     labels.insert(std::make_pair(1,index));
   }
 
-  void ContainsVector::buildPairsNto1(int index) const {
+  void ContainsVector::BuildPairsNto1(int index) const {
     for (int i=forIndexInterval.lower();i<=forIndexInterval.upper();i++) {
       labels.insert(std::make_pair(i,index));
     }
   }
 
-  void ContainsVector::buildPairsN() const {
+  void ContainsVector::BuildPairsNtoN() const {
     for (int i=forIndexInterval.lower();i<=forIndexInterval.upper();i++) {
       labels.insert(std::make_pair(i,i));
     }
   }
 
 
-  void ContainsVector::buildPairsNExpression(Expression exp) const {
+  void ContainsVector::BuildPairsNtoNExpression(Expression exp) const {
     Modelica::PartialEvalExpression partial_evaluator(syms);
     for (int i=forIndexInterval.lower();i<=forIndexInterval.upper();i++) {
       syms.insert(indexes.front().name(), VarInfo(TypePrefixes(1,parameter),"Integer", Option<Comment>(),Modification(ModEq(Expression(i)))));
@@ -247,13 +247,13 @@ namespace Causalize {
   }
 
 
-  void ContainsVector::buildPairs1toN() const {
+  void ContainsVector::BuildPairs1toM() const {
     for (int i=1;i<=unk2find.count;i++) {
       labels.insert(std::make_pair(1,i));
     }
   }
 
-  void ContainsVector::buildPairsNtoN() const {
+  void ContainsVector::BuildPairsNtoM() const {
     for (int i=forIndexInterval.lower();i<=forIndexInterval.upper();i++) {
       for (int j=1;j<=unk2find.count;j++) {
         labels.insert(std::make_pair(i,j));

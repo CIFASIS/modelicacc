@@ -52,17 +52,15 @@ namespace Causalize {
     bool operator()(Output) const;
     bool operator()(Reference) const;
     bool operator()(Range) const;
-    IndexPairSet getOccurrenceIndexes() { return labels; }
-//    void setForIndex(Expression a, Expression b, Name v);
+    IndexPairSet GetOccurrenceIndexes() { return labels; }
   private:
-    void addGenericIndex(BinOp) const;
-    void buildPairs(Reference) const;
-    void buildPairs1toN() const;
-    void buildPairsNto1(int index=1) const;
-    void buildPairs1to1(int index=1) const;
-    void buildPairsNtoN() const;
-    void buildPairsN() const;
-    void buildPairsNExpression(Expression exp) const;
+    void BuildPairs(Reference) const;
+    void BuildPairs1toM() const;
+    void BuildPairsNto1(int index=1) const;
+    void BuildPairs1to1(int index=1) const;
+    void BuildPairsNtoM() const;
+    void BuildPairsNtoN() const;
+    void BuildPairsNtoNExpression(Expression exp) const;
     Expression exp;
     boost::icl::discrete_interval<int> forIndexInterval;
     mutable std::set<VectorEdgeProperty> edgeList;
