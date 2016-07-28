@@ -60,7 +60,7 @@ void buildCollapsedGraph(Causalize::CausalizationGraph& graph, DirectedGraph& di
   // Create the vertices on the directed graph
   Causalize::CausalizationGraph::vertex_iterator vi, vi_end;
   for(boost::tie(vi,vi_end) = vertices(graph); vi != vi_end; ++vi) {
-   if (graph[*vi].type == E) {
+   if (graph[*vi].type == kVertexEquation) {
      DGVertex v = add_vertex(digraph);
      _collapsed2original[v]=*vi;
    }
@@ -118,14 +118,14 @@ int apply_tarjan(CausalizationGraph &graph, std::map<int, Causalize::ComponentPt
   for (std::map<Vertex, Vertex>::iterator it=_matching.begin(); it!=_matching.end(); ++it) {
         char se[10];
         Vertex v1 = it->first;
-        if(graph[v1].type == E) {
+        if(graph[v1].type == kVertexEquation) {
           sprintf(se, "E%d", vertex2index[v1]);
         } else {
           sprintf(se, "U%d", vertex2index[v1]);
         }
         char su[10];
         Vertex v2 = it->second;
-        if(graph[v2].type == E) {
+        if(graph[v2].type == kVertexEquation) {
           sprintf(su, "E%d", vertex2index[v2]);
         } else {
           sprintf(su, "U%d", vertex2index[v2]);

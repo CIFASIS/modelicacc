@@ -39,7 +39,6 @@ using namespace std;
 using namespace Modelica;
 using namespace Modelica::AST;
 using namespace Causalize;
-//using namespace Modelica::ExpandFor;
 
 int main(int argc, char ** argv)
 {

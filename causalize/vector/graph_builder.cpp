@@ -51,7 +51,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
   foreach_ (Equation e, mmo_class.equations().equations()) {
     static int index = 0;
     VectorVertexProperty vp;
-    vp.type = E;
+    vp.type = kVertexEquation;
     vp.equation = e;
     if (is<ForEq>(e)) {
       vp.count=getForRangeSize(get<ForEq>(e));
@@ -72,7 +72,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
     VarInfo varInfo = syms[var].get();
     if (!isConstant(var,syms) && !isBuiltIn(var,syms) && !isDiscrete(var,syms) && !isParameter(var,syms)) {
       VectorVertexProperty vp;
-      vp.type=U;
+      vp.type=kVertexUnknown;
       vp.index=index++;
       vp.unknown = Unknown(varInfo, var);
       if ("Real"==varInfo.type()) {
@@ -108,12 +108,8 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
       if (is<Equality>(e)) {
         Causalize::ContainsVector occurrs(unknown, graph[un], syms);
         Equality eqq = boost::get<Equality>(e);
-        std::cerr << "Checking var: " << unknown ;
-        std::cerr << eqq.left_ref() << "***********\n";
         const bool rl = Apply(occurrs,eqq.left_ref());
-        std::cerr << eqq.right_ref() << "***********\n";
         const bool rr = Apply(occurrs,eqq.right_ref()); 
-        std::cerr << "Result: " << rl << " " << rr << "\n";
         if(rl || rr) {
           VectorEdgeProperty ep;
           ep.labels = occurrs.GetOccurrenceIndexes();

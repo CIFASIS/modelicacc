@@ -48,7 +48,9 @@ namespace Causalize {
     syms(s),
     foreq(true),
     indexes(indexes) {
-      std::cout << "Looking for exp " << exp;
+      if (debugIsEnabled('c')) {
+        std::cout << "Looking for exp: " << exp <<"\n";
+      }
       ERROR_UNLESS(indexes.size()==1, "For Loop with more than one index is not supported yet\n");
       ERROR_UNLESS(indexes.front().exp(), "No index in for equation");
       ERROR_UNLESS(is<Range>(indexes.front().exp().get()), "Only range expressions supported");
@@ -120,7 +122,9 @@ namespace Causalize {
         Reference callRef=get<Reference>(call.args().front());
         Reference callExprRef=get<Reference>(callExpr.args().front());
         if (get<0>(callRef.ref().front())==get<0>(callExprRef.ref().front())) { //The references are the same
-          std::cout << "build pairs with " << callRef;
+          if (debugIsEnabled('c')) {
+            std::cout << "build pairs with: " << callRef << "\n";
+          }
           BuildPairs(callRef);
           return true;
         }

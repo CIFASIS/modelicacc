@@ -47,7 +47,7 @@ namespace Causalize {
 		  GraphPrinter(const Graph &g): graph(g) {
       	typename Graph::vertex_iterator vi, vi_end;
 	      for(tie(vi, vi_end) = vertices(graph); vi!= vi_end; vi++){
-		      if(graph[*vi].type == E){
+		      if(graph[*vi].type == kVertexEquation){
       			equationDescriptors.push_back(*vi);
       		}else{
       		  unknownDescriptors.push_back(*vi);		

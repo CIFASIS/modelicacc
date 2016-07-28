@@ -75,7 +75,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
     eq.left_ref()=Apply(eval ,eq.left_ref());
     eq.right_ref()=Apply(eval ,eq.right_ref());
     vp.equation = e;
-    vp.type = E;
+    vp.type = kVertexEquation;
     vp.index = index++;
     vp.visited = false;
     Vertex v = add_vertex(vp, _graph);
@@ -90,7 +90,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   foreach_(Expression e, unknowns) {
     VertexProperty vp;
     vp.unknown = Unknown(e);
-    vp.type = U;
+    vp.type = kVertexUnknown;
     vp.index = index++;
     vp.visited = false;
     Vertex v = add_vertex(vp, _graph);
@@ -228,7 +228,7 @@ void CausalizationStrategy::SimpleCausalizationStrategy() {
       Edge e = GetUniqueEdge(v);
       Vertex adjacent = target(e, _graph);
       _graph[adjacent].visited = true;
-      if (_graph[v].type == E) {
+      if (_graph[v].type == kVertexEquation) {
         eqDegree1Verts.push_back(v);
       } else {
         unknownDegree1Verts.push_back(v);
