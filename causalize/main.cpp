@@ -27,7 +27,6 @@
 #include <causalize/causalization_strategy.h>
 #include <causalize/vector/causalization_algorithm.h>
 #include <causalize/vector/graph_builder.h>
-#include <causalize/graph/graph_printer.h>
 #include <cstdlib>
 #include <stdio.h>
 #include <iostream>
@@ -79,8 +78,6 @@ int main(int argc, char ** argv)
     sf.splitFor();
     ReducedGraphBuilder gb(mmo);
     VectorCausalizationGraph g = gb.makeGraph();
-    GraphPrinter<VectorVertexProperty,VectorEdgeProperty>  gp(g);
-    gp.printGraph("initial_graph.dot");
     CausalizationStrategyVector cs(g,mmo);
     if(cs.Causalize()){ // Try vectorial causalization first
       if(debugIsEnabled('c')){

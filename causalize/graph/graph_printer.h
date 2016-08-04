@@ -86,7 +86,12 @@ namespace Causalize {
 			      }
 			      for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
 			        MAKE_SPACE
+#ifdef HAS_COUNT
+				      stri << "eq" << graph[*it].index << " [label=\"Eq. " << graph[*it].index << "\nCount=" << graph[*it].count << "\"];" << endl;
+#else 
 				      stri << "eq" << graph[*it].index << " [label=\"Eq. " << graph[*it].index << "\"];" << endl;
+
+#endif
             }
             stri << colors2.str();
 		      DELETE_TAB

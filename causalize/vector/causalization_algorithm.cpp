@@ -19,6 +19,7 @@
 
 #include <causalize/vector/causalization_algorithm.h>
 #include <causalize/vector/vector_graph_definition.h>
+#define HAS_COUNT
 #include <causalize/graph/graph_printer.h>
 #include <causalize/for_unrolling/process_for_equations.h>
 #include <util/debug.h>
@@ -66,6 +67,11 @@ CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGrap
 			  "There are %d equations and %d variables\n", 
 			  equationNumber, unknownNumber);		
 	}
+
+  stringstream ss;
+  ss << "initial_graph.dot";
+  GraphPrinter<VectorVertexProperty,VectorEdgeProperty>  gp(graph);
+  gp.printGraph(ss.str());
 }
 
 
