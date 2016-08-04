@@ -139,9 +139,9 @@ namespace Modelica {
     out << c.statements();
     END_BLOCK;
     if (c.external()) {
-      out << INDENT << "  external";
+      out << INDENT << " external";
       if (c.language())
-        out << " " << c.language().get();
+        out << " " << c.language().get() << " ";
       if (c.external()) {
         External e = c.external().get();
         if (e.comp_ref()) 

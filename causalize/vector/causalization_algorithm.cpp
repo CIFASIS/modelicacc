@@ -448,7 +448,9 @@ void CausalizationStrategyVector::SolveEquations() {
         if (debugIsEnabled('c')) {
           std::cout << "Solving:\n" << e << "\nfor variable " << cv.unknown() << "\n";
         }
-        all.push_back(EquationSolver::Solve(eq, cv.unknown(), syms,c_code,cl));
+        std::stringstream s;
+        s << mmo.name() << ".c";
+        all.push_back(EquationSolver::Solve(eq, cv.unknown(), syms,c_code,cl, s.str()));
       } else {
         ERROR("Trying to solve an array variable with a non for equation");
       }
@@ -459,7 +461,9 @@ void CausalizationStrategyVector::SolveEquations() {
       if (debugIsEnabled('c')) {
         std::cout << "Solving\n" << e << "\nfor variable " << cv.unknown() << "\n";
       }
-      all.push_back(EquationSolver::Solve(e, cv.unknown(), mmo.syms_ref(),c_code, cl));
+      std::stringstream s;
+      s << mmo.name() << ".c";
+      all.push_back(EquationSolver::Solve(e, cv.unknown(), mmo.syms_ref(),c_code, cl, s.str()));
     }
   }
   mmo.equations_ref().equations_ref()=all;

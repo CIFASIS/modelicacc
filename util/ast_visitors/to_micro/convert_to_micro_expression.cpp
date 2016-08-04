@@ -21,6 +21,7 @@
 #include <ast/queries.h>
 #include <stdio.h>
 #include <map>
+#include <sstream>
 
 namespace Modelica {
 
@@ -226,9 +227,9 @@ namespace Modelica {
       return v;
     }
     Expression ConvertToMicroExpression::newDiscrete(Option<Expression> oe) const {
-        char buff[1024];
-        sprintf(buff,"d%d",disc_count++);
-        Name name(buff);
+        std::stringstream disc_name;
+        disc_name << "d" << disc_count++;
+        Name name(disc_name.str());
         VarSymbolTable &syms=mmo_class.syms_ref();     
         if (oe) {
           ClassModification cm;
