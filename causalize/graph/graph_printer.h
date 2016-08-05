@@ -122,7 +122,11 @@ namespace Causalize {
 			      }
 			      for(Iterator it=unknownDescriptors.begin(); it!=unknownDescriptors.end(); it++){
 		          MAKE_SPACE
+#ifdef HAS_COUNT
+				      stri << "var" << graph[*it].index << " [ label = \"" << graph[*it].unknown() << "\nCount=" << graph[*it].count << "\"];" << endl;
+#else
 				      stri << "var" << graph[*it].index << " [ label = \"" << graph[*it].unknown() << "\"];" << endl;
+#endif
             }
 		      DELETE_TAB
 		      MAKE_SPACE
