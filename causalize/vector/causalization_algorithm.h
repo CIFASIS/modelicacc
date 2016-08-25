@@ -28,8 +28,8 @@ class CausalizationStrategyVector{
 		void PrintCausalizationResult();
 	private:
 		void SolveEquations();
-		void Causalize1toN(const Unknown unknown, const Equation equation, const IndexPairSet ips);
-		void CausalizeNto1(const Unknown unknown, const Equation equation, const IndexPairSet ips);
+		void Causalize1toN(const VectorUnknown unknown, const Equation equation, const IndexPairSet ips);
+		void CausalizeNto1(const VectorUnknown unknown, const Equation equation, const IndexPairSet ips);
     Vertex GetEquation(Edge e);
     Vertex GetUnknown(Edge e);
     Option<std::pair<VectorEdge,IndexPairSet> > CanCausalize(VectorEquationVertex eq, VertexType vt);

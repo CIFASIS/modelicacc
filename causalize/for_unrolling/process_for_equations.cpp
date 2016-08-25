@@ -30,15 +30,20 @@
 
 namespace Causalize {
 
-Equation instantiate_equation(Equation innerEq, Name variable, Real index, VarSymbolTable &symbolTable) {
+Equation instantiate_equation(Equation innerEq, std::list<Name> variables, std::list<int> indexes, VarSymbolTable &symbolTable) {
   VarSymbolTable v=symbolTable;
-  VarInfo vinfo = VarInfo(TypePrefixes(1,parameter), "Integer", Option<Comment>(), Modification(ModEq(Expression(index))));
-  v.insert(variable,vinfo);
+  ERROR_UNLESS(variables.size()==indexes.size(), "Mismatch size of variables and indexes size");
+  std::list<Name>::iterator varsIter = variables.begin();
+  foreach_(int i, indexes) {
+    VarInfo vinfo = VarInfo(TypePrefixes(1,parameter), "Integer", Option<Comment>(), Modification(ModEq(Expression(i))));
+    v.insert(*varsIter,vinfo);
+    varsIter++;
+  }
   if (is<Equality>(innerEq)) {
-      Equality eqeq = boost::get<Equality>(innerEq);
-      Expression l=eqeq.left(), r=eqeq.right();
-      //std::cout << "Left= " << l << " right " << r << std::endl;
-      return Equality(Apply(Modelica::PartialEvalExpression(v),l),Apply(Modelica::PartialEvalExpression(v),r));
+    Equality eqeq = boost::get<Equality>(innerEq);
+    Expression l=eqeq.left(), r=eqeq.right();
+    //std::cout << "Left= " << l << " right " << r << std::endl;
+    return Equality(Apply(Modelica::PartialEvalExpression(v),l),Apply(Modelica::PartialEvalExpression(v),r));
   } else {
       ERROR("process_for_equations - instantiate_equation:\n"
             "Incorrect equation type or not supported yet.\n");
@@ -72,7 +77,7 @@ void process_for_equations(Modelica::MMO_Class &mmo_class) {
       while (forIndexIter->hasNext()) {
         Real index_val = forIndexIter->next();
         foreach_ (Equation eq, feq.elements()) 
-          new_equations.push_back(instantiate_equation(eq, variable, index_val, mmo_class.syms_ref()));
+          new_equations.push_back(instantiate_equation(eq, std::list<Name>(1,variable), std::list<int>(1,index_val), mmo_class.syms_ref()));
       }
       delete forIndexIter;
     } else {

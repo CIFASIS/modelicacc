@@ -74,15 +74,20 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
       VectorVertexProperty vp;
       vp.type=kVertexUnknown;
       vp.index=index++;
-      vp.unknown = Unknown(varInfo, var);
+      vp.unknown = VectorUnknown(varInfo, var);
       if ("Real"==varInfo.type()) {
-        if (!varInfo.indices())  {
-          vp.count=1;
-        } else if (varInfo.indices().get().size()==1) {
-          EvalExpression ev(mmo_class.syms_ref()); 
-          vp.count = Apply(ev,varInfo.indices().get().front());
-        } else {
-          ERROR("ReducedGraphBuilder::makeGraph Arrays of arrays are not supported yet\n");  
+        int totalUnknowns = 1;
+        if (!varInfo.indices())  {  //Is a scalar unknown
+          vp.count=totalUnknowns;
+        } else { //Is a vector unknown
+          ExpList indexes = varInfo.indices_.get();
+          EvalExpression ev(mmo_class.syms_ref());
+          foreach_(Expression i, indexes) {
+            int indexSize = Apply(ev,i);
+            totalUnknowns *= indexSize;
+            vp.unknown.dimensionList.push_back(indexSize);
+          }
+          vp.count = totalUnknowns;
         }
       }
       unknownDescriptorList.push_back(add_vertex(vp, graph));
@@ -114,7 +119,6 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
           VectorEdgeProperty ep;
           ep.labels = occurrs.GetOccurrenceIndexes();
           add_edge(eq, un, ep, graph);
-          DEBUG('c', "(%d, %d) ", graph[eq].index, graph[un].index);
         } 
       } else if (is<ForEq>(e)) {
         ForEq feq = get<ForEq>(e);
@@ -123,16 +127,17 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         ERROR_UNLESS(is<Equality>(inside), "Only equality equation inside for loops supported");
         Equality eqq = boost::get<Equality>(inside);
         IndexList ind = feq.range().indexes();
-        ERROR_UNLESS(ind.size() == 1, "graph_builder:\n For Loop with more than one index is not supported yet\n");
-        Index i = ind.front();
-        ERROR_UNLESS(i.exp(), "graph_builder:\n No expression on for equation");
-        Expression exp = i.exp().get();
-        ERROR_UNLESS(is<Range>(exp), "Only range expression in for equations");
-        Range range = get<Range>(exp);
-        ERROR_UNLESS(!range.step(), "Range with step not supported");
+
+//        ERROR_UNLESS(ind.size() == 1, "graph_builder:\n For Loop with more than one index is not supported yet\n");
+//        Index i = ind.front();
+//        ERROR_UNLESS(i.exp(), "graph_builder:\n No expression on for equation");
+//        Expression exp = i.exp().get();
+//        ERROR_UNLESS(is<Range>(exp), "Only range expression in for equations");
+//        Range range = get<Range>(exp);
+//        ERROR_UNLESS(!range.step(), "Range with step not supported");
 
         VarSymbolTable syms_for = mmo_class.syms_ref();
-        syms_for.insert(i.name(),VarInfo(TypePrefixes(0),"Integer"));
+//        syms_for.insert(i.name(),VarInfo(TypePrefixes(0),"Integer"));
         Causalize::ContainsVector occurrs_for(graph[un], syms_for, ind);
         
         const bool rl = Apply(occurrs_for,eqq.left_ref());
@@ -141,7 +146,6 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
           VectorEdgeProperty ep;
           ep.labels = occurrs_for.GetOccurrenceIndexes();
           add_edge(eq, un, ep, graph);
-          DEBUG('c', "(%d, %d) ", graph[eq].index, graph[un].index);
         } 
       } else
         ERROR_UNLESS(is<Equality>(e), "Only causalization of equality and for equation is supported");
@@ -154,19 +158,22 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
 
 int ReducedGraphBuilder::getForRangeSize(ForEq feq) {
   IndexList ind = feq.range().indexes();
-  ERROR_UNLESS(ind.size() == 1, "graph_builder:\n For Loop with more than one index is not supported yet\n");
   Index i = ind.front();
-  ERROR_UNLESS(i.exp(), "graph_builder:\n No expression on for equation");
-  Expression exp = i.exp().get();
-  if (is<Brace>(exp))
-    return get<Brace>(exp).args().size();
-  if (is<Range>(exp)) {
-    Range range = get<Range>(exp);
-    ERROR_UNLESS(!range.step(), "graph_builder: FOR ranges with leaps not supported yet");
-    EvalExpression ev(mmo_class.syms_ref()); 
-    return Apply(ev,range.end_ref())-Apply(ev,range.start_ref())+1;
+  int equations = 1;
+  foreach_(Index i, ind) {
+    ERROR_UNLESS(i.exp(), "graph_builder:\n No expression on for equation");
+    Expression exp = i.exp().get();
+    if (is<Brace>(exp)) {
+      equations *= get<Brace>(exp).args().size();
+    } else if (is<Range>(exp)) {
+      Range range = get<Range>(exp);
+      ERROR_UNLESS(!range.step(), "graph_builder: FOR ranges with leaps not supported yet");
+      EvalExpression ev(mmo_class.syms_ref());
+      equations *= Apply(ev,range.end_ref())-Apply(ev,range.start_ref())+1;
+    } else {
+      ERROR("Expression in FOR Index not supported\n");
+    }
   }
-  ERROR("Expression in FOR Index not supported\n");
-  return 0;
+  return equations;
 }
 }

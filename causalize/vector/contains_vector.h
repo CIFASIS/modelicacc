@@ -54,15 +54,14 @@ namespace Causalize {
     bool operator()(Range) const;
     IndexPairSet GetOccurrenceIndexes() { return labels; }
   private:
-    void BuildPairs(Reference) const;
-    void BuildPairs1toM() const;
-    void BuildPairsNto1(int index=1) const;
-    void BuildPairs1to1(int index=1) const;
-    void BuildPairsNtoM() const;
-    void BuildPairsNtoN() const;
-    void BuildPairsNtoNExpression(Expression exp) const;
+    void BuildPairs(Reference unkRef) const;
+    void BuildPairs(int counters[], Reference unkRef) const;
+    void NestedLoopOperation(int counters[], int length[], int level, Reference unkRef) const;
+    std::string PrintListOfList(std::list<std::list<int> > xss) const;
+
     Expression exp;
-    boost::icl::discrete_interval<int> forIndexInterval;
+    std::list<boost::icl::discrete_interval<int> > forIndexIntervalList;
+    std::list<std::list<int> > BuildForIndexTuples(std::list<boost::icl::discrete_interval<int> > forIndexIntervalList) const;
     mutable std::set<VectorEdgeProperty> edgeList;
     mutable IndexPairSet labels;
     VectorVertexProperty unk2find;

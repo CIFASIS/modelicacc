@@ -70,7 +70,7 @@ CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGrap
 
 
 void 
-CausalizationStrategyVector::Causalize1toN(const Unknown unk, const Equation eq, const IndexPairSet ips){
+CausalizationStrategyVector::Causalize1toN(const VectorUnknown unk, const Equation eq, const IndexPairSet ips){
 	CausalizedVar c_var;
 	c_var.unknown = unk;
 	c_var.equation = eq;
@@ -79,7 +79,7 @@ CausalizationStrategyVector::Causalize1toN(const Unknown unk, const Equation eq,
 }
 
 void 
-CausalizationStrategyVector::CausalizeNto1(const Unknown unk, const Equation eq, const IndexPairSet ips){
+CausalizationStrategyVector::CausalizeNto1(const VectorUnknown unk, const Equation eq, const IndexPairSet ips){
 	CausalizedVar c_var;
 	c_var.unknown = unk;
 	c_var.equation = eq;
@@ -366,33 +366,46 @@ void CausalizationStrategyVector::SolveEquations() {
   foreach_(CausalizedVar cv, sorted_vars) {
     Equation equation = cv.equation;
     if(is<ForEq>(equation)) {
-      if (cv.unknown.dimension>0) { //TODO: Previously, here said: if(is<ForEq>(equation)) WTF?!
-        ForEq &feq = get<ForEq>(equation);
-        VarSymbolTable syms = mmo.syms_ref();
-
-        for (IndexPairSet::iterator pair = cv.pairs.begin(); pair!=cv.pairs.end(); pair++) {
-          int forIndex = pair->first;
-          Expression varIndex = pair->second;
-
-          cv.unknown.SetIndex(varIndex);
-          Equation eq = instantiate_equation(feq.elements().front(), feq.range().indexes().front().name(), forIndex, syms);
-
-          if (debugIsEnabled('c')) {
-            std::cout <<  "Solving variable " << cv.unknown() << "\n";
-            std::cout <<  "with eq " << feq << "\n";
+      ForEq &feq = get<ForEq>(equation);
+      VarSymbolTable syms = mmo.syms_ref();
+      for (IndexPairSet::iterator pair = cv.pairs.begin(); pair!=cv.pairs.end(); pair++) {
+        std::list<int> forIndexes = pair->first;
+        ExpList varIndexes;;
+        if (cv.unknown.dimension == 0) {
+          cv.unknown.SetIndex(varIndexes);
+        } else {
+          foreach_(int i, pair->second) {
+            varIndexes.push_back(Expression(i));
           }
-          std::list<std::string> c_code;
-          ClassList cl;
-          if (debugIsEnabled('c')) {
-            std::cout << "Solving:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
-          }
-          all.push_back(EquationSolver::Solve(eq, cv.unknown(), syms,c_code,cl));
+          cv.unknown.SetIndex(varIndexes);
         }
-      } else {
-        ERROR("Trying to solve an array variable with a non for equation");
+        std::list<Name> forIndexesNames;
+        foreach_(Index i, feq.range().indexes_) {
+          forIndexesNames.push_back(i.name());
+        }
+        Equation eq = instantiate_equation(feq.elements().front(), forIndexesNames, forIndexes, syms);
+
+        if (debugIsEnabled('c')) {
+          std::cout <<  "Solving variable " << cv.unknown() << "\n";
+          std::cout <<  "with eq " << feq << "\n";
+        }
+        std::list<std::string> c_code;
+        ClassList cl;
+        if (debugIsEnabled('c')) {
+          std::cout << "Solving:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
+        }
+        all.push_back(EquationSolver::Solve(eq, cv.unknown(), syms,c_code,cl));
       }
     } else{
-      cv.unknown.SetIndex(cv.pairs.begin()->second);
+      ExpList varIndexes;;
+      if (cv.unknown.dimension == 0) {
+        cv.unknown.SetIndex(varIndexes);
+      } else {
+        foreach_(int i, cv.pairs.begin()->second) {
+          varIndexes.push_back(Expression(i));
+        }
+      }
+      cv.unknown.SetIndex(varIndexes);
       std::list<std::string> c_code;
       ClassList cl;
       if (debugIsEnabled('c')) {
@@ -423,10 +436,7 @@ CausalizationStrategyVector::PrintCausalizationResult(){
     cout << "With equation \n";
     cout << cv.equation;
     cout << "\n solve variable " << cv.unknown();
-    cout << " in range {";
-    foreach_(IndexPair ip, cv.pairs)
-      cout << "(" << ip.first << "," << ip.second << ")";
-    cout << "}\n";
+    cout << " in range " << cv.pairs << "\n";
   }
 }
 }

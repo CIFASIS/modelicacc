@@ -34,12 +34,10 @@ namespace Causalize {
 
   struct Unknown {
     Modelica::AST::Expression expression;
-    Unknown() {};
+    Unknown();
     Unknown(Modelica::AST::Expression exp);
     Unknown(VarInfo varInfo, Modelica::AST::Reference var);
-    void SetIndex(Modelica::AST::Expression index);
     Expression operator() () const;
-    int dimension;
   };
 
 
