@@ -438,5 +438,6 @@ CausalizationStrategyVector::PrintCausalizationResult(){
     cout << "\n solve variable " << cv.unknown();
     cout << " in range " << cv.pairs << "\n";
   }
+  cout << "Cauzalization steps: " << sorted_vars.size() << "\n";
 }
 }
