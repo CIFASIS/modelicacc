@@ -29,6 +29,7 @@
 #include <boost/variant/get.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/icl/discrete_interval.hpp>
+#include <boost/icl/interval_set.hpp>
 #include <sstream>
 #include <mmo/mmo_class.h>
 #include <ast/queries.h>
@@ -360,6 +361,7 @@ bool CausalizationStrategyVector::CollisionPairInEdge(IndexPair ip, VectorEdge e
 
 
 void CausalizationStrategyVector::SolveEquations() {
+  /*
   EquationList all;
   vector<CausalizedVar> sorted_vars = equations1toN;
   sorted_vars.insert(sorted_vars.end(),equationsNto1.begin(), equationsNto1.end());
@@ -415,6 +417,7 @@ void CausalizationStrategyVector::SolveEquations() {
     }
   }
   mmo.equations_ref().equations_ref()=all;
+  */
 }
 
 Vertex CausalizationStrategyVector::GetEquation(Edge e) {

@@ -35,6 +35,7 @@
 #include <sstream>
 #include <string>
 
+namespace ICL = boost::icl;
 namespace Causalize {
   /// @brief This is the property for a vertex in the incidence graph. Nodes can be of two types: Equation or Unknow.
 
@@ -53,7 +54,17 @@ namespace Causalize {
   };
 
   /// @brief A pair representing a usage of a variable in an equation
-  typedef std::pair<std::list<int>, std::list<int> > IndexPair;
+  typedef ICL::interval_set<int> Interval;
+  inline Interval CreateInterval(int a, int b) {
+    Interval ret;
+    return ret.insert(ICL::discrete_interval<int>(a,b, ICL::interval_bounds::closed()));
+  }
+  typedef std::list<Interval> IntervalList;
+  typedef std::pair<IntervalList, IntervalList> IndexPair;
+  inline IndexPair CreateIndexPair(Interval a, Interval b) {
+    return make_pair(std::list<Interval>(1,a),std::list<Interval>(1,b));
+  }
+ // typedef std::pair<std::list<int>, std::list<int> > IndexPair;
   std::ostream& operator<<(std::ostream &os, const IndexPair &ip);
   typedef std::set<IndexPair> IndexPairSet;
   std::ostream& operator<<(std::ostream &os, const IndexPairSet &ips);

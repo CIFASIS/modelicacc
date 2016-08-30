@@ -53,12 +53,12 @@ namespace Causalize {
 
   std::ostream& operator<<(std::ostream &os, const IndexPair &ip) {
     std::pair<std::list<std::string>, std::list<std::string> > pairSt;
-    foreach_(int i, ip.first) {
+    foreach_(boost::icl::interval_set<int> i, ip.first) {
       std::stringstream ss;
       ss << i;
       pairSt.first.push_back(ss.str());
     }
-    foreach_(int i, ip.second) {
+    foreach_(boost::icl::interval_set<int> i, ip.second) {
       std::stringstream ss;
       ss << i;
       pairSt.second.push_back(ss.str());
@@ -85,6 +85,7 @@ namespace Causalize {
     return os;
   }
 
+  /*
   std::set<std::list<int> > VectorEdgeProperty::getDom() const {
     std::set<std::list<int> > dom;
     foreach_(IndexPair ip, labels)
@@ -97,6 +98,7 @@ namespace Causalize {
       ran.insert(ip.second);
     return ran;
   }
+  */
 
   void VectorEdgeProperty::RemovePairs(IndexPairSet ips) {
     foreach_(IndexPair ip, ips)

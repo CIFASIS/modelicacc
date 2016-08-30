@@ -244,7 +244,7 @@ namespace Causalize {
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
         std::list<std::list<int> > xss = BuildForIndexTuples(forIndexIntervalList);
         foreach_(std::list<int> xs, xss) {
-          labels.insert(std::make_pair(xs,std::list<int>(1,1)));
+          //labels.insert(std::make_pair(xs,std::list<int>(1,1)));
         }
       } else { //the unknown is a vector
         ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
@@ -270,12 +270,12 @@ namespace Causalize {
             ERROR_UNLESS(is<Modelica::AST::Integer>(val), "Expression inside for-equation could not be evaluated"); //TODO: See this error message
             unk_indexes.push_back(get<Modelica::AST::Integer>(val));
           }
-          labels.insert(std::make_pair(t,unk_indexes));
+          //labels.insert(std::make_pair(t,unk_indexes));
         }
       }
     } else { //The equation is not a for-equation
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
-        labels.insert(std::make_pair(std::list<int>(1,1),std::list<int>(1,1)));
+        //labels.insert(std::make_pair(std::list<int>(1,1),std::list<int>(1,1)));
       } else { //the unknown is a vector
         ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
         VarSymbolTable vst=syms;
@@ -289,7 +289,7 @@ namespace Causalize {
           ERROR_UNLESS(is<Modelica::AST::Integer>(val), "Expression index could not be evaluated"); //TODO: See this error message
           unk_indexes.push_back(get<Modelica::AST::Integer>(val));
         }
-        labels.insert(std::make_pair(std::list<int>(1,1),unk_indexes));
+        //labels.insert(std::make_pair(std::list<int>(1,1),unk_indexes));
       }
     }
   }
