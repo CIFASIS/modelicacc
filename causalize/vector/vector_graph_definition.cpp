@@ -53,18 +53,25 @@ namespace Causalize {
 
   std::ostream& operator<<(std::ostream &os, const IndexPair &ip) {
     std::pair<std::list<std::string>, std::list<std::string> > pairSt;
-    foreach_(boost::icl::interval_set<int> i, ip.first) {
+    foreach_(boost::icl::interval_set<int> i, ip.first.first) {
       std::stringstream ss;
       ss << i;
       pairSt.first.push_back(ss.str());
     }
-    foreach_(boost::icl::interval_set<int> i, ip.second) {
+    foreach_(boost::icl::interval_set<int> i, ip.second.first) {
       std::stringstream ss;
       ss << i;
       pairSt.second.push_back(ss.str());
     }
-    std::string joinedString = "((" + boost::algorithm::join(pairSt.first, ",") + "),(" + boost::algorithm::join(pairSt.second, ",") + "))";
+    std::string joinedString = "(Eq=(" + boost::algorithm::join(pairSt.first, ",") + "),Unk=(" + boost::algorithm::join(pairSt.second, ",") + "))";
     os << joinedString;
+    os << "Usage of first pair = {";
+    foreach_(int i, ip.first.second) 
+      os << i << ", ";
+    os << "}. Usage of second pair {";
+    foreach_(int i, ip.second.second) 
+      os << i << ", ";
+    os << "}\n";
     return os;
   }
 

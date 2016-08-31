@@ -60,9 +60,10 @@ namespace Causalize {
     return ret.insert(ICL::discrete_interval<int>(a,b, ICL::interval_bounds::closed()));
   }
   typedef std::list<Interval> IntervalList;
-  typedef std::pair<IntervalList, IntervalList> IndexPair;
-  inline IndexPair CreateIndexPair(Interval a, Interval b) {
-    return make_pair(std::list<Interval>(1,a),std::list<Interval>(1,b));
+  typedef std::pair<IntervalList, std::vector<int> > IntervalListUsage;
+  typedef std::pair<IntervalListUsage, IntervalListUsage> IndexPair;
+  inline IndexPair CreateIndexPair(Interval a, Interval b, std::vector<int> ua, std::vector<int> ub) {
+    return make_pair(make_pair(std::list<Interval>(1,a),ua) , make_pair(std::list<Interval>(1,b),ub));
   }
  // typedef std::pair<std::list<int>, std::list<int> > IndexPair;
   std::ostream& operator<<(std::ostream &os, const IndexPair &ip);

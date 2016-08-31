@@ -60,7 +60,7 @@ namespace Causalize {
     std::string PrintListOfList(std::list<std::list<int> > xss) const;
 
     Expression exp;
-    std::list<boost::icl::discrete_interval<int> > forIndexIntervalList;
+    IntervalList forIndexIntervalList;
     std::list<std::list<int> > BuildForIndexTuples(std::list<boost::icl::discrete_interval<int> > forIndexIntervalList) const;
     mutable std::set<VectorEdgeProperty> edgeList;
     mutable IndexPairSet labels;

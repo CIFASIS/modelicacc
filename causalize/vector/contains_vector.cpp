@@ -56,7 +56,8 @@ namespace Causalize {
         ERROR_UNLESS(i.exp(), "No index in for equation");
         ERROR_UNLESS(is<Range>(i.exp().get()), "Only range expressions supported");
         Range range = get<Range>(i.exp().get());
-        forIndexIntervalList.push_back(boost::icl::discrete_interval<int>::closed(Apply(ev,range.start_ref()), Apply(ev,range.end_ref())));
+        //boost::icl::interval_set<int> set_r;
+        forIndexIntervalList.push_back(CreateInterval(Apply(ev,range.start_ref()), Apply(ev,range.end_ref())));
       }
   };
 
@@ -177,6 +178,7 @@ namespace Causalize {
     return false;
   }
 
+  /*
 
   std::list<std::list<int> > PutHead(int x, std::list<std::list<int> > xss) {
     std::list<std::list<int> > yss;
@@ -232,64 +234,85 @@ namespace Causalize {
       return PutIndexes(xss.front(), BuildForIndexTuples(zss));
     }
   }
+    */
 
 
 
   void ContainsVector::BuildPairs(Reference unkRef) const {
     if (foreq) { //The equation is a for-equation
-      std::list<std::list<int> > forIndexTuples = BuildForIndexTuples(forIndexIntervalList);
-      if (debugIsEnabled('c')) {
-        std::cout << "forIndexIntervalList: " + PrintListOfList(forIndexTuples) + "\n";
-      }
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
-        std::list<std::list<int> > xss = BuildForIndexTuples(forIndexIntervalList);
-        foreach_(std::list<int> xs, xss) {
-          //labels.insert(std::make_pair(xs,std::list<int>(1,1)));
-        }
+        labels.insert( make_pair( make_pair(forIndexIntervalList, std::vector<int>(forIndexIntervalList.size() ,-1)), make_pair(IntervalList(1,CreateInterval(1,1)), std::vector<int>(1,-1))));
       } else { //the unknown is a vector
         ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
         VarSymbolTable vst=syms;
         std::vector<Name> iterator_names;
+        std::vector<int> usage_eq, usage_unk;
         foreach_(Index i, indexes) {
-          iterator_names.push_back(i.name());
+           iterator_names.push_back(i.name());
+           VarInfo vinfo = VarInfo(TypePrefixes(), "Integer", Option<Comment>(), Modification());
+           vst.insert(i.name(),vinfo);
         }
-        foreach_(std::list<int> t, forIndexTuples) {
-          int iterator_n=0;
-          foreach_(int val_iterator, t) {
-            VarInfo vinfo = VarInfo(TypePrefixes(1,parameter), "Integer", Option<Comment>(), Modification(ModEq(Expression(val_iterator))));
-            vst.insert(iterator_names[iterator_n],vinfo);
-            iterator_n++;
+        IntervalList unk_indexes;
+        Expression unkRef_exp = unkRef;
+        Expression evaluated_expr=Apply(Modelica::PartialEvalExpression(vst),unkRef_exp);
+        ERROR_UNLESS(is<Reference>(evaluated_expr), "Evaluated expression is not a reference");
+        Reference r = get<Reference>(evaluated_expr);
+        ExpList indexes_list = get<1>(r.ref().front());
+        unsigned int total_index_uses = 0;
+        foreach_(Expression val,indexes_list) {
+          if (is<Modelica::AST::Integer>(val)) {
+             int v = get<Modelica::AST::Integer>(val);
+             unk_indexes.push_back(CreateInterval(v,v)); 
+             usage_eq.push_back(-1);
+          } else if (is<Reference>(val)) {
+            Reference ind_ref = get<Reference>(val);
+            std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
+            ERROR_UNLESS(index_name!=iterator_names.end(), "Usage of variable in index expression not found");
+            Index i = indexes.at(index_name-iterator_names.begin());
+            ERROR_UNLESS(i.exp(), "Implicit range not supported in for equations");
+            ERROR_UNLESS(is<Range>(i.exp().get()), "Only range supported in for equations");
+            Range range = get<Range>(i.exp().get());
+            EvalExpression ev(syms);
+            usage_eq.push_back(index_name - iterator_names.begin());
+            unk_indexes.push_back(CreateInterval(Apply(ev,range.start_ref()), Apply(ev,range.end_ref())));
+            total_index_uses++;
+          } else if (is<BinOp>(val)) {
+            BinOp binop = get<BinOp>(Apply(Modelica::PartialEvalExpression(vst), val));
+            ERROR_UNLESS(binop.op()==Add ||
+                         binop.op()==Sub , "Only addition and substraction are supported in indexes");
+            ERROR_UNLESS(is<Reference>(binop.left()),"Index must be of the form i+/-K where K is a constant");
+            ERROR_UNLESS(is<Modelica::AST::Integer>(binop.right()),"Index must be of the form i+/-K where K is a constant");
+            //int offset = get<Modelica::AST::Integer>(binop.right());
+            /*if (binop.op()==Sub) // Transform everything to an addition
+              offset *= -1;
+              total_index_uses++;
+            */
+            
+          } else {
+            ERROR("Index expression not supported");
           }
-          Expression unkRef_exp = unkRef;
-          Expression evaluated_expr=Apply(Modelica::PartialEvalExpression(vst),unkRef_exp);
-          ERROR_UNLESS(is<Reference>(evaluated_expr), "Evaluated expression is not a reference");
-          std::list<int> unk_indexes;
-          Reference r = get<Reference>(evaluated_expr);
-          ExpList indexes = get<1>(r.ref().front());
-          foreach_(Expression val,indexes) {
-            ERROR_UNLESS(is<Modelica::AST::Integer>(val), "Expression inside for-equation could not be evaluated"); //TODO: See this error message
-            unk_indexes.push_back(get<Modelica::AST::Integer>(val));
-          }
-          //labels.insert(std::make_pair(t,unk_indexes));
         }
+        ERROR_UNLESS(total_index_uses==forIndexIntervalList.size(), "The number of indexes does not match the number of uses");
+        labels.insert(std::make_pair(make_pair(forIndexIntervalList,usage_eq),make_pair(unk_indexes,usage_unk)));
       }
     } else { //The equation is not a for-equation
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
-        //labels.insert(std::make_pair(std::list<int>(1,1),std::list<int>(1,1)));
+        labels.insert(CreateIndexPair(CreateInterval(1,1),CreateInterval(1,1),std::vector<int>(1,-1), std::vector<int>(1,-1) ));
       } else { //the unknown is a vector
         ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
         VarSymbolTable vst=syms;
         Expression unkRef_exp = unkRef;
         Expression evaluated_expr=Apply(Modelica::PartialEvalExpression(vst),unkRef_exp);
-        std::list<int> unk_indexes;
+        IntervalList unk_indexes;
         ERROR_UNLESS(is<Reference>(evaluated_expr), "Evaluated expression is not a reference");
         Reference r = get<Reference>(evaluated_expr);
         ExpList indexes = get<1>(r.ref().front());
         foreach_(Expression val, indexes) {
           ERROR_UNLESS(is<Modelica::AST::Integer>(val), "Expression index could not be evaluated"); //TODO: See this error message
-          unk_indexes.push_back(get<Modelica::AST::Integer>(val));
+          int v = get<Modelica::AST::Integer>(val);
+          unk_indexes.push_back(CreateInterval(v,v));
         }
-        //labels.insert(std::make_pair(std::list<int>(1,1),unk_indexes));
+        labels.insert(make_pair(make_pair(IntervalList(1,CreateInterval(1,1)), std::vector<int>(1,-1)),make_pair(unk_indexes, std::vector<int>(1,-1))));
       }
     }
   }
