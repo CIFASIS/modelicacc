@@ -61,15 +61,15 @@ namespace Causalize {
   }
   typedef std::list<Interval> IntervalList;
   typedef std::pair<IntervalList, std::vector<int> > IntervalListUsage;
-  typedef std::pair<IntervalListUsage, IntervalListUsage> IndexPair;
-  inline IndexPair CreateIndexPair(Interval a, Interval b, std::vector<int> ua, std::vector<int> ub) {
-    return make_pair(make_pair(std::list<Interval>(1,a),ua) , make_pair(std::list<Interval>(1,b),ub));
+  typedef boost::tuple<IntervalListUsage, IntervalListUsage, std::list<int> > IndexPair;
+  inline IndexPair CreateIndexPair(Interval a, Interval b, std::vector<int> ua, std::vector<int> ub, std::list<int> offset) {
+    return make_tuple(make_pair(std::list<Interval>(1,a),ua) , make_pair(std::list<Interval>(1,b),ub), offset);
   }
- // typedef std::pair<std::list<int>, std::list<int> > IndexPair;
   std::ostream& operator<<(std::ostream &os, const IndexPair &ip);
   typedef std::set<IndexPair> IndexPairSet;
   std::ostream& operator<<(std::ostream &os, const IndexPairSet &ips);
 
+  unsigned long int EdgeCount(IndexPairSet);
   struct VectorEdgeProperty {
 
     friend std::ostream& operator<<(std::ostream &os, const VectorEdgeProperty &ep);
@@ -82,6 +82,7 @@ namespace Causalize {
     void RemovePairs(IndexPairSet ips);
     void RemoveUnknowns(IndexPairSet ips_remove);
     void RemoveEquations(IndexPairSet ips_remove);
+    unsigned long int EdgeCount();
     inline bool IsEmpty() { return labels.size()==0; }
 
   };

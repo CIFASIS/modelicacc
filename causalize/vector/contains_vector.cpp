@@ -241,7 +241,7 @@ namespace Causalize {
   void ContainsVector::BuildPairs(Reference unkRef) const {
     if (foreq) { //The equation is a for-equation
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
-        labels.insert( make_pair( make_pair(forIndexIntervalList, std::vector<int>(forIndexIntervalList.size() ,-1)), make_pair(IntervalList(1,CreateInterval(1,1)), std::vector<int>(1,-1))));
+        labels.insert( make_tuple( make_pair(forIndexIntervalList, std::vector<int>(forIndexIntervalList.size() ,-1)), make_pair(IntervalList(1,CreateInterval(1,1)), std::vector<int>(1,-1)), std::list<int>()));
       } else { //the unknown is a vector
         ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
         VarSymbolTable vst=syms;
@@ -261,11 +261,13 @@ namespace Causalize {
         ExpList indexes_list = get<1>(r.ref().front());
         unsigned int total_index_uses = 0;
         unsigned int index_count = 0;
+        std::list<int> offset_list;
         foreach_(Expression val,indexes_list) {
           if (is<Modelica::AST::Integer>(val)) {
              int v = get<Modelica::AST::Integer>(val);
              unk_indexes.push_back(CreateInterval(v,v)); 
              usage_eq[index_count] = -1;
+             offset_list.push_back(0);
              usage_unk.push_back(-1);
           } else if (is<Reference>(val)) {
             Reference ind_ref = get<Reference>(val);
@@ -281,6 +283,7 @@ namespace Causalize {
             usage_eq[pos] = index_count;
             unk_indexes.push_back(CreateInterval(Apply(ev,range.start_ref()), Apply(ev,range.end_ref())));
             total_index_uses++;
+            offset_list.push_back(0);
           } else if (is<BinOp>(val)) {
             BinOp binop = get<BinOp>(Apply(Modelica::PartialEvalExpression(vst), val));
             ERROR_UNLESS(binop.op()==Add ||
@@ -290,6 +293,7 @@ namespace Causalize {
             int offset = get<Modelica::AST::Integer>(binop.right());
             if (binop.op()==Sub) // Transform everything to an addition
               offset *= -1;
+            offset_list.push_back(offset);
             Reference ind_ref = get<Reference>(binop.left());
             std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
             ERROR_UNLESS(index_name!=iterator_names.end(), "Usage of variable in index expression not found");
@@ -309,11 +313,11 @@ namespace Causalize {
           index_count++;
         }
         ERROR_UNLESS(total_index_uses==forIndexIntervalList.size(), "The number of indexes does not match the number of uses");
-        labels.insert(std::make_pair(make_pair(forIndexIntervalList,usage_eq),make_pair(unk_indexes,usage_unk)));
+        labels.insert(make_tuple(make_pair(forIndexIntervalList,usage_eq),make_pair(unk_indexes,usage_unk), offset_list));
       }
     } else { //The equation is not a for-equation
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
-        labels.insert(CreateIndexPair(CreateInterval(1,1),CreateInterval(1,1),std::vector<int>(1,-1), std::vector<int>(1,-1) ));
+        labels.insert(CreateIndexPair(CreateInterval(1,1),CreateInterval(1,1),std::vector<int>(1,-1), std::vector<int>(1,-1), std::list<int>() ));
       } else { //the unknown is a vector
         ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
         VarSymbolTable vst=syms;
@@ -328,7 +332,7 @@ namespace Causalize {
           int v = get<Modelica::AST::Integer>(val);
           unk_indexes.push_back(CreateInterval(v,v));
         }
-        labels.insert(make_pair(make_pair(IntervalList(1,CreateInterval(1,1)), std::vector<int>(1,-1)),make_pair(unk_indexes, std::vector<int>(1,-1))));
+        labels.insert(make_tuple(make_pair(IntervalList(1,CreateInterval(1,1)), std::vector<int>(1,-1)),make_pair(unk_indexes, std::vector<int>(1,-1)), std::list<int>()));
       }
     }
   }

@@ -53,12 +53,12 @@ namespace Causalize {
 
   std::ostream& operator<<(std::ostream &os, const IndexPair &ip) {
     std::pair<std::list<std::string>, std::list<std::string> > pairSt;
-    foreach_(boost::icl::interval_set<int> i, ip.first.first) {
+    foreach_(boost::icl::interval_set<int> i, get<0>(ip).first) {
       std::stringstream ss;
       ss << i;
       pairSt.first.push_back(ss.str());
     }
-    foreach_(boost::icl::interval_set<int> i, ip.second.first) {
+    foreach_(boost::icl::interval_set<int> i, get<1>(ip).first) {
       std::stringstream ss;
       ss << i;
       pairSt.second.push_back(ss.str());
@@ -66,11 +66,16 @@ namespace Causalize {
     std::string joinedString = "(Eq=(" + boost::algorithm::join(pairSt.first, ",") + "),Unk=(" + boost::algorithm::join(pairSt.second, ",") + "))";
     os << joinedString;
     os << "Usage of first pair = {";
-    foreach_(int i, ip.first.second) 
+    foreach_(int i, get<0>(ip).second) 
       os << i << ", ";
     os << "}. Usage of second pair {";
-    foreach_(int i, ip.second.second) 
+    foreach_(int i, get<1>(ip).second) 
       os << i << ", ";
+    os << "}";
+    os << "Offset list = {";
+    foreach_(int i, get<2>(ip)) {
+      os << " " << i;
+    }
     os << "}\n";
     return os;
   }
@@ -113,6 +118,7 @@ namespace Causalize {
   }
 
   void VectorEdgeProperty::RemoveUnknowns(IndexPairSet ips_remove) {
+    /*
     IndexPairSet new_labels;
     foreach_(IndexPair ip, labels)  {
       bool found=false;
@@ -126,8 +132,10 @@ namespace Causalize {
         new_labels.insert(ip);
     }
     labels = new_labels;
+    */
   } ;
   void VectorEdgeProperty::RemoveEquations(IndexPairSet ips_remove) {
+    /*
     IndexPairSet new_labels;
     foreach_(IndexPair ip, labels)  {
       bool found=false;
@@ -141,6 +149,29 @@ namespace Causalize {
         new_labels.insert(ip);
     }
     labels = new_labels;
+    */
   }
+  unsigned long int IntervalCount (IntervalList ilu) {
+    unsigned long int count = 1;
+    foreach_(Interval i, ilu) {
+      count *= i.size();
+    }
+    return count;
+  }
+  unsigned long int VectorEdgeProperty::EdgeCount() {
+    return Causalize::EdgeCount(labels);
+  }
+  unsigned long int EdgeCount(IndexPairSet labels) {
+    unsigned long int count = 0;
+    foreach_(IndexPair ip, labels) {
+      unsigned long int eq_count = IntervalCount(get<0>(ip).first);
+      unsigned long int unk_count = IntervalCount(get<1>(ip).first);
+      count += (eq_count > unk_count ? eq_count : unk_count);
+    //unsigned long int eq_ount = 
+      
+    }
+    return count;
+  }
+
 
 }
