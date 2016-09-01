@@ -252,6 +252,7 @@ namespace Causalize {
            VarInfo vinfo = VarInfo(TypePrefixes(), "Integer", Option<Comment>(), Modification());
            vst.insert(i.name(),vinfo);
         }
+        usage_eq.resize(indexes.size());
         IntervalList unk_indexes;
         Expression unkRef_exp = unkRef;
         Expression evaluated_expr=Apply(Modelica::PartialEvalExpression(vst),unkRef_exp);
@@ -259,11 +260,13 @@ namespace Causalize {
         Reference r = get<Reference>(evaluated_expr);
         ExpList indexes_list = get<1>(r.ref().front());
         unsigned int total_index_uses = 0;
+        unsigned int index_count = 0;
         foreach_(Expression val,indexes_list) {
           if (is<Modelica::AST::Integer>(val)) {
              int v = get<Modelica::AST::Integer>(val);
              unk_indexes.push_back(CreateInterval(v,v)); 
-             usage_eq.push_back(-1);
+             usage_eq[index_count] = -1;
+             usage_unk.push_back(-1);
           } else if (is<Reference>(val)) {
             Reference ind_ref = get<Reference>(val);
             std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
@@ -273,7 +276,9 @@ namespace Causalize {
             ERROR_UNLESS(is<Range>(i.exp().get()), "Only range supported in for equations");
             Range range = get<Range>(i.exp().get());
             EvalExpression ev(syms);
-            usage_eq.push_back(index_name - iterator_names.begin());
+            int pos = index_name - iterator_names.begin();
+            usage_unk.push_back(pos);
+            usage_eq[pos] = index_count;
             unk_indexes.push_back(CreateInterval(Apply(ev,range.start_ref()), Apply(ev,range.end_ref())));
             total_index_uses++;
           } else if (is<BinOp>(val)) {
@@ -282,15 +287,26 @@ namespace Causalize {
                          binop.op()==Sub , "Only addition and substraction are supported in indexes");
             ERROR_UNLESS(is<Reference>(binop.left()),"Index must be of the form i+/-K where K is a constant");
             ERROR_UNLESS(is<Modelica::AST::Integer>(binop.right()),"Index must be of the form i+/-K where K is a constant");
-            //int offset = get<Modelica::AST::Integer>(binop.right());
-            /*if (binop.op()==Sub) // Transform everything to an addition
+            int offset = get<Modelica::AST::Integer>(binop.right());
+            if (binop.op()==Sub) // Transform everything to an addition
               offset *= -1;
-              total_index_uses++;
-            */
-            
+            Reference ind_ref = get<Reference>(binop.left());
+            std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
+            ERROR_UNLESS(index_name!=iterator_names.end(), "Usage of variable in index expression not found");
+            Index i = indexes.at(index_name-iterator_names.begin());
+            ERROR_UNLESS(i.exp(), "Implicit range not supported in for equations");
+            ERROR_UNLESS(is<Range>(i.exp().get()), "Only range supported in for equations");
+            Range range = get<Range>(i.exp().get());
+            EvalExpression ev(syms);
+            int pos = index_name - iterator_names.begin();
+            usage_unk.push_back(pos);
+            usage_eq[pos] = index_count;
+            unk_indexes.push_back(CreateInterval(Apply(ev,range.start_ref())+offset, Apply(ev,range.end_ref())+offset));
+            total_index_uses++;
           } else {
             ERROR("Index expression not supported");
           }
+          index_count++;
         }
         ERROR_UNLESS(total_index_uses==forIndexIntervalList.size(), "The number of indexes does not match the number of uses");
         labels.insert(std::make_pair(make_pair(forIndexIntervalList,usage_eq),make_pair(unk_indexes,usage_unk)));
