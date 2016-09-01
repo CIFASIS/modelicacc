@@ -134,7 +134,7 @@ namespace Modelica {
       Ref r=v.ref();
       ERROR_UNLESS(r.size()==1,"EvalExpression: conversion of dotted references not implemented");
       Option<ExpList> oel = boost::get<1>(r[0]);
-      ERROR_UNLESS(oel,"EvalExpression: conversion of subscripted references not implemented");
+      ERROR_UNLESS((bool)oel,"EvalExpression: conversion of subscripted references not implemented");
       Name s=boost::get<0>(r[0]);
       
       if (name && name.get() == s) return val.get();

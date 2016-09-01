@@ -45,7 +45,7 @@ ExpList UnknownsCollector::collectUnknowns() {
     Name name = val.first;
 		if (!varInfo.builtin() && !isConstant(name,_c.syms_ref()) && !isDiscrete(name, _c.syms_ref()) && !isParameter(name,_c.syms_ref())) {
       Option<Type::Type> opt_type =  _c.tyTable_ref()[varInfo.type()];
-      ERROR_UNLESS(opt_type, "No %s type found", varInfo.type().c_str());
+      ERROR_UNLESS((bool)opt_type, "No %s type found", varInfo.type().c_str());
       Type::Type type = opt_type.get();
       if (is<Type::Real>(type)) {
         if (varInfo.state()) {

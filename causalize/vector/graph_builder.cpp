@@ -129,7 +129,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         IndexList ind = feq.range().indexes();
         ERROR_UNLESS(ind.size() == 1, "graph_builder:\n For Loop with more than one index is not supported yet\n");
         Index i = ind.front();
-        ERROR_UNLESS(i.exp(), "graph_builder:\n No expression on for equation");
+        ERROR_UNLESS((bool)i.exp(), "graph_builder:\n No expression on for equation");
         Expression exp = i.exp().get();
         ERROR_UNLESS(is<Range>(exp), "Only range expression in for equations");
         Range range = get<Range>(exp);
@@ -160,7 +160,7 @@ int ReducedGraphBuilder::getForRangeSize(ForEq feq) {
   IndexList ind = feq.range().indexes();
   ERROR_UNLESS(ind.size() == 1, "graph_builder:\n For Loop with more than one index is not supported yet\n");
   Index i = ind.front();
-  ERROR_UNLESS(i.exp(), "graph_builder:\n No expression on for equation");
+  ERROR_UNLESS((bool)i.exp(), "graph_builder:\n No expression on for equation");
   Expression exp = i.exp().get();
   if (is<Brace>(exp))
     return get<Brace>(exp).args().size();

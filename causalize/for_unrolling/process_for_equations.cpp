@@ -59,7 +59,7 @@ void process_for_equations(Modelica::MMO_Class &mmo_class) {
       Index in = il.front();
       Name variable  = in.name();
       OptExp ind = in.exp();
-      ERROR_UNLESS(ind, "for-equation's index with implicit range not supported yet\n");
+      ERROR_UNLESS((bool)ind, "for-equation's index with implicit range not supported yet\n");
       Expression exp = ind.get();
       ForIndexIterator *forIndexIter = NULL;
       if (is<Range>(exp)) {

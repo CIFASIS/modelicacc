@@ -106,7 +106,7 @@ void StateVariablesFinder::findStateVariables() {
         Name name= boost::get<0>(rt);
         VarSymbolTable &vars = _c.syms_ref();
         Option<VarInfo> opt_vinfo = vars[name];
-        ERROR_UNLESS(opt_vinfo, "StateVariablesFinder: Variable %s not found", name.c_str());
+        ERROR_UNLESS((bool)opt_vinfo, "StateVariablesFinder: Variable %s not found", name.c_str());
         VarInfo vinfo = opt_vinfo.get();
         vinfo.state_ref()=true;
         vars.insert(name,vinfo);

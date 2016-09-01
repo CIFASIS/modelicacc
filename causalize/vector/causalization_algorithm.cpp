@@ -90,7 +90,7 @@ CausalizationStrategyVector::CausalizeNto1(const Unknown unk, const Equation eq,
 	c_var.unknown = unk;
 	c_var.equation = eq;
 	c_var.pairs = ips;
-  equationsNto1.insert(begin(equationsNto1), c_var);		
+  equationsNto1.insert(equationsNto1.begin(), c_var);		
 }
 
 bool

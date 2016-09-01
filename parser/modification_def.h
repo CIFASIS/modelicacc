@@ -370,7 +370,7 @@ namespace Modelica
           , std::cerr
                 << val("Parser error. Expecting ")
                 << _4                               // what failed?
-                << bind(&at,_3,it)
+                << construct<std::string>(_3, _2)
                 << std::endl
         );
  

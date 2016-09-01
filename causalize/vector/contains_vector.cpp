@@ -50,7 +50,7 @@ namespace Causalize {
     indexes(indexes) {
       std::cout << "Looking for exp " << exp;
       ERROR_UNLESS(indexes.size()==1, "For Loop with more than one index is not supported yet\n");
-      ERROR_UNLESS(indexes.front().exp(), "No index in for equation");
+      ERROR_UNLESS((bool)indexes.front().exp(), "No index in for equation");
       ERROR_UNLESS(is<Range>(indexes.front().exp().get()), "Only range expressions supported");
       Range range = get<Range>(indexes.front().exp().get());
       EvalExpression ev(syms);
