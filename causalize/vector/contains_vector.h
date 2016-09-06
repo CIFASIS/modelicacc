@@ -52,7 +52,7 @@ namespace Causalize {
     bool operator()(Output) const;
     bool operator()(Reference) const;
     bool operator()(Range) const;
-    IndexPairSet GetOccurrenceIndexes() { return labels; }
+    IndexPairSetOld GetOccurrenceIndexes() { return labels; }
   private:
     void BuildPairs(Reference unkRef) const;
     void BuildPairs(int counters[], Reference unkRef) const;
@@ -63,7 +63,7 @@ namespace Causalize {
     IntervalList forIndexIntervalList;
     std::list<std::list<int> > BuildForIndexTuples(std::list<boost::icl::discrete_interval<int> > forIndexIntervalList) const;
     mutable std::set<VectorEdgeProperty> edgeList;
-    mutable IndexPairSet labels;
+    mutable IndexPairSetOld labels;
     VectorVertexProperty unk2find;
     mutable VarSymbolTable syms;
     bool foreq;

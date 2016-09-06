@@ -71,7 +71,7 @@ CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGrap
 
 
 void 
-CausalizationStrategyVector::Causalize1toN(const VectorUnknown unk, const Equation eq, const IndexPairSet ips){
+CausalizationStrategyVector::Causalize1toN(const VectorUnknown unk, const Equation eq, const IndexPairSetOld ips){
 	CausalizedVar c_var;
 	c_var.unknown = unk;
 	c_var.equation = eq;
@@ -80,7 +80,7 @@ CausalizationStrategyVector::Causalize1toN(const VectorUnknown unk, const Equati
 }
 
 void 
-CausalizationStrategyVector::CausalizeNto1(const VectorUnknown unk, const Equation eq, const IndexPairSet ips){
+CausalizationStrategyVector::CausalizeNto1(const VectorUnknown unk, const Equation eq, const IndexPairSetOld ips){
 	CausalizedVar c_var;
 	c_var.unknown = unk;
 	c_var.equation = eq;
@@ -111,13 +111,13 @@ CausalizationStrategyVector::Causalize() {
       EquationVertex eq = *iter;
       ERROR_UNLESS(out_degree(eq, graph) != 0, "Problem is singular, not supported yet\n");
       // Try to look for a set of indexes to causalize
-      Option<std::pair<VectorEdge,IndexPairSet> > op = CanCausalize(eq, kVertexEquation);
+      Option<std::pair<VectorEdge,IndexPairSetOld> > op = CanCausalize(eq, kVertexEquation);
       // If we can causalize something
       if (op) {
         // We are going to causalize something
         causalize_some=true;
         // This pair holds which edge(the first component) to use for causalization and which indexes(the second component)
-        std::pair<VectorEdge,IndexPairSet> causal_pair = op.get();
+        std::pair<VectorEdge,IndexPairSetOld> causal_pair = op.get();
         VectorEdge e = causal_pair.first;
         // This is the unknown node connecting to the edge
         UnknownVertex unk = GetUnknown(e);
@@ -177,13 +177,13 @@ CausalizationStrategyVector::Causalize() {
       UnknownVertex unk = *iter;
       ERROR_UNLESS(out_degree(unk, graph) != 0, "Problem is singular, not supported yet\n");
       // Try to look for a set of indexes to causalize
-      Option<std::pair<VectorEdge,IndexPairSet> > op = CanCausalize(unk, kVertexUnknown);
+      Option<std::pair<VectorEdge,IndexPairSetOld> > op = CanCausalize(unk, kVertexUnknown);
       // If we can causalize something
       if (op) {
         // We are going to causalize something
         causalize_some=true;
         // This pair holds which edge(the first component) to use for causalization and which indexes(the second component)
-        std::pair<VectorEdge,IndexPairSet> causal_pair = op.get();
+        std::pair<VectorEdge,IndexPairSetOld> causal_pair = op.get();
         VectorEdge e = causal_pair.first;
         // This is the equation node connecting to the edge
         EquationVertex eq = GetEquation(e);
@@ -252,15 +252,15 @@ CausalizationStrategyVector::Causalize() {
 }
 
 
-Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCausalize(VectorEquationVertex eq, VertexType vt) {
+Option<std::pair<VectorEdge,IndexPairSetOld> > CausalizationStrategyVector::CanCausalize(VectorEquationVertex eq, VertexType vt) {
   VectorCausalizationGraph::out_edge_iterator vi, vi_end, other, other_end;
   VectorEdge candidate_edge; 
-  IndexPairSet resultingIPS;
-  IndexPairSet::iterator candidate_pair, test;
+  IndexPairSetOld resultingIPS;
+  IndexPairSetOld::iterator candidate_pair, test;
   for(boost::tie(vi,vi_end) = out_edges(eq,graph); vi != vi_end; ++vi) {
     // Try to find a pair in candidate_edge
     candidate_edge = *vi;
-    IndexPairSet ips = graph[*vi].labels;
+    IndexPairSetOld ips = graph[*vi].labels;
     if (debugIsEnabled('c')) {
       cout << "Checking edge " << graph[*vi] << "\n";
     }
@@ -294,11 +294,11 @@ Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCaus
     }
   }
   //At this point we couldn't find any causalizable pair in any edge
-  return Option<std::pair<VectorEdge,IndexPairSet> >();    // First find on candidate_edge a possible set of pairs
+  return Option<std::pair<VectorEdge,IndexPairSetOld> >();    // First find on candidate_edge a possible set of pairs
 }
 
 
-bool CausalizationStrategyVector::TestPairInCandidateEdge(IndexPairSet S, IndexPairOld ip, VectorEdge edge, VertexType vt) {
+bool CausalizationStrategyVector::TestPairInCandidateEdge(IndexPairSetOld S, IndexPairOld ip, VectorEdge edge, VertexType vt) {
   /*
   IndexPairSet::iterator test;
   //Test the candidate pair in the edge

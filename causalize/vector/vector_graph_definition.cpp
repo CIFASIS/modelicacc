@@ -81,12 +81,23 @@ namespace Causalize {
     return os;
   }
 
-  std::ostream& operator<<(std::ostream &os, const IndexPairOld &ip) {
+  std::ostream& operator<<(std::ostream &os, const IndexPairOld &ip) {  //TODO: BORRAR!
     return os;
   }
 
-
   std::ostream& operator<<(std::ostream &os, const IndexPairSet &ips) {
+    std::list<std::string> ipsStList;
+    foreach_(IndexPair ip, ips){
+      std::ostringstream ipSt;
+      ipSt << ip;
+      ipsStList.push_back(ipSt.str());
+    }
+    std::string ipsSt = "<" + boost::algorithm::join(ipsStList, ",") + ">";
+    os << ipsSt;
+    return os;
+  }
+
+  std::ostream& operator<<(std::ostream &os, const IndexPairSetOld &ips) {  //TODO: BORRAR!
     std::list<std::string> ipsStList;
     foreach_(IndexPairOld ip, ips){
       std::ostringstream ipSt;
@@ -98,7 +109,7 @@ namespace Causalize {
     return os;
   }
 
-  std::ostream& operator<<(std::ostream &os, const VectorEdgeProperty &ep) {
+  std::ostream& operator<<(std::ostream &os, const VectorEdgeProperty &ep) {  //TODO: BORRAR!
     os << ep.labels;
     return os;
   }
@@ -240,7 +251,7 @@ namespace Causalize {
     return Filter(ret, other);
   }
 
-  void Label::RemovePairs(IPS ips) {
+  void Label::RemovePairs(IndexPairSet ips) {
 
   }
 
@@ -250,11 +261,11 @@ namespace Causalize {
   }
 
 
-  void VectorEdgeProperty::RemovePairs(IndexPairSet ips) {
+  void VectorEdgeProperty::RemovePairs(IndexPairSetOld ips) {  //TODO: BORRAR!
 
   }
 
-  void VectorEdgeProperty::RemoveUnknowns(IndexPairSet ips_remove) {
+  void VectorEdgeProperty::RemoveUnknowns(IndexPairSetOld ips_remove) { //TODO: BORRAR!
     /*
     IndexPairSet new_labels;
     foreach_(IndexPair ip, labels)  {
@@ -271,7 +282,7 @@ namespace Causalize {
     labels = new_labels;
     */
   } ;
-  void VectorEdgeProperty::RemoveEquations(IndexPairSet ips_remove) {
+  void VectorEdgeProperty::RemoveEquations(IndexPairSetOld ips_remove) { //TODO: BORRAR!
     /*
     IndexPairSet new_labels;
     foreach_(IndexPair ip, labels)  {
@@ -295,10 +306,10 @@ namespace Causalize {
     }
     return count;
   }
-  unsigned long int VectorEdgeProperty::EdgeCount() {
+  unsigned long int VectorEdgeProperty::EdgeCount() { //TODO: BORRAR!
     return Causalize::EdgeCount(labels);
   }
-  unsigned long int EdgeCount(IndexPairSet labels) {
+  unsigned long int EdgeCount(IndexPairSetOld labels) {
     unsigned long int count = 0;
     foreach_(IndexPairOld ip, labels) {
       unsigned long int eq_count = IntervalCount(get<0>(ip).first);

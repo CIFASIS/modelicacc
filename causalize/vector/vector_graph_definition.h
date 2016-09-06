@@ -79,7 +79,7 @@ namespace Causalize {
       std::vector<Interval> intervals;
       std::list<int> usage;
 
-      IntervalList intervalList;   //TODO: Borrar!!!
+      IntervalList intervalList;   //TODO: BORRAR!
       typedef IntervalList::iterator iterator;
       typedef IntervalList::const_iterator const_iterator;
       inline iterator begin() { return intervalList.begin(); }
@@ -109,23 +109,13 @@ namespace Causalize {
 
   inline MDI Dom(IndexPair ip) { return get<1>(ip); }
 
-  inline unsigned long int Size(Interval i) { return i.upper() - i.lower(); }
+  inline unsigned long int Size(Interval i) { return i.upper() - i.lower(); }  //TODO: BORRAR!
 
-  std::ostream& operator<<(std::ostream &os, const IndexPairOld &ip);
+  std::ostream& operator<<(std::ostream &os, const IndexPairOld &ip);  //TODO: BORRAR!
 
-  typedef std::set<IndexPairOld> IndexPairSet; //TODO: Borrar!!!
+  typedef std::set<IndexPairOld> IndexPairSetOld; //TODO: BORRAR!
+  typedef std::set<IndexPair> IndexPairSet;
 
-
-  /*****************************************************************************
-   ****                               IPS                                   ****
-   *****************************************************************************/
-  class IPS {
-  public:
-    inline IPS(std::set<IndexPair> ips): ips(ips) {};
-    inline bool IsEmpty() { return ips.size()==0; }
-  private:
-    std::set<IndexPair> ips;
-  };
 
 
   /*****************************************************************************
@@ -133,31 +123,33 @@ namespace Causalize {
    *****************************************************************************/
   class Label {
   public:
-    inline Label(IPS ips): ips(ips) {};
+    inline Label(IndexPairSet ips): ips(ips) {};
     Label nrres(MDI const mdi) const;
     Label ndres(MDI const mdi) const;
-    void RemovePairs(IPS ips);
+    void RemovePairs(IndexPairSet ips);
     unsigned long int EdgeCount();
-    inline bool IsEmpty() { return ips.IsEmpty(); }
+    inline bool IsEmpty() { return ips.size()==0; }
     friend std::ostream& operator<<(std::ostream &os, const Label &label);
   private:
-    IPS ips;
+    IndexPairSet ips;
   };
-
-
 
   std::ostream& operator<<(std::ostream &os, const IndexPairSet &ips);
 
-  unsigned long int EdgeCount(IndexPairSet);
+  std::ostream& operator<<(std::ostream &os, const IndexPairSetOld &ips);   //TODO:: BORRAR!
 
-  struct VectorEdgeProperty {  //TODO: Borrar!!!
+
+  unsigned long int EdgeCount(IndexPairSetOld);
+
+
+  struct VectorEdgeProperty {  //TODO: BORRAR!
     friend std::ostream& operator<<(std::ostream &os, const VectorEdgeProperty &ep);
-    IndexPairSet labels;
+    IndexPairSetOld labels;
 /// @brief This function removes a set of pairs from this Edge
 /// @param ips set of pairs to remove
-    void RemovePairs(IndexPairSet ips);
-    void RemoveUnknowns(IndexPairSet ips_remove);
-    void RemoveEquations(IndexPairSet ips_remove);
+    void RemovePairs(IndexPairSetOld ips);
+    void RemoveUnknowns(IndexPairSetOld ips_remove);
+    void RemoveEquations(IndexPairSetOld ips_remove);
     unsigned long int EdgeCount();
     inline bool IsEmpty() { return labels.size()==0; }
 
@@ -178,7 +170,7 @@ namespace Causalize {
   struct CausalizedVar{
     VectorUnknown unknown;
     Equation equation;
-    IndexPairSet pairs;
+    IndexPairSetOld pairs;
   };
 }
 #endif
