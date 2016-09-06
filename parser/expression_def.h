@@ -205,23 +205,6 @@ namespace Modelica
       }
     } boolean;
   
-    std::string at(std::string::const_iterator where, std::string::const_iterator start) {
-    std::stringstream ss;
-    int line=1, col=1;
-    while (where!=start) {
-      if (*start=='\n') {
-        line++; 
-        col=1;
-      } else {
-        col++; 
-      }
-      start++;
-    }
-    ss << " at Line " << line << " Col: " << col;
-    return ss.str();
-  }
- 
-
     template <typename Iterator>
     ExpressionRule<Iterator>::ExpressionRule(Iterator &it) : ExpressionRule::base_type(expression), ident(it), QUOTE("\""), OPAREN("("),CPAREN(")"),
                                                       OBRACKET("["), CBRACKET("]"), OBRACE("{"), CBRACE("}"), COMA(","), it(it), DOT(qi::char_('.')), 
@@ -397,7 +380,7 @@ namespace Modelica
           , std::cerr
                 << val("Parser error. Expecting ")
                 << _4                               // what failed?
-                << bind(&at,_3,it)
+                << construct<std::string>(_3, _2) 
                 << std::endl
         );
  

@@ -27,6 +27,7 @@
 #include <boost/fusion/include/std_pair.hpp>
 #include <boost/fusion/include/boost_tuple.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
+#include <string>
 
 BOOST_FUSION_ADAPT_STRUCT(
     Modelica::AST::EquationSection,
@@ -92,6 +93,7 @@ namespace Modelica
       using qi::_4;
       using qi::_val;
       using phoenix::bind;
+      using phoenix::construct;
       using phoenix::val;
       using qi::fail;
       using qi::on_error;
@@ -142,15 +144,15 @@ namespace Modelica
 
  
       /* Error and debug */
-      /*on_error<fail>
+      on_error<fail>
         (
             equation
           , std::cerr
                 << val("Parser error. Expecting ")
                 << _4                               // what failed?
-                << bind(&at,_3,it)
+                << construct<std::string>(_3, _2)
                 << std::endl
-        );*/
+        );
  
       equation_list.name("equation_list");
 

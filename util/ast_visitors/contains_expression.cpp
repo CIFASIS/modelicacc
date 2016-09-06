@@ -19,6 +19,7 @@
 
 #include <util/debug.h>
 #include <util/ast_visitors/contains_expression.h>
+#include <boost/variant/get.hpp>
 
 namespace Modelica {
     ContainsExpression::ContainsExpression(Expression e): exp(e) {};
@@ -98,6 +99,12 @@ namespace Modelica {
     }
     bool ContainsExpression::operator()(Reference v) const {
       if (exp==Expression(v)) return true; 
+      if (is<Reference>(exp)) {
+        Reference ref = get<Reference>(exp);
+        // Check wheter a[1] is contained in a
+        if (get<0>(v.ref().front())==get<0>(ref.ref().front()) && get<1>(v.ref().front()).size()==0)
+          return true;
+      }
       return false;
     }
 }
