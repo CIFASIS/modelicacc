@@ -33,8 +33,8 @@ class CausalizationStrategyVector{
     Vertex GetEquation(Edge e);
     Vertex GetUnknown(Edge e);
     Option<std::pair<VectorEdge,IndexPairSet> > CanCausalize(VectorEquationVertex eq, VertexType vt);
-    bool TestPairInCandidateEdge(IndexPairSet S, IndexPair ip, VectorEdge edge, VertexType vt);
-    bool CollisionPairInEdge(IndexPair ip, VectorEdge edge, VertexType vt);
+    bool TestPairInCandidateEdge(IndexPairSet S, IndexPairOld ip, VectorEdge edge, VertexType vt);
+    bool CollisionPairInEdge(IndexPairOld ip, VectorEdge edge, VertexType vt);
 
     int step;
 		int equationNumber;

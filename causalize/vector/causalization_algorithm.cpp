@@ -298,7 +298,7 @@ Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCaus
 }
 
 
-bool CausalizationStrategyVector::TestPairInCandidateEdge(IndexPairSet S, IndexPair ip, VectorEdge edge, VertexType vt) {
+bool CausalizationStrategyVector::TestPairInCandidateEdge(IndexPairSet S, IndexPairOld ip, VectorEdge edge, VertexType vt) {
   /*
   IndexPairSet::iterator test;
   //Test the candidate pair in the edge
@@ -341,7 +341,7 @@ bool CausalizationStrategyVector::TestPairInCandidateEdge(IndexPairSet S, IndexP
 }
 
 
-bool CausalizationStrategyVector::CollisionPairInEdge(IndexPair ip, VectorEdge edge, VertexType vt) {
+bool CausalizationStrategyVector::CollisionPairInEdge(IndexPairOld ip, VectorEdge edge, VertexType vt) {
   /*
   for (IndexPairSet::iterator test = graph[edge].labels.begin(); test !=graph[edge].labels.end(); test++) {
     if (vt==kVertexEquation) {

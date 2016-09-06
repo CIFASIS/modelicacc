@@ -26,6 +26,7 @@
 #include <ast/expression.h>
 #include <boost/variant/get.hpp>
 #include <util/debug.h>
+#include <stdarg.h>
 
 
 namespace Causalize {
@@ -53,41 +54,46 @@ namespace Causalize {
 
   std::ostream& operator<<(std::ostream &os, const IndexPair &ip) {
     std::pair<std::list<std::string>, std::list<std::string> > pairSt;
-    foreach_(boost::icl::interval_set<int> i, get<0>(ip).first) {
+    foreach_(Interval i, Ran(ip).getIntervals()) {
       std::stringstream ss;
       ss << i;
       pairSt.first.push_back(ss.str());
     }
-    foreach_(boost::icl::interval_set<int> i, get<1>(ip).first) {
+    foreach_(Interval i, Dom(ip).getIntervals()) {
       std::stringstream ss;
       ss << i;
       pairSt.second.push_back(ss.str());
     }
     std::string joinedString = "(Eq=(" + boost::algorithm::join(pairSt.first, ",") + "),Unk=(" + boost::algorithm::join(pairSt.second, ",") + "))";
     os << joinedString;
-    os << "Usage of first pair = {";
-    foreach_(int i, get<0>(ip).second) 
-      os << i << ", ";
-    os << "}. Usage of second pair {";
-    foreach_(int i, get<1>(ip).second) 
-      os << i << ", ";
-    os << "}";
-    os << "Offset list = {";
-    foreach_(int i, get<2>(ip)) {
-      os << " " << i;
-    }
-    os << "}\n";
+//    os << "Usage of first pair = {";
+//    foreach_(int i, get<0>(ip).second)
+//      os << i << ", ";
+//    os << "}. Usage of second pair {";
+//    foreach_(int i, get<1>(ip).second)
+//      os << i << ", ";
+//    os << "}";
+//    os << "Offset list = {";
+//    foreach_(int i, get<2>(ip)) {
+//      os << " " << i;
+//    }
+//    os << "}\n";
     return os;
   }
 
+  std::ostream& operator<<(std::ostream &os, const IndexPairOld &ip) {
+    return os;
+  }
+
+
   std::ostream& operator<<(std::ostream &os, const IndexPairSet &ips) {
     std::list<std::string> ipsStList;
-    foreach_(IndexPair ip, ips){
+    foreach_(IndexPairOld ip, ips){
       std::ostringstream ipSt;
       ipSt << ip;
       ipsStList.push_back(ipSt.str());
     }
-    std::string ipsSt = "{" + boost::algorithm::join(ipsStList, ",") + "}";
+    std::string ipsSt = "<" + boost::algorithm::join(ipsStList, ",") + ">";
     os << ipsSt;
     return os;
   }
@@ -97,24 +103,155 @@ namespace Causalize {
     return os;
   }
 
-  /*
-  std::set<std::list<int> > VectorEdgeProperty::getDom() const {
-    std::set<std::list<int> > dom;
-    foreach_(IndexPair ip, labels)
-      dom.insert(ip.first);
-    return dom;
+
+  MDI::MDI(int d, ...) {
+    intervals.resize(d);
+    va_list vl;
+    va_start(vl,d);
+    for (int i=0;i<d;i++) {
+      int lower=va_arg(vl,int);
+      int upper=va_arg(vl,int);
+      intervals[i]=CreateInterval(lower, upper);
+    }
+    va_end(vl);
   }
-  std::set<std::list<int> > VectorEdgeProperty::getRan() const {
-    std::set<std::list<int> > ran;
-    foreach_(IndexPair ip, labels)
-      ran.insert(ip.second);
-    return ran;
+
+  int MDI::Size() const{
+    int size = 1;
+    foreach_(Interval i, intervals) {
+      size*=(i.upper()+1-i.lower());
+    }
+    return size;
   }
-  */
+
+  std::list<Interval> MDI::Partition(Interval iA, Interval iB) {
+    std::list<Interval> ret;
+    int a = iA.lower();
+    int b = iA.upper();
+    int c = iB.lower();
+    int d = iB.upper();
+    if ((a<c) && (c<d) && (d<b)) {
+      ret.push_back(CreateInterval(a,c-1));
+      ret.push_back(CreateInterval(c,d));
+      ret.push_back(CreateInterval(d+1,b));
+    } else if ((c<=a) && (a<=d) && (d<b)) {
+  //      return {CreateInterval(a,d), CreateInterval(d+1,b)}; /* c++11 */
+      ret.push_back(CreateInterval(a,d));
+      ret.push_back(CreateInterval(d+1,b));
+    } else if ((a<c) && (c<=b) && (b<=d)) {
+      ret.push_back(CreateInterval(a,c-1));
+      ret.push_back(CreateInterval(c,b));
+    } else {
+      ret.push_back(CreateInterval(a,b));
+    }
+    return ret;
+  }
+
+
+  std::list<MDI> MDI::PutHead(Interval i, std::list<MDI> mdiList) {
+    std::list<MDI> mdiListRet;
+    BOOST_FOREACH(MDI xs, mdiList) {
+      IntervalList ys=xs.intervalList;
+      ys.push_front(i);
+      mdiListRet.push_back(ys);
+    }
+    return mdiListRet;
+  }
+
+  std::list<MDI> MDI::PutLists(MDI mdi, std::list<MDI> mdiList) {
+    std::list<MDI> mdiListRet;
+    BOOST_FOREACH(Interval i, mdi.intervalList) {
+      std::list<MDI> zss = PutHead(i, mdiList);
+      BOOST_FOREACH(MDI zs, zss) {
+        mdiListRet.push_back(zs);
+      }
+    }
+    return mdiListRet;
+  }
+
+  std::ostream& operator<<(std::ostream &os, const MDI mdi) {
+    std::list<std::string> xsStList;
+    BOOST_FOREACH(Interval x, mdi.intervals) {
+      std::stringstream ss;
+      ss << "["<< x.lower() << "," << x.upper() << "]";
+      xsStList.push_back(ss.str());
+    }
+    os << "<" << boost::algorithm::join(xsStList, ",") << ">";
+    return os;
+  }
+
+  std::list<MDI> MDI::CartProd(std::list<MDI> xss) {
+    std::list<MDI> yss;
+    if (xss.size()==0) return yss;
+    else if (xss.size()==1) {
+      IntervalList xs = xss.front().intervalList;
+      BOOST_FOREACH(Interval i, xs) {
+        IntervalList ys;
+        ys.push_back(i);
+        yss.push_back(ys);
+      }
+      return yss;
+    } else {
+      std::list<MDI> zss = xss;
+      zss.pop_front();
+      return PutLists(xss.front(), CartProd(zss));
+    }
+  }
+
+  std::list<MDI> MDI::Filter(std::list<MDI> mdiList, MDI mdi) {
+    std::list<MDI> mdiListRet;
+    BOOST_FOREACH(MDI m, mdiList) {
+      ERROR_UNLESS(m.Dimension()==mdi.Dimension(), "Dimension error");
+      if (m.Dimension()!=mdi.Dimension()) {
+        std::cout << "Dimension error\n";
+        abort();
+      }
+      MDI::iterator iterXS = m.begin();
+      MDI::iterator iterYS = mdi.begin();
+      bool hasInter = true;
+      for(int i=0; i<(int)m.Dimension(); i++) {
+        hasInter&= intersects(*iterXS,*iterYS);
+        iterXS++;
+        iterYS++;
+      }
+      if (!hasInter) {
+        mdiListRet.push_back(m);
+      }
+    }
+    return mdiListRet;
+  }
+
+
+  std::list<MDI> MDI::operator-(MDI &other) {
+    if (this->Dimension()!=other.Dimension()) {
+      std::cout << "Dimension error\n";
+      abort();
+    }
+    std::list<MDI> ret;
+    MDI::iterator iterA = this->begin();
+    MDI::const_iterator iterB = other.begin();
+    std::list<MDI> prod;
+    for(int i=0; i<this->Dimension(); i++) {
+      prod.push_back(Partition(*iterA,*iterB));
+      iterA++;
+      iterB++;
+    }
+    ret = CartProd(prod);
+    return Filter(ret, other);
+  }
+
+  void Label::RemovePairs(IPS ips) {
+
+  }
+
+  std::ostream& operator<<(std::ostream &os, const Label &label) {
+    os << label.ips;
+    return os;
+  }
+
 
   void VectorEdgeProperty::RemovePairs(IndexPairSet ips) {
-    foreach_(IndexPair ip, ips)
-      labels.erase(ip);
+
   }
 
   void VectorEdgeProperty::RemoveUnknowns(IndexPairSet ips_remove) {
@@ -154,7 +291,7 @@ namespace Causalize {
   unsigned long int IntervalCount (IntervalList ilu) {
     unsigned long int count = 1;
     foreach_(Interval i, ilu) {
-      count *= i.size();
+      count *= Size(i);
     }
     return count;
   }
@@ -163,7 +300,7 @@ namespace Causalize {
   }
   unsigned long int EdgeCount(IndexPairSet labels) {
     unsigned long int count = 0;
-    foreach_(IndexPair ip, labels) {
+    foreach_(IndexPairOld ip, labels) {
       unsigned long int eq_count = IntervalCount(get<0>(ip).first);
       unsigned long int unk_count = IntervalCount(get<1>(ip).first);
       count += (eq_count > unk_count ? eq_count : unk_count);
