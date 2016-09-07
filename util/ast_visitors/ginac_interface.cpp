@@ -148,6 +148,9 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
       if ("sin"==v.name()) {
         return sin(ApplyThis(v.args()[0]));
       } 
+      if ("cos"==v.name()) {
+        return cos(ApplyThis(v.args()[0]));
+      } 
       if ("pre"==v.name()) {
         return ApplyThis(v.args()[0]);
       } 

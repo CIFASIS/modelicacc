@@ -86,7 +86,7 @@ namespace Modelica {
     }
     foreach_(Name var, mmo_class.variables()) {
       Option<VarInfo> opt_vinfo = mmo_class.syms_ref()[var];
-      ERROR_UNLESS(opt_vinfo, "No variable info for %s", var.c_str());
+      ERROR_UNLESS((bool)opt_vinfo, "No variable info for %s", var.c_str());
       VarInfo vinfo = opt_vinfo.get();  
       if (vinfo.type()=="Boolean" || vinfo.type()=="Integer") {
         //if ((vinfo.type()=="Boolean" && !isParameter(var,mmo_class.syms_ref())) || (vinfo.type()=="Integer" && !isParameter(var,mmo_class.syms_ref()) && !isConstant(var,mmo_class.syms_ref()))) 

@@ -80,10 +80,14 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
   }    
   GiNaC::lst eqns, vars;
   foreach_(Expression exp,crs)  {
+    if (debugIsEnabled('s')) 
+      std::cerr << "Solving variables " << exp;
     vars.append(Apply(tog,exp));
   }
   bool for_eq=false;
   foreach_(Equation e,eqs) {
+    if (debugIsEnabled('s')) 
+      std::cerr << "Using equation " << e << "\n";
     if (is<ForEq>(e)) {
       ForEq feq = get<ForEq>(e);
       ERROR_UNLESS(is<Equality>(feq.elements().front()), "Trying to solve a for loop with a non suported equation inside");
@@ -93,6 +97,8 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
       Expression r=Apply(peval,eq.right_ref());
       GiNaC::ex left=Apply(tog,l);
       GiNaC::ex right=Apply(tog,r);
+      if (debugIsEnabled('s')) 
+        std::cerr << "GiNaC equation " << left << "=" << right << "\n";
       eqns.append(left==right);
     } else {
       ERROR_UNLESS(is<Equality>(e), "Solve: Only equality equations are supported\n");
@@ -101,6 +107,8 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
       Expression r=Apply(peval,eq.right_ref());
       GiNaC::ex left=Apply(tog,l);
       GiNaC::ex right=Apply(tog,r);
+      if (debugIsEnabled('s')) 
+        std::cerr << "GiNaC equation " << left << "=" << right << "\n";
       eqns.append(left==right);
     }
   }
@@ -109,6 +117,8 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
   try  {
     //if (size>1)
     //  throw std::logic_error("Blahh");
+    if (debugIsEnabled('s')) 
+      std::cerr << "GiNaC equations " << eqns << "\n";
     GiNaC::ex solved= lsolve(eqns, vars,GiNaC::solve_algo::gauss);
     if (solved.nops()==0) {
       std::cerr << "EquationSolver: cannot solve equation" << eqns<< std::endl;
@@ -119,6 +129,8 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
       std::stringstream s(ios_base::out);
       std::stringstream rhs(ios_base::out);
       set_print_func<power,print_dflt>(my_print_power_dflt);
+      if (debugIsEnabled('s')) 
+        std::cerr << "GiNaC result " << solved.op(i) << "\n";
       s << index_dimensions;
       s << solved.op(i).op(0);
       Expression lhs;
@@ -147,8 +159,8 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     std::set<Name> args;
     foreach_(Expression exp,crs) 
       ol.push_back(exp);
-    char buff[1024];
-    sprintf(buff,"fsolve%d",fsolve++);
+    std::stringstream fun_name;
+    fun_name << "fsolve"<< fsolve++;
     EquationList loop;
     foreach_ (VarSymbolTable::table_type::value_type val, syms) {
         if (val.second.builtin()) 
@@ -167,7 +179,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
         }
     }
     std::ostringstream code;
-    code << "int " << buff << "_eval(const gsl_vector * __x, void * __p, gsl_vector * __f) {\n";
+    code << "int " << fun_name.str() << "_eval(const gsl_vector * __x, void * __p, gsl_vector * __f) {\n";
     code << "  double *args=(double*)__p;\n";
     int i=0;
     foreach_ (Expression e, crs) {
@@ -189,9 +201,9 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     code << "  return GSL_SUCCESS;\n";
     code << "}\n";
     if (crs.size()>1)
-      code << "void " << buff << "(";
+      code << "void " << fun_name.str() << "(";
     else 
-      code << "double " << buff << "(";
+      code << "double " << fun_name.str() << "(";
     i=0;
     foreach_(Name n, args) {
       code << (++i>1 ? "," : "") << "double " << n;
@@ -250,7 +262,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     }
     code << "  }\n";
     code << "  __F.n = " << eqs.size() << ";\n";
-    code << "  __F.f = " << buff << "_eval;\n";
+    code << "  __F.f = " << fun_name.str() << "_eval;\n";
     code << "  double __args[" << args.size() << "];\n";
     i=0;
     foreach_ (Name n, args) {
@@ -259,7 +271,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     code << "   __F.params  = __args;\n";
     code << "  gsl_vector *__f = gsl_vector_alloc(" << eqs.size() << ");\n";
     code << "   // Try if we are already in the solution from the start (useful for discrete dependendt loops) \n";
-    code << "   " << buff << "_eval(__x, (void*)__args, __f) ;\n";
+    code << "   " << fun_name.str() << "_eval(__x, (void*)__args, __f) ;\n";
     code << "   if (gsl_multiroot_test_residual(__f, 1e-7)==GSL_SUCCESS) {\n";
     code << "       gsl_vector_free(__f);\n";
     code << "       gsl_multiroot_fsolver_free (__s);\n";
@@ -302,41 +314,47 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     c_code.push_back(code.str());
     
     ExpList exp_args;
+    i=0;
     foreach_(Name n, args) {
       exp_args.push_back(Reference(n));
     }
     if (crs.size()>1)
-      ret.push_back(Equality(Output(ol), Call(buff,exp_args)));
+      ret.push_back(Equality(Output(ol), Call(fun_name.str(),exp_args)));
     else
-      ret.push_back(Equality(crs.front(), Call(buff,exp_args)));
+      ret.push_back(Equality(crs.front(), Call(fun_name.str(),exp_args)));
     Class c;
-    c.name_ref()=buff;
+    c.name_ref()=fun_name.str();
     Composition com;
     External ext;
+    i=0;
     foreach_(Name n, args) {
-      com.elements_ref().push_back(Component(TypePrefixes(1,input),"Real",Option<ExpList>(),DeclList(1,Declaration(n))));
-      ext.args_ref().push_back(Expression(Reference(n)));
+      std::stringstream arg_name;
+      arg_name << "u_" << i;
+      com.elements_ref().push_back(Component(TypePrefixes(1,input),"Real",Option<ExpList>(),DeclList(1,Declaration(arg_name.str()))));
+      ext.args_ref().push_back(Expression(Reference(arg_name.str())));
+      i++;
     }
+    i=0;
     foreach_(Expression e, crs) {
-      if (is<Reference>(e)) 
-        com.elements_ref().push_back(Component(TypePrefixes(1,output),"Real",Option<ExpList>(),DeclList(1,Declaration(Modelica::refName(get<Reference>(e))))));
-      else
-        WARNING("Skiping call output value to algebraic loop");
+      std::stringstream arg_name;
+      arg_name << "y_" << i;
+      com.elements_ref().push_back(Component(TypePrefixes(1,output),"Real",Option<ExpList>(),DeclList(1,Declaration(arg_name.str()))));
       if (crs.size()>1)
-        ext.args_ref().push_back(e);
+        ext.args_ref().push_back( Expression(Reference(arg_name.str())));
+      i++;
     }
     if (crs.size()==1)
-        ext.comp_ref_ref() = crs.front();
+        ext.comp_ref_ref() = Expression(Reference("y_0"));
     c.prefixes_ref()=ClassPrefixes(1,Modelica::function);
     com.language_ref()=String("C");
-    ext.fun_ref()=buff;
+    ext.fun_ref()=fun_name.str();
     com.call_ref()=ext;
     com.external_ref()=true;
     ExpList el;    
     el.push_back(String("m")); 
     el.push_back(String("gsl")); 
     el.push_back(String("blas")); 
-    Annotation ext_anot(ClassModification(Argument(ElMod("Library",ModEq(Brace(el)))), Argument(ElMod("Include",ModEq(String("#include \\\"" + path + "\\\"\n"))))  ));
+    Annotation ext_anot(ClassModification(Argument(ElMod("Library",ModEq(Brace(el)))), Argument(ElMod("Include",ModEq(String("#include \\\"" + path + "\\\""))))  ));
     com.ext_annot_ref()=ext_anot;
     c.composition_ref()=com;
     

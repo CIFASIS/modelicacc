@@ -453,7 +453,7 @@ OptExp Connectors::intersectionIntervals(OptExp a, OptExp b)
 OptExp Connectors::proyInter(Expression inter,Edge e)
 {
 	if (isEneUno(e)) {
-		ConstantExpression ce = ConstantExpression();
+		//ConstantExpression ce = ConstantExpression();
 		Expression i1 = getIndex(e).get();
 		/*if (Apply(ce,i1)) */ return applyIntervalo(getIntervalo(e).get(),getIndex(e));
 	} 
