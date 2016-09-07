@@ -52,34 +52,6 @@ namespace Causalize {
     }
   }
 
-  std::ostream& operator<<(std::ostream &os, const IndexPair &ip) {
-    std::pair<std::list<std::string>, std::list<std::string> > pairSt;
-    foreach_(Interval i, Ran(ip).getIntervals()) {
-      std::stringstream ss;
-      ss << i;
-      pairSt.first.push_back(ss.str());
-    }
-    foreach_(Interval i, Dom(ip).getIntervals()) {
-      std::stringstream ss;
-      ss << i;
-      pairSt.second.push_back(ss.str());
-    }
-    std::string joinedString = "(Eq=(" + boost::algorithm::join(pairSt.first, ",") + "),Unk=(" + boost::algorithm::join(pairSt.second, ",") + "))";
-    os << joinedString;
-//    os << "Usage of first pair = {";
-//    foreach_(int i, get<0>(ip).second)
-//      os << i << ", ";
-//    os << "}. Usage of second pair {";
-//    foreach_(int i, get<1>(ip).second)
-//      os << i << ", ";
-//    os << "}";
-//    os << "Offset list = {";
-//    foreach_(int i, get<2>(ip)) {
-//      os << " " << i;
-//    }
-//    os << "}\n";
-    return os;
-  }
 
   std::ostream& operator<<(std::ostream &os, const IndexPairOld &ip) {  //TODO: BORRAR!
     return os;
@@ -114,7 +86,9 @@ namespace Causalize {
     return os;
   }
 
-
+  /*****************************************************************************
+   ****                               MDI                                   ****
+   *****************************************************************************/
   MDI::MDI(int d, ...) {
     intervals.resize(d);
     va_list vl;
@@ -127,12 +101,24 @@ namespace Causalize {
     va_end(vl);
   }
 
+  MDI::MDI(IntervalList intervalList) {
+    intervals.resize(intervalList.size());
+    int count=0;
+    foreach_(Interval i, intervalList) {
+      intervals[count] = i;
+    }
+  }
+
   int MDI::Size() const{
     int size = 1;
     foreach_(Interval i, intervals) {
       size*=(i.upper()+1-i.lower());
     }
     return size;
+  }
+
+  bool MDI::operator<(const MDI& other) const {
+    return this->intervals<other.intervals;
   }
 
   std::list<Interval> MDI::Partition(Interval iA, Interval iB) {
@@ -157,7 +143,6 @@ namespace Causalize {
     }
     return ret;
   }
-
 
   std::list<MDI> MDI::PutHead(Interval i, std::list<MDI> mdiList) {
     std::list<MDI> mdiListRet;
@@ -232,8 +217,7 @@ namespace Causalize {
     return mdiListRet;
   }
 
-
-  std::list<MDI> MDI::operator-(MDI &other) {
+  std::list<MDI> MDI::operator-(const MDI &other) {
     if (this->Dimension()!=other.Dimension()) {
       std::cout << "Dimension error\n";
       abort();
@@ -251,14 +235,100 @@ namespace Causalize {
     return Filter(ret, other);
   }
 
+  bool MDI::operator&(const MDI &other) {
+    if (this->Dimension() != other.Dimension()) { //TODO: Is this condition OK?
+      ERROR("Dimension error\n");
+      return false;
+    }
+    for(int i=0; i<this->Dimension(); i++) {
+      //If i-th interval does not intersect with its corresponding interval in the other MDI: return false
+      if (!intersects(this->intervals[i],other.intervals[i])) return false;
+    }
+    //All intervals intersect with its corresponding interval in the other MDI: return true
+    return true;
+  }
+  /*****************************************************************************
+   ****************************************************************************/
+
+
+
+  /*****************************************************************************
+   ****                            INDEX PAIR                               ****
+   *****************************************************************************/
+  std::list<IndexPair> IndexPair::operator-(const IndexPair& other) {
+    ERROR_UNLESS((this->Dom().Dimension()==other.Dom().Dimension()) &&
+        (this->Ran().Dimension()==other.Ran().Dimension()), "Dimension error\n");
+    std::list<MDI> remainsDom = this->Dom()-other.Dom();
+    std::list<MDI> remainsRan = this->Ran()-other.Ran();
+    std::list<MDI>::iterator domIter = remainsDom.begin();
+    std::list<MDI>::iterator ranIter = remainsRan.begin();
+    std::list<IndexPair> ret;
+    while (domIter!=remainsDom.end()) {
+      ret.push_back(IndexPair(*domIter,*ranIter,this->offset));
+      domIter++;
+      ranIter++;
+    }
+    return ret;
+  }
+
+  bool IndexPair::operator<(const IndexPair& other) const {
+    return this->Dom() < other.Dom() && this->Ran() < other.Ran() && this->OS() < other.OS();
+  }
+
+  std::ostream& operator<<(std::ostream &os, const IndexPair &ip) {
+    os << "(Eq=(" << ip.Dom() << "), Unk=(" << ip.Ran() << "))";
+//    os << "Usage of first pair = {";
+//    foreach_(int i, get<0>(ip).second)
+//      os << i << ", ";
+//    os << "}. Usage of second pair {";
+//    foreach_(int i, get<1>(ip).second)
+//      os << i << ", ";
+//    os << "}";
+//    os << "Offset list = {";
+//    foreach_(int i, get<2>(ip)) {
+//      os << " " << i;
+//    }
+//    os << "}\n";
+    return os;
+  }
+  /*****************************************************************************
+   ****************************************************************************/
+
+
+
+  /*****************************************************************************
+   ****                              LABEL                                  ****
+   *****************************************************************************/
   void Label::RemovePairs(IndexPairSet ips) {
+    foreach_(IndexPair ipRemove, ips) {
+      foreach_(IndexPair ip, this->ips) {
+        if ((ip.Dom()&ipRemove.Dom()) && (ip.Ran()&ipRemove.Ran()) && (ip.OS())==(ipRemove.OS())) {
+          this->ips.erase(ip);
+          foreach_(IndexPair ipRemaining, (ip-ipRemove)) {
+            this->ips.insert(ipRemaining);
+          }
+        }
+      }
+    }
+  }
+
+  void Label::RemoveUnknowns(MDI const mdi) const {
 
   }
+
+  void Label::RemoveEquations(MDI const mdi) const {
+
+  }
+
 
   std::ostream& operator<<(std::ostream &os, const Label &label) {
     os << label.ips;
     return os;
   }
+  /*****************************************************************************
+   ****************************************************************************/
+
+
 
 
   void VectorEdgeProperty::RemovePairs(IndexPairSetOld ips) {  //TODO: BORRAR!

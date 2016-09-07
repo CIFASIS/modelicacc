@@ -68,30 +68,33 @@ namespace Causalize {
 
   public:
     MDI(int d, ... );
-    inline MDI(IntervalList intervalList): intervalList(intervalList) {};
+    MDI(IntervalList intervalList);
     inline int Dimension() const {return intervals.size(); }
     int Size () const;
-    inline IntervalList getIntervals() {return intervalList; }
-    std::list<MDI> operator-(MDI &other);
-    friend std::ostream& operator<<(std::ostream &os, const MDI mdi);
+    std::list<MDI> operator-(const MDI& other);
+    bool operator<(const MDI& other) const;
+    //Returns true if the intersection if not void
+    bool operator&(const MDI& other);
+    friend std::ostream& operator<<(std::ostream& os, const MDI mdi);
 
   private:
       std::vector<Interval> intervals;
       std::list<int> usage;
-
-      IntervalList intervalList;   //TODO: BORRAR!
-      typedef IntervalList::iterator iterator;
-      typedef IntervalList::const_iterator const_iterator;
-      inline iterator begin() { return intervalList.begin(); }
-      inline const_iterator begin() const { return intervalList.begin(); }
-      inline iterator end() { return intervalList.end(); }
-
+      typedef std::vector<Interval>::iterator iterator;
+      typedef std::vector<Interval>::const_iterator const_iterator;
+      inline iterator begin() { return intervals.begin(); }
+      inline const_iterator begin() const { return intervals.begin(); }
+      inline iterator end() { return intervals.end(); }
       IntervalList Partition(Interval iA, Interval iB);
       std::list<MDI> PutHead(Interval i, std::list<MDI> mdiList);
       std::list<MDI> Filter(std::list<MDI> mdiList, MDI mdi);
       std::list<MDI> CartProd(std::list<MDI> mdiList);
       std::list<MDI> PutLists(MDI mdi, std::list<MDI> mdiList);
+
+      IntervalList intervalList;   //TODO: BORRAR!
   };
+  /*****************************************************************************
+   ****************************************************************************/
 
 
   typedef std::pair<IntervalList, std::vector<int> > IntervalListUsage;   //TODO: BORRAR!
@@ -100,21 +103,40 @@ namespace Causalize {
 
   typedef boost::tuple<IntervalListUsage, IntervalListUsage, Offset> IndexPairOld;  //TODO: BORRAR!
 
-  typedef boost::tuple<MDI, MDI, Offset> IndexPair;
-  inline IndexPairOld CreateIndexPair(Interval a, Interval b, std::vector<int> ua, std::vector<int> ub, std::list<int> offset) {
+
+
+  /*****************************************************************************
+   ****                           INDEX PAIR                                ****
+   *****************************************************************************/
+  class IndexPair {
+  public:
+    inline IndexPair(MDI dom, MDI ran, Offset os): dom(dom), ran(ran), offset(os) { };
+    inline MDI Dom() const { return dom; }
+    inline MDI Ran() const { return ran; }
+    inline Offset OS() const { return offset; }
+    std::list<IndexPair> operator-(const IndexPair& other);
+    bool operator<(const IndexPair& other) const;
+    friend std::ostream& operator<<(std::ostream& os, const IndexPair& ip);
+  private:
+    MDI dom, ran;
+    Offset offset;
+  };
+  /*****************************************************************************
+   ****************************************************************************/
+
+
+
+  inline IndexPairOld CreateIndexPair(Interval a, Interval b, std::vector<int> ua, std::vector<int> ub, std::list<int> offset) { //TODO: BORRAR!
     return make_tuple(make_pair(std::list<Interval>(1,a),ua) , make_pair(std::list<Interval>(1,b),ub), offset);
   }
 
-  inline MDI Ran(IndexPair ip) { return get<0>(ip); }
-
-  inline MDI Dom(IndexPair ip) { return get<1>(ip); }
-
   inline unsigned long int Size(Interval i) { return i.upper() - i.lower(); }  //TODO: BORRAR!
-
-  std::ostream& operator<<(std::ostream &os, const IndexPairOld &ip);  //TODO: BORRAR!
+  std::ostream& operator<<(std::ostream& os, const IndexPairOld& ip);  //TODO: BORRAR!
 
   typedef std::set<IndexPairOld> IndexPairSetOld; //TODO: BORRAR!
   typedef std::set<IndexPair> IndexPairSet;
+  std::ostream& operator<<(std::ostream& os, const IndexPairSet& ips);
+  std::ostream& operator<<(std::ostream& os, const IndexPairSetOld& ips);   //TODO:: BORRAR!
 
 
 
@@ -124,26 +146,25 @@ namespace Causalize {
   class Label {
   public:
     inline Label(IndexPairSet ips): ips(ips) {};
-    Label nrres(MDI const mdi) const;
-    Label ndres(MDI const mdi) const;
     void RemovePairs(IndexPairSet ips);
+    void RemoveUnknowns(MDI const mdi) const;
+    void RemoveEquations(MDI const mdi) const;
     unsigned long int EdgeCount();
     inline bool IsEmpty() { return ips.size()==0; }
-    friend std::ostream& operator<<(std::ostream &os, const Label &label);
+    friend std::ostream& operator<<(std::ostream& os, const Label& label);
   private:
     IndexPairSet ips;
   };
+  /*****************************************************************************
+   ****************************************************************************/
 
-  std::ostream& operator<<(std::ostream &os, const IndexPairSet &ips);
-
-  std::ostream& operator<<(std::ostream &os, const IndexPairSetOld &ips);   //TODO:: BORRAR!
 
 
   unsigned long int EdgeCount(IndexPairSetOld);
 
 
   struct VectorEdgeProperty {  //TODO: BORRAR!
-    friend std::ostream& operator<<(std::ostream &os, const VectorEdgeProperty &ep);
+    friend std::ostream& operator<<(std::ostream& os, const VectorEdgeProperty& ep);
     IndexPairSetOld labels;
 /// @brief This function removes a set of pairs from this Edge
 /// @param ips set of pairs to remove
@@ -152,7 +173,6 @@ namespace Causalize {
     void RemoveEquations(IndexPairSetOld ips_remove);
     unsigned long int EdgeCount();
     inline bool IsEmpty() { return labels.size()==0; }
-
   };
 
   /// @brief This is the definition of the Incidence graph for the vector case.
