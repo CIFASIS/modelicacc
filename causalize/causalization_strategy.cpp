@@ -298,8 +298,8 @@ void CausalizationStrategy::MakeCausalBegining(Equation e, Expression unknown) {
       cout << std::endl << e;
       cout << std::endl;
   }
-  Equation causalEq = EquationSolver::Solve(e, unknown, _mmo_class.syms_ref(), c_code, _cl);
-  _causalEqsBegining.push_back(causalEq);
+//  Equation causalEq = EquationSolver::Solve(e, unknown, _mmo_class.syms_ref(), c_code, _cl);
+//  _causalEqsBegining.push_back(causalEq);
 }
 
 void CausalizationStrategy::MakeCausalEnd(Equation e, Expression unknown) {
@@ -312,8 +312,8 @@ void CausalizationStrategy::MakeCausalEnd(Equation e, Expression unknown) {
     cout << std::endl << e;
     cout << std::endl;
   }
-  Equation causalEq = EquationSolver::Solve(e, unknown, _mmo_class.syms_ref(), c_code, _cl);
-  _causalEqsEnd[_causalEqsEndIndex--] = causalEq;
+//  Equation causalEq = EquationSolver::Solve(e, unknown, _mmo_class.syms_ref(), c_code, _cl);
+//  _causalEqsEnd[_causalEqsEndIndex--] = causalEq;
 }
 
 /**
@@ -347,8 +347,8 @@ void CausalizationStrategy::MakeCausalMiddle() {
       eqs.push_back(eq);
     }
 
-    EquationList causalEqs = EquationSolver::Solve(eqs, unknowns, _mmo_class.syms_ref(), c_code, _cl);
-    _causalEqsMiddle.insert(_causalEqsMiddle.end(), causalEqs.begin(), causalEqs.end());
+//    EquationList causalEqs = EquationSolver::Solve(eqs, unknowns, _mmo_class.syms_ref(), c_code, _cl);
+//    _causalEqsMiddle.insert(_causalEqsMiddle.end(), causalEqs.begin(), causalEqs.end());
   }
 }
 }

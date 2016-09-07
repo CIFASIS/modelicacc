@@ -59,6 +59,7 @@ namespace Causalize {
     return ICL::discrete_interval<int>(a,b, ICL::interval_bounds::closed());
   }
   typedef std::list<Interval> IntervalList;
+  typedef std::vector<Interval> IntervalVector;
 
 
   /*****************************************************************************
@@ -78,10 +79,10 @@ namespace Causalize {
     friend std::ostream& operator<<(std::ostream& os, const MDI mdi);
 
   private:
-      std::vector<Interval> intervals;
+      IntervalVector intervals;
       std::list<int> usage;
-      typedef std::vector<Interval>::iterator iterator;
-      typedef std::vector<Interval>::const_iterator const_iterator;
+      typedef IntervalVector::iterator iterator;
+      typedef IntervalVector::const_iterator const_iterator;
       inline iterator begin() { return intervals.begin(); }
       inline const_iterator begin() const { return intervals.begin(); }
       inline iterator end() { return intervals.end(); }
@@ -90,8 +91,6 @@ namespace Causalize {
       std::list<MDI> Filter(std::list<MDI> mdiList, MDI mdi);
       std::list<MDI> CartProd(std::list<MDI> mdiList);
       std::list<MDI> PutLists(MDI mdi, std::list<MDI> mdiList);
-
-      IntervalList intervalList;   //TODO: BORRAR!
   };
   /*****************************************************************************
    ****************************************************************************/
@@ -127,7 +126,7 @@ namespace Causalize {
 
 
   inline IndexPairOld CreateIndexPair(Interval a, Interval b, std::vector<int> ua, std::vector<int> ub, std::list<int> offset) { //TODO: BORRAR!
-    return make_tuple(make_pair(std::list<Interval>(1,a),ua) , make_pair(std::list<Interval>(1,b),ub), offset);
+    return IndexPairOld();
   }
 
   inline unsigned long int Size(Interval i) { return i.upper() - i.lower(); }  //TODO: BORRAR!

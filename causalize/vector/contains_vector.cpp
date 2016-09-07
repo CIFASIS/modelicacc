@@ -53,7 +53,8 @@ namespace Causalize {
       }
       EvalExpression ev(syms);
       foreach_(Index i, indexes) {
-        ERROR_UNLESS(i.exp(), "No index in for equation");
+        if (!i.exp())
+          ERROR("No index in for equation");
         ERROR_UNLESS(is<Range>(i.exp().get()), "Only range expressions supported");
         Range range = get<Range>(i.exp().get());
         //boost::icl::interval_set<int> set_r;
@@ -241,7 +242,7 @@ namespace Causalize {
   void ContainsVector::BuildPairs(Reference unkRef) const {
     if (foreq) { //The equation is a for-equation
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
-        labels.insert( make_tuple( make_pair(forIndexIntervalList, std::vector<int>(forIndexIntervalList.size() ,-1)), make_pair(IntervalList(1,CreateInterval(1,1)), std::vector<int>(1,-1)), std::list<int>()));
+//        labels.insert( make_tuple( make_pair(forIndexIntervalList, std::vector<int>(forIndexIntervalList.size() ,-1)), make_pair(IntervalList(1,CreateInterval(1,1)), std::vector<int>(1,-1)), std::list<int>()));
       } else { //the unknown is a vector
         ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
         VarSymbolTable vst=syms;
@@ -274,7 +275,7 @@ namespace Causalize {
             std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
             ERROR_UNLESS(index_name!=iterator_names.end(), "Usage of variable in index expression not found");
             Index i = indexes.at(index_name-iterator_names.begin());
-            ERROR_UNLESS(i.exp(), "Implicit range not supported in for equations");
+//            ERROR_UNLESS(i.exp(), "Implicit range not supported in for equations");
             ERROR_UNLESS(is<Range>(i.exp().get()), "Only range supported in for equations");
             Range range = get<Range>(i.exp().get());
             EvalExpression ev(syms);
@@ -298,7 +299,7 @@ namespace Causalize {
             std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
             ERROR_UNLESS(index_name!=iterator_names.end(), "Usage of variable in index expression not found");
             Index i = indexes.at(index_name-iterator_names.begin());
-            ERROR_UNLESS(i.exp(), "Implicit range not supported in for equations");
+//            ERROR_UNLESS(i.exp(), "Implicit range not supported in for equations");
             ERROR_UNLESS(is<Range>(i.exp().get()), "Only range supported in for equations");
             Range range = get<Range>(i.exp().get());
             EvalExpression ev(syms);
@@ -313,7 +314,7 @@ namespace Causalize {
           index_count++;
         }
         ERROR_UNLESS(total_index_uses==forIndexIntervalList.size(), "The number of indexes does not match the number of uses");
-        labels.insert(make_tuple(make_pair(forIndexIntervalList,usage_eq),make_pair(unk_indexes,usage_unk), offset_list));
+//        labels.insert(make_tuple(make_pair(forIndexIntervalList,usage_eq),make_pair(unk_indexes,usage_unk), offset_list));
       }
     } else { //The equation is not a for-equation
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
@@ -332,7 +333,7 @@ namespace Causalize {
           int v = get<Modelica::AST::Integer>(val);
           unk_indexes.push_back(CreateInterval(v,v));
         }
-        labels.insert(make_tuple(make_pair(IntervalList(1,CreateInterval(1,1)), std::vector<int>(1,-1)),make_pair(unk_indexes, std::vector<int>(1,-1)), std::list<int>()));
+//        labels.insert(make_tuple(make_pair(IntervalList(1,CreateInterval(1,1)), std::vector<int>(1,-1)),make_pair(unk_indexes, std::vector<int>(1,-1)), std::list<int>()));
       }
     }
   }

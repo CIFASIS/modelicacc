@@ -161,7 +161,7 @@ int ReducedGraphBuilder::getForRangeSize(ForEq feq) {
   Index i = ind.front();
   int equations = 1;
   foreach_(Index i, ind) {
-    ERROR_UNLESS(i.exp(), "graph_builder:\n No expression on for equation");
+//    ERROR_UNLESS(i.exp(), "graph_builder:\n No expression on for equation");
     Expression exp = i.exp().get();
     if (is<Brace>(exp)) {
       equations *= get<Brace>(exp).args().size();

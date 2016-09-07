@@ -101,13 +101,7 @@ namespace Causalize {
     va_end(vl);
   }
 
-  MDI::MDI(IntervalList intervalList) {
-    intervals.resize(intervalList.size());
-    int count=0;
-    foreach_(Interval i, intervalList) {
-      intervals[count] = i;
-    }
-  }
+  MDI::MDI(IntervalList intervalList): intervals(IntervalVector(intervalList.begin(), intervalList.end())) { }
 
   int MDI::Size() const{
     int size = 1;
@@ -147,7 +141,7 @@ namespace Causalize {
   std::list<MDI> MDI::PutHead(Interval i, std::list<MDI> mdiList) {
     std::list<MDI> mdiListRet;
     BOOST_FOREACH(MDI xs, mdiList) {
-      IntervalList ys=xs.intervalList;
+      IntervalList ys=IntervalList(xs.intervals.begin(), xs.intervals.end());
       ys.push_front(i);
       mdiListRet.push_back(ys);
     }
@@ -156,7 +150,7 @@ namespace Causalize {
 
   std::list<MDI> MDI::PutLists(MDI mdi, std::list<MDI> mdiList) {
     std::list<MDI> mdiListRet;
-    BOOST_FOREACH(Interval i, mdi.intervalList) {
+    BOOST_FOREACH(Interval i, mdi.intervals) {
       std::list<MDI> zss = PutHead(i, mdiList);
       BOOST_FOREACH(MDI zs, zss) {
         mdiListRet.push_back(zs);
@@ -180,7 +174,7 @@ namespace Causalize {
     std::list<MDI> yss;
     if (xss.size()==0) return yss;
     else if (xss.size()==1) {
-      IntervalList xs = xss.front().intervalList;
+      IntervalVector xs = xss.front().intervals;
       BOOST_FOREACH(Interval i, xs) {
         IntervalList ys;
         ys.push_back(i);
