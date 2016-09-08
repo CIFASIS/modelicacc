@@ -225,14 +225,18 @@ namespace Modelica {
       foreach_(RefTuple t, r.ref()) {
         out << get<0>(t);
         if (get<1>(t).size()) {
-          out << "[";
+          if (printAsCActive (out))
+            out << "_";
+          else 
+            out << "[";
           int ll=get<1>(t).size(), ii=0;
           foreach_(const Expression e, get<1>(t)) {
             out << e;
             if (++ii<ll)
               out << ",";
           }
-          out << "]";
+          if (!printAsCActive (out))
+            out << "]";
         };
         if (++i<l)
           out << ".";

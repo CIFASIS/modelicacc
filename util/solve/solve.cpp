@@ -156,7 +156,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
   } catch (std::logic_error) {    
     ERROR_UNLESS(!for_eq, "Non linear solving of for loops not suported yet");
     OptExpList ol;
-    std::set<Name> args;
+    std::vector<Reference> args;
     foreach_(Expression exp,crs) 
       ol.push_back(exp);
     std::stringstream fun_name;
@@ -169,16 +169,37 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
           continue;
         if (crs.end()!=std::find(crs.begin(),crs.end(),Expression( Reference(val.first))) )
           continue;
-        Modelica::ContainsExpression con(Reference(val.first));
-        foreach_ (Equation &e, eqs) {
-          ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
-          Equality eq = get<Equality>(e);
-          if (Apply(con,eq.left_ref()) || Apply(con,eq.right_ref())) { 
-              args.insert(val.first);
+        VarInfo vinfo = val.second;
+        if (vinfo.indices() && vinfo.indices().get().size() > 1 ) {
+          ERROR("Multidimensional arrays not supported yet");
+        }
+        if (vinfo.indices()) {
+          int size = Apply(eval,vinfo.indices().get().front());
+          for (int i=1; i<= size ; i++) {
+            Reference var(val.first, ExpList(1,i));
+            Modelica::ContainsExpression con(var);
+            foreach_ (Equation &e, eqs) {
+              ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
+              Equality eq = get<Equality>(e);
+              if (Apply(con,eq.left_ref()) || Apply(con,eq.right_ref())) { 
+                if (crs.end()==std::find(crs.begin(),crs.end(),Expression( var ))) 
+                  args.push_back(var);
+              }
+            }
+          }
+        } else {
+          Modelica::ContainsExpression con(Reference(val.first));
+          foreach_ (Equation &e, eqs) {
+            ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
+            Equality eq = get<Equality>(e);
+            if (Apply(con,eq.left_ref()) || Apply(con,eq.right_ref())) { 
+                args.push_back(Reference(val.first));
+            }
           }
         }
     }
     std::ostringstream code;
+    setCFlag(code,1);
     code << "int " << fun_name.str() << "_eval(const gsl_vector * __x, void * __p, gsl_vector * __f) {\n";
     code << "  double *args=(double*)__p;\n";
     int i=0;
@@ -186,7 +207,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
       code << "  const double " << e << " = gsl_vector_get(__x," << i++ << ");\n";
     }
     i=0;
-    foreach_ (Name n, args) {
+    foreach_ (Reference n, args) {
       code << "  const double " << n << " = args[" << i++ << "];\n";
     }
     i=0;
@@ -194,7 +215,6 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
           ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
           Equality eq = get<Equality>(e);
           //loop.push_back(Equality(Apply(peval,eq.left_ref()), Apply(peval,eq.right_ref())));
-          setCFlag(code,1);
           code << "  gsl_vector_set (__f," << i++ << ", (" << 
             Apply(peval,eq.left_ref()) << ") - (" << Apply(peval,eq.right_ref()) << "));\n";
     }
@@ -205,7 +225,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     else 
       code << "double " << fun_name.str() << "(";
     i=0;
-    foreach_(Name n, args) {
+    foreach_(Reference n, args) {
       code << (++i>1 ? "," : "") << "double " << n;
     }
     i=0;
@@ -265,7 +285,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     code << "  __F.f = " << fun_name.str() << "_eval;\n";
     code << "  double __args[" << args.size() << "];\n";
     i=0;
-    foreach_ (Name n, args) {
+    foreach_ (Reference n, args) {
       code << "  __args[" << i++ << "] = " << n << ";\n";
     }
     code << "   __F.params  = __args;\n";
@@ -313,11 +333,8 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     code << "}\n";
     c_code.push_back(code.str());
     
-    ExpList exp_args;
+    ExpList exp_args(args.begin(), args.end());
     i=0;
-    foreach_(Name n, args) {
-      exp_args.push_back(Reference(n));
-    }
     if (crs.size()>1)
       ret.push_back(Equality(Output(ol), Call(fun_name.str(),exp_args)));
     else
@@ -327,7 +344,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     Composition com;
     External ext;
     i=0;
-    foreach_(Name n, args) {
+    foreach_(Reference n, args) {
       std::stringstream arg_name;
       arg_name << "u_" << i;
       com.elements_ref().push_back(Component(TypePrefixes(1,input),"Real",Option<ExpList>(),DeclList(1,Declaration(arg_name.str()))));

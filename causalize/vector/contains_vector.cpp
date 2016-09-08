@@ -57,8 +57,7 @@ namespace Causalize {
           ERROR("No index in for equation");
         ERROR_UNLESS(is<Range>(i.exp().get()), "Only range expressions supported");
         Range range = get<Range>(i.exp().get());
-        //boost::icl::interval_set<int> set_r;
-        forIndexIntervalList.push_back(CreateInterval(Apply(ev,range.start_ref()), Apply(ev,range.end_ref())));
+        forIndexIntervalList.push_back(Interval::closed(Apply(ev,range.start_ref()), Apply(ev,range.end_ref())));
       }
   };
 
@@ -179,70 +178,10 @@ namespace Causalize {
     return false;
   }
 
-  /*
-
-  std::list<std::list<int> > PutHead(int x, std::list<std::list<int> > xss) {
-    std::list<std::list<int> > yss;
-    foreach_(std::list<int> xs, xss) {
-      std::list<int> ys=xs;
-      ys.push_front(x);
-      yss.push_back(ys);
-    }
-    return yss;
-  }
-
-
-  std::list<std::list<int> > PutIndexes(boost::icl::discrete_interval<int> xs, std::list<std::list<int> > xss) {
-    std::list<std::list<int> > yss;
-    for (int i=xs.lower(); i<=xs.upper(); i++) {
-      std::list<std::list<int> > zss = PutHead(i, xss);
-      foreach_(std::list<int> zs, zss) {
-        yss.push_back(zs);
-      }
-    }
-    return yss;
-  }
-
-  std::string ContainsVector::PrintListOfList(std::list<std::list<int> > xss) const {
-    std::list<std::string> xssStList;
-    foreach_(std::list<int> xs, xss){
-      std::list<std::string> xsStList;
-      foreach_(int x, xs) {
-        std::stringstream ss;
-        ss << x;
-        xsStList.push_back(ss.str());
-      }
-      std::string xsSt = "<" + boost::algorithm::join(xsStList, ",") + ">";
-      xssStList.push_back(xsSt);
-    }
-    return "{" + boost::algorithm::join(xssStList, ",") + "}";
-  }
-
-  std::list<std::list<int> > ContainsVector::BuildForIndexTuples(std::list<boost::icl::discrete_interval<int> > xss) const {
-    std::list<std::list<int> > yss;
-    if (xss.size()==0) return yss;
-    else if (xss.size()==1) {
-      boost::icl::discrete_interval<int> xs = xss.front();
-      for (int i=(int)(xs.lower()); i<=xs.upper(); i++) {
-        std::list<int> ys;
-        ys.push_back(i);
-        yss.push_back(ys);
-      }
-      return yss;
-    } else {
-      std::list<boost::icl::discrete_interval<int> > zss = xss;
-      zss.pop_front();
-      return PutIndexes(xss.front(), BuildForIndexTuples(zss));
-    }
-  }
-    */
-
-
-
   void ContainsVector::BuildPairs(Reference unkRef) const {
     if (foreq) { //The equation is a for-equation
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
-//        labels.insert( make_tuple( make_pair(forIndexIntervalList, std::vector<int>(forIndexIntervalList.size() ,-1)), make_pair(IntervalList(1,CreateInterval(1,1)), std::vector<int>(1,-1)), std::list<int>()));
+          labels.insert(IndexPair(MDI(forIndexIntervalList), MDI(0), Offset()));
       } else { //the unknown is a vector
         ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
         VarSymbolTable vst=syms;
@@ -266,7 +205,7 @@ namespace Causalize {
         foreach_(Expression val,indexes_list) {
           if (is<Modelica::AST::Integer>(val)) {
              int v = get<Modelica::AST::Integer>(val);
-             unk_indexes.push_back(CreateInterval(v,v)); 
+             unk_indexes.push_back(Interval::closed(v,v)); 
              usage_eq[index_count] = -1;
              offset_list.push_back(0);
              usage_unk.push_back(-1);
@@ -275,14 +214,15 @@ namespace Causalize {
             std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
             ERROR_UNLESS(index_name!=iterator_names.end(), "Usage of variable in index expression not found");
             Index i = indexes.at(index_name-iterator_names.begin());
-//            ERROR_UNLESS(i.exp(), "Implicit range not supported in for equations");
+            if (!i.exp())
+              ERROR("Implicit range not supported in for equations");
             ERROR_UNLESS(is<Range>(i.exp().get()), "Only range supported in for equations");
             Range range = get<Range>(i.exp().get());
             EvalExpression ev(syms);
             int pos = index_name - iterator_names.begin();
             usage_unk.push_back(pos);
             usage_eq[pos] = index_count;
-            unk_indexes.push_back(CreateInterval(Apply(ev,range.start_ref()), Apply(ev,range.end_ref())));
+            unk_indexes.push_back(Interval::closed(Apply(ev,range.start_ref()), Apply(ev,range.end_ref())));
             total_index_uses++;
             offset_list.push_back(0);
           } else if (is<BinOp>(val)) {
@@ -299,14 +239,15 @@ namespace Causalize {
             std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
             ERROR_UNLESS(index_name!=iterator_names.end(), "Usage of variable in index expression not found");
             Index i = indexes.at(index_name-iterator_names.begin());
-//            ERROR_UNLESS(i.exp(), "Implicit range not supported in for equations");
+            if (!i.exp())
+              ERROR("Implicit range not supported in for equations");
             ERROR_UNLESS(is<Range>(i.exp().get()), "Only range supported in for equations");
             Range range = get<Range>(i.exp().get());
             EvalExpression ev(syms);
             int pos = index_name - iterator_names.begin();
             usage_unk.push_back(pos);
             usage_eq[pos] = index_count;
-            unk_indexes.push_back(CreateInterval(Apply(ev,range.start_ref())+offset, Apply(ev,range.end_ref())+offset));
+            //unk_indexes.push_back(CreateInterval(Apply(ev,range.start_ref())+offset, Apply(ev,range.end_ref())+offset));
             total_index_uses++;
           } else {
             ERROR("Index expression not supported");
@@ -314,11 +255,13 @@ namespace Causalize {
           index_count++;
         }
         ERROR_UNLESS(total_index_uses==forIndexIntervalList.size(), "The number of indexes does not match the number of uses");
-//        labels.insert(make_tuple(make_pair(forIndexIntervalList,usage_eq),make_pair(unk_indexes,usage_unk), offset_list));
+        MDI mdi_eq(forIndexIntervalList),  mdi_unk(unk_indexes);
+        ERROR_UNLESS(mdi_eq.Size() == mdi_unk.Size(), "Edge of different size");
+        labels.insert(IndexPair(mdi_eq, mdi_unk, offset_list));
       }
     } else { //The equation is not a for-equation
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
-        labels.insert(CreateIndexPair(CreateInterval(1,1),CreateInterval(1,1),std::vector<int>(1,-1), std::vector<int>(1,-1), std::list<int>() ));
+        labels.insert(IndexPair(MDI(0), MDI(0), Offset()));
       } else { //the unknown is a vector
         ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
         VarSymbolTable vst=syms;
@@ -331,9 +274,9 @@ namespace Causalize {
         foreach_(Expression val, indexes) {
           ERROR_UNLESS(is<Modelica::AST::Integer>(val), "Expression index could not be evaluated"); //TODO: See this error message
           int v = get<Modelica::AST::Integer>(val);
-          unk_indexes.push_back(CreateInterval(v,v));
+          unk_indexes.push_back(Interval::closed(v,v));
         }
-//        labels.insert(make_tuple(make_pair(IntervalList(1,CreateInterval(1,1)), std::vector<int>(1,-1)),make_pair(unk_indexes, std::vector<int>(1,-1)), std::list<int>()));
+        labels.insert(IndexPair(MDI(0), MDI(unk_indexes), Offset()));
       }
     }
   }

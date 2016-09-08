@@ -116,8 +116,7 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         const bool rl = Apply(occurrs,eqq.left_ref());
         const bool rr = Apply(occurrs,eqq.right_ref()); 
         if(rl || rr) {
-          VectorEdgeProperty ep;
-          ep.labels = occurrs.GetOccurrenceIndexes();
+          Label ep(occurrs.GetOccurrenceIndexes());
           add_edge(eq, un, ep, graph);
         } 
       } else if (is<ForEq>(e)) {
@@ -127,24 +126,12 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         ERROR_UNLESS(is<Equality>(inside), "Only equality equation inside for loops supported");
         Equality eqq = boost::get<Equality>(inside);
         IndexList ind = feq.range().indexes();
-
-//        ERROR_UNLESS(ind.size() == 1, "graph_builder:\n For Loop with more than one index is not supported yet\n");
-//        Index i = ind.front();
-//        ERROR_UNLESS(i.exp(), "graph_builder:\n No expression on for equation");
-//        Expression exp = i.exp().get();
-//        ERROR_UNLESS(is<Range>(exp), "Only range expression in for equations");
-//        Range range = get<Range>(exp);
-//        ERROR_UNLESS(!range.step(), "Range with step not supported");
-
         VarSymbolTable syms_for = mmo_class.syms_ref();
-//        syms_for.insert(i.name(),VarInfo(TypePrefixes(0),"Integer"));
         Causalize::ContainsVector occurrs_for(graph[un], syms_for, ind);
-        
         const bool rl = Apply(occurrs_for,eqq.left_ref());
         const bool rr = Apply(occurrs_for,eqq.right_ref()); 
         if(rl || rr) {
-          VectorEdgeProperty ep;
-          ep.labels = occurrs_for.GetOccurrenceIndexes();
+          Label ep(occurrs_for.GetOccurrenceIndexes());
           add_edge(eq, un, ep, graph);
         } 
       } else
@@ -161,7 +148,8 @@ int ReducedGraphBuilder::getForRangeSize(ForEq feq) {
   Index i = ind.front();
   int equations = 1;
   foreach_(Index i, ind) {
-//    ERROR_UNLESS(i.exp(), "graph_builder:\n No expression on for equation");
+    if (!i.exp())
+      ERROR("graph_builder:\n No expression on for equation");
     Expression exp = i.exp().get();
     if (is<Brace>(exp)) {
       equations *= get<Brace>(exp).args().size();

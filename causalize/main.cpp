@@ -78,7 +78,7 @@ int main(int argc, char ** argv)
     sf.splitFor();
     ReducedGraphBuilder gb(mmo);
     VectorCausalizationGraph g = gb.makeGraph();
-    GraphPrinter<VectorVertexProperty,VectorEdgeProperty>  gp(g);
+    GraphPrinter<VectorVertexProperty,Label>  gp(g);
     gp.printGraph("initial_graph.dot");
     CausalizationStrategyVector cs(g,mmo);
     if(cs.Causalize()){ // Try vectorial causalization first

@@ -144,6 +144,7 @@ namespace Causalize {
    *****************************************************************************/
   class Label {
   public:
+    inline Label() {};
     inline Label(IndexPairSet ips): ips(ips) {};
     void RemovePairs(IndexPairSet ips);
     void RemoveUnknowns(MDI const mdi) const;
@@ -159,12 +160,12 @@ namespace Causalize {
 
 
 
-  unsigned long int EdgeCount(IndexPairSetOld);
+  unsigned long int EdgeCount(IndexPairSet);
 
 
-  struct VectorEdgeProperty {  //TODO: BORRAR!
+  /*struct VectorEdgeProperty {  //TODO: BORRAR!
     friend std::ostream& operator<<(std::ostream& os, const VectorEdgeProperty& ep);
-    IndexPairSetOld labels;
+    IndexPairSet labels;
 /// @brief This function removes a set of pairs from this Edge
 /// @param ips set of pairs to remove
     void RemovePairs(IndexPairSetOld ips);
@@ -172,10 +173,10 @@ namespace Causalize {
     void RemoveEquations(IndexPairSetOld ips_remove);
     unsigned long int EdgeCount();
     inline bool IsEmpty() { return labels.size()==0; }
-  };
+  };*/
 
   /// @brief This is the definition of the Incidence graph for the vector case.
-  typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VectorVertexProperty, VectorEdgeProperty> VectorCausalizationGraph;
+  typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VectorVertexProperty, Label> VectorCausalizationGraph;
   /// @brief This a node from the vectorized incidence graph
   typedef Causalize::VectorCausalizationGraph::vertex_descriptor VectorVertex;
   /// @brief An equation vertex is the same as a regular vertex
@@ -189,7 +190,7 @@ namespace Causalize {
   struct CausalizedVar{
     VectorUnknown unknown;
     Equation equation;
-    IndexPairSetOld pairs;
+    IndexPairSet pairs;
   };
 }
 #endif

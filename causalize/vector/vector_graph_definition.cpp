@@ -81,10 +81,10 @@ namespace Causalize {
     return os;
   }
 
-  std::ostream& operator<<(std::ostream &os, const VectorEdgeProperty &ep) {  //TODO: BORRAR!
+  /*std::ostream& operator<<(std::ostream &os, const VectorEdgeProperty &ep) {  //TODO: BORRAR!
     os << ep.labels;
     return os;
-  }
+  }*/
 
   /*****************************************************************************
    ****                               MDI                                   ****
@@ -325,12 +325,11 @@ namespace Causalize {
 
 
 
-  void VectorEdgeProperty::RemovePairs(IndexPairSetOld ips) {  //TODO: BORRAR!
+  /*void VectorEdgeProperty::RemovePairs(IndexPairSetOld ips) {  //TODO: BORRAR!
 
   }
 
   void VectorEdgeProperty::RemoveUnknowns(IndexPairSetOld ips_remove) { //TODO: BORRAR!
-    /*
     IndexPairSet new_labels;
     foreach_(IndexPair ip, labels)  {
       bool found=false;
@@ -344,10 +343,8 @@ namespace Causalize {
         new_labels.insert(ip);
     }
     labels = new_labels;
-    */
   } ;
   void VectorEdgeProperty::RemoveEquations(IndexPairSetOld ips_remove) { //TODO: BORRAR!
-    /*
     IndexPairSet new_labels;
     foreach_(IndexPair ip, labels)  {
       bool found=false;
@@ -361,8 +358,8 @@ namespace Causalize {
         new_labels.insert(ip);
     }
     labels = new_labels;
-    */
   }
+    */
   unsigned long int IntervalCount (IntervalList ilu) {
     unsigned long int count = 1;
     foreach_(Interval i, ilu) {
@@ -370,18 +367,18 @@ namespace Causalize {
     }
     return count;
   }
-  unsigned long int VectorEdgeProperty::EdgeCount() { //TODO: BORRAR!
+  /*unsigned long int VectorEdgeProperty::EdgeCount() { //TODO: BORRAR!
     return Causalize::EdgeCount(labels);
-  }
-  unsigned long int EdgeCount(IndexPairSetOld labels) {
+  }*/
+  unsigned long int EdgeCount(IndexPairSet labels) {
     unsigned long int count = 0;
-    foreach_(IndexPairOld ip, labels) {
+    /*foreach_(IndexPair ip, labels) {
       unsigned long int eq_count = IntervalCount(get<0>(ip).first);
       unsigned long int unk_count = IntervalCount(get<1>(ip).first);
       count += (eq_count > unk_count ? eq_count : unk_count);
     //unsigned long int eq_ount = 
       
-    }
+    }*/
     return count;
   }
 
