@@ -1,4 +1,4 @@
-CXXFLAGS = -I. -Wall -Werror -Wno-reorder -O3 
+CXXFLAGS = -I. -Wall -Werror -Wno-reorder -O3 -std=c++14
 DEPDIR := .
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 LIBMODELICA = lib/libmodelica.a
