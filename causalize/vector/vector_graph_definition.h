@@ -133,6 +133,7 @@ namespace Causalize {
     void RemoveEquations(MDI const mdi) const;
     unsigned long int EdgeCount();
     inline bool IsEmpty() { return ips.size()==0; }
+    inline const IndexPairSet & Pairs() const { return ips; }
     friend std::ostream& operator<<(std::ostream& os, const Label& label);
   private:
     IndexPairSet ips;
