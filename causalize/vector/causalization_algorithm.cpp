@@ -99,7 +99,7 @@ CausalizationStrategyVector::Causalize() {
       return true;
     }
 
-    list<VectorVertex>::size_type numAcausalEqs = equationDescriptors.size();
+    //list<VectorVertex>::size_type numAcausalEqs = equationDescriptors.size();
     list<VectorVertex>::iterator iter, auxiliaryIter;
 
 

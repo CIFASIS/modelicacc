@@ -96,12 +96,7 @@ namespace Causalize {
    ****************************************************************************/
 
 
-  typedef std::pair<IntervalList, std::vector<int> > IntervalListUsage;   //TODO: BORRAR!
-
   typedef std::list<int> Offset;
-
-  typedef boost::tuple<IntervalListUsage, IntervalListUsage, Offset> IndexPairOld;  //TODO: BORRAR!
-
 
 
   /*****************************************************************************
@@ -123,21 +118,8 @@ namespace Causalize {
   /*****************************************************************************
    ****************************************************************************/
 
-
-
-  inline IndexPairOld CreateIndexPair(Interval a, Interval b, std::vector<int> ua, std::vector<int> ub, std::list<int> offset) { //TODO: BORRAR!
-    return IndexPairOld();
-  }
-
-  inline unsigned long int Size(Interval i) { return i.upper() - i.lower(); }  //TODO: BORRAR!
-  std::ostream& operator<<(std::ostream& os, const IndexPairOld& ip);  //TODO: BORRAR!
-
-  typedef std::set<IndexPairOld> IndexPairSetOld; //TODO: BORRAR!
   typedef std::set<IndexPair> IndexPairSet;
   std::ostream& operator<<(std::ostream& os, const IndexPairSet& ips);
-  std::ostream& operator<<(std::ostream& os, const IndexPairSetOld& ips);   //TODO:: BORRAR!
-
-
 
   /*****************************************************************************
    ****                              LABEL                                  ****
@@ -162,18 +144,6 @@ namespace Causalize {
 
   unsigned long int EdgeCount(IndexPairSet);
 
-
-  /*struct VectorEdgeProperty {  //TODO: BORRAR!
-    friend std::ostream& operator<<(std::ostream& os, const VectorEdgeProperty& ep);
-    IndexPairSet labels;
-/// @brief This function removes a set of pairs from this Edge
-/// @param ips set of pairs to remove
-    void RemovePairs(IndexPairSetOld ips);
-    void RemoveUnknowns(IndexPairSetOld ips_remove);
-    void RemoveEquations(IndexPairSetOld ips_remove);
-    unsigned long int EdgeCount();
-    inline bool IsEmpty() { return labels.size()==0; }
-  };*/
 
   /// @brief This is the definition of the Incidence graph for the vector case.
   typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, VectorVertexProperty, Label> VectorCausalizationGraph;

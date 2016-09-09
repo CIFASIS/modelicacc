@@ -52,11 +52,6 @@ namespace Causalize {
     }
   }
 
-
-  std::ostream& operator<<(std::ostream &os, const IndexPairOld &ip) {  //TODO: BORRAR!
-    return os;
-  }
-
   std::ostream& operator<<(std::ostream &os, const IndexPairSet &ips) {
     std::list<std::string> ipsStList;
     foreach_(IndexPair ip, ips){
@@ -68,23 +63,6 @@ namespace Causalize {
     os << ipsSt;
     return os;
   }
-
-  std::ostream& operator<<(std::ostream &os, const IndexPairSetOld &ips) {  //TODO: BORRAR!
-    std::list<std::string> ipsStList;
-    foreach_(IndexPairOld ip, ips){
-      std::ostringstream ipSt;
-      ipSt << ip;
-      ipsStList.push_back(ipSt.str());
-    }
-    std::string ipsSt = "<" + boost::algorithm::join(ipsStList, ",") + ">";
-    os << ipsSt;
-    return os;
-  }
-
-  /*std::ostream& operator<<(std::ostream &os, const VectorEdgeProperty &ep) {  //TODO: BORRAR!
-    os << ep.labels;
-    return os;
-  }*/
 
   /*****************************************************************************
    ****                               MDI                                   ****
@@ -271,18 +249,6 @@ namespace Causalize {
 
   std::ostream& operator<<(std::ostream &os, const IndexPair &ip) {
     os << "(Eq=(" << ip.Dom() << "), Unk=(" << ip.Ran() << "))";
-//    os << "Usage of first pair = {";
-//    foreach_(int i, get<0>(ip).second)
-//      os << i << ", ";
-//    os << "}. Usage of second pair {";
-//    foreach_(int i, get<1>(ip).second)
-//      os << i << ", ";
-//    os << "}";
-//    os << "Offset list = {";
-//    foreach_(int i, get<2>(ip)) {
-//      os << " " << i;
-//    }
-//    os << "}\n";
     return os;
   }
   /*****************************************************************************
@@ -323,53 +289,6 @@ namespace Causalize {
    ****************************************************************************/
 
 
-
-
-  /*void VectorEdgeProperty::RemovePairs(IndexPairSetOld ips) {  //TODO: BORRAR!
-
-  }
-
-  void VectorEdgeProperty::RemoveUnknowns(IndexPairSetOld ips_remove) { //TODO: BORRAR!
-    IndexPairSet new_labels;
-    foreach_(IndexPair ip, labels)  {
-      bool found=false;
-      foreach_(IndexPair ip_remove, ips_remove)  {
-        if (ip_remove.second == ip.second) {
-          found=true;
-          break;
-        }
-      }
-      if (!found)
-        new_labels.insert(ip);
-    }
-    labels = new_labels;
-  } ;
-  void VectorEdgeProperty::RemoveEquations(IndexPairSetOld ips_remove) { //TODO: BORRAR!
-    IndexPairSet new_labels;
-    foreach_(IndexPair ip, labels)  {
-      bool found=false;
-      foreach_(IndexPair ip_remove, ips_remove)  {
-        if (ip_remove.first == ip.first) {
-          found=true;
-          break;
-        }
-      }
-      if (!found)
-        new_labels.insert(ip);
-    }
-    labels = new_labels;
-  }
-    */
-  unsigned long int IntervalCount (IntervalList ilu) {
-    unsigned long int count = 1;
-    foreach_(Interval i, ilu) {
-      count *= Size(i);
-    }
-    return count;
-  }
-  /*unsigned long int VectorEdgeProperty::EdgeCount() { //TODO: BORRAR!
-    return Causalize::EdgeCount(labels);
-  }*/
   unsigned long int EdgeCount(IndexPairSet labels) {
     unsigned long int count = 0;
     /*foreach_(IndexPair ip, labels) {
