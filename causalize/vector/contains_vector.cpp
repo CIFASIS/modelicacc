@@ -201,13 +201,13 @@ namespace Causalize {
         ExpList indexes_list = get<1>(r.ref().front());
         unsigned int total_index_uses = 0;
         unsigned int index_count = 0;
-        std::list<int> offset_list;
+        std::vector<int> offset_vector;
         foreach_(Expression val,indexes_list) {
           if (is<Modelica::AST::Integer>(val)) {
              int v = get<Modelica::AST::Integer>(val);
              unk_indexes.push_back(Interval::closed(v,v)); 
              usage_eq[index_count] = -1;
-             offset_list.push_back(0);
+             offset_vector.push_back(0);
              usage_unk.push_back(-1);
           } else if (is<Reference>(val)) {
             Reference ind_ref = get<Reference>(val);
@@ -224,7 +224,7 @@ namespace Causalize {
             usage_eq[pos] = index_count;
             unk_indexes.push_back(Interval::closed(Apply(ev,range.start_ref()), Apply(ev,range.end_ref())));
             total_index_uses++;
-            offset_list.push_back(0);
+            offset_vector.push_back(0);
           } else if (is<BinOp>(val)) {
             BinOp binop = get<BinOp>(Apply(Modelica::PartialEvalExpression(vst), val));
             ERROR_UNLESS(binop.op()==Add ||
@@ -234,7 +234,7 @@ namespace Causalize {
             int offset = get<Modelica::AST::Integer>(binop.right());
             if (binop.op()==Sub) // Transform everything to an addition
               offset *= -1;
-            offset_list.push_back(offset);
+            offset_vector.push_back(offset);
             Reference ind_ref = get<Reference>(binop.left());
             std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
             ERROR_UNLESS(index_name!=iterator_names.end(), "Usage of variable in index expression not found");
@@ -257,7 +257,7 @@ namespace Causalize {
         ERROR_UNLESS(total_index_uses==forIndexIntervalList.size(), "The number of indexes does not match the number of uses");
         MDI mdi_eq(forIndexIntervalList),  mdi_unk(unk_indexes);
         ERROR_UNLESS(mdi_eq.Size() == mdi_unk.Size(), "Edge of different size");
-        labels.insert(IndexPair(mdi_eq, mdi_unk, offset_list));
+        labels.insert(IndexPair(mdi_eq, mdi_unk, offset_vector));
       }
     } else { //The equation is not a for-equation
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
