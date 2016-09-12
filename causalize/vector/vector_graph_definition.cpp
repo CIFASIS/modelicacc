@@ -84,7 +84,7 @@ namespace Causalize {
   int MDI::Size() const{
     int size = 1;
     foreach_(Interval i, intervals) {
-      size*=(i.upper()+1-i.lower());
+      size*=boost::icl::size(i);
     }
     return size;
   }
@@ -189,6 +189,28 @@ namespace Causalize {
     return mdiListRet;
   }
 
+  MDI MDI::ApplyOffset(Offset offset) {
+    IntervalVector copyIntervals = intervals;
+    for(int i=0; i<(int)copyIntervals.size(); i++) {
+      copyIntervals[i] = CreateInterval(copyIntervals[i].lower()+offset[i],copyIntervals[i].upper()+offset[i]);
+    }
+    return MDI(copyIntervals);
+  }
+
+  MDI MDI::ApplyUsage(std::vector<int> usage) {
+      IntervalVector newIntervals;
+      newIntervals.resize(intervals.size());
+      int usages = 0;
+      for(int i: usage) {
+        if (i>=0) {
+          newIntervals[i] = CreateInterval(intervals[i].lower(), intervals[i].upper());
+          usages++;
+        }
+      }
+      newIntervals.resize(usages);
+      return MDI(newIntervals);
+    }
+
   std::list<MDI> MDI::operator-(const MDI &other) {
     if (this->Dimension()!=other.Dimension()) {
       std::cout << "Dimension error\n";
@@ -207,17 +229,36 @@ namespace Causalize {
     return Filter(ret, other);
   }
 
-  bool MDI::operator&(const MDI &other) {
+  std::list<MDI> MDI::Remove(const MDI &other, Offset offset) {
+    if (this->Dimension()!=other.Dimension()) {
+      std::cout << "Dimension error\n";
+      abort();
+    }
+    std::list<MDI> ret;
+    MDI::iterator iterA = this->begin();
+    MDI::const_iterator iterB = other.begin();
+    std::list<MDI> prod;
+    for(int i=0; i<this->Dimension(); i++) {
+      prod.push_back(Partition(*iterA,*iterB));
+      iterA++;
+      iterB++;
+    }
+    ret = CartProd(prod);
+    return Filter(ret, other);
+  }
+
+  Option<MDI> MDI::operator&(const MDI &other) const {
     if (this->Dimension() != other.Dimension()) { //TODO: Is this condition OK?
       ERROR("Dimension error\n");
-      return false;
     }
+    IntervalList intersection;
     for(int i=0; i<this->Dimension(); i++) {
-      //If i-th interval does not intersect with its corresponding interval in the other MDI: return false
-      if (!intersects(this->intervals[i],other.intervals[i])) return false;
+      //If i-th interval does not intersect with its corresponding interval in the other MDI: return an empty MDI
+      if (!intersects(this->intervals[i],other.intervals[i])) return Option<MDI>();
+      else intersection.push_back((this->intervals[i])&(other.intervals[i]));
     }
-    //All intervals intersect with its corresponding interval in the other MDI: return true
-    return true;
+    //All intervals intersect with its corresponding interval in the other MDI: return the resulting intersection MDI
+    return MDI(intersection);
   }
   /*****************************************************************************
    ****************************************************************************/
@@ -243,6 +284,30 @@ namespace Causalize {
     return ret;
   }
 
+  std::list<IndexPair> IndexPair::RemoveUnknowns(MDI mdi) {
+    if (Option<MDI> toRemove = mdi&this->Ran()) {
+
+      for(int i=0; i<(int)usage.size(); i++) {
+
+      }
+      std::list<MDI> remainsRan = this->Dom().Remove(toRemove.get(), offset);
+
+
+
+      std::list<MDI> remainsDom = this->Ran()-toRemove.get();
+      std::list<MDI>::iterator domIter = remainsDom.begin();
+      std::list<MDI>::iterator ranIter = remainsRan.begin();
+      std::list<IndexPair> ret;
+      while (domIter!=remainsDom.end()) {
+        ret.push_back(IndexPair(*domIter,*ranIter,this->offset));
+        domIter++;
+        ranIter++;
+      }
+      return ret;
+    }
+    else return std::list<IndexPair>();
+  }
+
   bool IndexPair::operator<(const IndexPair& other) const {
     return this->Dom() < other.Dom() && this->Ran() < other.Ran() && this->OS() < other.OS();
   }
@@ -261,19 +326,24 @@ namespace Causalize {
    *****************************************************************************/
   void Label::RemovePairs(IndexPairSet ips) {
     foreach_(IndexPair ipRemove, ips) {
+      IndexPairSet newIps = this->ips;
       foreach_(IndexPair ip, this->ips) {
         if ((ip.Dom()&ipRemove.Dom()) && (ip.Ran()&ipRemove.Ran()) && (ip.OS())==(ipRemove.OS())) {
-          this->ips.erase(ip);
+          newIps.erase(ip);
           foreach_(IndexPair ipRemaining, (ip-ipRemove)) {
             this->ips.insert(ipRemaining);
           }
         }
       }
+      this->ips = newIps;
     }
   }
 
   void Label::RemoveUnknowns(MDI const mdi) const {
-
+    for(IndexPair ip: ips) {
+      ip.RemoveUnknowns(mdi);
+//      if ()
+    }
   }
 
   void Label::RemoveEquations(MDI const mdi) const {

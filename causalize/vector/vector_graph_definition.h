@@ -61,6 +61,7 @@ namespace Causalize {
   typedef std::list<Interval> IntervalList;
   typedef std::vector<Interval> IntervalVector;
 
+  typedef std::vector<int> Offset;
 
   /*****************************************************************************
    ****                               MDI                                   ****
@@ -70,12 +71,13 @@ namespace Causalize {
   public:
     MDI(int d, ... );
     MDI(IntervalList intervalList);
+    inline MDI(IntervalVector intervals): intervals(intervals) { };
     inline int Dimension() const {return intervals.size(); }
     int Size () const;
     std::list<MDI> operator-(const MDI& other);
+    std::list<MDI> Remove(const MDI& mdi, Offset offset);
     bool operator<(const MDI& other) const;
-    //Returns true if the intersection if not void
-    bool operator&(const MDI& other);
+    Option<MDI> operator&(const MDI& other) const;
     friend std::ostream& operator<<(std::ostream& os, const MDI mdi);
     inline const IntervalVector & Intervals() const { return intervals; }
 
@@ -88,6 +90,8 @@ namespace Causalize {
       IntervalList Partition(Interval iA, Interval iB);
       inline iterator begin() { return intervals.begin(); }
       inline iterator end() { return intervals.end(); }
+      MDI ApplyOffset(Offset offset);
+      MDI ApplyUsage(std::vector<int> usage);
       std::list<MDI> PutHead(Interval i, std::list<MDI> mdiList);
       std::list<MDI> Filter(std::list<MDI> mdiList, MDI mdi);
       std::list<MDI> CartProd(std::list<MDI> mdiList);
@@ -95,9 +99,6 @@ namespace Causalize {
   };
   /*****************************************************************************
    ****************************************************************************/
-
-
-  typedef std::list<int> Offset;
 
 
   /*****************************************************************************
@@ -110,11 +111,13 @@ namespace Causalize {
     inline MDI Ran() const { return ran; }
     inline Offset OS() const { return offset; }
     std::list<IndexPair> operator-(const IndexPair& other);
+    std::list<IndexPair> RemoveUnknowns(MDI eqs);
     bool operator<(const IndexPair& other) const;
     friend std::ostream& operator<<(std::ostream& os, const IndexPair& ip);
   private:
     MDI dom, ran;
     Offset offset;
+    std::vector<int> usage;
   };
   /*****************************************************************************
    ****************************************************************************/

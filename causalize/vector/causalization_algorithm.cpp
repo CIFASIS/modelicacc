@@ -90,7 +90,8 @@ CausalizationStrategyVector::CausalizeNto1(const VectorUnknown unk, const Equati
 
 bool
 CausalizationStrategyVector::Causalize() {	
-  while(true){
+  int steps = 0;
+  while(true) {
     bool causalize_some=false;
     assert(equationNumber == unknownNumber);
     if(equationDescriptors.empty() && unknownDescriptors.empty()) {
@@ -248,6 +249,8 @@ CausalizationStrategyVector::Causalize() {
       ERROR("Loop detected! We don't handle loops yet!\n");
       return false;
     }
+    steps++;
+    ERROR_UNLESS(steps<50, "Maximum number of steps reached");
   }
 }
 
@@ -346,51 +349,39 @@ bool CausalizationStrategyVector::CollisionPairInEdge(IndexPair ip, VectorEdge e
 
 
 void CausalizationStrategyVector::SolveEquations() {
-  /*
   EquationList all;
   vector<CausalizedVar> sorted_vars = equations1toN;
   sorted_vars.insert(sorted_vars.end(),equationsNto1.begin(), equationsNto1.end());
   foreach_(CausalizedVar cv, sorted_vars) {
     Equation equation = cv.equation;
     if(is<ForEq>(equation)) {
+      ERROR_UNLESS(cv.pairs.size() != 1, "Solving scalar equation with more than one index pair");
+      IndexPair ip = *cv.pairs.begin();
+      MDI dom = ip.Dom(), ran = ip.Ran();
+      for (int i : ip.OS()) {
+        ERROR_UNLESS(i != 0, "Solving with offset not implemented");
+      }
+      ERROR_UNLESS(dom.Size() == ran.Size(), "Solving with ranges of different size");
       ForEq &feq = get<ForEq>(equation);
       VarSymbolTable syms = mmo.syms_ref();
-      for (IndexPairSet::iterator pair = cv.pairs.begin(); pair!=cv.pairs.end(); pair++) {
-        std::list<int> forIndexes = pair->first;
-        ExpList varIndexes;;
-        if (cv.unknown.dimension == 0) {
-          cv.unknown.SetIndex(varIndexes);
-        } else {
-          foreach_(int i, pair->second) {
-            varIndexes.push_back(Expression(i));
-          }
-          cv.unknown.SetIndex(varIndexes);
-        }
-        std::list<Name> forIndexesNames;
-        foreach_(Index i, feq.range().indexes_) {
-          forIndexesNames.push_back(i.name());
-        }
-        Equation eq = instantiate_equation(feq.elements().front(), forIndexesNames, forIndexes, syms);
-
-        if (debugIsEnabled('c')) {
-          std::cout <<  "Solving variable " << cv.unknown() << "\n";
-          std::cout <<  "with eq " << feq << "\n";
-        }
-        std::list<std::string> c_code;
-        ClassList cl;
-        if (debugIsEnabled('c')) {
-          std::cout << "Solving:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
-        }
-        all.push_back(EquationSolver::Solve(eq, cv.unknown(), syms,c_code,cl));
+      if (debugIsEnabled('c')) {
+        std::cout << "Solving:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
       }
+      std::list<std::string> c_code;
+      ClassList cl;
+      all.push_back(feq);
+      //all.push_back(EquationSolver::Solve(feq, cv.unknown(), syms, c_code, cl, mmo.name() + ".c"));
     } else{
       ExpList varIndexes;;
       if (cv.unknown.dimension == 0) {
         cv.unknown.SetIndex(varIndexes);
       } else {
-        foreach_(int i, cv.pairs.begin()->second) {
-          varIndexes.push_back(Expression(i));
-        }
+         ERROR_UNLESS(cv.pairs.size() != 1, "Solving scalar equation with more than one index pair");
+         MDI mdi = cv.pairs.begin()->Ran();
+         for(Interval i : mdi.Intervals()) {
+          ERROR_UNLESS(boost::icl::size(i)!=1, "Interval of size>1 used for solving a scalar equation"); 
+          varIndexes.push_back(Expression(i.lower()));
+         }
       }
       cv.unknown.SetIndex(varIndexes);
       std::list<std::string> c_code;
@@ -398,11 +389,10 @@ void CausalizationStrategyVector::SolveEquations() {
       if (debugIsEnabled('c')) {
         std::cout << "Solving\n" << equation << "\nfor variable " << cv.unknown() << "\n";
       }
-      all.push_back(EquationSolver::Solve(equation, cv.unknown(), mmo.syms_ref(),c_code, cl));
+      all.push_back(EquationSolver::Solve(equation, cv.unknown(), mmo.syms_ref(),c_code, cl, mmo.name() + ".c"));
     }
   }
   mmo.equations_ref().equations_ref()=all;
-  */
 }
 
 Vertex CausalizationStrategyVector::GetEquation(Edge e) {
