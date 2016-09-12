@@ -64,6 +64,22 @@ namespace Causalize {
     return os;
   }
 
+
+  /*****************************************************************************
+   ****                              Offset                                  ****
+   *****************************************************************************/
+  Offset Offset::operator-() const {
+    std::vector<int> ret(offset.size());
+    for(int i = 0; i<(int)offset.size(); i++) {
+      ret[i] = -offset[i];
+    }
+    return ret;
+  };
+  /*****************************************************************************
+   ****************************************************************************/
+
+
+
   /*****************************************************************************
    ****                               MDI                                   ****
    *****************************************************************************/
@@ -189,27 +205,27 @@ namespace Causalize {
     return mdiListRet;
   }
 
-  MDI MDI::ApplyOffset(Offset offset) {
-    IntervalVector copyIntervals = intervals;
-    for(int i=0; i<(int)copyIntervals.size(); i++) {
-      copyIntervals[i] = CreateInterval(copyIntervals[i].lower()+offset[i],copyIntervals[i].upper()+offset[i]);
-    }
-    return MDI(copyIntervals);
-  }
+//  MDI MDI::ApplyOffset(Offset offset) {
+//    IntervalVector copyIntervals = intervals;
+//    for(int i=0; i<(int)copyIntervals.size(); i++) {
+//      copyIntervals[i] = CreateInterval(copyIntervals[i].lower()+offset[i],copyIntervals[i].upper()+offset[i]);
+//    }
+//    return MDI(copyIntervals);
+//  }
 
   MDI MDI::ApplyUsage(std::vector<int> usage) {
-      IntervalVector newIntervals;
-      newIntervals.resize(intervals.size());
-      int usages = 0;
-      for(int i: usage) {
-        if (i>=0) {
-          newIntervals[i] = CreateInterval(intervals[i].lower(), intervals[i].upper());
-          usages++;
-        }
+    IntervalVector newIntervals;
+    newIntervals.resize(intervals.size());
+    int usages = 0;
+    for(int i: usage) {
+      if (i>=0) {
+        newIntervals[i] = CreateInterval(intervals[i].lower(), intervals[i].upper());
+        usages++;
       }
-      newIntervals.resize(usages);
-      return MDI(newIntervals);
     }
+    newIntervals.resize(usages);
+    return MDI(newIntervals);
+  }
 
   std::list<MDI> MDI::operator-(const MDI &other) {
     if (this->Dimension()!=other.Dimension()) {
@@ -285,16 +301,10 @@ namespace Causalize {
   }
 
   std::list<IndexPair> IndexPair::RemoveUnknowns(MDI mdi) {
-    if (Option<MDI> toRemove = mdi&this->Ran()) {
-
-      for(int i=0; i<(int)usage.size(); i++) {
-
-      }
-      std::list<MDI> remainsRan = this->Dom().Remove(toRemove.get(), offset);
-
-
-
-      std::list<MDI> remainsDom = this->Ran()-toRemove.get();
+    if (Option<MDI> ranToRemove = mdi&this->Ran()) {
+      ranToRemove = ranToRemove.get().ApplyUsage(this->usage);
+      std::list<MDI> remainsRan = this->Dom().Remove(ranToRemove.get(), offset);
+      std::list<MDI> remainsDom = this->Ran()-ranToRemove.get();
       std::list<MDI>::iterator domIter = remainsDom.begin();
       std::list<MDI>::iterator ranIter = remainsRan.begin();
       std::list<IndexPair> ret;
@@ -305,7 +315,25 @@ namespace Causalize {
       }
       return ret;
     }
-    else return std::list<IndexPair>();
+    else return std::list<IndexPair>({*this});
+  }
+
+  std::list<IndexPair> IndexPair::RemoveEquations(MDI mdi) {
+    if (Option<MDI> domToRemove = mdi&this->Ran()) {
+      domToRemove = domToRemove.get().ApplyUsage(this->usage);
+      std::list<MDI> remainsRan = this->Ran().Remove(domToRemove.get(), -offset);
+      std::list<MDI> remainsDom = this->Dom()-domToRemove.get();
+      std::list<MDI>::iterator domIter = remainsDom.begin();
+      std::list<MDI>::iterator ranIter = remainsRan.begin();
+      std::list<IndexPair> ret;
+      while (domIter!=remainsDom.end()) {
+        ret.push_back(IndexPair(*domIter,*ranIter,this->offset));
+        domIter++;
+        ranIter++;
+      }
+      return ret;
+    }
+    else return std::list<IndexPair>({*this});
   }
 
   bool IndexPair::operator<(const IndexPair& other) const {
@@ -340,14 +368,21 @@ namespace Causalize {
   }
 
   void Label::RemoveUnknowns(MDI const mdi) const {
-    for(IndexPair ip: ips) {
-      ip.RemoveUnknowns(mdi);
-//      if ()
+    IndexPairSet newIps = this->ips;
+    for(IndexPair ipOld: ips) {
+      for(IndexPair ipNew: ipOld.RemoveUnknowns(mdi)) {
+        newIps.insert(ipNew);
+      }
     }
   }
 
   void Label::RemoveEquations(MDI const mdi) const {
-
+    IndexPairSet newIps = this->ips;
+    for(IndexPair ipOld: ips) {
+      for(IndexPair ipNew: ipOld.RemoveEquations(mdi)) {
+        newIps.insert(ipNew);
+      }
+    }
   }
 
 
