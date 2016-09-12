@@ -48,9 +48,6 @@ namespace Causalize {
     syms(s),
     foreq(true),
     indexes(indexes) {
-      if (debugIsEnabled('c')) {
-        std::cout << "Looking for exp: " << exp <<"\n";
-      }
       EvalExpression ev(syms);
       foreach_(Index i, indexes) {
         if (!i.exp())
@@ -124,9 +121,6 @@ namespace Causalize {
         Reference callRef=get<Reference>(call.args().front());
         Reference callExprRef=get<Reference>(callExpr.args().front());
         if (get<0>(callRef.ref().front())==get<0>(callExprRef.ref().front())) { //The references are the same
-          if (debugIsEnabled('c')) {
-            std::cout << "build pairs with: " << callRef << "\n";
-          }
           BuildPairs(callRef);
           return true;
         }
@@ -181,18 +175,19 @@ namespace Causalize {
   void ContainsVector::BuildPairs(Reference unkRef) const {
     if (foreq) { //The equation is a for-equation
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
-          labels.insert(IndexPair(MDI(forIndexIntervalList), MDI(0), Offset()));
+          Usage usage(indexes.size(),-1);
+          Offset offset(std::vector<int>(indexes.size(),0));
+          labels.insert(IndexPair(MDI(forIndexIntervalList), MDI(0), offset, usage));
       } else { //the unknown is a vector
         ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
         VarSymbolTable vst=syms;
         std::vector<Name> iterator_names;
-        std::vector<int> usage_eq, usage_unk;
+        Usage usage_indexes(indexes.size());
         foreach_(Index i, indexes) {
            iterator_names.push_back(i.name());
            VarInfo vinfo = VarInfo(TypePrefixes(), "Integer", Option<Comment>(), Modification());
            vst.insert(i.name(),vinfo);
         }
-        usage_eq.resize(indexes.size());
         IntervalList unk_indexes;
         Expression unkRef_exp = unkRef;
         Expression evaluated_expr=Apply(Modelica::PartialEvalExpression(vst),unkRef_exp);
@@ -201,14 +196,12 @@ namespace Causalize {
         ExpList indexes_list = get<1>(r.ref().front());
         unsigned int total_index_uses = 0;
         unsigned int index_count = 0;
-        std::vector<int> offset_vector;
+        std::vector<int> offset_vector(indexes.size());
         foreach_(Expression val,indexes_list) {
+
           if (is<Modelica::AST::Integer>(val)) {
              int v = get<Modelica::AST::Integer>(val);
              unk_indexes.push_back(Interval::closed(v,v)); 
-             usage_eq[index_count] = -1;
-             offset_vector.push_back(0);
-             usage_unk.push_back(-1);
           } else if (is<Reference>(val)) {
             Reference ind_ref = get<Reference>(val);
             std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
@@ -220,11 +213,10 @@ namespace Causalize {
             Range range = get<Range>(i.exp().get());
             EvalExpression ev(syms);
             int pos = index_name - iterator_names.begin();
-            usage_unk.push_back(pos);
-            usage_eq[pos] = index_count;
+            usage_indexes[pos] = index_count;
             unk_indexes.push_back(Interval::closed(Apply(ev,range.start_ref()), Apply(ev,range.end_ref())));
             total_index_uses++;
-            offset_vector.push_back(0);
+            offset_vector[pos] = 0;
           } else if (is<BinOp>(val)) {
             BinOp binop = get<BinOp>(Apply(Modelica::PartialEvalExpression(vst), val));
             ERROR_UNLESS(binop.op()==Add ||
@@ -234,7 +226,6 @@ namespace Causalize {
             int offset = get<Modelica::AST::Integer>(binop.right());
             if (binop.op()==Sub) // Transform everything to an addition
               offset *= -1;
-            offset_vector.push_back(offset);
             Reference ind_ref = get<Reference>(binop.left());
             std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
             ERROR_UNLESS(index_name!=iterator_names.end(), "Usage of variable in index expression not found");
@@ -245,9 +236,9 @@ namespace Causalize {
             Range range = get<Range>(i.exp().get());
             EvalExpression ev(syms);
             int pos = index_name - iterator_names.begin();
-            usage_unk.push_back(pos);
-            usage_eq[pos] = index_count;
-            //unk_indexes.push_back(CreateInterval(Apply(ev,range.start_ref())+offset, Apply(ev,range.end_ref())+offset));
+            offset_vector[pos] = offset;
+            usage_indexes[pos] = index_count;
+            unk_indexes.push_back(Interval::closed(Apply(ev,range.start_ref())+offset, Apply(ev,range.end_ref())+offset));
             total_index_uses++;
           } else {
             ERROR("Index expression not supported");
@@ -257,11 +248,11 @@ namespace Causalize {
         ERROR_UNLESS(total_index_uses==forIndexIntervalList.size(), "The number of indexes does not match the number of uses");
         MDI mdi_eq(forIndexIntervalList),  mdi_unk(unk_indexes);
         ERROR_UNLESS(mdi_eq.Size() == mdi_unk.Size(), "Edge of different size");
-        labels.insert(IndexPair(mdi_eq, mdi_unk, offset_vector));
+        labels.insert(IndexPair(mdi_eq, mdi_unk, Offset(offset_vector), usage_indexes));
       }
     } else { //The equation is not a for-equation
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
-        labels.insert(IndexPair(MDI(0), MDI(0), Offset()));
+        labels.insert(IndexPair(MDI(0), MDI(0), Offset(), Usage()));
       } else { //the unknown is a vector
         ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
         VarSymbolTable vst=syms;
@@ -276,7 +267,7 @@ namespace Causalize {
           int v = get<Modelica::AST::Integer>(val);
           unk_indexes.push_back(Interval::closed(v,v));
         }
-        labels.insert(IndexPair(MDI(0), MDI(unk_indexes), Offset()));
+        labels.insert(IndexPair(MDI(0), MDI(unk_indexes), Offset(), Usage()));
       }
     }
   }

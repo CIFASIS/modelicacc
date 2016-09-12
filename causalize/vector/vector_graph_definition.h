@@ -60,8 +60,38 @@ namespace Causalize {
   }
   typedef std::list<Interval> IntervalList;
   typedef std::vector<Interval> IntervalVector;
+  typedef std::vector<int> Usage;
 
-  typedef std::vector<int> Offset;
+
+  /*****************************************************************************
+   ****                              Offset                                  ****
+   *****************************************************************************/
+  class Offset {
+  public:
+    inline Offset(std::vector<int> offset): offset(offset) { };
+    inline Offset(): offset() { };
+    inline bool operator<(const Offset& other) const { return this->offset < other.offset; };
+    inline bool operator==(const Offset& other) const { return this->offset == other.offset; };
+    inline bool isZeros() { 
+      for(int i: offset) {
+        if (i!=0) return false;
+      }
+      return true;
+    }
+    Offset operator-() const;
+    typedef std::vector<int>::iterator iterator;
+    typedef std::vector<int>::const_iterator const_iterator;
+    inline const_iterator begin() const { return offset.begin(); }
+    inline iterator begin() { return offset.begin(); }
+    inline iterator end() { return offset.end(); }
+    inline unsigned int Size () const { return offset.size(); }
+private:
+      std::vector<int> offset;
+  };
+  /*****************************************************************************
+   ****************************************************************************/
+
+
 
   /*****************************************************************************
    ****                               MDI                                   ****
@@ -76,6 +106,7 @@ namespace Causalize {
     int Size () const;
     std::list<MDI> operator-(const MDI& other);
     std::list<MDI> Remove(const MDI& mdi, Offset offset);
+    MDI ApplyUsage(Usage);
     bool operator<(const MDI& other) const;
     Option<MDI> operator&(const MDI& other) const;
     friend std::ostream& operator<<(std::ostream& os, const MDI mdi);
@@ -83,15 +114,14 @@ namespace Causalize {
 
   private:
       IntervalVector intervals;
-      std::list<int> usage;
       typedef IntervalVector::iterator iterator;
       typedef IntervalVector::const_iterator const_iterator;
       inline const_iterator begin() const { return intervals.begin(); }
-      IntervalList Partition(Interval iA, Interval iB);
       inline iterator begin() { return intervals.begin(); }
       inline iterator end() { return intervals.end(); }
-      MDI ApplyOffset(Offset offset);
-      MDI ApplyUsage(std::vector<int> usage);
+
+      IntervalList Partition(Interval iA, Interval iB);
+      //MDI ApplyOffset(Offset offset);
       std::list<MDI> PutHead(Interval i, std::list<MDI> mdiList);
       std::list<MDI> Filter(std::list<MDI> mdiList, MDI mdi);
       std::list<MDI> CartProd(std::list<MDI> mdiList);
@@ -106,18 +136,20 @@ namespace Causalize {
    *****************************************************************************/
   class IndexPair {
   public:
-    inline IndexPair(MDI dom, MDI ran, Offset os): dom(dom), ran(ran), offset(os) { };
+    inline IndexPair(MDI dom, MDI ran, Offset os, Usage us): dom(dom), ran(ran), offset(os), usage(us) { };
     inline MDI Dom() const { return dom; }
     inline MDI Ran() const { return ran; }
     inline Offset OS() const { return offset; }
+    inline Usage GetUsage() const { return usage; }
     std::list<IndexPair> operator-(const IndexPair& other);
     std::list<IndexPair> RemoveUnknowns(MDI eqs);
+    std::list<IndexPair> RemoveEquations(MDI eqs);
     bool operator<(const IndexPair& other) const;
     friend std::ostream& operator<<(std::ostream& os, const IndexPair& ip);
   private:
     MDI dom, ran;
     Offset offset;
-    std::vector<int> usage;
+    Usage usage;
   };
   /*****************************************************************************
    ****************************************************************************/

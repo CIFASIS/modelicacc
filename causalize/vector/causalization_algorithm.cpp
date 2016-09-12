@@ -96,6 +96,7 @@ CausalizationStrategyVector::Causalize() {
     assert(equationNumber == unknownNumber);
     if(equationDescriptors.empty() && unknownDescriptors.empty()) {
       // Finished causalizing :)
+      PrintCausalizationResult();
       SolveEquations();
       return true;
     }
@@ -119,6 +120,7 @@ CausalizationStrategyVector::Causalize() {
         causalize_some=true;
         // This pair holds which edge(the first component) to use for causalization and which indexes(the second component)
         std::pair<VectorEdge,IndexPairSet> causal_pair = op.get();
+        ERROR_UNLESS(causal_pair.second.size()==1, "Causalizing more than a singleton");
         VectorEdge e = causal_pair.first;
         // This is the unknown node connecting to the edge
         UnknownVertex unk = GetUnknown(e);
@@ -127,10 +129,10 @@ CausalizationStrategyVector::Causalize() {
         // Save the result of this step of causalization
         Causalize1toN(graph[unk].unknown, graph[eq].equation, causal_pair.second);
         // Update the pairs in the edge that is being causalized
-        //graph[e].RemovePairs(causal_pair.second);
+        graph[e].RemovePairs(causal_pair.second);
         // Decrement the number of uncausalized equations/unknowns
-        graph[eq].count -= causal_pair.second.size();
-        graph[unk].count -= causal_pair.second.size();
+        graph[eq].count -= causal_pair.second.begin()->Dom().Size();
+        graph[unk].count -= causal_pair.second.begin()->Ran().Size();
         // If the edge has no more pairs in it remove it
         if (graph[e].IsEmpty()) {
           remove_edge(e, graph);
@@ -139,9 +141,12 @@ CausalizationStrategyVector::Causalize() {
         std::list<VectorEdge> remove;
         foreach_(VectorEdge e1, out_edges(unk,graph)) {
           // Update the labels from all the edges adjacent to the unknown
-          //graph[e1].RemoveUnknowns(causal_pair.second);
+          std::cout << "Removing unknowns " << causal_pair.second.begin()->Ran() << " from " << graph[e1]<<"\n";
+          graph[e1].RemoveUnknowns(causal_pair.second.begin()->Ran());
+          std::cerr << "Result= " << graph[e1] << "\n";
           // If the edge is now empty schedule it for removal
           if (graph[e1].IsEmpty()) {
+            std::cerr << "Delete it\n";
             remove.push_back(e1);
           }
         }
@@ -193,10 +198,11 @@ CausalizationStrategyVector::Causalize() {
         // Save the result of this step of causalization
         CausalizeNto1(graph[unk].unknown, graph[eq].equation, causal_pair.second);
         // Update the pairs in the edge that is being causalized
-        //graph[e].RemovePairs(causal_pair.second);
+        graph[e].RemovePairs(causal_pair.second);
         // Decrement the number of uncausalized equations/unknowns
-        graph[eq].count -= causal_pair.second.size();
-        graph[unk].count -= causal_pair.second.size();
+        ERROR_UNLESS(causal_pair.second.size()==1, "Causalizing more than a singleton");
+        graph[eq].count -= causal_pair.second.begin()->Dom().Size();
+        graph[unk].count -= causal_pair.second.begin()->Ran().Size();
         // If the edge has no more pairs in it remove it
         if (graph[e].IsEmpty()) {
           remove_edge(e, graph);
@@ -205,10 +211,9 @@ CausalizationStrategyVector::Causalize() {
         std::list<VectorEdge> remove;
         foreach_(VectorEdge e1, out_edges(eq,graph)) {
           // Update the labels from all the edges adjacent to the equation
-          if (debugIsEnabled('c')) {
-            std::cout << "Removing equations from " << graph[e1]<<"\n";
-          }
-          //graph[e1].RemoveEquations(causal_pair.second);
+          std::cout << "Removing equations " << causal_pair.second.begin()->Dom() << " from " << graph[e1]<<"\n";
+          graph[e1].RemoveEquations(causal_pair.second.begin()->Dom());
+          std::cout << "Result = " << graph[e1]<<"\n";
           // If the edge is now empty schedule it for removal
           if (graph[e1].IsEmpty()) {
             if (debugIsEnabled('c')) {
@@ -265,11 +270,9 @@ Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCaus
     candidate_edge = *vi;
     const IndexPairSet &ips = graph[*vi].Pairs();
     if (debugIsEnabled('c')) {
-      cout << "Checking edge " << graph[*vi] << "\n";
     }
     // First find on candidate_edge a possible set of pairs
     for (candidate_pair = ips.begin(); candidate_pair!=ips.end(); candidate_pair++) {
-      cout << "Checking cand " << *candidate_pair << "\n";
       if (TestPairInCandidateEdge(candidate_pair, candidate_edge, vt)) {
         //We found a candidate pair in the candidate edge
         //Check if this pair is allowed for other edges
@@ -303,7 +306,6 @@ bool CausalizationStrategyVector::TestPairInCandidateEdge(IndexPairSet::iterator
   //Test the candidate pair in the edge
   for (test = graph[edge].Pairs().begin(); test !=graph[edge].Pairs().end(); test++) {
     // Skip the same pair in the same edge
-    cout << "Checking cand " << *test << "\n";
     if (ip==test) {
       continue;
     }
@@ -355,31 +357,29 @@ void CausalizationStrategyVector::SolveEquations() {
   foreach_(CausalizedVar cv, sorted_vars) {
     Equation equation = cv.equation;
     if(is<ForEq>(equation)) {
-      ERROR_UNLESS(cv.pairs.size() != 1, "Solving scalar equation with more than one index pair");
+      /*ERROR_UNLESS(cv.pairs.size() != 1, "Solving scalar equation with more than one index pair");
       IndexPair ip = *cv.pairs.begin();
       MDI dom = ip.Dom(), ran = ip.Ran();
-      for (int i : ip.OS()) {
-        ERROR_UNLESS(i != 0, "Solving with offset not implemented");
-      }
+      ERROR_UNLESS(ip.OS().isZeros(), "Solving with offset not implemented");
       ERROR_UNLESS(dom.Size() == ran.Size(), "Solving with ranges of different size");
       ForEq &feq = get<ForEq>(equation);
-      VarSymbolTable syms = mmo.syms_ref();
+      VarSymbolTable syms = mmo.syms_ref();*/
       if (debugIsEnabled('c')) {
         std::cout << "Solving:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
       }
-      std::list<std::string> c_code;
-      ClassList cl;
-      all.push_back(feq);
+      //std::list<std::string> c_code;
+      //ClassList cl;
+      //all.push_back(feq);
       //all.push_back(EquationSolver::Solve(feq, cv.unknown(), syms, c_code, cl, mmo.name() + ".c"));
     } else{
       ExpList varIndexes;;
       if (cv.unknown.dimension == 0) {
         cv.unknown.SetIndex(varIndexes);
       } else {
-         ERROR_UNLESS(cv.pairs.size() != 1, "Solving scalar equation with more than one index pair");
+         ERROR_UNLESS(cv.pairs.size() == 1, "Solving scalar equation with more than one index pair");
          MDI mdi = cv.pairs.begin()->Ran();
          for(Interval i : mdi.Intervals()) {
-          ERROR_UNLESS(boost::icl::size(i)!=1, "Interval of size>1 used for solving a scalar equation"); 
+          ERROR_UNLESS(boost::icl::size(i)==1, "Interval of size>1 used for solving a scalar equation"); 
           varIndexes.push_back(Expression(i.lower()));
          }
       }
