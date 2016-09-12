@@ -77,16 +77,17 @@ namespace Causalize {
     //Returns true if the intersection if not void
     bool operator&(const MDI& other);
     friend std::ostream& operator<<(std::ostream& os, const MDI mdi);
+    inline const IntervalVector & Intervals() const { return intervals; }
 
   private:
       IntervalVector intervals;
       std::list<int> usage;
       typedef IntervalVector::iterator iterator;
       typedef IntervalVector::const_iterator const_iterator;
-      inline iterator begin() { return intervals.begin(); }
       inline const_iterator begin() const { return intervals.begin(); }
-      inline iterator end() { return intervals.end(); }
       IntervalList Partition(Interval iA, Interval iB);
+      inline iterator begin() { return intervals.begin(); }
+      inline iterator end() { return intervals.end(); }
       std::list<MDI> PutHead(Interval i, std::list<MDI> mdiList);
       std::list<MDI> Filter(std::list<MDI> mdiList, MDI mdi);
       std::list<MDI> CartProd(std::list<MDI> mdiList);
