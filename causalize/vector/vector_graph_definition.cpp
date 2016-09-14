@@ -251,6 +251,7 @@ namespace Causalize {
   std::list<MDI> MDI::Remove(const MDI &other, Offset offset) {
     //TODO: Apply offset
     if (this->Dimension()!=other.Dimension()) {
+      std::cout << *this << " " << other << "\n";
       ERROR("Dimension error #4\n");
     }
     std::list<MDI> ret;
@@ -304,11 +305,20 @@ namespace Causalize {
   }
 
   IndexPairSet IndexPair::RemoveUnknowns(MDI mdi) {
+    if (Ran().Dimension()==0) {
+      ERROR_UNLESS(mdi.Dimension()==0, "Removing ranges of different dimension");
+      return {};
+    }
     if (Option<MDI> intersection = mdi & this->Ran()) {
       MDI domToRemove = intersection.get().ApplyUsage(this->usage);
       MDI ranToRemove = intersection.get();
-//      std::cout << "From " << this->Dom() << " remove " << domToRemove << "\n";
-      std::list<MDI> remainsDom = this->Dom().Remove(domToRemove, -offset);
+      std::cout << "From " << this->Ran() << " remove " << mdi << "\n";
+      std::cout << "From2 " << this->Dom() << " remove " << domToRemove << "\n";
+
+      std::list<MDI> remainsDom = {this->Dom()};
+      if (this->Dom().Dimension()!=0) 
+        remainsDom = this->Dom().Remove(domToRemove, -offset);
+
       std::list<MDI> remainsRan = this->Ran()-ranToRemove;
       std::list<MDI>::iterator domIter = remainsDom.begin();
       std::list<MDI>::iterator ranIter = remainsRan.begin();
@@ -325,24 +335,31 @@ namespace Causalize {
 
   IndexPairSet IndexPair::RemoveEquations(MDI mdi) {
     //If there is intersection, there is something to remove
-    if (Option<MDI> domToRemove = mdi&this->Dom()) {
+    if (Option<MDI> domToRemove = mdi & this->Dom()) {
       //If the dimension of domToRemove is 0, is not a for-eq, we should remove it all
       if (domToRemove.get().Dimension() == 0) {
        ERROR_UNLESS(this->Ran().Size() == 1, "Dimension error #7");
        return IndexPairSet();
       } else {
-//        std::cout << "From " << this->Dom() << " remove " << domToRemove << "\n";
+        std::cout << "\n\nFrom " << this->Dom() << " remove " << domToRemove << "\n";
         MDI ranToRemove = domToRemove.get().ApplyUsage(this->usage);
-//        std::cout << "From " << this->Ran() << " remove " << ranToRemove << "\n";
-        std::list<MDI> remainsRan = this->Ran().Remove(ranToRemove, offset);
+        ////std::cout << "From " << this->Ran() << " remove " << ranToRemove << "\n";
+        std::list<MDI> remainsRan = {this->Ran()};
+        if (this->Ran().Dimension()!=0) 
+          remainsRan = this->Ran().Remove(ranToRemove, offset);
+        std::cout << "Result in ran " << remainsRan << "\n";
         std::list<MDI> remainsDom = this->Dom()-domToRemove.get();
+        std::cout << "Result in dom " << remainsDom << "\n";
         std::list<MDI>::iterator domIter = remainsDom.begin();
         std::list<MDI>::iterator ranIter = remainsRan.begin();
+        ERROR_UNLESS(ranIter != remainsRan.end(), "remainsRan is empty");
         IndexPairSet ret;
         while (domIter!=remainsDom.end()) {
-          ret.insert(IndexPair(*domIter,*ranIter,this->offset, this->usage));
+          IndexPair ip(*domIter,*ranIter,this->offset, this->usage);
+          ret.insert(ip);
           domIter++;
-          ranIter++;
+          if (this->Ran().Dimension()!=0) 
+            ranIter++;
         }
         return ret;
       }
@@ -356,7 +373,7 @@ namespace Causalize {
 
   std::ostream& operator<<(std::ostream &os, const IndexPair &ip) {
     os << "(" << ip.Dom() << ", " << ip.Ran() << ")";
-    if (ip.OS().Size()) {
+    /*if (ip.OS().Size()) {
       os << "Offset = {";
       for (int i: ip.OS()) 
         os << i << " ";
@@ -364,7 +381,7 @@ namespace Causalize {
       for (int i: ip.GetUsage()) 
         os << i << " ";
       os << "}";
-    }
+    }*/
     return os;
   }
   /*****************************************************************************

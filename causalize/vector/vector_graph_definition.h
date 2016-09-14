@@ -139,7 +139,7 @@ private:
    *****************************************************************************/
   class IndexPair {
   public:
-    inline IndexPair(MDI dom, MDI ran, Offset os, Usage us): dom(dom), ran(ran), offset(os), usage(us) { };
+    inline IndexPair(MDI dom_, MDI ran_, Offset os, Usage us): dom(dom_), ran(ran_), offset(os), usage(us) { };
     inline MDI Dom() const { return dom; }
     inline MDI Ran() const { return ran; }
     inline Offset OS() const { return offset; }

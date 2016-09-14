@@ -120,6 +120,7 @@ CausalizationStrategyVector::Causalize() {
         causalize_some=true;
         // This pair holds which edge(the first component) to use for causalization and which indexes(the second component)
         std::pair<VectorEdge,IndexPairSet> causal_pair = op.get();
+        std::cout << "Causalizing EqSide: " << causal_pair.second << "\n";
         ERROR_UNLESS(causal_pair.second.size()==1, "Causalizing more than a singleton");
         VectorEdge e = causal_pair.first;
         // This is the unknown node connecting to the edge
@@ -199,6 +200,7 @@ CausalizationStrategyVector::Causalize() {
         causalize_some=true;
         // This pair holds which edge(the first component) to use for causalization and which indexes(the second component)
         std::pair<VectorEdge,IndexPairSet> causal_pair = op.get();
+        std::cout << "Causalizing Unk side " << causal_pair.second << "\n";
         VectorEdge e = causal_pair.first;
         // This is the equation node connecting to the edge
         EquationVertex eq = GetEquation(e);
@@ -289,6 +291,11 @@ Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCaus
     }
     // First find on candidate_edge a possible set of pairs
     for (candidate_pair = ips.begin(); candidate_pair!=ips.end(); candidate_pair++) {
+      IndexPair candidate_ip = *candidate_pair;
+      // A N-to-1 or 1-to-N can not be causalized
+      if (candidate_ip.Dom().Size()!=candidate_ip.Ran().Size()) 
+        continue;
+      
       if (TestPairInCandidateEdge(candidate_pair, candidate_edge, vt)) {
         //We found a candidate pair in the candidate edge
         //Check if this pair is allowed for other edges
