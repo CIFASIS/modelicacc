@@ -106,7 +106,7 @@ namespace Causalize {
   }
 
   bool MDI::operator<(const MDI& other) const {
-    return this->intervals<other.intervals;
+    return (this->intervals)<(other.intervals);
   }
 
   std::list<Interval> MDI::Partition(Interval iA, Interval iB) {
@@ -115,7 +115,7 @@ namespace Causalize {
     int b = iA.upper();
     int c = iB.lower();
     int d = iB.upper();
-    if ((a<c) && (c<d) && (d<b)) {
+    if ((a<c) && (d<b)) {
       ret.push_back(CreateInterval(a,c-1));
       ret.push_back(CreateInterval(c,d));
       ret.push_back(CreateInterval(d+1,b));
@@ -134,7 +134,7 @@ namespace Causalize {
 
   std::list<MDI> MDI::PutHead(Interval i, std::list<MDI> mdiList) {
     std::list<MDI> mdiListRet;
-    BOOST_FOREACH(MDI xs, mdiList) {
+    for(MDI xs: mdiList) {
       IntervalList ys=IntervalList(xs.intervals.begin(), xs.intervals.end());
       ys.push_front(i);
       mdiListRet.push_back(ys);
@@ -144,9 +144,9 @@ namespace Causalize {
 
   std::list<MDI> MDI::PutLists(MDI mdi, std::list<MDI> mdiList) {
     std::list<MDI> mdiListRet;
-    BOOST_FOREACH(Interval i, mdi.intervals) {
+    for(Interval i: mdi.intervals) {
       std::list<MDI> zss = PutHead(i, mdiList);
-      BOOST_FOREACH(MDI zs, zss) {
+      for(MDI zs: zss) {
         mdiListRet.push_back(zs);
       }
     }
@@ -155,7 +155,7 @@ namespace Causalize {
 
   std::ostream& operator<<(std::ostream &os, const MDI mdi) {
     std::list<std::string> xsStList;
-    BOOST_FOREACH(Interval x, mdi.intervals) {
+    for(Interval x: mdi.intervals) {
       std::stringstream ss;
       if ( x.lower()== x.upper()) 
         ss << "[" << x.lower() << "]";
@@ -172,7 +172,7 @@ namespace Causalize {
     if (xss.size()==0) return yss;
     else if (xss.size()==1) {
       IntervalVector xs = xss.front().intervals;
-      BOOST_FOREACH(Interval i, xs) {
+      for(Interval i: xs) {
         IntervalList ys;
         ys.push_back(i);
         yss.push_back(ys);
@@ -187,10 +187,10 @@ namespace Causalize {
 
   std::list<MDI> MDI::Filter(std::list<MDI> mdiList, MDI mdi) {
     std::list<MDI> mdiListRet;
-    BOOST_FOREACH(MDI m, mdiList) {
-      ERROR_UNLESS(m.Dimension()==mdi.Dimension(), "Dimension error");
+    for(MDI m: mdiList) {
+      ERROR_UNLESS(m.Dimension()==mdi.Dimension(), "Dimension error #1");
       if (m.Dimension()!=mdi.Dimension()) {
-        std::cout << "Dimension error\n";
+        std::cout << "Dimension error #2\n";
         abort();
       }
       MDI::iterator iterXS = m.begin();
@@ -218,7 +218,8 @@ namespace Causalize {
 
   MDI MDI::ApplyUsage(std::vector<int> usage) {
     IntervalVector newIntervals;
-    newIntervals.resize(intervals.size());
+    //If usage.size > this->dimension, add empty intervals, without affecting the subsequent removal
+    newIntervals.resize(usage.size());
     int usages = 0;
     for(int i: usage) {
       if (i>=0) {
@@ -232,8 +233,7 @@ namespace Causalize {
 
   std::list<MDI> MDI::operator-(const MDI &other) {
     if (this->Dimension()!=other.Dimension()) {
-      std::cout << "Dimension error\n";
-      abort();
+      ERROR("Dimension error #3\n");
     }
     std::list<MDI> ret;
     MDI::iterator iterA = this->begin();
@@ -249,10 +249,9 @@ namespace Causalize {
   }
 
   std::list<MDI> MDI::Remove(const MDI &other, Offset offset) {
+    //TODO: Apply offset
     if (this->Dimension()!=other.Dimension()) {
-      std::cout << "Dimension error\n";
-      std::cout << *this << " " << other <<"\n";
-      abort();
+      ERROR("Dimension error #4\n");
     }
     std::list<MDI> ret;
     MDI::iterator iterA = this->begin();
@@ -269,7 +268,7 @@ namespace Causalize {
 
   Option<MDI> MDI::operator&(const MDI &other) const {
     if (this->Dimension() != other.Dimension()) { //TODO: Is this condition OK?
-      ERROR("Dimension error\n");
+      ERROR("Dimension error #5\n");
     }
     IntervalList intersection;
     for(int i=0; i<this->Dimension(); i++) {
@@ -290,7 +289,7 @@ namespace Causalize {
    *****************************************************************************/
   std::list<IndexPair> IndexPair::operator-(const IndexPair& other) {
     ERROR_UNLESS((this->Dom().Dimension()==other.Dom().Dimension()) &&
-        (this->Ran().Dimension()==other.Ran().Dimension()), "Dimension error\n");
+        (this->Ran().Dimension()==other.Ran().Dimension()), "Dimension error #6\n");
     std::list<MDI> remainsDom = this->Dom()-other.Dom();
     std::list<MDI> remainsRan = this->Ran()-other.Ran();
     std::list<MDI>::iterator domIter = remainsDom.begin();
@@ -304,46 +303,55 @@ namespace Causalize {
     return ret;
   }
 
-  std::list<IndexPair> IndexPair::RemoveUnknowns(MDI mdi) {
-    if (Option<MDI> ranToRemove = mdi & this->Ran()) {
-      MDI domToRemove = ranToRemove.get().ApplyUsage(this->usage);
-      std::cout << "From " << this->Dom() << " remove " << domToRemove << "\n";
-      std::list<MDI> remainsDom = this->Dom().Remove(domToRemove, offset);
-      std::list<MDI> remainsRan = this->Ran()-ranToRemove.get();
+  IndexPairSet IndexPair::RemoveUnknowns(MDI mdi) {
+    if (Option<MDI> intersection = mdi & this->Ran()) {
+      MDI domToRemove = intersection.get().ApplyUsage(this->usage);
+      MDI ranToRemove = intersection.get();
+//      std::cout << "From " << this->Dom() << " remove " << domToRemove << "\n";
+      std::list<MDI> remainsDom = this->Dom().Remove(domToRemove, -offset);
+      std::list<MDI> remainsRan = this->Ran()-ranToRemove;
       std::list<MDI>::iterator domIter = remainsDom.begin();
       std::list<MDI>::iterator ranIter = remainsRan.begin();
-      std::list<IndexPair> ret;
+      IndexPairSet ret;
       while (domIter!=remainsDom.end()) {
-        ret.push_back(IndexPair(*domIter,*ranIter,this->offset, this->usage)); 
+        ret.insert(IndexPair(*domIter,*ranIter,this->offset, this->usage));
         domIter++;
         ranIter++;
       }
       return ret;
     }
-    else return std::list<IndexPair>({*this});
+    else return IndexPairSet({*this});
   }
 
-  std::list<IndexPair> IndexPair::RemoveEquations(MDI mdi) {
-    ERROR("Not yet!");
-    if (Option<MDI> domToRemove = mdi&this->Ran()) {
-      MDI ranToRemove = domToRemove.get().ApplyUsage(this->usage);
-      std::list<MDI> remainsRan = this->Ran().Remove(ranToRemove, -offset);
-      std::list<MDI> remainsDom = this->Dom()-domToRemove.get();
-      std::list<MDI>::iterator domIter = remainsDom.begin();
-      std::list<MDI>::iterator ranIter = remainsRan.begin();
-      std::list<IndexPair> ret;
-      while (domIter!=remainsDom.end()) {
-        ret.push_back(IndexPair(*domIter,*ranIter,this->offset, this->usage)); 
-        domIter++;
-        ranIter++;
+  IndexPairSet IndexPair::RemoveEquations(MDI mdi) {
+    //If there is intersection, there is something to remove
+    if (Option<MDI> domToRemove = mdi&this->Dom()) {
+      //If the dimension of domToRemove is 0, is not a for-eq, we should remove it all
+      if (domToRemove.get().Dimension() == 0) {
+       ERROR_UNLESS(this->Ran().Size() == 1, "Dimension error #7");
+       return IndexPairSet();
+      } else {
+//        std::cout << "From " << this->Dom() << " remove " << domToRemove << "\n";
+        MDI ranToRemove = domToRemove.get().ApplyUsage(this->usage);
+//        std::cout << "From " << this->Ran() << " remove " << ranToRemove << "\n";
+        std::list<MDI> remainsRan = this->Ran().Remove(ranToRemove, offset);
+        std::list<MDI> remainsDom = this->Dom()-domToRemove.get();
+        std::list<MDI>::iterator domIter = remainsDom.begin();
+        std::list<MDI>::iterator ranIter = remainsRan.begin();
+        IndexPairSet ret;
+        while (domIter!=remainsDom.end()) {
+          ret.insert(IndexPair(*domIter,*ranIter,this->offset, this->usage));
+          domIter++;
+          ranIter++;
+        }
+        return ret;
       }
-      return ret;
     }
-    else return std::list<IndexPair>({*this});
+    else return IndexPairSet({*this});
   }
 
   bool IndexPair::operator<(const IndexPair& other) const {
-    return this->Dom() < other.Dom() && this->Ran() < other.Ran() && this->OS() < other.OS();
+    return this->Dom() < other.Dom() || this->Ran() < other.Ran() || this->OS() < other.OS();
   }
 
   std::ostream& operator<<(std::ostream &os, const IndexPair &ip) {
@@ -382,22 +390,25 @@ namespace Causalize {
     }
   }
 
-  void Label::RemoveUnknowns(MDI const mdi) const {
-    IndexPairSet newIps = this->ips;
-    for(IndexPair ipOld: ips) {
-      for(IndexPair ipNew: ipOld.RemoveUnknowns(mdi)) {
-        newIps.insert(ipNew);
-      }
+  void Label::RemoveUnknowns(MDI const mdi) {
+    IndexPairSet newIps;
+    for(IndexPair ip: this->ips) {
+      IndexPairSet afterRemove = ip.RemoveUnknowns(mdi);
+      newIps.insert(afterRemove.begin(), afterRemove.end());
     }
+//    std::cout << "\nLabel::RemoveUnknowns result:\n" << newIps << "\n";
+    this->ips=newIps;
   }
 
-  void Label::RemoveEquations(MDI const mdi) const {
-    IndexPairSet newIps = this->ips;
-    for(IndexPair ipOld: ips) {
+  void Label::RemoveEquations(MDI const mdi) {
+    IndexPairSet newIps;
+    for(IndexPair ipOld: this->ips) {
       for(IndexPair ipNew: ipOld.RemoveEquations(mdi)) {
         newIps.insert(ipNew);
       }
     }
+//    std::cout << "\nLabel::RemoveEquations result:\n" << newIps << "\n";
+    this->ips=newIps;
   }
 
 
@@ -407,6 +418,30 @@ namespace Causalize {
   }
   /*****************************************************************************
    ****************************************************************************/
+
+
+  std::ostream& operator<<(std::ostream &os, const std::list<MDI> &mdiList) {
+    std::list<std::string> mdiStList;
+    for(MDI mdi: mdiList) {
+      std::stringstream ss;
+      ss << mdi;
+      mdiStList.push_back(ss.str());
+    }
+    os << "{" << boost::algorithm::join(mdiStList, ",") << "}";
+    return os;
+  }
+
+  std::ostream& operator<<(std::ostream &os, const std::list<IndexPair> &ipList) {
+    std::list<std::string> ipsStList;
+    foreach_(IndexPair ip, ipList){
+      std::ostringstream ipSt;
+      ipSt << ip;
+      ipsStList.push_back(ipSt.str());
+    }
+    std::string ipsSt = "{" + boost::algorithm::join(ipsStList, ",") + "}";
+    os << ipsSt;
+    return os;
+  }
 
 
   unsigned long int EdgeCount(IndexPairSet labels) {

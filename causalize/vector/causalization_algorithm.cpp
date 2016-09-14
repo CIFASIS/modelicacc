@@ -135,18 +135,27 @@ CausalizationStrategyVector::Causalize() {
         graph[unk].count -= causal_pair.second.begin()->Ran().Size();
         // If the edge has no more pairs in it remove it
         if (graph[e].IsEmpty()) {
+          if (debugIsEnabled('c')) {
+            std::cout << "Removing the edge\n";
+          }
           remove_edge(e, graph);
         }
         // Auxiliary list to later remove empty edges
         std::list<VectorEdge> remove;
         foreach_(VectorEdge e1, out_edges(unk,graph)) {
           // Update the labels from all the edges adjacent to the unknown
-          std::cout << "Removing unknowns " << causal_pair.second.begin()->Ran() << " from " << graph[e1]<<"\n";
+          if (debugIsEnabled('c')) {
+            std::cout << "Removing unknowns " << causal_pair.second.begin()->Ran() << " from " << graph[e1]<<"\n";
+          }
           graph[e1].RemoveUnknowns(causal_pair.second.begin()->Ran());
-          std::cerr << "Result= " << graph[e1] << "\n";
+          if (debugIsEnabled('c')) {
+            std::cout << "Result: " << graph[e1] << "\n";
+          }
           // If the edge is now empty schedule it for removal
           if (graph[e1].IsEmpty()) {
-            std::cerr << "Delete it\n";
+            if (debugIsEnabled('c')) {
+              std::cout << "Removing the edge\n";
+            }
             remove.push_back(e1);
           }
         }
@@ -205,15 +214,22 @@ CausalizationStrategyVector::Causalize() {
         graph[unk].count -= causal_pair.second.begin()->Ran().Size();
         // If the edge has no more pairs in it remove it
         if (graph[e].IsEmpty()) {
+          if (debugIsEnabled('c')) {
+            std::cout << "Removing the edge\n";
+          }
           remove_edge(e, graph);
         }
         // Auxiliary list to later remove empty edges
         std::list<VectorEdge> remove;
         foreach_(VectorEdge e1, out_edges(eq,graph)) {
           // Update the labels from all the edges adjacent to the equation
-          std::cout << "Removing equations " << causal_pair.second.begin()->Dom() << " from " << graph[e1]<<"\n";
+          if (debugIsEnabled('c')) {
+            std::cout << "Removing equations " << causal_pair.second.begin()->Dom() << " from " << graph[e1]<<"\n";
+          }
           graph[e1].RemoveEquations(causal_pair.second.begin()->Dom());
-          std::cout << "Result = " << graph[e1]<<"\n";
+          if (debugIsEnabled('c')) {
+            std::cout << "Result: " << graph[e1]<<"\n";
+          }
           // If the edge is now empty schedule it for removal
           if (graph[e1].IsEmpty()) {
             if (debugIsEnabled('c')) {

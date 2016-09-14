@@ -131,6 +131,9 @@ private:
    ****************************************************************************/
 
 
+  std::ostream& operator<<(std::ostream &os, const std::list<MDI> &mdiList);
+
+
   /*****************************************************************************
    ****                           INDEX PAIR                                ****
    *****************************************************************************/
@@ -142,8 +145,8 @@ private:
     inline Offset OS() const { return offset; }
     inline Usage GetUsage() const { return usage; }
     std::list<IndexPair> operator-(const IndexPair& other);
-    std::list<IndexPair> RemoveUnknowns(MDI eqs);
-    std::list<IndexPair> RemoveEquations(MDI eqs);
+    std::set<IndexPair> RemoveUnknowns(MDI eqs);
+    std::set<IndexPair> RemoveEquations(MDI eqs);
     bool operator<(const IndexPair& other) const;
     friend std::ostream& operator<<(std::ostream& os, const IndexPair& ip);
   private:
@@ -153,6 +156,10 @@ private:
   };
   /*****************************************************************************
    ****************************************************************************/
+
+
+  std::ostream& operator<<(std::ostream &os, const std::list<IndexPair> &ipList);
+
 
   typedef std::set<IndexPair> IndexPairSet;
   std::ostream& operator<<(std::ostream& os, const IndexPairSet& ips);
@@ -165,8 +172,8 @@ private:
     inline Label() {};
     inline Label(IndexPairSet ips): ips(ips) {};
     void RemovePairs(IndexPairSet ips);
-    void RemoveUnknowns(MDI const mdi) const;
-    void RemoveEquations(MDI const mdi) const;
+    void RemoveUnknowns(MDI const mdi);
+    void RemoveEquations(MDI const mdi);
     unsigned long int EdgeCount();
     inline bool IsEmpty() { return ips.size()==0; }
     inline const IndexPairSet & Pairs() const { return ips; }
