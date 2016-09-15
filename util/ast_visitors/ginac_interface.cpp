@@ -26,11 +26,16 @@
 #include <ginac/ginac.h>
 #include <util/ast_visitors/ginac_interface.h>
 #include <boost/tuple/tuple.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/lexical_cast.hpp>
 #include <util/debug.h>
 #include <ast/queries.h>
 #include <parser/parser.h>
 
 using namespace GiNaC;
+using namespace std;
 REGISTER_FUNCTION(der, dummy())
 REGISTER_FUNCTION(pre, dummy())
 
@@ -160,7 +165,7 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
         Reference r = get<Reference>(arg);
         GiNaC::ex exp = ConvertToGiNaC::operator()(r);
         std::stringstream ss;
-        ss << "der(" << exp << ")";
+        ss << "der_" << exp;
         return getSymbol(ss.str());
       } 
       if ("exp"==v.name()) {
@@ -172,10 +177,10 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
         return getSymbol(ss.str());
       } 
       if ("log"==v.name()) {
-        return log(ApplyThis(v.args()[0]));
+        return GiNaC::log(ApplyThis(v.args()[0]));
       } 
       if ("log10"==v.name()) {
-        return log(ApplyThis(v.args()[0]))/log(10);
+        return GiNaC::log(ApplyThis(v.args()[0]))/GiNaC::log(10);
       } 
       WARNING("ConvertToGiNaC: conversion of function %s implemented. Returning 0.\n", v.name().c_str());
       return 0;
@@ -211,8 +216,13 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
           std::stringstream ss;
           ss << s << "[" <<  oel.get().front() << "]";
           return getSymbol(ss.str());
-        } else if (oel && oel.get().size()>1) {
-          ERROR("Multidimensional array not supported");
+        } else if (oel && oel.get().size()==2) {
+          std::stringstream ss;
+          ss << s;
+          for(Expression e: oel.get())
+            ss << "_" << e;
+          return getSymbol(ss.str());
+          //ERROR("Multidimensional array not supported");
         } 
         return getSymbol(s);
       } else if (_forDerivation) {
@@ -238,17 +248,71 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
       return directory.insert(make_pair(s, symbol(s))).first->second;
     }
     
+ class GiNaCtoModelica 
+ : public visitor,          // this is required
+   public add::visitor,     // visit add objects
+   public GiNaC::function::visitor,     // visit add objects
+   public mul::visitor,     // visit add objects
+   public power::visitor,     // visit add objects
+   public GiNaC::numeric::visitor, // visit numeric objects
+   public symbol::visitor, // visit numeric objects
+   public basic::visitor    // visit basic objects
+{
+    void visit(const power & x) { result_ = BinOp(ConvertToExp(x.op(0)), Exp , ConvertToExp(x.op(1))); }
+    void visit(const add & x) { result_ = BinOp(ConvertToExp(x.op(0)), Add, ConvertToExp(x.op(1))); }
+    void visit(const GiNaC::function & x) { 
+      const std::string name = x.get_name();
+      if ("sin"==name) {
+        result_ = Call(name, ConvertToExp(x.op(0)));
+        return; 
+      }
+      ERROR("Function not supported in GiNaC conversion");
+
+    }
+    void visit(const mul & x) { result_ = BinOp(ConvertToExp(x.op(0)), Mult, ConvertToExp(x.op(1))); }
+    void visit(const GiNaC::numeric & x) { result_ = x.to_double(); 
+      if (x.to_double()<0) 
+        result_=Output(result_);
+    } 
+    void visit(const GiNaC::symbol & x) { 
+      std::string name = x.get_name();;
+      std::vector< std::string > sp;
+      bool is_der=false;
+      bool found_name=false;
+      boost::algorithm::split(sp, name, boost::is_any_of("_"));
+      ExpList el;
+      for(std::string s:sp) {
+        if ("der"==s) {
+          is_der=true;
+          continue;
+        }
+        if (!found_name) {
+          name = s;
+          found_name = true;
+          continue;
+        }
+        try {
+          el.push_back(boost::lexical_cast<int>(s));
+        } catch (boost::bad_lexical_cast) {
+          el.push_back(Reference(s));
+        } 
+      }
+      if (!is_der) 
+        result_ = Reference(name, el);
+      else
+        result_ = Call("der", Reference(name, el));
+    }
+    void visit(const basic & x) { std::cerr << x << std::endl; ERROR("Could not convert GiNaC expression to Modelica"); }
+    
+    Expression result_;
+  public:
+    Expression exp() { return result_; }
+  };
+
     Expression ConvertToExp(GiNaC::ex e) {
-      bool r;
-      std::stringstream s(std::ios_base::out),der_s(std::ios_base::out);
-     // set_print_func<power,print_dflt>(my_print_power_dflt);
-      s << e;
-      Expression exp = Parser::ParseExpression(s.str(),r);
-      if (!r) {
-        WARNING("ConvertToGiNaC: conversion of output expression. Returning 0");
-        return 0;
-      } 
-      return exp;
+      GiNaCtoModelica v;
+      e.accept(v);
+      return v.exp();
     }
 
 }

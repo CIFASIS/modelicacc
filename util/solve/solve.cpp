@@ -81,7 +81,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
   GiNaC::lst eqns, vars;
   foreach_(Expression exp,crs)  {
     if (debugIsEnabled('s')) 
-      std::cerr << "Solving variables " << exp;
+      std::cerr << "Solving variables " << exp << ": GiNaC " << Apply(tog,exp) << "\n";
     vars.append(Apply(tog,exp));
   }
   bool for_eq=false;
@@ -118,7 +118,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     //if (size>1)
     //  throw std::logic_error("Blahh");
     if (debugIsEnabled('s')) 
-      std::cerr << "GiNaC equations " << eqns << "\n";
+      std::cerr << "GiNaC equations " << eqns << " variables " << vars << "\n";
     GiNaC::ex solved= lsolve(eqns, vars,GiNaC::solve_algo::gauss);
     if (solved.nops()==0) {
       std::cerr << "EquationSolver: cannot solve equation" << eqns<< std::endl;
@@ -127,33 +127,23 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     }
     for(unsigned int i=0; i<solved.nops();i++)  {
       std::stringstream s(ios_base::out);
-      std::stringstream rhs(ios_base::out);
       set_print_func<power,print_dflt>(my_print_power_dflt);
       if (debugIsEnabled('s')) 
         std::cerr << "GiNaC result " << solved.op(i) << "\n";
-      s << index_dimensions;
-      s << solved.op(i).op(0);
-      Expression lhs;
-      if (s.str().find("__der_")==0) { 
-        std::string ss=s.str().erase(0,6);
-        lhs = Call("der", Reference(Ref(1,RefTuple(ss,ExpList(0)))));
-      } else {
-        lhs = Reference(Ref(1,RefTuple(s.str(),ExpList(0))));
-      }
-      rhs << solved.op(i).op(1);
-      bool r;
-      Expression rhs_exp = Modelica::Parser::ParseExpression(rhs.str(),r);
-      if (!r)
-        ERROR("Could not solve equation\n");
+      Expression lhs = Modelica::ConvertToExp(solved.op(i).op(0));
+      Expression rhs = Modelica::ConvertToExp(solved.op(i).op(1));
+      if (debugIsEnabled('s')) 
+        std::cerr << "Modelica result " << lhs << "=" << rhs << "\n";
       if (for_eq) {
         ForEq feq  = get<ForEq>(eqs.front());
-        feq.elements_ref().front() = Equality(lhs,rhs_exp);
+        feq.elements_ref().front() = Equality(lhs,rhs);
         ret.push_back(feq);
       } else {
-        ret.push_back(Equality(lhs,rhs_exp));
+        ret.push_back(Equality(lhs,rhs));
       }
     }
   } catch (std::logic_error) {    
+    abort();
     ERROR_UNLESS(!for_eq, "Non linear solving of for loops not suported yet");
     OptExpList ol;
     std::vector<Reference> args;

@@ -312,9 +312,6 @@ namespace Causalize {
     if (Option<MDI> intersection = mdi & this->Ran()) {
       MDI domToRemove = intersection.get().ApplyUsage(this->usage);
       MDI ranToRemove = intersection.get();
-      std::cout << "From " << this->Ran() << " remove " << mdi << "\n";
-      std::cout << "From2 " << this->Dom() << " remove " << domToRemove << "\n";
-
       std::list<MDI> remainsDom = {this->Dom()};
       if (this->Dom().Dimension()!=0) 
         remainsDom = this->Dom().Remove(domToRemove, -offset);
@@ -341,15 +338,12 @@ namespace Causalize {
        ERROR_UNLESS(this->Ran().Size() == 1, "Dimension error #7");
        return IndexPairSet();
       } else {
-        std::cout << "\n\nFrom " << this->Dom() << " remove " << domToRemove << "\n";
         MDI ranToRemove = domToRemove.get().ApplyUsage(this->usage);
         ////std::cout << "From " << this->Ran() << " remove " << ranToRemove << "\n";
         std::list<MDI> remainsRan = {this->Ran()};
         if (this->Ran().Dimension()!=0) 
           remainsRan = this->Ran().Remove(ranToRemove, offset);
-        std::cout << "Result in ran " << remainsRan << "\n";
         std::list<MDI> remainsDom = this->Dom()-domToRemove.get();
-        std::cout << "Result in dom " << remainsDom << "\n";
         std::list<MDI>::iterator domIter = remainsDom.begin();
         std::list<MDI>::iterator ranIter = remainsRan.begin();
         ERROR_UNLESS(ranIter != remainsRan.end(), "remainsRan is empty");

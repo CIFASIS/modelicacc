@@ -96,7 +96,8 @@ CausalizationStrategyVector::Causalize() {
     assert(equationNumber == unknownNumber);
     if(equationDescriptors.empty() && unknownDescriptors.empty()) {
       // Finished causalizing :)
-      PrintCausalizationResult();
+      if (debugIsEnabled('c'))
+        PrintCausalizationResult();
       SolveEquations();
       return true;
     }
@@ -120,7 +121,6 @@ CausalizationStrategyVector::Causalize() {
         causalize_some=true;
         // This pair holds which edge(the first component) to use for causalization and which indexes(the second component)
         std::pair<VectorEdge,IndexPairSet> causal_pair = op.get();
-        std::cout << "Causalizing EqSide: " << causal_pair.second << "\n";
         ERROR_UNLESS(causal_pair.second.size()==1, "Causalizing more than a singleton");
         VectorEdge e = causal_pair.first;
         // This is the unknown node connecting to the edge
@@ -200,7 +200,6 @@ CausalizationStrategyVector::Causalize() {
         causalize_some=true;
         // This pair holds which edge(the first component) to use for causalization and which indexes(the second component)
         std::pair<VectorEdge,IndexPairSet> causal_pair = op.get();
-        std::cout << "Causalizing Unk side " << causal_pair.second << "\n";
         VectorEdge e = causal_pair.first;
         // This is the equation node connecting to the edge
         EquationVertex eq = GetEquation(e);
@@ -336,12 +335,10 @@ bool CausalizationStrategyVector::TestPairInCandidateEdge(IndexPairSet::iterator
     IndexPair test_pair = *test;
     if (vt==kVertexEquation) {
       if (candidate.Dom() & test_pair.Dom()) {
-        std::cout << "Candidate: " << candidate.Dom() << " colissions with " << test_pair.Dom() << "\n";
         return false;
       } 
     } else {
       if (candidate.Ran() & test_pair.Ran()) {
-        std::cout << "Candidate: " << candidate.Ran() << " colissions with " << test_pair.Ran() << "\n";
         return false;
       } 
 
@@ -380,20 +377,41 @@ void CausalizationStrategyVector::SolveEquations() {
   foreach_(CausalizedVar cv, sorted_vars) {
     Equation equation = cv.equation;
     if(is<ForEq>(equation)) {
-      /*ERROR_UNLESS(cv.pairs.size() != 1, "Solving scalar equation with more than one index pair");
+      ERROR_UNLESS(cv.pairs.size() == 1, "Solving scalar equation with more than one index pair");
       IndexPair ip = *cv.pairs.begin();
       MDI dom = ip.Dom(), ran = ip.Ran();
       ERROR_UNLESS(ip.OS().isZeros(), "Solving with offset not implemented");
       ERROR_UNLESS(dom.Size() == ran.Size(), "Solving with ranges of different size");
       ForEq &feq = get<ForEq>(equation);
-      VarSymbolTable syms = mmo.syms_ref();*/
+      VarSymbolTable syms = mmo.syms_ref();
+      unsigned int index = 0;
+      for(Index & i : feq.range_ref().indexes_ref()) {
+         VarInfo vinfo = VarInfo(TypePrefixes(), "Integer", Option<Comment>(), Modification());
+         syms.insert(i.name(),vinfo);
+         i.exp_ref() = Expression(Range(dom.Intervals().at(index).lower(),dom.Intervals().at(index).upper()));
+      }
+      ExpList el;
+      index = 0;
+      for (Interval i: ran.Intervals()) {
+        if (boost::icl::size(i)==1) // The unknown is used in a unitary range
+          el.push_back(i.lower());
+        else {// The unknown index is using a iterator
+          Usage us = ip.GetUsage();
+          std::vector<int>::iterator it = std::find(us.begin(), us.end(), index);
+          ERROR_UNLESS(it!=us.end(), "Range not found in usages");
+          unsigned int index_pos = it-us.begin();
+          Index i = feq.range().indexes().at(index_pos);
+          el.push_back(Reference(i.name())) ;
+        }
+        index++;
+      }
+      cv.unknown.SetIndex(el);
       if (debugIsEnabled('c')) {
         std::cout << "Solving:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
       }
-      //std::list<std::string> c_code;
-      //ClassList cl;
-      //all.push_back(feq);
-      //all.push_back(EquationSolver::Solve(feq, cv.unknown(), syms, c_code, cl, mmo.name() + ".c"));
+      std::list<std::string> c_code;
+      ClassList cl;
+      all.push_back(EquationSolver::Solve(feq, cv.unknown(), syms, c_code, cl, mmo.name() + ".c"));
     } else{
       ExpList varIndexes;;
       if (cv.unknown.dimension == 0) {

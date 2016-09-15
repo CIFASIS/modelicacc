@@ -32,6 +32,7 @@ namespace Modelica {
     printable(Extends);
   };
 
+  /* TODO include members */
   struct Import {
     Import(){};
     Import(Name, Name, Comment) {}
