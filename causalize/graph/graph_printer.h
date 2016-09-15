@@ -55,7 +55,7 @@ namespace Causalize {
     	  }
       };
 
-		  std::string printGraph(std::string name) {
+		  void printGraph(std::string name) {
 	      stringstream stri;
 	      ofstream out(name.c_str());
 	      int depth = 0;
@@ -75,7 +75,7 @@ namespace Causalize {
 			      for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
 				      Iterator aux = it;
 				      aux++;
-				      stri << graph[*it].index;
+				      stri << "eq" << graph[*it].index;
 				      if((aux) != equationDescriptors.end()){
 					      stri << " -- ";		
 				      }else{
@@ -84,6 +84,15 @@ namespace Causalize {
               if (out_degree(*it,graph)==0)
                 colors2 << "    " << graph[*it].index << "[ color=\"red\" ];" << endl;
 			      }
+			      for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
+			        MAKE_SPACE
+#ifdef HAS_COUNT
+				      stri << "eq" << graph[*it].index << " [label=\"Eq. " << graph[*it].index << "\nCount=" << graph[*it].count << "\"];" << endl;
+#else 
+				      stri << "eq" << graph[*it].index << " [label=\"Eq. " << graph[*it].index << "\"];" << endl;
+
+#endif
+            }
             stri << colors2.str();
 		      DELETE_TAB
 		      MAKE_SPACE
@@ -104,13 +113,21 @@ namespace Causalize {
 			      for(Iterator it=unknownDescriptors.begin(); it!=unknownDescriptors.end(); it++){
 				      Iterator aux = it;
 				      aux++;
-				      stri << "\"" << graph[*it].unknown() << "\"";
+				      stri << "var" << graph[*it].index;
 				      if((aux) != unknownDescriptors.end()){
 					      stri << " -- ";		
 				      }else{
 					      stri << ";" << endl;		
 				      }
 			      }
+			      for(Iterator it=unknownDescriptors.begin(); it!=unknownDescriptors.end(); it++){
+		          MAKE_SPACE
+#ifdef HAS_COUNT
+				      stri << "var" << graph[*it].index << " [ label = \"" << graph[*it].unknown() << "\nCount=" << graph[*it].count << "\"];" << endl;
+#else
+				      stri << "var" << graph[*it].index << " [ label = \"" << graph[*it].unknown() << "\"];" << endl;
+#endif
+            }
 		      DELETE_TAB
 		      MAKE_SPACE
 		      stri << colors.str();
@@ -126,7 +143,7 @@ namespace Causalize {
 				      Vertex unknown = target(*ei, graph);
 				      MAKE_SPACE;
 				      string name;
-    	        stri << graph[*eq_it].index << " -- \"" << graph[unknown].unknown() << "\"";
+    	        stri << "eq" << graph[*eq_it].index << " -- var" << graph[unknown].index;
               EdgeProperty ep = graph[*ei];
               stri << "[label = \"" << ep << "\"];";
 			      }
@@ -135,7 +152,16 @@ namespace Causalize {
 	      stri << "}" << endl;
 	      out << stri.str();
 	      out.close();
-	      return stri.str();
+#ifdef __linux__
+        size_t lastindex = name.find_last_of("."); 
+        string rawname = name.substr(0, lastindex); 
+	      stringstream command;
+        command << "/usr/bin/dot -T eps " << name << " >" << rawname << ".eps";
+        if (system(command.str().c_str()));
+        command.str(std::string());
+        command << "/usr/bin/dot -T jpg " << name << " >" << rawname << ".jpg";
+        if (system(command.str().c_str()));
+#endif
       }
 	  private:
 		  const Graph &graph;
