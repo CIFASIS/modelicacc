@@ -212,17 +212,26 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
       Option<ExpList> oel = boost::get<1>(r[0]);
       std::string s=boost::get<0>(r[0]);
       if (!_forDerivation || isConstant(s,varEnv) || isParameter(s,varEnv) || isDiscrete(s,varEnv)) {
-        if (oel && oel.get().size()==1) {
-          std::stringstream ss;
-          ss << s << "[" <<  oel.get().front() << "]";
-          return getSymbol(ss.str());
-        } else if (oel && oel.get().size()==2) {
+        if (oel && oel.get().size()) {
           std::stringstream ss;
           ss << s;
-          for(Expression e: oel.get())
-            ss << "_" << e;
+          for(Expression e: oel.get()) {
+            ERROR_UNLESS(is<Integer>(e) || is<Reference>(e) || is<BinOp>(e), "Not suppoted conversion");
+            if (!is<BinOp>(e))
+              ss << "_" << e;
+            else {
+              BinOp bop = get<BinOp>(e);
+              int offset = get<Integer>(bop.right());
+              if (bop.op()==Sub)
+                offset *=-1;
+              ss << "_" << bop.left();
+              if (offset>0) 
+                ss << "@" << offset;
+              else 
+                ss << "#" << -offset;
+            }
+          }
           return getSymbol(ss.str());
-          //ERROR("Multidimensional array not supported");
         } 
         return getSymbol(s);
       } else if (_forDerivation) {
@@ -258,8 +267,12 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
    public symbol::visitor, // visit numeric objects
    public basic::visitor    // visit basic objects
 {
-    void visit(const power & x) { result_ = BinOp(ConvertToExp(x.op(0)), Exp , ConvertToExp(x.op(1))); }
-    void visit(const add & x) { result_ = BinOp(ConvertToExp(x.op(0)), Add, ConvertToExp(x.op(1))); }
+    void visit(const power & x) { result_ = Output(BinOp(ConvertToExp(x.op(0)), Exp , ConvertToExp(x.op(1)))); }
+    void visit(const add & x) { 
+      result_ = Output(BinOp(ConvertToExp(x.op(0)), Add, ConvertToExp(x.op(1)))); 
+      for (unsigned int op = 2;op<x.nops();op++)
+        result_ = Output(BinOp(result_, Add, ConvertToExp(x.op(op)))); 
+    }
     void visit(const GiNaC::function & x) { 
       const std::string name = x.get_name();
       if ("sin"==name) {
@@ -269,14 +282,18 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
       ERROR("Function not supported in GiNaC conversion");
 
     }
-    void visit(const mul & x) { result_ = BinOp(ConvertToExp(x.op(0)), Mult, ConvertToExp(x.op(1))); }
+    void visit(const mul & x) { 
+      result_ = Output(BinOp(ConvertToExp(x.op(0)), Mult, ConvertToExp(x.op(1)))); 
+      for (unsigned int op = 2;op<x.nops();op++)
+        result_ = Output(BinOp(result_, Mult, ConvertToExp(x.op(op)))); 
+    }
     void visit(const GiNaC::numeric & x) { result_ = x.to_double(); 
       if (x.to_double()<0) 
         result_=Output(result_);
     } 
     void visit(const GiNaC::symbol & x) { 
       std::string name = x.get_name();;
-      std::vector< std::string > sp;
+      std::vector< std::string > sp, bop;
       bool is_der=false;
       bool found_name=false;
       boost::algorithm::split(sp, name, boost::is_any_of("_"));
@@ -293,8 +310,16 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
         }
         try {
           el.push_back(boost::lexical_cast<int>(s));
-        } catch (boost::bad_lexical_cast) {
-          el.push_back(Reference(s));
+        } catch (boost::bad_lexical_cast) { // Unprocess offset  
+          if (find_first(s, "@")) {
+            boost::algorithm::split(bop, s, boost::is_any_of("@"));
+            el.push_back(BinOp(Reference(bop.front()), Add, boost::lexical_cast<int>(bop.at(1))));
+          } else if (find_first(s, "#")) {
+            boost::algorithm::split(bop, s, boost::is_any_of("#"));
+            el.push_back(BinOp(Reference(bop.front()), Sub, boost::lexical_cast<int>(bop.at(1))));
+          } else {  
+            el.push_back(Reference(s));
+          }
         } 
       }
       if (!is_der) 
