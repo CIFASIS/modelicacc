@@ -280,6 +280,20 @@ namespace Causalize {
     //All intervals intersect with its corresponding interval in the other MDI: return the resulting intersection MDI
     return MDI(intersection);
   }
+
+  bool MDI::Contains(const MDI &other) const {
+    if (this->Dimension()!=other.Dimension())
+      return false;
+    else {
+      for (int i=0; i<(int)this->intervals.size(); i++){
+        if (!boost::icl::contains(this->intervals[i],other.intervals[i]))
+          return false;
+      }
+      //If each interval of "this" contains its corresponding interval of "other" return true
+      return true;
+    }
+    return false;
+  }
   /*****************************************************************************
    ****************************************************************************/
 
@@ -378,6 +392,17 @@ namespace Causalize {
     }*/
     return os;
   }
+
+  bool IndexPair::Contains(const IndexPair& other) const {
+    if (this->offset!=other.offset || this->usage!=other.usage)
+      return false;
+    if (this->dom.Size()<other.dom.Size() || this->ran.Size()<other.ran.Size())
+      return false;
+    if (this->dom.Contains(other.dom) & this->ran.Contains(other.ran))
+      return true;
+    else
+      return false;
+  }
   /*****************************************************************************
    ****************************************************************************/
 
@@ -386,6 +411,11 @@ namespace Causalize {
   /*****************************************************************************
    ****                              LABEL                                  ****
    *****************************************************************************/
+  Label::Label(IndexPairSet ips): ips(ips) {
+   this->RemoveDuplicates();
+  }
+
+
   void Label::RemovePairs(IndexPairSet ips) {
     foreach_(IndexPair ipRemove, ips) {
       IndexPairSet newIps = this->ips;
@@ -426,6 +456,23 @@ namespace Causalize {
   std::ostream& operator<<(std::ostream &os, const Label &label) {
     os << label.ips;
     return os;
+  }
+
+  void Label::RemoveDuplicates() {
+    IndexPairSet retIPS = ips;
+    for (IndexPairSet::iterator checkingIP=ips.begin(); checkingIP!=ips.end(); checkingIP++) {
+      //Ignore pairs 1-1
+      if (checkingIP->Dom().Size()==1 && checkingIP->Ran().Size()==1)
+        continue;
+      for (IndexPairSet::iterator ip=ips.begin(); ip!=ips.end(); ip++) {
+        //Ignore the same pair
+        if (checkingIP == ip)
+          continue;
+        if (checkingIP->Contains(*ip)) {
+          retIPS.erase(ip);
+        }
+      }
+    }
   }
   /*****************************************************************************
    ****************************************************************************/

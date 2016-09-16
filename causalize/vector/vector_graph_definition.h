@@ -72,6 +72,7 @@ namespace Causalize {
     inline Offset(): offset() { };
     inline bool operator<(const Offset& other) const { return this->offset < other.offset; };
     inline bool operator==(const Offset& other) const { return this->offset == other.offset; };
+    inline bool operator!=(const Offset& other) const { return this->offset != other.offset; };
     inline bool isZeros() { 
       for(int i: offset) {
         if (i!=0) return false;
@@ -111,6 +112,7 @@ private:
     Option<MDI> operator&(const MDI& other) const;
     friend std::ostream& operator<<(std::ostream& os, const MDI mdi);
     inline const IntervalVector & Intervals() const { return intervals; }
+    bool Contains(const MDI& other) const;
 
   private:
       IntervalVector intervals;
@@ -149,6 +151,7 @@ private:
     std::set<IndexPair> RemoveEquations(MDI eqs);
     bool operator<(const IndexPair& other) const;
     friend std::ostream& operator<<(std::ostream& os, const IndexPair& ip);
+    bool Contains(const IndexPair& other) const;
   private:
     MDI dom, ran;
     Offset offset;
@@ -170,7 +173,7 @@ private:
   class Label {
   public:
     inline Label() {};
-    inline Label(IndexPairSet ips): ips(ips) {};
+    Label(IndexPairSet ips);
     void RemovePairs(IndexPairSet ips);
     void RemoveUnknowns(MDI const mdi);
     void RemoveEquations(MDI const mdi);
@@ -180,6 +183,7 @@ private:
     friend std::ostream& operator<<(std::ostream& os, const Label& label);
   private:
     IndexPairSet ips;
+    void RemoveDuplicates();
   };
   /*****************************************************************************
    ****************************************************************************/
