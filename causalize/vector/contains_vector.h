@@ -55,13 +55,13 @@ namespace Causalize {
     IndexPairSet GetOccurrenceIndexes() { return labels; }
   private:
     void BuildPairs(Reference unkRef) const;
-    void BuildPairs(int counters[], Reference unkRef) const;
-    void NestedLoopOperation(int counters[], int length[], int level, Reference unkRef) const;
-    std::string PrintListOfList(std::list<std::list<int> > xss) const;
+    //void BuildPairs(int counters[], Reference unkRef) const;
+    //void NestedLoopOperation(int counters[], int length[], int level, Reference unkRef) const;
+    //std::string PrintListOfList(std::list<std::list<int> > xss) const;
 
     Expression exp;
     IntervalList forIndexIntervalList;
-    std::list<std::list<int> > BuildForIndexTuples(std::list<boost::icl::discrete_interval<int> > forIndexIntervalList) const;
+    //std::list<std::list<int> > BuildForIndexTuples(std::list<boost::icl::discrete_interval<int> > forIndexIntervalList) const;
     mutable IndexPairSet labels;
     VectorVertexProperty unk2find;
     mutable VarSymbolTable syms;

@@ -245,9 +245,12 @@ namespace Causalize {
           }
           index_count++;
         }
-        ERROR_UNLESS(total_index_uses==forIndexIntervalList.size(), "The number of indexes does not match the number of uses");
+        ERROR_UNLESS(total_index_uses == 0 || total_index_uses==forIndexIntervalList.size(), "The number of indexes does not match the number of uses");
         MDI mdi_eq(forIndexIntervalList),  mdi_unk(unk_indexes);
-        ERROR_UNLESS(mdi_eq.Size() == mdi_unk.Size(), "Edge of different size");
+        ERROR_UNLESS(  mdi_eq.Size() == mdi_unk.Size() 
+                    || mdi_eq.Size() == 1
+                    || mdi_unk.Size() == 1
+                    , "Edge of different size");
         labels.insert(IndexPair(mdi_eq, mdi_unk, Offset(offset_vector), usage_indexes));
       }
     } else { //The equation is not a for-equation
