@@ -302,7 +302,7 @@ namespace Causalize {
   /*****************************************************************************
    ****                            INDEX PAIR                               ****
    *****************************************************************************/
-  std::list<IndexPair> IndexPair::operator-(const IndexPair& other) {
+  std::list<IndexPair> IndexPair::operator-(const IndexPair& other) const {
     ERROR_UNLESS((this->Dom().Dimension()==other.Dom().Dimension()) &&
         (this->Ran().Dimension()==other.Ran().Dimension()), "Dimension error #6\n");
     std::list<MDI> remainsDom = this->Dom()-other.Dom();
@@ -403,6 +403,11 @@ namespace Causalize {
     else
       return false;
   }
+
+  Option<IndexPair> IndexPair::operator&(const IndexPair& other) const {
+    //TODO:
+    return Option<IndexPair>();
+  }
   /*****************************************************************************
    ****************************************************************************/
 
@@ -412,7 +417,7 @@ namespace Causalize {
    ****                              LABEL                                  ****
    *****************************************************************************/
   Label::Label(IndexPairSet ips): ips(ips) {
-   this->RemoveDuplicates();
+//   this->RemoveDuplicates();
   }
 
 
@@ -459,19 +464,27 @@ namespace Causalize {
   }
 
   void Label::RemoveDuplicates() {
-    IndexPairSet retIPS = ips;
-    for (IndexPairSet::iterator checkingIP=ips.begin(); checkingIP!=ips.end(); checkingIP++) {
-      //Ignore pairs 1-1
-      if (checkingIP->Dom().Size()==1 && checkingIP->Ran().Size()==1)
-        continue;
-      for (IndexPairSet::iterator ip=ips.begin(); ip!=ips.end(); ip++) {
-        //Ignore the same pair
-        if (checkingIP == ip)
+    bool removeSomething = true;
+    while (removeSomething) {
+      IndexPairSet retIPS = ips;
+      for (IndexPairSet::iterator checkingIP=ips.begin(); checkingIP!=ips.end(); checkingIP++) {
+        //Ignore pairs 1-1
+        if (checkingIP->Dom().Size()==1 && checkingIP->Ran().Size()==1)
           continue;
-        if (checkingIP->Contains(*ip)) {
-          retIPS.erase(ip);
+        for (IndexPairSet::iterator ip=ips.begin(); ip!=ips.end(); ip++) {
+          //Ignore the same pair
+          if (checkingIP == ip)
+            continue;
+          if (Option<IndexPair> hasToRemove = *checkingIP & *ip) {
+            retIPS.erase(*ip);
+            IndexPair ipToRemove = hasToRemove.get();
+            std::list<IndexPair> remainingIPS = (*ip)-ipToRemove;
+            retIPS.insert(remainingIPS.begin(), remainingIPS.end());
+            ips = retIPS;
+          }
         }
       }
+      removeSomething = false;
     }
   }
   /*****************************************************************************
