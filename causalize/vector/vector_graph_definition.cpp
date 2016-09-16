@@ -208,27 +208,50 @@ namespace Causalize {
     return mdiListRet;
   }
 
-//  MDI MDI::ApplyOffset(Offset offset) {
-//    IntervalVector copyIntervals = intervals;
-//    for(int i=0; i<(int)copyIntervals.size(); i++) {
-//      copyIntervals[i] = CreateInterval(copyIntervals[i].lower()+offset[i],copyIntervals[i].upper()+offset[i]);
-//    }
-//    return MDI(copyIntervals);
-//  }
+  MDI MDI::ApplyOffset(Offset offset) const {
+    ERROR_UNLESS((int)offset.Size()==this->Dimension(),"Dimension error applying offset"); //TODO: Review this error
+    IntervalVector copyIntervals = intervals;
+    for(int i=0; i<(int)copyIntervals.size(); i++) {
+      copyIntervals[i] = CreateInterval(copyIntervals[i].lower()+offset[i],copyIntervals[i].upper()+offset[i]);
+    }
+    return MDI(copyIntervals);
+  }
 
-  MDI MDI::ApplyUsage(std::vector<int> usage) {
-    IntervalVector newIntervals;
-    //If usage.size > this->dimension, add empty intervals, without affecting the subsequent removal
-    newIntervals.resize(usage.size());
+  MDI MDI::ApplyUsage(Usage usage, MDI ran) const {
+    IntervalVector newIntervals(usage.Size());
     int usages = 0;
-    for(int i: usage) {
-      if (i>=0) {
-        newIntervals[i] = CreateInterval(intervals[i].lower(), intervals[i].upper());
+    for(int i=0; i<(int)usage.Size(); i++) {
+      if (usage[i]>=0) {
+        newIntervals[i] = intervals[usage[i]];
         usages++;
       }
+      else {
+        ERROR_UNLESS(ran.Dimension()>=i, "Range argument size error");
+        newIntervals[i] = ran.intervals[i];
+      }
     }
+    //Eliminate unused intervals (usage[i]=-1)
     newIntervals.resize(usages);
     return MDI(newIntervals);
+  }
+
+  MDI MDI::RevertUsage(Usage usage, MDI dom) const {
+    ERROR_UNLESS(usage.Size()==dom.Dimension(), "Dimension error reverting usage");
+    if (usage.Size()==0 || usage.isUnused()) {
+      return dom;
+    }
+    else {
+      IntervalVector newIntervals(usage.Size());
+      int usages = 0;
+      for (int i: usage) {
+        if (i>=0) {
+          newIntervals[i] = this->intervals[usages];
+          usages++;
+        }
+      }
+      newIntervals.resize(usages);
+      return MDI(newIntervals);
+    }
   }
 
   std::list<MDI> MDI::operator-(const MDI &other) {
@@ -302,77 +325,287 @@ namespace Causalize {
   /*****************************************************************************
    ****                            INDEX PAIR                               ****
    *****************************************************************************/
-  std::list<IndexPair> IndexPair::operator-(const IndexPair& other) {
-    ERROR_UNLESS((this->Dom().Dimension()==other.Dom().Dimension()) &&
-        (this->Ran().Dimension()==other.Ran().Dimension()), "Dimension error #6\n");
-    std::list<MDI> remainsDom = this->Dom()-other.Dom();
-    std::list<MDI> remainsRan = this->Ran()-other.Ran();
-    std::list<MDI>::iterator domIter = remainsDom.begin();
-    std::list<MDI>::iterator ranIter = remainsRan.begin();
+  std::list<IndexPair> IndexPair::operator-(const IndexPair& other) const {
+    ERROR_UNLESS((this->Dom().Dimension()==other.Dom().Dimension()), "Domain dimension error in IndexPair subtraction");
+    ERROR_UNLESS((this->Ran().Dimension()==other.Ran().Dimension()), "Range dimension error in IndexPair subtraction");
     std::list<IndexPair> ret;
-    while (domIter!=remainsDom.end()) {
-      ret.push_back(IndexPair(*domIter,*ranIter,this->offset, this->usage)); 
-      domIter++;
-      ranIter++;
-    }
-    return ret;
-  }
-
-  IndexPairSet IndexPair::RemoveUnknowns(MDI mdi) {
-    if (Ran().Dimension()==0) {
-      ERROR_UNLESS(mdi.Dimension()==0, "Removing ranges of different dimension");
-      return {};
-    }
-    if (Option<MDI> intersection = mdi & this->Ran()) {
-      MDI domToRemove = intersection.get().ApplyUsage(this->usage);
-      MDI ranToRemove = intersection.get();
-      std::list<MDI> remainsDom = {this->Dom()};
-      if (this->Dom().Dimension()!=0) 
-        remainsDom = this->Dom().Remove(domToRemove, -offset);
-
-      std::list<MDI> remainsRan = this->Ran()-ranToRemove;
-      std::list<MDI>::iterator domIter = remainsDom.begin();
-      std::list<MDI>::iterator ranIter = remainsRan.begin();
-      IndexPairSet ret;
-      while (domIter!=remainsDom.end()) {
-        ret.insert(IndexPair(*domIter,*ranIter,this->offset, this->usage));
-        domIter++;
-        ranIter++;
-      }
-      return ret;
-    }
-    else return IndexPairSet({*this});
-  }
-
-  IndexPairSet IndexPair::RemoveEquations(MDI mdi) {
-    //If there is intersection, there is something to remove
-    if (Option<MDI> domToRemove = mdi & this->Dom()) {
-      //If the dimension of domToRemove is 0, is not a for-eq, we should remove it all
-      if (domToRemove.get().Dimension() == 0) {
-       ERROR_UNLESS(this->Ran().Size() == 1, "Dimension error #7");
-       return IndexPairSet();
-      } else {
-        MDI ranToRemove = domToRemove.get().ApplyUsage(this->usage);
-        ////std::cout << "From " << this->Ran() << " remove " << ranToRemove << "\n";
-        std::list<MDI> remainsRan = {this->Ran()};
-        if (this->Ran().Dimension()!=0) 
-          remainsRan = this->Ran().Remove(ranToRemove, offset);
-        std::list<MDI> remainsDom = this->Dom()-domToRemove.get();
-        std::list<MDI>::iterator domIter = remainsDom.begin();
-        std::list<MDI>::iterator ranIter = remainsRan.begin();
-        ERROR_UNLESS(ranIter != remainsRan.end(), "remainsRan is empty");
-        IndexPairSet ret;
-        while (domIter!=remainsDom.end()) {
-          IndexPair ip(*domIter,*ranIter,this->offset, this->usage);
-          ret.insert(ip);
-          domIter++;
-          if (this->Ran().Dimension()!=0) 
+    switch (this->Type()) {
+    case _N_N:
+      switch (other.Type()) {
+      case _N_N:
+        if (this->offset != other.offset) {
+          //Nothing to subtract
+          return std::list<IndexPair>{*this};
+        } else {
+          std::list<MDI> remainingDom = this->Dom()-other.Dom();
+          std::list<MDI> remainingRan = this->Ran()-other.Ran();
+          ERROR_UNLESS(remainingDom.size()==remainingRan.size(), "Size error in remaining domains and ranges");
+          std::list<MDI>::iterator domIter = remainingDom.begin();
+          std::list<MDI>::iterator ranIter = remainingRan.begin();
+          std::list<IndexPair> ret;
+          while (domIter!=remainingDom.end()) {
+            ret.push_back(IndexPair(*domIter,*ranIter,this->offset, this->usage));
+            domIter++;
             ranIter++;
+          }
+          return ret;
         }
-        return ret;
+      case _N_1:
+        if (!this->Ran().Contains(other.Ran())) {
+          //Nothing to subtract
+          return std::list<IndexPair>{*this};
+        } else {
+          MDI domToRemove = (other.Ran().RevertUsage(usage, this->Dom())).ApplyOffset(-offset);
+          ERROR_UNLESS(domToRemove.Size()==1, "Domain of removing a pair N-1 from a N-N must have size 1");
+          if(!this->Dom().Contains(domToRemove)) {
+            //Nothing to subtract
+            return std::list<IndexPair>{*this};
+          } else {
+            std::list<MDI> remainingDom = this->Dom()-domToRemove;
+            std::list<MDI> remainingRan = this->Ran()-other.Ran();
+            ERROR_UNLESS(remainingDom.size()==remainingRan.size(), "Size error in remaining domains and ranges");
+            std::list<MDI>::iterator domIter = remainingDom.begin();
+            std::list<MDI>::iterator ranIter = remainingRan.begin();
+            std::list<IndexPair> ret;
+            while (domIter!=remainingDom.end()) {
+              ret.push_back(IndexPair(*domIter,*ranIter,this->offset, this->usage));
+              domIter++;
+              ranIter++;
+            }
+            return ret;
+          }
+        }
+      case _1_N:
+        if (!this->Dom().Contains(other.Dom())) {
+          //Nothing to subtract
+          return std::list<IndexPair>{*this};
+        } else {
+          MDI ranToRemove = (other.Dom().ApplyUsage(usage, this->Ran())).ApplyOffset(offset);
+          ERROR_UNLESS(ranToRemove.Size()==1, "Range of removing a pair N-1 from a N-N pair must have size 1");
+          std::list<MDI> remainingDom = this->Dom()-other.Dom();
+          std::list<MDI> remainingRan = this->Ran()-ranToRemove;
+          ERROR_UNLESS(remainingDom.size()==remainingRan.size(), "Size error in remaining domains and ranges");
+          std::list<MDI>::iterator domIter = remainingDom.begin();
+          std::list<MDI>::iterator ranIter = remainingRan.begin();
+          std::list<IndexPair> ret;
+          while (domIter!=remainingDom.end()) {
+            ret.push_back(IndexPair(*domIter,*ranIter,this->offset, this->usage));
+            domIter++;
+            ranIter++;
+          }
+          return ret;
+        }
       }
+    case _N_1:
+      switch (other.Type()) {
+      case _N_N:
+        if (!other.Ran().Contains(this->Ran())) {
+          //Nothing to subtract
+          return std::list<IndexPair>{*this};
+        } else {
+          MDI domToRemove = (other.Ran().RevertUsage(other.usage, other.Dom())).ApplyOffset(-other.offset);
+          ERROR_UNLESS(domToRemove.Size()==1, "Domain of removing a pair N-N from a N-1 pair must have size 1");
+          if(!this->Dom().Contains(domToRemove)) {
+            //Nothing to subtract
+            return std::list<IndexPair>{*this};
+          } else {
+            std::list<MDI> remainingDom = this->Dom()-domToRemove;
+            std::list<IndexPair> ret;
+            for (MDI dom: remainingDom) {
+              ret.push_back(IndexPair(dom, this->Ran(), this->offset, this->usage));
+            }
+            return ret;
+          }
+        }
+      case _N_1:
+        if (this->Ran()!=other.Ran()) {
+          //Nothing to subtract
+          return std::list<IndexPair>{*this};
+        } else {
+          std::list<MDI> remainingDom = this->Dom()-other.Dom();
+          std::list<IndexPair> ret;
+          for (MDI dom: remainingDom) {
+            ret.push_back(IndexPair(dom, this->Ran(), this->offset, this->usage));
+          }
+          return ret;
+        }
+      case _1_N:
+        if (!other.Ran().Contains(this->Ran()) || !this->Dom().Contains(other.Ran())) {
+          //Nothing to subtract
+          return std::list<IndexPair>{*this};
+        } else {
+          std::list<MDI> remainingDom = this->Dom()-other.Dom();
+          std::list<IndexPair> ret;
+          for (MDI dom: remainingDom) {
+            ret.push_back(IndexPair(dom, this->Ran(), this->offset, this->usage));
+          }
+          return ret;
+        }
+      }
+    case _1_N:
+      switch (other.Type()) {
+      case _N_N:
+        if (!other.Dom().Contains(this->Dom())) {
+        //Nothing to subtract
+        return std::list<IndexPair>{*this};
+      } else {
+        MDI ranToRemove = (this->Dom().ApplyUsage(other.usage, other.Ran())).ApplyOffset(-other.offset);
+        ERROR_UNLESS(ranToRemove.Size()==1, "Domain of removing a pair N-N from a 1-N pair must have size 1");
+        if(!this->Ran().Contains(ranToRemove)) {
+          //Nothing to subtract
+          return std::list<IndexPair>{*this};
+        } else {
+          std::list<MDI> remainingRan = this->Ran()-ranToRemove;
+          std::list<IndexPair> ret;
+          for (MDI ran: remainingRan) {
+            ret.push_back(IndexPair(this->Dom(), ran, this->offset, this->usage));
+          }
+          return ret;
+        }
+      }
+      case _N_1:
+        if (!this->Ran().Contains(other.Ran()) || !other.Dom().Contains(this->Dom())) {
+          //Nothing to subtract
+          return std::list<IndexPair>{*this};
+        } else {
+          std::list<MDI> remainingRan = this->Ran()-other.Ran();
+          std::list<IndexPair> ret;
+          for (MDI ran: remainingRan) {
+            ret.push_back(IndexPair(this->Dom(), ran, this->offset, this->usage));
+          }
+          return ret;
+        }
+      case _1_N:
+        if (!this->Ran().Contains(other.Ran())) {
+          //Nothing to subtract
+          return std::list<IndexPair>{*this};
+        } else {
+          std::list<MDI> remainingRan = this->Ran()-other.Ran();
+          std::list<IndexPair> ret;
+          for (MDI ran: remainingRan) {
+            ret.push_back(IndexPair(this->Dom(), ran, this->offset, this->usage));
+          }
+          return ret;
+        }
+      }
+    default:
+      ERROR("This case should not occur");
+      abort();
     }
-    else return IndexPairSet({*this});
+  }
+
+  IndexPairSet IndexPair::RemoveUnknowns(MDI unk2remove) {
+    ERROR_UNLESS(this->Ran().Dimension()==unk2remove.Dimension(), "Removing unknowns of different dimension");
+    std::cout << "In remove unknowns, IP Type: ";
+    switch (this->Type()) {
+      case _N_N:
+        std::cout << "N-N\n";
+        break;
+      case _N_1:
+        std::cout << "N-1\n";
+        break;
+      case _1_N:
+        std::cout << "1-N\n";
+        break;
+      default:
+        std::cout << "ERROR\n";
+        break;
+    }
+//    std::cout << "In remove unknowns, Unknown to remove dimension: " << unk2remove.Dimension() << "\n";
+    switch (this->Type()) {
+      case _N_N:
+        if (Option<MDI> intersection = unk2remove & this->Ran()) {
+          MDI ranToRemove = intersection.get();
+          MDI domToRemove = (ranToRemove.RevertUsage(usage, this->Dom())).ApplyOffset(-offset);
+          std::list<MDI> remainsDom = this->Dom()-domToRemove;
+          std::list<MDI> remainsRan = this->Ran()-ranToRemove;
+          ERROR_UNLESS(remainsDom.size()==remainsRan.size(), "Size error of remaining pairs");
+          std::list<MDI>::iterator domIter = remainsDom.begin();
+          std::list<MDI>::iterator ranIter = remainsRan.begin();
+          IndexPairSet ret;
+          while (domIter!=remainsDom.end()) {
+            ret.insert(IndexPair(*domIter,*ranIter,this->offset, this->usage));
+            domIter++;
+            ranIter++;
+          }
+          return ret;
+        } else {
+          return {*this};
+        }
+      case _N_1:
+        if (this->Ran()==unk2remove) {
+          //Remove all:
+          return {};
+        }
+        else {
+          //Nothing to remove_
+          return {*this};
+        }
+      case _1_N:
+        if (Option<MDI> intersection = unk2remove & this->Ran()) {
+          MDI ranToRemove = intersection.get();
+          IndexPairSet ret;
+          std::list<MDI> remainsRan = this->Dom()-ranToRemove;
+          for (MDI r: remainsRan) {
+            ret.insert(IndexPair(this->Dom(), r ,this->offset, this->usage));
+          }
+          return ret;
+        } else {
+          return {*this};
+        }
+      default:
+        ERROR("This case should not occur");
+        abort();
+    }
+  }
+
+  IndexPairSet IndexPair::RemoveEquations(MDI eqs2remove) {
+    ERROR_UNLESS(this->Dom().Dimension()==eqs2remove.Dimension(), "Removing equations of different dimension");
+    switch (this->Type()) {
+      case _N_N:
+        if (Option<MDI> intersection = eqs2remove & this->Dom()) {
+          MDI domToRemove = intersection.get();
+          MDI ranToRemove = (domToRemove.ApplyUsage(usage, this->Ran())).ApplyOffset(offset);
+          std::list<MDI> remainsDom = this->Dom()-domToRemove;
+          std::list<MDI> remainsRan = this->Ran()-ranToRemove;
+          ERROR_UNLESS(remainsDom.size()==remainsRan.size(), "Size error of remaining pairs");
+          std::list<MDI>::iterator domIter = remainsDom.begin();
+          std::list<MDI>::iterator ranIter = remainsRan.begin();
+          IndexPairSet ret;
+          while (domIter!=remainsDom.end()) {
+            ret.insert(IndexPair(*domIter,*ranIter,this->offset, this->usage));
+            domIter++;
+            ranIter++;
+          }
+          return ret;
+        } else {
+          return {*this};
+        }
+      case _N_1:
+        if (Option<MDI> intersection = eqs2remove & this->Dom()) {
+          MDI domToRemove = intersection.get();
+          IndexPairSet ret;
+          std::list<MDI> remainsDom = this->Dom()-domToRemove;
+          for (MDI dom: remainsDom) {
+            ret.insert(IndexPair(dom,this->Ran(),this->offset, this->usage));
+          }
+          return ret;
+        } else {
+          return {*this};
+        }
+      case _1_N:
+        if (this->Dom()==eqs2remove) {
+          //Remove all:
+          return {};
+        }
+        else {
+          //Nothing to remove_
+          return {*this};
+        }
+      default:
+        ERROR("This case should not occur");
+        abort();
+    }
   }
 
   bool IndexPair::operator<(const IndexPair& other) const {
@@ -403,6 +636,21 @@ namespace Causalize {
     else
       return false;
   }
+
+  Option<IndexPair> IndexPair::operator&(const IndexPair& other) const {
+    //TODO:
+    return Option<IndexPair>();
+  }
+
+  IndexPairType IndexPair::Type() const {
+    //TODO: Check if there is MtoN or NtoM with N,M > 1
+    if (dom.Size()==ran.Size())
+      return _N_N;
+    else if (dom.Size()>ran.Size())
+      return _N_1;
+    else return _1_N;
+  }
+
   /*****************************************************************************
    ****************************************************************************/
 
@@ -412,19 +660,17 @@ namespace Causalize {
    ****                              LABEL                                  ****
    *****************************************************************************/
   Label::Label(IndexPairSet ips): ips(ips) {
-   this->RemoveDuplicates();
+//   this->RemoveDuplicates();
   }
 
 
-  void Label::RemovePairs(IndexPairSet ips) {
-    foreach_(IndexPair ipRemove, ips) {
+  void Label::RemovePairs(IndexPairSet ipsToRemove) {
+    foreach_(IndexPair ipRemove, ipsToRemove) {
       IndexPairSet newIps = this->ips;
       foreach_(IndexPair ip, this->ips) {
-        if ((ip.Dom()&ipRemove.Dom()) && (ip.Ran()&ipRemove.Ran()) && (ip.OS())==(ipRemove.OS())) {
-          newIps.erase(ip);
-          foreach_(IndexPair ipRemaining, (ip-ipRemove)) {
-            this->ips.insert(ipRemaining);
-          }
+        newIps.erase(ip);
+        foreach_(IndexPair ipRemaining, (ip-ipRemove)) {
+          this->ips.insert(ipRemaining);
         }
       }
       this->ips = newIps;
@@ -459,19 +705,27 @@ namespace Causalize {
   }
 
   void Label::RemoveDuplicates() {
-    IndexPairSet retIPS = ips;
-    for (IndexPairSet::iterator checkingIP=ips.begin(); checkingIP!=ips.end(); checkingIP++) {
-      //Ignore pairs 1-1
-      if (checkingIP->Dom().Size()==1 && checkingIP->Ran().Size()==1)
-        continue;
-      for (IndexPairSet::iterator ip=ips.begin(); ip!=ips.end(); ip++) {
-        //Ignore the same pair
-        if (checkingIP == ip)
+    bool removeSomething = true;
+    while (removeSomething) {
+      IndexPairSet retIPS = ips;
+      for (IndexPairSet::iterator checkingIP=ips.begin(); checkingIP!=ips.end(); checkingIP++) {
+        //Ignore pairs 1-1
+        if (checkingIP->Dom().Size()==1 && checkingIP->Ran().Size()==1)
           continue;
-        if (checkingIP->Contains(*ip)) {
-          retIPS.erase(ip);
+        for (IndexPairSet::iterator ip=ips.begin(); ip!=ips.end(); ip++) {
+          //Ignore the same pair
+          if (checkingIP == ip)
+            continue;
+          if (Option<IndexPair> hasToRemove = *checkingIP & *ip) {
+            retIPS.erase(*ip);
+            IndexPair ipToRemove = hasToRemove.get();
+            std::list<IndexPair> remainingIPS = (*ip)-ipToRemove;
+            retIPS.insert(remainingIPS.begin(), remainingIPS.end());
+            ips = retIPS;
+          }
         }
       }
+      removeSomething = false;
     }
   }
   /*****************************************************************************

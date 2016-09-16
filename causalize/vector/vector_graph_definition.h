@@ -60,7 +60,38 @@ namespace Causalize {
   }
   typedef std::list<Interval> IntervalList;
   typedef std::vector<Interval> IntervalVector;
-  typedef std::vector<int> Usage;
+
+
+  /*****************************************************************************
+   ****                              Usage                                  ****
+   *****************************************************************************/
+  class Usage {
+  public:
+    inline Usage():usage() { };
+    inline Usage(int size):usage(std::vector<int>(size)) { }
+    inline Usage(int size, int value):usage(std::vector<int>(size, value)) { }
+    inline int& operator[](int index) { return usage[index]; }
+    inline const int& operator[](int index) const { return usage[index]; }
+    inline bool operator==(const Usage& other) const { return this->usage == other.usage; };
+    inline bool operator!=(const Usage& other) const { return this->usage != other.usage; };
+    inline int Size() { return usage.size(); }
+    inline bool isUnused() {
+      for(int i: usage) {
+        if (i!=-1) return false;
+      }
+      return true;
+    }
+    typedef std::vector<int>::iterator iterator;
+    typedef std::vector<int>::const_iterator const_iterator;
+    inline const_iterator begin() const { return usage.begin(); }
+    inline iterator begin() { return usage.begin(); }
+    inline iterator end() { return usage.end(); }
+  private:
+    std::vector<int> usage;
+  };
+  /*****************************************************************************
+   ****************************************************************************/
+
 
 
   /*****************************************************************************
@@ -73,6 +104,7 @@ namespace Causalize {
     inline bool operator<(const Offset& other) const { return this->offset < other.offset; };
     inline bool operator==(const Offset& other) const { return this->offset == other.offset; };
     inline bool operator!=(const Offset& other) const { return this->offset != other.offset; };
+    inline int operator[](const int& index) const { return offset[index]; };
     inline bool isZeros() { 
       for(int i: offset) {
         if (i!=0) return false;
@@ -102,17 +134,22 @@ private:
   public:
     MDI(int d, ... );
     MDI(IntervalList intervalList);
+    inline MDI() { intervals.resize(0); }
     inline MDI(IntervalVector intervals): intervals(intervals) { };
     inline int Dimension() const {return intervals.size(); }
     int Size () const;
     std::list<MDI> operator-(const MDI& other);
     std::list<MDI> Remove(const MDI& mdi, Offset offset);
-    MDI ApplyUsage(Usage);
+    MDI ApplyOffset(Offset) const;
+    MDI ApplyUsage(Usage, MDI ran = MDI({})) const;
+    MDI RevertUsage(Usage usage, MDI dom = MDI({})) const;
     bool operator<(const MDI& other) const;
     Option<MDI> operator&(const MDI& other) const;
     friend std::ostream& operator<<(std::ostream& os, const MDI mdi);
     inline const IntervalVector & Intervals() const { return intervals; }
     bool Contains(const MDI& other) const;
+    inline bool operator==(const MDI& other) const { return this->intervals==other.intervals; };
+    inline bool operator!=(const MDI& other) const { return !((*this)==other); };
 
   private:
       IntervalVector intervals;
@@ -134,7 +171,9 @@ private:
 
 
   std::ostream& operator<<(std::ostream &os, const std::list<MDI> &mdiList);
-
+  enum IndexPairType{
+    _N_N, _N_1, _1_N
+  };
 
   /*****************************************************************************
    ****                           INDEX PAIR                                ****
@@ -146,12 +185,14 @@ private:
     inline MDI Ran() const { return ran; }
     inline Offset OS() const { return offset; }
     inline Usage GetUsage() const { return usage; }
-    std::list<IndexPair> operator-(const IndexPair& other);
-    std::set<IndexPair> RemoveUnknowns(MDI eqs);
-    std::set<IndexPair> RemoveEquations(MDI eqs);
+    std::list<IndexPair> operator-(const IndexPair& other) const;
+    std::set<IndexPair> RemoveUnknowns(MDI unk2remove);
+    std::set<IndexPair> RemoveEquations(MDI eqs2remove);
     bool operator<(const IndexPair& other) const;
+    Option<IndexPair> operator&(const IndexPair& other) const;
     friend std::ostream& operator<<(std::ostream& os, const IndexPair& ip);
     bool Contains(const IndexPair& other) const;
+    IndexPairType Type() const;
   private:
     MDI dom, ran;
     Offset offset;
@@ -175,7 +216,7 @@ private:
     inline Label() {};
     Label(IndexPairSet ips);
     void RemovePairs(IndexPairSet ips);
-    void RemoveUnknowns(MDI const mdi);
+    void RemoveUnknowns(MDI const unk2remove);
     void RemoveEquations(MDI const mdi);
     unsigned long int EdgeCount();
     inline bool IsEmpty() { return ips.size()==0; }
