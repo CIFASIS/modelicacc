@@ -60,7 +60,7 @@ namespace Modelica {
   }
 
   struct Composition {
-    Composition(){};
+    Composition();
     Composition(ElemList, CompElemList ,boost::optional<boost::fusion::vector3<boost::optional<String>, boost::optional<External>, boost::optional<Annotation> > >);
     member_(ElemList,elements);
     member_(CompElemList,comp_elem);

@@ -106,6 +106,7 @@ namespace Modelica {
       if ("exp"==v.name()) {
         return exp(ApplyThis(v.args().front()));
       }
+      std::cerr << v << "\n";
       ERROR("EvalExpression: trying to evaluate a Call");
       return 0;
     }
