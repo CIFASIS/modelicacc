@@ -146,10 +146,11 @@ private:
     inline MDI Ran() const { return ran; }
     inline Offset OS() const { return offset; }
     inline Usage GetUsage() const { return usage; }
-    std::list<IndexPair> operator-(const IndexPair& other);
+    std::list<IndexPair> operator-(const IndexPair& other) const;
     std::set<IndexPair> RemoveUnknowns(MDI eqs);
     std::set<IndexPair> RemoveEquations(MDI eqs);
     bool operator<(const IndexPair& other) const;
+    Option<IndexPair> operator&(const IndexPair& other) const;
     friend std::ostream& operator<<(std::ostream& os, const IndexPair& ip);
     bool Contains(const IndexPair& other) const;
   private:
