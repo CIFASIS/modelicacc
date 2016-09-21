@@ -17,11 +17,15 @@
 
 ******************************************************************************/
 
+#ifndef DEBUG_H
+#define DEBUG_H
 
 // This debugging routines allow the user to turn on selected
 // debugging messages, controllable from the command line arguments
 // passed to modelicacc after de -d option.
 
+
+#include <iostream> 
 
 /**
  * Initialize so that only DEBUG messages with a flag in flagList
@@ -62,3 +66,5 @@ void WARNING(const char *format, ...);
  * Then continues with the execution.
  */
 void WARNING_UNLESS(bool condition, const char *format, ...);
+
+#endif

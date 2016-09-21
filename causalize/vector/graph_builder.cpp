@@ -71,6 +71,8 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
     const VarSymbolTable &syms = mmo_class.syms_ref();
     VarInfo varInfo = syms[var].get();
     if (!isConstant(var,syms) && !isBuiltIn(var,syms) && !isDiscrete(var,syms) && !isParameter(var,syms)) {
+      if (varInfo.modification() && is<ModEq>(varInfo.modification().get())) // if the var has a fixed value over time is not a unknown
+        continue;
       VectorVertexProperty vp;
       vp.type=kVertexUnknown;
       vp.index=index++;

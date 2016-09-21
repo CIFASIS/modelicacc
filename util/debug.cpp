@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include <debug/debug.h>
+#include <util/debug.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -83,8 +83,17 @@ void ERROR_UNLESS(bool condition, const char *format, ...) {
   if(!condition) {
     va_list ap;
     va_start(ap, format);
-    ERROR(format, ap);
+    const char *error_string = "Error: ";
+    char *new_format = new char [sizeof(char) * strlen(error_string) + strlen(format) + 1];
+    strcpy(new_format, error_string);
+    strcat(new_format, format);
+    vfprintf(stderr, new_format, ap);
+    fprintf(stderr,"\n");
+    fflush(stderr);
     va_end(ap);
+    delete []new_format;
+    va_end(ap);
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -106,9 +115,15 @@ void WARNING_UNLESS(bool condition, const char *format, ...) {
   if(!condition) {
     va_list ap;
     va_start(ap, format);
-    WARNING(format, ap);
+    const char *error_string = "Warning: ";
+    char *new_format = new char [sizeof(char) * strlen(error_string) + strlen(format) + 1];
+    strcpy(new_format, error_string);
+    strcat(new_format, format);
+    vfprintf(stderr, new_format, ap);
+    fprintf(stderr,"\n");
+    fflush(stderr);
+    delete []new_format;
     va_end(ap);
   }
 }
-
 
