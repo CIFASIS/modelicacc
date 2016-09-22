@@ -141,8 +141,10 @@ namespace Modelica {
       if (name && name.get() == s) return val.get();
 			      
       Option<VarInfo> vinfo = vtable[s];
-      if (!vinfo)
+      if (!vinfo) {
+        vtable.dump();
         ERROR("EvalExpression: Variable %s not found !", s.c_str());
+      }
       if (!vinfo.get().modification()) {
         ERROR("EvalExpression: Variable %s without initial value!", s.c_str());
       } 

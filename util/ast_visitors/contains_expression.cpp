@@ -19,10 +19,12 @@
 
 #include <util/debug.h>
 #include <util/ast_visitors/contains_expression.h>
+#include <util/ast_visitors/eval_expression.h>
 #include <boost/variant/get.hpp>
 
 namespace Modelica {
     ContainsExpression::ContainsExpression(Expression e): exp(e) {};
+    ContainsExpression::ContainsExpression(Expression e, VarSymbolTable vst): exp(e), st(vst) {};
     bool ContainsExpression::operator()(Integer v) const { return exp==Expression(v); } 
     bool ContainsExpression::operator()(Boolean v) const { return exp==Expression(v); } 
     bool ContainsExpression::operator()(String v) const { return exp==Expression(v); } 
@@ -82,8 +84,24 @@ namespace Modelica {
     }
     bool ContainsExpression::operator()(ForExp v) const {
       if (exp==Expression(v)) return true; 
-      ERROR("ContainsExpression: For expression not supported");
-      //TODO
+      Indexes indexes = v.indices();
+      ERROR_UNLESS(indexes.indexes().size() == 1, "Only unidimensional for expression supported");
+      Index ind = indexes.indexes().front();
+      if (!ind.exp())
+        ERROR("Index with no expression");
+      Expression exp_ind = ind.exp().get();
+      ERROR_UNLESS(is<Range>(exp_ind), "Only range supported in for expression");
+      EvalExpression ev(st);
+      Expression start_exp = get<Range>(exp_ind).start(), end_exp = get<Range>(exp_ind).end();
+      int start = Apply(ev,start_exp);
+      int end = Apply(ev,end_exp);
+      int i;
+      for (i=start; i<= end ; i++) {
+        VarInfo vinfo = VarInfo(TypePrefixes(1,parameter), "Integer", Option<Comment>(), Modification(ModEq(Expression(i))));
+        st.insert(ind.name(), vinfo);
+        Expression exp_for = v.exp();
+        if (ApplyThis(exp_for)) return true;
+      }
       return false;
     }
     bool ContainsExpression::operator()(Named v) const {

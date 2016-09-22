@@ -104,7 +104,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   list<Vertex>::iterator acausalEqsIter, unknownsIter;
   foreach_(Vertex eqVertex, eqVerts) {
     foreach_(Vertex unknownVertex , unknownVerts) {
-      Modelica::ContainsExpression occurrs(_graph[unknownVertex].unknown());
+      Modelica::ContainsExpression occurrs(_graph[unknownVertex].unknown(), _mmo_class.syms());
       Equation e = _graph[eqVertex].equation;
       ERROR_UNLESS(is<Equality>(e), "Causalization of non-equality equation is not supported");
       Equality eq = boost::get<Equality>(e);
