@@ -91,7 +91,8 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
           }
           vp.count = totalUnknowns;
         }
-      }
+      } else 
+        ERROR("Unknown type: %s", varInfo.type().c_str());
       unknownDescriptorList.push_back(add_vertex(vp, graph));
     }
   }

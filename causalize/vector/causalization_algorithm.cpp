@@ -17,6 +17,7 @@
 
 ******************************************************************************/
 
+#define HAS_COUNT
 #include <causalize/vector/causalization_algorithm.h>
 #include <causalize/vector/vector_graph_definition.h>
 #include <causalize/graph/graph_printer.h>
@@ -55,6 +56,7 @@ CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGrap
 		}
 		else{
       unknownNumber += graph[current_element].count;
+      std::cerr << graph[current_element].unknown() << ":" << graph[current_element].count << std::endl;
 			unknownDescriptors.push_back(current_element);
 		}
 	}

@@ -175,14 +175,14 @@ namespace Causalize {
   void ContainsVector::BuildPairs(Reference unkRef) const {
     if (foreq) { //The equation is a for-equation
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
-          Usage usage(indexes.size(),-1);
-          Offset offset(std::vector<int>(indexes.size(),0));
+          Usage usage;
+          Offset offset;
           labels.insert(IndexPair(MDI(forIndexIntervalList), MDI(0), offset, usage));
       } else { //the unknown is a vector
         ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
         VarSymbolTable vst=syms;
         std::vector<Name> iterator_names;
-        Usage usage_indexes(indexes.size());
+        Usage usage_indexes;
         foreach_(Index i, indexes) {
            iterator_names.push_back(i.name());
            VarInfo vinfo = VarInfo(TypePrefixes(), "Integer", Option<Comment>(), Modification());
@@ -196,12 +196,13 @@ namespace Causalize {
         ExpList indexes_list = get<1>(r.ref().front());
         unsigned int total_index_uses = 0;
         unsigned int index_count = 0;
-        std::vector<int> offset_vector(indexes.size());
+        std::vector<int> offset_vector;
         foreach_(Expression val,indexes_list) {
-
           if (is<Modelica::AST::Integer>(val)) {
              int v = get<Modelica::AST::Integer>(val);
              unk_indexes.push_back(Interval::closed(v,v)); 
+             usage_indexes.push_back(-1);
+             offset_vector.push_back(0);
           } else if (is<Reference>(val)) {
             Reference ind_ref = get<Reference>(val);
             std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
@@ -213,10 +214,10 @@ namespace Causalize {
             Range range = get<Range>(i.exp().get());
             EvalExpression ev(syms);
             int pos = index_name - iterator_names.begin();
-            usage_indexes[pos] = index_count;
+            usage_indexes.push_back(pos);
             unk_indexes.push_back(Interval::closed(Apply(ev,range.start_ref()), Apply(ev,range.end_ref())));
             total_index_uses++;
-            offset_vector[pos] = 0;
+            offset_vector.push_back(0);
           } else if (is<BinOp>(val)) {
             BinOp binop = get<BinOp>(Apply(Modelica::PartialEvalExpression(vst), val));
             ERROR_UNLESS(binop.op()==Add ||
@@ -236,8 +237,8 @@ namespace Causalize {
             Range range = get<Range>(i.exp().get());
             EvalExpression ev(syms);
             int pos = index_name - iterator_names.begin();
-            offset_vector[pos] = offset;
-            usage_indexes[pos] = index_count;
+            offset_vector.push_back(offset);
+            usage_indexes.push_back(pos);
             unk_indexes.push_back(Interval::closed(Apply(ev,range.start_ref())+offset, Apply(ev,range.end_ref())+offset));
             total_index_uses++;
           } else {
@@ -265,12 +266,14 @@ namespace Causalize {
         ERROR_UNLESS(is<Reference>(evaluated_expr), "Evaluated expression is not a reference");
         Reference r = get<Reference>(evaluated_expr);
         ExpList indexes = get<1>(r.ref().front());
+        std::vector<int> offset_vector(indexes.size(),-1);
+        Usage usage_indexes(indexes.size(),0);
         foreach_(Expression val, indexes) {
           ERROR_UNLESS(is<Modelica::AST::Integer>(val), "Expression index could not be evaluated"); //TODO: See this error message
           int v = get<Modelica::AST::Integer>(val);
           unk_indexes.push_back(Interval::closed(v,v));
         }
-        labels.insert(IndexPair(MDI(0), MDI(unk_indexes), Offset(), Usage()));
+        labels.insert(IndexPair(MDI(0), MDI(unk_indexes), Offset(offset_vector), usage_indexes));
       }
     }
   }

@@ -385,11 +385,14 @@ namespace Causalize {
       os << "Offset = {";
       for (int i: ip.OS()) 
         os << i << " ";
-      os << "} Usage = {";
+      os << "}";
+    } */
+    if (ip.GetUsage().size()) {
+      os << "Usage = {";
       for (int i: ip.GetUsage()) 
         os << i << " ";
       os << "}";
-    }*/
+    }
     return os;
   }
 
