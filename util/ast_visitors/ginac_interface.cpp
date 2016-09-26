@@ -165,7 +165,7 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
         Reference r = get<Reference>(arg);
         GiNaC::ex exp = ConvertToGiNaC::operator()(r);
         std::stringstream ss;
-        ss << "der_" << exp;
+        ss << "der!" << exp;
         return getSymbol(ss.str());
       } 
       if ("exp"==v.name()) {
@@ -218,13 +218,13 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
           for(Expression e: oel.get()) {
             ERROR_UNLESS(is<Integer>(e) || is<Reference>(e) || is<BinOp>(e), "Not suppoted conversion");
             if (!is<BinOp>(e))
-              ss << "_" << e;
+              ss << "!" << e;
             else {
               BinOp bop = get<BinOp>(e);
               int offset = get<Integer>(bop.right());
               if (bop.op()==Sub)
                 offset *=-1;
-              ss << "_" << bop.left();
+              ss << "!" << bop.left();
               if (offset>0) 
                 ss << "@" << offset;
               else 
@@ -296,7 +296,7 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
       std::vector< std::string > sp, bop;
       bool is_der=false;
       bool found_name=false;
-      boost::algorithm::split(sp, name, boost::is_any_of("_"));
+      boost::algorithm::split(sp, name, boost::is_any_of("!"));
       ExpList el;
       for(std::string s:sp) {
         if ("der"==s) {

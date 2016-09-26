@@ -21,6 +21,7 @@
 #define AST_VISITOR_CONTAINS
 #include <boost/variant/static_visitor.hpp>
 #include <ast/expression.h>
+#include <util/table.h>
 
 namespace Modelica {
 
@@ -28,6 +29,7 @@ namespace Modelica {
   class ContainsExpression: public boost::static_visitor<bool> {
   public:
     ContainsExpression(Expression);
+    ContainsExpression(Expression, VarSymbolTable);
     bool operator()(Integer v) const;
     bool operator()(Boolean v) const;
     bool operator()(String v) const;
@@ -47,8 +49,9 @@ namespace Modelica {
     bool operator()(Output) const;
     bool operator()(Reference) const;
     bool operator()(Range) const;
- 
+  private:
     Expression exp;
+    mutable VarSymbolTable st;
   }; 
 }
 #endif 

@@ -44,6 +44,8 @@ ExpList UnknownsCollector::collectUnknowns() {
     VarInfo varInfo = val.second;
     Name name = val.first;
 		if (!varInfo.builtin() && !isConstant(name,_c.syms_ref()) && !isDiscrete(name, _c.syms_ref()) && !isParameter(name,_c.syms_ref())) {
+      if (varInfo.modification() && is<ModEq>(varInfo.modification().get())) // if the var has a fixed value over time is not a unknown
+        continue;
       Option<Type::Type> opt_type =  _c.tyTable_ref()[varInfo.type()];
       ERROR_UNLESS((bool)opt_type, "No %s type found", varInfo.type().c_str());
       Type::Type type = opt_type.get();

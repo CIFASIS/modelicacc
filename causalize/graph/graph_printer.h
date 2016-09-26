@@ -71,7 +71,7 @@ namespace Causalize {
 			      MAKE_SPACE
 			      stri << "edge [style=invis];" << endl;
 			      MAKE_SPACE
-            stringstream colors2;
+            //stringstream colors2;
 			      for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
 				      Iterator aux = it;
 				      aux++;
@@ -81,8 +81,8 @@ namespace Causalize {
 				      }else{
 					      stri << ";" << endl;		
 				      }
-              if (out_degree(*it,graph)==0)
-                colors2 << "    " << graph[*it].index << "[ color=\"red\" ];" << endl;
+              /*if (out_degree(*it,graph)==0)
+                colors2 << "    " << graph[*it].index << "[ color=\"red\" ];" << endl;*/
 			      }
 			      for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
 			        MAKE_SPACE
@@ -93,7 +93,7 @@ namespace Causalize {
 
 #endif
             }
-            stri << colors2.str();
+            //stri << colors2.str();
 		      DELETE_TAB
 		      MAKE_SPACE
 		      stri << "}" << endl;

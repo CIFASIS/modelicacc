@@ -17,6 +17,7 @@
 
 ******************************************************************************/
 
+#define HAS_COUNT
 #include <causalize/vector/causalization_algorithm.h>
 #include <causalize/vector/vector_graph_definition.h>
 #include <causalize/graph/graph_printer.h>
@@ -55,6 +56,7 @@ CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGrap
 		}
 		else{
       unknownNumber += graph[current_element].count;
+      std::cerr << graph[current_element].unknown() << ":" << graph[current_element].count << std::endl;
 			unknownDescriptors.push_back(current_element);
 		}
 	}
@@ -216,7 +218,7 @@ CausalizationStrategyVector::Causalize() {
         // If the edge has no more pairs in it remove it
         if (graph[e].IsEmpty()) {
           if (debugIsEnabled('c')) {
-            std::cout << "Removing the edge\n";
+            std::cout << "Removing the edge\n" << graph[e] << "\n";
           }
           remove_edge(e, graph);
         }
@@ -229,12 +231,12 @@ CausalizationStrategyVector::Causalize() {
           }
           graph[e1].RemoveEquations(causal_pair.second.begin()->Dom());
           if (debugIsEnabled('c')) {
-            std::cout << "Result: " << graph[e1]<<"\n";
+            std::cout << "Result: " << graph[e1] << "\n";
           }
           // If the edge is now empty schedule it for removal
           if (graph[e1].IsEmpty()) {
             if (debugIsEnabled('c')) {
-              std::cout << "Removing the edge\n";
+              std::cout << "Removing the edge\n" << graph[e1] << "\n";
             }
             remove.push_back(e1);
           }

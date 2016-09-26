@@ -77,7 +77,8 @@ int main(int argc, char ** argv)
 		Flatter f = Flatter();
 		Connectors co = Connectors(mmo);
     if (className == NULL) { // if no specified, flat last class
-      className = (char*)::className(sd.classes().back()).c_str();
+      std::string classToFlat = ::className(sd.classes().back());
+      className = strdup(classToFlat.c_str());
     }
 		if (className != NULL) {
 			if (debug) std::cerr << "Searching for class " << (className?className:"NULL") << std::endl;

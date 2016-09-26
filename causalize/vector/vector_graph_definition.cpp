@@ -209,7 +209,12 @@ namespace Causalize {
   }
 
   MDI MDI::ApplyOffset(Offset offset) const {
-    ERROR_UNLESS((int)offset.Size()==this->Dimension(),"Dimension error applying offset"); //TODO: Review this error
+    //TODO: It is mandatory to "Apply" or "Revert" usage before applying this method
+//    ERROR_UNLESS((int)offset.Size()==this->Dimension(),"Dimension error applying offset"); //TODO: Review this error
+    if (this->Dimension()==0 || offset.Size()==0) {
+      //nothing to apply
+      return *this;
+    }
     IntervalVector copyIntervals = intervals;
     for(int i=0; i<(int)copyIntervals.size(); i++) {
       copyIntervals[i] = CreateInterval(copyIntervals[i].lower()+offset[i],copyIntervals[i].upper()+offset[i]);
@@ -236,16 +241,16 @@ namespace Causalize {
   }
 
   MDI MDI::RevertUsage(Usage usage, MDI dom) const {
-    ERROR_UNLESS(usage.Size()==dom.Dimension(), "Dimension error reverting usage");
-    if (usage.Size()==0 || usage.isUnused()) {
+//    ERROR_UNLESS(usage.Size()==dom.Dimension(), "Dimension error reverting usage");
+    if (usage.Size()==0 || usage.isUnused() || dom.Dimension()==0) {
       return dom;
     }
     else {
       IntervalVector newIntervals(usage.Size());
       int usages = 0;
-      for (int i: usage) {
-        if (i>=0) {
-          newIntervals[i] = this->intervals[usages];
+      for (int i=0; i<usage.Size(); i++) {
+        if (usage[i]>=0) {
+          newIntervals[usage[i]] = this->intervals[i];
           usages++;
         }
       }
@@ -618,11 +623,14 @@ namespace Causalize {
       os << "Offset = {";
       for (int i: ip.OS()) 
         os << i << " ";
-      os << "} Usage = {";
+      os << "}";
+    } */
+    if (ip.GetUsage().Size()) {
+      os << "Usage = {";
       for (int i: ip.GetUsage()) 
         os << i << " ";
       os << "}";
-    }*/
+    }
     return os;
   }
 
@@ -665,16 +673,16 @@ namespace Causalize {
 
 
   void Label::RemovePairs(IndexPairSet ipsToRemove) {
+    IndexPairSet newIps;
     foreach_(IndexPair ipRemove, ipsToRemove) {
-      IndexPairSet newIps = this->ips;
       foreach_(IndexPair ip, this->ips) {
-        newIps.erase(ip);
+//        newIps.erase(ip);
         foreach_(IndexPair ipRemaining, (ip-ipRemove)) {
-          this->ips.insert(ipRemaining);
+          newIps.insert(ipRemaining);
         }
       }
-      this->ips = newIps;
     }
+    this->ips = newIps;
   }
 
   void Label::RemoveUnknowns(MDI const mdi) {

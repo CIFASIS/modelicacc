@@ -72,6 +72,7 @@ namespace Causalize {
     inline Usage(int size, int value):usage(std::vector<int>(size, value)) { }
     inline int& operator[](int index) { return usage[index]; }
     inline const int& operator[](int index) const { return usage[index]; }
+    inline void push_back(const int i) { usage.push_back(i); }
     inline bool operator==(const Usage& other) const { return this->usage == other.usage; };
     inline bool operator!=(const Usage& other) const { return this->usage != other.usage; };
     inline int Size() { return usage.size(); }

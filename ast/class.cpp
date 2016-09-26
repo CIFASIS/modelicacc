@@ -203,12 +203,15 @@ namespace Modelica {
     }
  
 
+    Composition::Composition(): external_(false) {}
     Composition::Composition(ElemList el, CompElemList comp_el
       , boost::optional<boost::fusion::vector3<boost::optional<String>, boost::optional<External>, boost::optional<Annotation> > > ext
       ): elements_(el), comp_elem_(comp_el)
     {
       if (ext)
         external_=true;
+      else 
+        external_=false;
     }
 
     Name className(ClassType c) {
