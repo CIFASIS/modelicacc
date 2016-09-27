@@ -383,22 +383,22 @@ void CausalizationStrategyVector::SolveEquations() {
       MDI dom = ip.Dom(), ran = ip.Ran();
       //ERROR_UNLESS(ip.OS().isZeros(), "Solving with offset not implemented");
       ERROR_UNLESS(dom.Size() == ran.Size(), "Solving with ranges of different size");
-      ForEq &feq = get<ForEq>(equation);
+      ForEq feq = get<ForEq>(equation);
       VarSymbolTable syms = mmo.syms_ref();
       int index = 0;
       for(Index & i : feq.range_ref().indexes_ref()) {
          VarInfo vinfo = VarInfo(TypePrefixes(), "Integer", Option<Comment>(), Modification());
          syms.insert(i.name(),vinfo);
          i.exp_ref() = Expression(Range(dom.Intervals().at(index).lower(),dom.Intervals().at(index).upper()));
+         index++;
       }
       ExpList el;
       index = 0;
       Usage us = ip.GetUsage();
       Offset offset = ip.OS();
       for (Interval i: ran.Intervals()) {
-        if (boost::icl::size(i)==1) { // The unknown is used in a unitary range
+        if (boost::icl::size(i)==1 && us[index]==-1) { // The unknown is used in a unitary range
           el.push_back(i.lower());
-          ERROR_UNLESS(us[index]==-1, "Usage vector says is using an iterator but range is of size 1"); 
         } else {// The unknown index is using a iterator
           ERROR_UNLESS(index<us.Size(), "Range not found in usages");
           Index i = feq.range().indexes().at(us[index]);
@@ -412,7 +412,7 @@ void CausalizationStrategyVector::SolveEquations() {
       }
       cv.unknown.SetIndex(el);
       if (debugIsEnabled('c')) {
-        std::cout << "Solving1:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
+        std::cout << "Solving:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
       }
       std::list<std::string> c_code;
       ClassList cl;
