@@ -224,19 +224,15 @@ namespace Causalize {
 
   MDI MDI::ApplyUsage(Usage usage, MDI ran) const {
     IntervalVector newIntervals(usage.Size());
-    int usages = 0;
     for(int i=0; i<(int)usage.Size(); i++) {
       if (usage[i]>=0) {
         newIntervals[i] = intervals[usage[i]];
-        usages++;
       }
       else {
         ERROR_UNLESS(ran.Dimension()>=i, "Range argument size error");
         newIntervals[i] = ran.intervals[i];
       }
     }
-    //Eliminate unused intervals (usage[i]=-1)
-    newIntervals.resize(usages);
     return MDI(newIntervals);
   }
 
