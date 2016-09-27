@@ -56,7 +56,6 @@ CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGrap
 		}
 		else{
       unknownNumber += graph[current_element].count;
-      std::cerr << graph[current_element].unknown() << ":" << graph[current_element].count << std::endl;
 			unknownDescriptors.push_back(current_element);
 		}
 	}
@@ -382,7 +381,7 @@ void CausalizationStrategyVector::SolveEquations() {
       ERROR_UNLESS(cv.pairs.size() == 1, "Solving scalar equation with more than one index pair");
       IndexPair ip = *cv.pairs.begin();
       MDI dom = ip.Dom(), ran = ip.Ran();
-      ERROR_UNLESS(ip.OS().isZeros(), "Solving with offset not implemented");
+      //ERROR_UNLESS(ip.OS().isZeros(), "Solving with offset not implemented");
       ERROR_UNLESS(dom.Size() == ran.Size(), "Solving with ranges of different size");
       ForEq &feq = get<ForEq>(equation);
       VarSymbolTable syms = mmo.syms_ref();
@@ -395,6 +394,7 @@ void CausalizationStrategyVector::SolveEquations() {
       ExpList el;
       index = 0;
       Usage us = ip.GetUsage();
+      Offset offset = ip.OS();
       for (Interval i: ran.Intervals()) {
         if (boost::icl::size(i)==1) { // The unknown is used in a unitary range
           el.push_back(i.lower());
@@ -402,7 +402,11 @@ void CausalizationStrategyVector::SolveEquations() {
         } else {// The unknown index is using a iterator
           ERROR_UNLESS(index<us.Size(), "Range not found in usages");
           Index i = feq.range().indexes().at(us[index]);
-          el.push_back(Reference(i.name())) ;
+          if (offset[index]!=0) {
+            el.push_back(BinOp(Reference(i.name()),Add, Expression(offset[index]))) ;
+          } else { 
+            el.push_back(Reference(i.name())) ;
+          }
         }
         index++;
       }
