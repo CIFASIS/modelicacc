@@ -386,7 +386,7 @@ void CausalizationStrategyVector::SolveEquations() {
       ERROR_UNLESS(dom.Size() == ran.Size(), "Solving with ranges of different size");
       ForEq &feq = get<ForEq>(equation);
       VarSymbolTable syms = mmo.syms_ref();
-      unsigned int index = 0;
+      int index = 0;
       for(Index & i : feq.range_ref().indexes_ref()) {
          VarInfo vinfo = VarInfo(TypePrefixes(), "Integer", Option<Comment>(), Modification());
          syms.insert(i.name(),vinfo);
@@ -394,22 +394,21 @@ void CausalizationStrategyVector::SolveEquations() {
       }
       ExpList el;
       index = 0;
+      Usage us = ip.GetUsage();
       for (Interval i: ran.Intervals()) {
-        if (boost::icl::size(i)==1) // The unknown is used in a unitary range
+        if (boost::icl::size(i)==1) { // The unknown is used in a unitary range
           el.push_back(i.lower());
-        else {// The unknown index is using a iterator
-          Usage us = ip.GetUsage();
-          std::vector<int>::iterator it = std::find(us.begin(), us.end(), index);
-          ERROR_UNLESS(it!=us.end(), "Range not found in usages");
-          unsigned int index_pos = it-us.begin();
-          Index i = feq.range().indexes().at(index_pos);
+          ERROR_UNLESS(us[index]==-1, "Usage vector says is using an iterator but range is of size 1"); 
+        } else {// The unknown index is using a iterator
+          ERROR_UNLESS(index<us.Size(), "Range not found in usages");
+          Index i = feq.range().indexes().at(us[index]);
           el.push_back(Reference(i.name())) ;
         }
         index++;
       }
       cv.unknown.SetIndex(el);
       if (debugIsEnabled('c')) {
-        std::cout << "Solving:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
+        std::cout << "Solving1:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
       }
       std::list<std::string> c_code;
       ClassList cl;

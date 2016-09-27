@@ -258,7 +258,7 @@ namespace Causalize {
       if (unk2find.unknown.dimension==0) { //the unknown is a scalar
         labels.insert(IndexPair(MDI(0), MDI(0), Offset(), Usage()));
       } else { //the unknown is a vector
-        ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size(), "Only complete usage of vectors are allowed");
+        ERROR_UNLESS(unk2find.unknown.dimension==(int)get<1>(unkRef.ref().front()).size() || (int)get<1>(unkRef.ref().front()).size() ==0 , "Only complete usage of vectors are allowed");
         VarSymbolTable vst=syms;
         Expression unkRef_exp = unkRef;
         Expression evaluated_expr=Apply(Modelica::PartialEvalExpression(vst),unkRef_exp);
@@ -266,13 +266,16 @@ namespace Causalize {
         ERROR_UNLESS(is<Reference>(evaluated_expr), "Evaluated expression is not a reference");
         Reference r = get<Reference>(evaluated_expr);
         ExpList indexes = get<1>(r.ref().front());
-        std::vector<int> offset_vector(indexes.size(),-1);
-        Usage usage_indexes(indexes.size(),0);
+        std::vector<int> offset_vector(indexes.size(),0);
+        Usage usage_indexes(indexes.size(),-1);
         foreach_(Expression val, indexes) {
           ERROR_UNLESS(is<Modelica::AST::Integer>(val), "Expression index could not be evaluated"); //TODO: See this error message
           int v = get<Modelica::AST::Integer>(val);
           unk_indexes.push_back(Interval::closed(v,v));
         }
+        if (indexes.size()==0)  // If no usage, use the whole array
+          for(int i : unk2find.unknown.dimensionList)
+            unk_indexes.push_back(Interval::closed(1,i));
         labels.insert(IndexPair(MDI(0), MDI(unk_indexes), Offset(offset_vector), usage_indexes));
       }
     }
