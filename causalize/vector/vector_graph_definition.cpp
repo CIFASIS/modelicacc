@@ -497,22 +497,6 @@ namespace Causalize {
 
   IndexPairSet IndexPair::RemoveUnknowns(MDI unk2remove) {
     ERROR_UNLESS(this->Ran().Dimension()==unk2remove.Dimension(), "Removing unknowns of different dimension");
-    std::cout << "In remove unknowns, IP Type: ";
-    switch (this->Type()) {
-      case _N_N:
-        std::cout << "N-N\n";
-        break;
-      case _N_1:
-        std::cout << "N-1\n";
-        break;
-      case _1_N:
-        std::cout << "1-N\n";
-        break;
-      default:
-        std::cout << "ERROR\n";
-        break;
-    }
-//    std::cout << "In remove unknowns, Unknown to remove dimension: " << unk2remove.Dimension() << "\n";
     switch (this->Type()) {
       case _N_N:
         if (Option<MDI> intersection = unk2remove & this->Ran()) {
@@ -546,7 +530,7 @@ namespace Causalize {
         if (Option<MDI> intersection = unk2remove & this->Ran()) {
           MDI ranToRemove = intersection.get();
           IndexPairSet ret;
-          std::list<MDI> remainsRan = this->Dom()-ranToRemove;
+          std::list<MDI> remainsRan = this->Ran()-ranToRemove;
           for (MDI r: remainsRan) {
             ret.insert(IndexPair(this->Dom(), r ,this->offset, this->usage));
           }
