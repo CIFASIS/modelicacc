@@ -184,7 +184,7 @@ private:
     inline IndexPair(MDI dom_, MDI ran_, Offset os, Usage us): dom(dom_), ran(ran_), offset(os), usage(us) { };
     inline MDI Dom() const { return dom; }
     inline MDI Ran() const { return ran; }
-    inline Offset OS() const { return offset; }
+    inline Offset GetOffset() const { return offset; }
     inline Usage GetUsage() const { return usage; }
     std::list<IndexPair> operator-(const IndexPair& other) const;
     std::set<IndexPair> RemoveUnknowns(MDI unk2remove);

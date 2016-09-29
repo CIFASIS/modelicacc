@@ -498,103 +498,103 @@ namespace Causalize {
   IndexPairSet IndexPair::RemoveUnknowns(MDI unk2remove) {
     ERROR_UNLESS(this->Ran().Dimension()==unk2remove.Dimension(), "Removing unknowns of different dimension");
     switch (this->Type()) {
-      case _N_N:
-        if (Option<MDI> intersection = unk2remove & this->Ran()) {
-          MDI ranToRemove = intersection.get();
-          MDI domToRemove = (ranToRemove.RevertUsage(usage, this->Dom())).ApplyOffset(-offset);
-          std::list<MDI> remainsDom = this->Dom()-domToRemove;
-          std::list<MDI> remainsRan = this->Ran()-ranToRemove;
-          ERROR_UNLESS(remainsDom.size()==remainsRan.size(), "Size error of remaining pairs");
-          std::list<MDI>::iterator domIter = remainsDom.begin();
-          std::list<MDI>::iterator ranIter = remainsRan.begin();
-          IndexPairSet ret;
-          while (domIter!=remainsDom.end()) {
-            ret.insert(IndexPair(*domIter,*ranIter,this->offset, this->usage));
-            domIter++;
-            ranIter++;
-          }
-          return ret;
-        } else {
-          return {*this};
+    case _N_N:
+      if (Option<MDI> intersection = unk2remove & this->Ran()) {
+        MDI ranToRemove = intersection.get();
+        MDI domToRemove = (ranToRemove.RevertUsage(usage, this->Dom())).ApplyOffset(-offset);
+        std::list<MDI> remainsDom = this->Dom()-domToRemove;
+        std::list<MDI> remainsRan = this->Ran()-ranToRemove;
+        ERROR_UNLESS(remainsDom.size()==remainsRan.size(), "Size error of remaining pairs");
+        std::list<MDI>::iterator domIter = remainsDom.begin();
+        std::list<MDI>::iterator ranIter = remainsRan.begin();
+        IndexPairSet ret;
+        while (domIter!=remainsDom.end()) {
+          ret.insert(IndexPair(*domIter,*ranIter,this->offset, this->usage));
+          domIter++;
+          ranIter++;
         }
-      case _N_1:
-        if (this->Ran()==unk2remove) {
-          //Remove all:
-          return {};
+        return ret;
+      } else {
+        return {*this};
+      }
+    case _N_1:
+      if (this->Ran()==unk2remove) {
+        //Remove all:
+        return {};
+      }
+      else {
+        //Nothing to remove_
+        return {*this};
+      }
+    case _1_N:
+      if (Option<MDI> intersection = unk2remove & this->Ran()) {
+        MDI ranToRemove = intersection.get();
+        IndexPairSet ret;
+        std::list<MDI> remainsRan = this->Ran()-ranToRemove;
+        for (MDI r: remainsRan) {
+          ret.insert(IndexPair(this->Dom(), r ,this->offset, this->usage));
         }
-        else {
-          //Nothing to remove_
-          return {*this};
-        }
-      case _1_N:
-        if (Option<MDI> intersection = unk2remove & this->Ran()) {
-          MDI ranToRemove = intersection.get();
-          IndexPairSet ret;
-          std::list<MDI> remainsRan = this->Ran()-ranToRemove;
-          for (MDI r: remainsRan) {
-            ret.insert(IndexPair(this->Dom(), r ,this->offset, this->usage));
-          }
-          return ret;
-        } else {
-          return {*this};
-        }
-      default:
-        ERROR("This case should not occur");
-        abort();
+        return ret;
+      } else {
+        return {*this};
+      }
+    default:
+      ERROR("This case should not occur");
+      abort();
     }
   }
 
   IndexPairSet IndexPair::RemoveEquations(MDI eqs2remove) {
     ERROR_UNLESS(this->Dom().Dimension()==eqs2remove.Dimension(), "Removing equations of different dimension");
     switch (this->Type()) {
-      case _N_N:
-        if (Option<MDI> intersection = eqs2remove & this->Dom()) {
-          MDI domToRemove = intersection.get();
-          MDI ranToRemove = (domToRemove.ApplyUsage(usage, this->Ran())).ApplyOffset(offset);
-          std::list<MDI> remainsDom = this->Dom()-domToRemove;
-          std::list<MDI> remainsRan = this->Ran()-ranToRemove;
-          ERROR_UNLESS(remainsDom.size()==remainsRan.size(), "Size error of remaining pairs");
-          std::list<MDI>::iterator domIter = remainsDom.begin();
-          std::list<MDI>::iterator ranIter = remainsRan.begin();
-          IndexPairSet ret;
-          while (domIter!=remainsDom.end()) {
-            ret.insert(IndexPair(*domIter,*ranIter,this->offset, this->usage));
-            domIter++;
-            ranIter++;
-          }
-          return ret;
-        } else {
-          return {*this};
+    case _N_N:
+      if (Option<MDI> intersection = eqs2remove & this->Dom()) {
+        MDI domToRemove = intersection.get();
+        MDI ranToRemove = (domToRemove.ApplyUsage(usage, this->Ran())).ApplyOffset(offset);
+        std::list<MDI> remainsDom = this->Dom()-domToRemove;
+        std::list<MDI> remainsRan = this->Ran()-ranToRemove;
+        ERROR_UNLESS(remainsDom.size()==remainsRan.size(), "Size error of remaining pairs");
+        std::list<MDI>::iterator domIter = remainsDom.begin();
+        std::list<MDI>::iterator ranIter = remainsRan.begin();
+        IndexPairSet ret;
+        while (domIter!=remainsDom.end()) {
+          ret.insert(IndexPair(*domIter,*ranIter,this->offset, this->usage));
+          domIter++;
+          ranIter++;
         }
-      case _N_1:
-        if (Option<MDI> intersection = eqs2remove & this->Dom()) {
-          MDI domToRemove = intersection.get();
-          IndexPairSet ret;
-          std::list<MDI> remainsDom = this->Dom()-domToRemove;
-          for (MDI dom: remainsDom) {
-            ret.insert(IndexPair(dom,this->Ran(),this->offset, this->usage));
-          }
-          return ret;
-        } else {
-          return {*this};
+        return ret;
+      } else {
+        return {*this};
+      }
+    case _N_1:
+      if (Option<MDI> intersection = eqs2remove & this->Dom()) {
+        MDI domToRemove = intersection.get();
+        IndexPairSet ret;
+        std::list<MDI> remainsDom = this->Dom()-domToRemove;
+        for (MDI dom: remainsDom) {
+          ret.insert(IndexPair(dom,this->Ran(),this->offset, this->usage));
         }
-      case _1_N:
-        if (this->Dom()==eqs2remove) {
-          //Remove all:
-          return {};
-        }
-        else {
-          //Nothing to remove_
-          return {*this};
-        }
-      default:
-        ERROR("This case should not occur");
-        abort();
+        return ret;
+      } else {
+        return {*this};
+      }
+    case _1_N:
+      if (this->Dom()==eqs2remove) {
+        //Remove all:
+        return {};
+      }
+      else {
+        //Nothing to remove_
+        return {*this};
+      }
+    default:
+      ERROR("This case should not occur");
+      abort();
     }
   }
 
   bool IndexPair::operator<(const IndexPair& other) const {
-    return this->Dom() < other.Dom() || this->Ran() < other.Ran() || this->OS() < other.OS();
+    return this->Dom() < other.Dom() || this->Ran() < other.Ran() || this->GetOffset() < other.GetOffset();
   }
 
   std::ostream& operator<<(std::ostream &os, const IndexPair &ip) {
@@ -648,7 +648,7 @@ namespace Causalize {
    ****                              LABEL                                  ****
    *****************************************************************************/
   Label::Label(IndexPairSet ips): ips(ips) {
-//   this->RemoveDuplicates();
+   this->RemoveDuplicates();
   }
 
 
@@ -694,27 +694,111 @@ namespace Causalize {
 
   void Label::RemoveDuplicates() {
     bool removeSomething = true;
+    IndexPairSet newIPS = ips;
     while (removeSomething) {
-      IndexPairSet retIPS = ips;
       for (IndexPairSet::iterator checkingIP=ips.begin(); checkingIP!=ips.end(); checkingIP++) {
-        //Ignore pairs 1-1
+        //Ignore pairs 1-1 => should not be equal pairs in a set
         if (checkingIP->Dom().Size()==1 && checkingIP->Ran().Size()==1)
           continue;
-        for (IndexPairSet::iterator ip=ips.begin(); ip!=ips.end(); ip++) {
+        for (IndexPairSet::iterator otherIP=ips.begin(); otherIP!=ips.end(); otherIP++) {
           //Ignore the same pair
-          if (checkingIP == ip)
+          if (checkingIP == otherIP)
             continue;
-          if (Option<IndexPair> hasToRemove = *checkingIP & *ip) {
-            retIPS.erase(*ip);
-            IndexPair ipToRemove = hasToRemove.get();
-            std::list<IndexPair> remainingIPS = (*ip)-ipToRemove;
-            retIPS.insert(remainingIPS.begin(), remainingIPS.end());
-            ips = retIPS;
+          switch (checkingIP->Type()) {
+          case _N_N:
+            switch (otherIP->Type()) {
+            case _N_N:
+              if (checkingIP->GetUsage()==otherIP->GetUsage()) {
+                if (checkingIP->GetOffset()==otherIP->GetOffset()) { // Same usage same offset => are equals: SHOULD NOT OCCUR
+                  ERROR("This case should not occur since should not be equal pairs in a set");
+                  abort();
+                } else { // Same usage different offset => there is no intersection, nothing to remove
+                  removeSomething = false;
+                  continue;
+                }
+              } else { //Different usage => ERROR: Not supported yet
+                ERROR("Multiple usages of a same vector with different index usages in a same for equation not supported");
+                abort();
+              }
+            case _N_1:
+              if (checkingIP->Ran().Contains(otherIP->Ran())) { //There is intersection => remove it from the N-1 Index Pair
+                newIPS.erase(*otherIP);
+                MDI domToRemove = otherIP->Ran().RevertUsage(checkingIP->GetUsage(), checkingIP->Dom()).ApplyOffset(checkingIP->GetOffset());
+                for (MDI remainingDom: otherIP->Dom()-domToRemove) {
+                  newIPS.insert(IndexPair(remainingDom, otherIP->Ran(), otherIP->GetOffset(), otherIP->GetUsage()));
+                }
+                removeSomething = true;
+                continue;
+              }
+              else { //No intersection => nothing to remove
+                removeSomething = false;
+                continue;
+              }
+            case _1_N:
+              if (checkingIP->Dom().Contains(otherIP->Dom())) { //There is intersection => remove the N-N Index Pair, since it must be a 1-1 pair.
+                newIPS.erase(*checkingIP);
+                removeSomething = true;
+                continue;
+              }
+            }
+          case _N_1:
+            switch (otherIP->Type()) {
+            case _N_N:
+              if (otherIP->Ran().Contains(checkingIP->Ran())) { //There is intersection => remove it from the N-1 Index Pair
+                newIPS.erase(*checkingIP);
+                MDI domToRemove = checkingIP->Ran().RevertUsage(otherIP->GetUsage(), otherIP->Dom()).ApplyOffset(otherIP->GetOffset());
+                for (MDI remainingDom: checkingIP->Dom()-domToRemove) {
+                  newIPS.insert(IndexPair(remainingDom, checkingIP->Ran(), checkingIP->GetOffset(), checkingIP->GetUsage()));
+                }
+                removeSomething = true;
+                continue;
+              }
+              else { //No intersection => nothing to remove
+                removeSomething = false;
+                continue;
+              }
+            case _N_1:
+              if (checkingIP->Ran()==otherIP->Ran()) { // Same range => are equals: SHOULD NOT OCCUR
+                ERROR("This case should not occur since should not be equal pairs in a set");
+                abort();
+              }
+              else { //No intersection => nothing to remove
+                removeSomething = false;
+                continue;
+              }
+            case _1_N:
+              //This case should not occur
+              ERROR("This case should not occur since should could not be N-1 and 1-N pairs in a same label");
+              abort();
+            }
+          case _1_N:
+            switch (otherIP->Type()) {
+            case _N_N:
+              if (otherIP->Dom().Contains(checkingIP->Dom())) { //There is intersection => remove the N-N Index Pair, since it must be a 1-1 pair.
+                newIPS.erase(*otherIP);
+                removeSomething = true;
+                continue;
+              }
+            case _N_1:
+              //This case should not occur
+              ERROR("This case should not occur since should could not be N-1 and 1-N pairs in a same label");
+              abort();
+            case _1_N:
+              if (checkingIP->Dom()==otherIP->Dom()) { // Same range => are equals: SHOULD NOT OCCUR
+                ERROR("This case should not occur since should not be equal pairs in a set");
+                abort();
+              }
+              else { //No intersection => nothing to remove
+                removeSomething = false;
+                continue;
+              }
+            }
           }
         }
       }
       removeSomething = false;
     }
+    ips = newIPS;
   }
   /*****************************************************************************
    ****************************************************************************/

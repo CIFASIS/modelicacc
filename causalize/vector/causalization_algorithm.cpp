@@ -395,7 +395,7 @@ void CausalizationStrategyVector::SolveEquations() {
       ExpList el;
       index = 0;
       Usage us = ip.GetUsage();
-      Offset offset = ip.OS();
+      Offset offset = ip.GetOffset();
       for (Interval i: ran.Intervals()) {
         if (boost::icl::size(i)==1 && us[index]==-1) { // The unknown is used in a unitary range
           el.push_back(i.lower());
