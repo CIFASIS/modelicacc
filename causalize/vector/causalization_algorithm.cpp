@@ -133,6 +133,8 @@ CausalizationStrategyVector::Causalize() {
         // Save the result of this step of causalization
         Causalize1toN(graph[unk].unknown, graph[eq].equation, causal_pair.second);
         // Update the pairs in the edge that is being causalized
+        if (debugIsEnabled('c')) 
+          std::cerr << "Causalizing from the equaiton side " << causal_pair.second << std::endl;
         graph[e].RemovePairs(causal_pair.second);
         // Decrement the number of uncausalized equations/unknowns
         graph[eq].count -= causal_pair.second.begin()->Dom().Size();
@@ -212,6 +214,8 @@ CausalizationStrategyVector::Causalize() {
         // Save the result of this step of causalization
         CausalizeNto1(graph[unk].unknown, graph[eq].equation, causal_pair.second);
         // Update the pairs in the edge that is being causalized
+        if (debugIsEnabled('c')) 
+          std::cerr << "Causalizing from the unknown side " << causal_pair.second << std::endl;
         graph[e].RemovePairs(causal_pair.second);
         // Decrement the number of uncausalized equations/unknowns
         ERROR_UNLESS(causal_pair.second.size()==1, "Causalizing more than a singleton");
@@ -327,6 +331,8 @@ Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCaus
     const IndexPairSet &ips = graph[*vi].Pairs();
     // First find on candidate_edge a possible set of pairs
     for (candidate_pair = ips.begin(); candidate_pair!=ips.end(); candidate_pair++) {
+      if (candidate_pair->Dom().Size()!=candidate_pair->Ran().Size()) // If they are different size cannot causalize
+        continue;
       if (Option<IndexPair> ip = TestBreak(eq,vt, vi, candidate_pair)) { // We found something we can break
         return make_pair(candidate_edge,IndexPairSet({ip.get()}));
       }
@@ -375,7 +381,9 @@ Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCaus
     //If we found a suitable set of pairs, return this result
   }
   //At this point we couldn't find any causalizable pair in any edge
-  return CanCausalizeBreak(eq,vt); 
+  if (split)
+    return CanCausalizeBreak(eq,vt); 
+  return Option<std::pair<VectorEdge,IndexPairSet> >();    // First find on candidate_edge a possible set of pairs
 }
 
 

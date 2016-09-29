@@ -25,6 +25,7 @@
 #include <sstream>
 #include <ginac/ginac.h>
 #include <util/ast_visitors/ginac_interface.h>
+#include <util/ast_visitors/eval_expression.h>
 #include <boost/tuple/tuple.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -172,9 +173,20 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
         return exp(ApplyThis(v.args()[0]));
       } 
       if ("sum"==v.name()) {
-        std::stringstream ss;
-        ss << v;
-        return getSymbol(ss.str());
+        // Expand sum over unidimensional arrays
+        ERROR_UNLESS(is<Reference>(v.args().front()), "Call to sum with no reference");
+        Reference ref = get<Reference>(v.args().front());
+        Option<VarInfo> opt_vinfo = varEnv[refName(ref)];
+        if (!opt_vinfo)
+          ERROR("Variable %s not found", refName(ref));
+        ERROR_UNLESS(opt_vinfo.get().indices() && opt_vinfo.get().indices().get().size()==1, "sum operator over matrix not supported");
+        Expression size_exp = opt_vinfo.get().indices().get().front();
+        Real size = Apply(EvalExpression(varEnv), size_exp);
+        GiNaC::ex exp = ConvertToGiNaC::operator()(Reference(refName(ref),1));
+        for (int i=2; i<=size;i++) {
+          exp = exp + ConvertToGiNaC::operator()(Reference(refName(ref),i));
+        }
+        return exp;
       } 
       if ("log"==v.name()) {
         return GiNaC::log(ApplyThis(v.args()[0]));

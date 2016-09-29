@@ -1,24 +1,24 @@
 model CocurrentHeatExchangerEquations
   "cocurrent heat exchanger implemented by equations"
   import Modelica.SIunits;
-  parameter Real L "length of the channels";
+  parameter Real L=1 "length of the channels";
   parameter Integer N=20 "number of nodes";
-  parameter Real wB "mass flow rate of fluid B";
-  parameter Real areaA "cross sectional area of channel A";
-  parameter Real areaB "cross sectional area of channel B";
-  parameter Real rhoA "density of fluid A";
-  parameter Real rhoB "density of fluid B";
-  parameter SIunits.SpecificHeatCapacity cpA
+  parameter Real wB=1 "mass flow rate of fluid B";
+  parameter Real areaA=1 "cross sectional area of channel A";
+  parameter Real areaB=1 "cross sectional area of channel B";
+  parameter Real rhoA=1 "density of fluid A";
+  parameter Real rhoB=1 "density of fluid B";
+  parameter SIunits.SpecificHeatCapacity cpA=1
     "specific heat capacity of fluid A";
-  parameter SIunits.SpecificHeatCapacity cpB
+  parameter SIunits.SpecificHeatCapacity cpB=1
     "specific heat capacity of fluid B";
-  parameter SIunits.SpecificHeatCapacity cpW
+  parameter SIunits.SpecificHeatCapacity cpW=1
     "specific heat capacity of the wall";
-  parameter SIunits.CoefficientOfHeatTransfer gammaA
+  parameter SIunits.CoefficientOfHeatTransfer gammaA=1
     "heat transfer coefficient of fluid A";
-  parameter SIunits.CoefficientOfHeatTransfer gammaB
+  parameter SIunits.CoefficientOfHeatTransfer gammaB=1
     "heat transfer coefficient of fluid B";
-  parameter Real omega "perimeter";
+  parameter Real omega=1 "perimeter";
   final parameter Real l = L / (N - 1)
     "length of the each wall segment";
   Real wA "mass flow rate of fluid A";
