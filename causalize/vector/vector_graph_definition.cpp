@@ -604,13 +604,13 @@ namespace Causalize {
       for (int i: ip.OS()) 
         os << i << " ";
       os << "}";
-    } */
+    } 
     if (ip.GetUsage().Size()) {
       os << "Usage = {";
       for (int i: ip.GetUsage()) 
         os << i << " ";
       os << "}";
-    }
+    } */
     return os;
   }
 

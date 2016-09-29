@@ -92,6 +92,7 @@ CausalizationStrategyVector::CausalizeNto1(const VectorUnknown unk, const Equati
 bool
 CausalizationStrategyVector::Causalize() {	
   int steps = 0;
+  bool split = false;
   while(true) {
     bool causalize_some=false;
     assert(equationNumber == unknownNumber);
@@ -115,11 +116,12 @@ CausalizationStrategyVector::Causalize() {
       EquationVertex eq = *iter;
       ERROR_UNLESS(out_degree(eq, graph) != 0, "Problem is singular, not supported yet\n");
       // Try to look for a set of indexes to causalize
-      Option<std::pair<VectorEdge,IndexPairSet> > op = CanCausalize(eq, kVertexEquation);
+      Option<std::pair<VectorEdge,IndexPairSet> > op = CanCausalize(eq, kVertexEquation, split);
       // If we can causalize something
       if (op) {
         // We are going to causalize something
         causalize_some=true;
+        split = false;
         // This pair holds which edge(the first component) to use for causalization and which indexes(the second component)
         std::pair<VectorEdge,IndexPairSet> causal_pair = op.get();
         ERROR_UNLESS(causal_pair.second.size()==1, "Causalizing more than a singleton");
@@ -131,6 +133,8 @@ CausalizationStrategyVector::Causalize() {
         // Save the result of this step of causalization
         Causalize1toN(graph[unk].unknown, graph[eq].equation, causal_pair.second);
         // Update the pairs in the edge that is being causalized
+        if (debugIsEnabled('c')) 
+          std::cerr << "Causalizing from the equaiton side " << causal_pair.second << std::endl;
         graph[e].RemovePairs(causal_pair.second);
         // Decrement the number of uncausalized equations/unknowns
         graph[eq].count -= causal_pair.second.begin()->Dom().Size();
@@ -199,6 +203,7 @@ CausalizationStrategyVector::Causalize() {
       if (op) {
         // We are going to causalize something
         causalize_some=true;
+        split = false;
         // This pair holds which edge(the first component) to use for causalization and which indexes(the second component)
         std::pair<VectorEdge,IndexPairSet> causal_pair = op.get();
         VectorEdge e = causal_pair.first;
@@ -209,6 +214,8 @@ CausalizationStrategyVector::Causalize() {
         // Save the result of this step of causalization
         CausalizeNto1(graph[unk].unknown, graph[eq].equation, causal_pair.second);
         // Update the pairs in the edge that is being causalized
+        if (debugIsEnabled('c')) 
+          std::cerr << "Causalizing from the unknown side " << causal_pair.second << std::endl;
         graph[e].RemovePairs(causal_pair.second);
         // Decrement the number of uncausalized equations/unknowns
         ERROR_UNLESS(causal_pair.second.size()==1, "Causalizing more than a singleton");
@@ -265,7 +272,11 @@ CausalizationStrategyVector::Causalize() {
       }
     }
 
-    if(!causalize_some){
+    if (!causalize_some && !split) { // Try to split ranges
+      split=true;
+      continue;
+    }
+    if(!causalize_some && split){
       //we have a LOOP or a FOR equation that we don't
       //handle at least yet, so we resort to the previous
       //algorithm
@@ -278,7 +289,38 @@ CausalizationStrategyVector::Causalize() {
 }
 
 
-Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCausalize(VectorEquationVertex eq, VertexType vt) {
+Option <IndexPair> CausalizationStrategyVector::TestBreak(VectorEquationVertex eq, 
+                                                          VertexType vt, 
+                                                          VectorCausalizationGraph::out_edge_iterator edge,
+                                                          IndexPairSet::iterator candidate_pair)  
+{
+  VectorCausalizationGraph::out_edge_iterator other, other_end;
+  MDI mdi = (vt==kVertexEquation ? candidate_pair->Dom() : candidate_pair->Ran()) ;
+  for(boost::tie(other,other_end) = out_edges(eq,graph); other != other_end; ++other) {
+    const IndexPairSet &ips = graph[*other].Pairs();
+    IndexPairSet::iterator test;
+    // First find on candidate_edge a possible set of pairs
+    for (test = ips.begin(); test!=ips.end(); test++) {
+      if (test == candidate_pair && other == edge) 
+        continue; // Skip the same pair in the same edge
+      std::list<MDI> diff = mdi - (vt==kVertexEquation ? test->Dom() : test->Ran());
+      if (diff.size()==0) // If the difference is empty we are done
+        return Option<IndexPair>();
+      mdi = diff.front();
+    }
+  }
+  if (vt==kVertexEquation) {
+  return IndexPair(mdi,
+                   mdi.ApplyUsage(candidate_pair->GetUsage(),candidate_pair->Ran()).ApplyOffset(candidate_pair->OS()),
+                   candidate_pair->OS(),
+                   candidate_pair->GetUsage());
+  } else { 
+    std::cerr << "TODO: TestBreak\n";
+    return Option<IndexPair>();
+  }
+}
+
+Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCausalizeBreak(VectorEquationVertex eq, VertexType vt) {
   VectorCausalizationGraph::out_edge_iterator vi, vi_end, other, other_end;
   VectorEdge candidate_edge; 
   IndexPairSet::iterator candidate_pair, test;
@@ -287,8 +329,27 @@ Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCaus
     // Try to find a pair in candidate_edge
     candidate_edge = *vi;
     const IndexPairSet &ips = graph[*vi].Pairs();
-    if (debugIsEnabled('c')) {
+    // First find on candidate_edge a possible set of pairs
+    for (candidate_pair = ips.begin(); candidate_pair!=ips.end(); candidate_pair++) {
+      if (candidate_pair->Dom().Size()!=candidate_pair->Ran().Size()) // If they are different size cannot causalize
+        continue;
+      if (Option<IndexPair> ip = TestBreak(eq,vt, vi, candidate_pair)) { // We found something we can break
+        return make_pair(candidate_edge,IndexPairSet({ip.get()}));
+      }
     }
+  } 
+  return Option<std::pair<VectorEdge,IndexPairSet> >();    // First find on candidate_edge a possible set of pairs
+}
+
+Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCausalize(VectorEquationVertex eq, VertexType vt, bool split) {
+  VectorCausalizationGraph::out_edge_iterator vi, vi_end, other, other_end;
+  VectorEdge candidate_edge; 
+  IndexPairSet::iterator candidate_pair, test;
+  IndexPairSet resultingIPS;
+  for(boost::tie(vi,vi_end) = out_edges(eq,graph); vi != vi_end; ++vi) {
+    // Try to find a pair in candidate_edge
+    candidate_edge = *vi;
+    const IndexPairSet &ips = graph[*vi].Pairs();
     // First find on candidate_edge a possible set of pairs
     for (candidate_pair = ips.begin(); candidate_pair!=ips.end(); candidate_pair++) {
       IndexPair candidate_ip = *candidate_pair;
@@ -320,6 +381,8 @@ Option<std::pair<VectorEdge,IndexPairSet> > CausalizationStrategyVector::CanCaus
     //If we found a suitable set of pairs, return this result
   }
   //At this point we couldn't find any causalizable pair in any edge
+  if (split)
+    return CanCausalizeBreak(eq,vt); 
   return Option<std::pair<VectorEdge,IndexPairSet> >();    // First find on candidate_edge a possible set of pairs
 }
 
