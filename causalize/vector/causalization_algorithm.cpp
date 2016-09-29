@@ -311,8 +311,8 @@ Option <IndexPair> CausalizationStrategyVector::TestBreak(VectorEquationVertex e
   }
   if (vt==kVertexEquation) {
   return IndexPair(mdi,
-                   mdi.ApplyUsage(candidate_pair->GetUsage(),candidate_pair->Ran()).ApplyOffset(candidate_pair->OS()),
-                   candidate_pair->OS(),
+                   mdi.ApplyUsage(candidate_pair->GetUsage(),candidate_pair->Ran()).ApplyOffset(candidate_pair->GetOffset()),
+                   candidate_pair->GetOffset(),
                    candidate_pair->GetUsage());
   } else { 
     std::cerr << "TODO: TestBreak\n";
@@ -444,7 +444,7 @@ void CausalizationStrategyVector::SolveEquations() {
       ERROR_UNLESS(cv.pairs.size() == 1, "Solving scalar equation with more than one index pair");
       IndexPair ip = *cv.pairs.begin();
       MDI dom = ip.Dom(), ran = ip.Ran();
-      //ERROR_UNLESS(ip.OS().isZeros(), "Solving with offset not implemented");
+      //ERROR_UNLESS(ip.GetOffset().isZeros(), "Solving with offset not implemented");
       ERROR_UNLESS(dom.Size() == ran.Size(), "Solving with ranges of different size");
       ForEq feq = get<ForEq>(equation);
       VarSymbolTable syms = mmo.syms_ref();
