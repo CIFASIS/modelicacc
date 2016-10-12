@@ -26,16 +26,18 @@ model CocurrentHeatExchangerEquations
     "heat flow rate of fluid A in the segments";
   Real QB[N - 1]
     "heat flow rate of fluid B in the segments";
-  Real TA[N] "temperature nodes on channel A";
-  Real TB[N] "temperature nodes on channel B";
+  Real TA_1 "temperature nodes on channel A";
+  Real TB_1 "temperature nodes on channel B";
+  Real TA[N - 1] "temperature nodes on channel A";
+  Real TB[N - 1] "temperature nodes on channel B";
   Real TW[N - 1] "temperatures on the wall segments";
   Real QtotA "total heat flow rate of fluid A";
   Real QtotB "total heat flow rate of fluid B";
 initial equation
-  for i in 2:N loop
+  for i in 1:N-1 loop
     TA[i] = 300;
     TB[i] = 300;
-    TW[i - 1] = 300;
+    TW[i] = 300;
   end for;
 equation
 
@@ -43,10 +45,10 @@ equation
   der(TB[1]) = 0; // This is the derivative of TB[1] = 310;
   wA = if time < 15 then 1 else 1.1;
   for i in 1:N - 1 loop
-    rhoA * l * cpA * areaA * der(TA[i + 1]) = wA * cpA * TA[i] - wA * cpA * TA[i + 1] + QA[i];
-    rhoB * l * cpB * areaB * der(TB[i + 1]) = wB * cpB * TB[i] - wB * cpB * TB[i + 1] - QB[i];
-    QA[i] = (TW[i] - (TA[i] + TA[i + 1]) / 2) * gammaA * omega * l;
-    QB[i] = ((TB[i] + TB[i + 1]) / 2 - TW[i]) * gammaB * omega * l;
+    rhoA * l * cpA * areaA * der(TA[i]) = wA * cpA * TA[i-1] - wA * cpA * TA[i] + QA[i];
+    rhoB * l * cpB * areaB * der(TB[i]) = wB * cpB * TB[i-1] - wB * cpB * TB[i] - QB[i];
+    QA[i] = (TW[i] - (TA[i-1] + TA[i]) / 2) * gammaA * omega * l;
+    QB[i] = ((TB[i-1] + TB[i]) / 2 - TW[i]) * gammaB * omega * l;
     cpW / (N - 1) * der(TW[i]) = (-QA[i]) + QB[i];
   end for;
   QtotA = sum(QA);
