@@ -23,6 +23,6 @@ equation
     der(u[i,j])=(-u[i,j]+u[i,j-1])*ax/dx+(-u[i,j]+u[i-1,j])*ay/dy + reaction[i,j];
   end for;
   for i in 1:N, j in 1:M loop
-	reaction[i,j] = r*u[i,j]^2*(1-u[i,j]);
+	  reaction[i,j] = r*u[i,j]^2*(1-u[i,j]);
   end for;
 end AdvectionReaction2D;

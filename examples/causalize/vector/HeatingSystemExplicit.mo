@@ -19,7 +19,7 @@ model HeatingSystemExplicit "Explicit ODE model of a heating system - continuous
 
 
   constant Real pi = 3.1416;
-  parameter Integer N = 3 "Number of heated units";
+  parameter Integer N = 10 "Number of heated units";
   parameter Real  Cu[N] = (ones(N)+ linspace(0,1.348,N))*1e7
     "Heat capacity of heated units";
   parameter Real  Cd = 2e6*N
@@ -55,8 +55,6 @@ equation
   for i in 1:N loop
     der(x[i]) = a*hist(x[i], Tu0 - Tu[i], Teps);
   end for;
-  annotation (Documentation(info="<html>
-<p>Same model as <a href=\"modelica://ScalableTestSuite.Thermal.DistrictHeating.Models.HeatingSystem\">HeatingSystem</a>, with explicit formulation of the state derivatives.</p>
-</html>"));
+  annotation(experiment(StopTime = 864000, Tolerance = 1e-4));
 end HeatingSystemExplicit;
 
