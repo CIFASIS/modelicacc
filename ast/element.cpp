@@ -108,10 +108,21 @@ namespace Modelica {
     member_imp(ElemClass,bool,redeclare);
     member_imp(ElemClass,bool,replaceable);
     member_imp(ElemClass,boost::recursive_wrapper<ClassType_>,class_element);
-
+  
+    member_imp(Import, Name, name);
+    member_imp(Import, Name, alias);
+    member_imp(Import, Comment, comment);
+    Import::Import() {};
+    Import::Import(Name a, Name n, Comment c): alias_(a), name_(n), comment_(c) {};
+    Import::Import(Name n,  boost::optional<IdentList> ls, Comment c): name_(n), comment_(c) {};
     std::ostream& operator<<(std::ostream& out, const Import &i) // output
     {
-      out << "import";
+      out << "import ";
+      if (i.alias().empty()) {
+        out << i.name() << i.comment();
+      } else {
+        out << i.alias() << " = " << i.name() << i.comment();
+      }
       return out;
     }
     member_imp(Extends,Name,name);

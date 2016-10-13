@@ -56,7 +56,7 @@ namespace Modelica {
     Expression PartialEvalExpression::operator()(BinOp v) const { 
       Expression l=v.left(), r=v.right();
       l=ApplyThis(l);r=ApplyThis(r);
-      if ((is<Real>(l) || is<Integer>(l)) && (is<Real>(r) || is<Integer>(r))) {
+      if (eval_parameters && (is<Real>(l) || is<Integer>(l)) && (is<Real>(r) || is<Integer>(r))) {
         Expression binop = BinOp(l,v.op(),r);
         Expression e = Apply(EvalExpression(vtable),binop);
         if (!is<Real>(l) && !is<Real>(r) && is<Real>(e)) {
@@ -64,6 +64,15 @@ namespace Modelica {
         }
         return Apply(EvalExpression(vtable),binop);
       }
+      if (is<Integer>(l) && is<Integer>(r)) { // Only evaluate integer operations
+        Expression binop = BinOp(l,v.op(),r);
+        Expression e = Apply(EvalExpression(vtable),binop);
+        if (!is<Real>(l) && !is<Real>(r) && is<Real>(e)) {
+          return Integer(get<Real>(e));
+        }
+        return Apply(EvalExpression(vtable),binop);
+      }
+ 
       if (v.op()==Add && isZero(l)) 
         return r;
       if (v.op()==Add && isZero(r)) 

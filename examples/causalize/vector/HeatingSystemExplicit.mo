@@ -47,8 +47,12 @@ model HeatingSystemExplicit "Explicit ODE model of a heating system - continuous
     "Temperature of individual heated units";
   Real x[N](each start = -0.5, each fixed = true)
     "States of heated units temperature controllers";
+  Real s[N];
 equation
-  der(Td) = (sat(Kp*(Td0-Td),0, Qmax) - sum(Gh*(Td - Tu[i])*(sat(b*x[i], -0.5, 0.5)+0.5) for i in 1:N))/Cd;
+  for i in 1:N loop
+    s[i]=Gh*(Td - Tu[i])*(sat(b*x[i], -0.5, 0.5)+0.5);
+  end for;
+  der(Td) = (sat(Kp*(Td0-Td),0, Qmax) - sum(s))/Cd;
   for i in 1:N loop
     der(Tu[i]) = (Gh*(Td - Tu[i])*(sat(b*x[i], -0.5, 0.5)+0.5) - Gu*(Tu[i] - (278.15 + 8*sin(2*pi*time/86400))))/Cu[i];
   end for;  

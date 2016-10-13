@@ -2,7 +2,7 @@ model CocurrentHeatExchangerEquations
   "cocurrent heat exchanger implemented by equations"
   import Modelica.SIunits;
   parameter Real L=10 "length of the channels";
-  parameter Integer N=20 "number of nodes";
+  constant Integer N=20 "number of nodes";
   parameter Real wB=1 "mass flow rate of fluid B";
   parameter Real areaA=5e-5 "cross sectional area of channel A";
   parameter Real areaB=5e-5 "cross sectional area of channel B";
@@ -21,7 +21,7 @@ model CocurrentHeatExchangerEquations
   parameter Real omega=0.1 "perimeter";
   final parameter Real l = L / (N - 1)
     "length of the each wall segment";
-  Real wA "mass flow rate of fluid A";
+  discrete Real wA(start=1) "mass flow rate of fluid A";
   Real QA[N - 1]
     "heat flow rate of fluid A in the segments";
   Real QB[N - 1]
@@ -34,7 +34,7 @@ model CocurrentHeatExchangerEquations
   Real QtotA "total heat flow rate of fluid A";
   Real QtotB "total heat flow rate of fluid B";
   
-  Real TA_1;
+  discrete Real TA_1(start=300);
   Real TB_1;
 initial equation
   for i in 1:N-1 loop
@@ -43,11 +43,9 @@ initial equation
     TW[i] = 300;
   end for;
 equation
-  TA_1  = if time < 8 then 300 else 301;
+  //TA_1  = if time < 8 then 300 else 301;
   TB_1  = 310;
-//  TA[1] = 0;
-//  TB[1] = 0;
-  wA = if time < 15 then 1 else 1.1;
+  //wA = if time < 15 then 1 else 1.1;
   
   
   rhoA * l * cpA * areaA * der(TA[1]) = wA * cpA * TA_1 - wA * cpA * TA[1] + QA[1];
@@ -66,6 +64,14 @@ equation
   end for;
   QtotA = sum(QA);
   QtotB = sum(QB);  
+algorithm
+  when time > 8 then
+    TA_1 := 301;
+  end when;
+  when time > 15 then
+    wA := 1.1;
+    //wA = if time < 15 then 1 else 1.1;
+  end when; 
   annotation(experiment(StopTime = 20, Tolerance = 1e-6));
 end CocurrentHeatExchangerEquations;
 
