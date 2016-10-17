@@ -5,5 +5,4 @@ equation
     a[i]+a[3]=17;
   end for;
 end A;
-
 // Remove duplicates: OK

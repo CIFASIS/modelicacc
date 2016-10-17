@@ -18,8 +18,3 @@ equation
 		c[i]=17+a[i,4];
 	end for;
 end A;
-
-// Error: Dimension error #3
-
-
-

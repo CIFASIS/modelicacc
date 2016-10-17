@@ -6,5 +6,3 @@ equation
 		b[i] + b[i+1] = 123;
 	end for;
 end A;
-
-// Modify cancausalize
