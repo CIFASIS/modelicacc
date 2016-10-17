@@ -40,6 +40,18 @@ using namespace std;
 REGISTER_FUNCTION(der, dummy())
 REGISTER_FUNCTION(pre, dummy())
 
+REGISTER_FUNCTION(user_fun1_1, dummy())
+REGISTER_FUNCTION(user_fun1_2, dummy())
+REGISTER_FUNCTION(user_fun1_3, dummy())
+
+REGISTER_FUNCTION(user_fun2_1, dummy())
+REGISTER_FUNCTION(user_fun2_2, dummy())
+REGISTER_FUNCTION(user_fun2_3, dummy())
+
+REGISTER_FUNCTION(user_fun3_1, dummy())
+REGISTER_FUNCTION(user_fun3_2, dummy())
+REGISTER_FUNCTION(user_fun3_3, dummy())
+
 static ex var_derivative(const ex & x,const ex & y, unsigned diff_param) {
   return der(x);
 }
@@ -81,7 +93,11 @@ void my_print_add_dflt(const add & s, const print_dflt & c, unsigned level) {
 namespace Modelica {
   
     using namespace GiNaC;
-ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv(var),_forDerivation(forDerivation) {}
+    std::map<int, Name> ConvertToGiNaC::function3_directory;
+    int ConvertToGiNaC::user_func1 = 0;
+    int ConvertToGiNaC::user_func2 = 0;
+    int ConvertToGiNaC::user_func3 = 0;
+    ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv(var),_forDerivation(forDerivation)   { }
 
     GiNaC::ex ConvertToGiNaC::operator()(Integer v) const { 
       return ex(v);
@@ -194,6 +210,21 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
       if ("log10"==v.name()) {
         return GiNaC::log(ApplyThis(v.args()[0]))/GiNaC::log(10);
       } 
+      if (user_func3<3 && v.args().size()==3) {
+        Expression arg1 = v.args().front();
+        Expression arg2 = v.args().at(1);
+        Expression arg3 = v.args().at(2);
+        function3_directory.insert(make_pair(user_func3, v.name()));
+        //std::cerr << "Converting " << v.name() << " as user_fun3_" << user_func3+1 << "\n";
+        switch (user_func3++) {
+          case 0:
+            return user_fun3_1(ApplyThis(arg1), ApplyThis(arg2), ApplyThis(arg3));
+          case 1:
+            return user_fun3_2(ApplyThis(arg1), ApplyThis(arg2), ApplyThis(arg3));
+          case 2:
+            return user_fun3_3(ApplyThis(arg1), ApplyThis(arg2), ApplyThis(arg3));
+        }
+      }
       WARNING("ConvertToGiNaC: conversion of function %s implemented. Returning 0.\n", v.name().c_str());
       return 0;
     }
@@ -290,7 +321,22 @@ ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable  &var, bool forDerivation): varEnv
       if ("sin"==name) {
         result_ = Call(name, ConvertToExp(x.op(0)));
         return; 
-      }
+      } 
+      if ("user_fun3_1"==name) {
+        //std::cerr << ConvertToGiNaC::function3_directory[0];
+        result_ = Call(ConvertToGiNaC::function3_directory[0],{ConvertToExp(x.op(0)), ConvertToExp(x.op(1)), ConvertToExp(x.op(2))});
+        return ;
+      } 
+      if ("user_fun3_2"==name) {
+        std::cerr << ConvertToGiNaC::function3_directory[1];
+        result_ = Call(ConvertToGiNaC::function3_directory[1],{ConvertToExp(x.op(0)), ConvertToExp(x.op(1)), ConvertToExp(x.op(2))});
+        return ;
+      } 
+      if ("user_fun3_3"==name) {
+        std::cerr << ConvertToGiNaC::function3_directory[2];
+        result_ = Call(ConvertToGiNaC::function3_directory[2],{ConvertToExp(x.op(0)), ConvertToExp(x.op(1)), ConvertToExp(x.op(2))});
+        return ;
+      } 
       ERROR("Function not supported in GiNaC conversion");
 
     }

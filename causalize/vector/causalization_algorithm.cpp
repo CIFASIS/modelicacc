@@ -198,7 +198,7 @@ CausalizationStrategyVector::Causalize() {
       UnknownVertex unk = *iter;
       ERROR_UNLESS(out_degree(unk, graph) != 0, "Problem is singular, not supported yet\n");
       // Try to look for a set of indexes to causalize
-      Option<std::pair<VectorEdge,IndexPairSet> > op = CanCausalize(unk, kVertexUnknown);
+      Option<std::pair<VectorEdge,IndexPairSet> > op = CanCausalize(unk, kVertexUnknown, split);
       // If we can causalize something
       if (op) {
         // We are going to causalize something
@@ -296,6 +296,8 @@ Option <IndexPair> CausalizationStrategyVector::TestBreak(VectorEquationVertex e
 {
   VectorCausalizationGraph::out_edge_iterator other, other_end;
   MDI mdi = (vt==kVertexEquation ? candidate_pair->Dom() : candidate_pair->Ran()) ;
+  std::set<MDI> leftovers = {mdi};
+  //std::cerr << "Trying to break " << mdi << std::endl;
   for(boost::tie(other,other_end) = out_edges(eq,graph); other != other_end; ++other) {
     const IndexPairSet &ips = graph[*other].Pairs();
     IndexPairSet::iterator test;
@@ -303,20 +305,36 @@ Option <IndexPair> CausalizationStrategyVector::TestBreak(VectorEquationVertex e
     for (test = ips.begin(); test!=ips.end(); test++) {
       if (test == candidate_pair && other == edge) 
         continue; // Skip the same pair in the same edge
-      std::list<MDI> diff = mdi - (vt==kVertexEquation ? test->Dom() : test->Ran());
-      if (diff.size()==0) // If the difference is empty we are done
+      MDI toRemove = (vt==kVertexEquation ? test->Dom() : test->Ran());
+      std::set<MDI> new_leftovers;
+      //std::cerr << "Removing " << toRemove << std::endl;
+      for(MDI m : leftovers) {
+        std::list<MDI> diff = m - toRemove;
+        new_leftovers.insert(diff.begin(), diff.end());
+      } 
+      if (new_leftovers.size()==0) // If the difference is empty we are done
         return Option<IndexPair>();
-      mdi = diff.front();
+      leftovers = new_leftovers;
+      /*std::cerr << "Left={ ";
+      for(MDI m : leftovers) 
+        std::cerr << m;
+      std::cerr << "}\n";
+      */
     }
   }
+  mdi = *leftovers.begin();
   if (vt==kVertexEquation) {
-  return IndexPair(mdi,
+    // Here we are only taking the first of the remaining parts. We could choose anyone so we are taking the first
+    return IndexPair(mdi,
                    mdi.ApplyUsage(candidate_pair->GetUsage(),candidate_pair->Ran()).ApplyOffset(candidate_pair->GetOffset()),
                    candidate_pair->GetOffset(),
                    candidate_pair->GetUsage());
   } else { 
-    std::cerr << "TODO: TestBreak\n";
-    return Option<IndexPair>();
+
+    return IndexPair(mdi.RevertUsage(candidate_pair->GetUsage(),candidate_pair->Dom()).ApplyOffset(candidate_pair->GetOffset()),
+                   mdi,
+                   candidate_pair->GetOffset(),
+                   candidate_pair->GetUsage());
   }
 }
 

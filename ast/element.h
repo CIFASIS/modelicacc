@@ -34,10 +34,13 @@ namespace Modelica {
 
   /* TODO include members */
   struct Import {
-    Import(){};
-    Import(Name, Name, Comment) {}
-    Import(Name, boost::optional<boost::optional<IdentList> >, Comment) {}
+    Import();
+    Import(Name, Name, Comment); 
+    Import(Name, boost::optional<IdentList> , Comment); 
     printable(Import);
+    member_(Name, name);
+    member_(Name, alias);
+    member_(Comment, comment);
     
   };
 
