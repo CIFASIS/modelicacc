@@ -6,4 +6,4 @@ equation
 	end for;
 end A;
 
-// Remove duplicates!!!
+// Multiple usages of a same vector with different index usages in a same for equation not supported
