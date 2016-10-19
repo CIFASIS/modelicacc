@@ -15,6 +15,7 @@ SRC_CAUSALIZE := causalize/main.cpp \
                   causalize/state_variables_finder.cpp \
                   causalize/unknowns_collector.cpp \
                   causalize/causalization_strategy.cpp \
+                  causalize/contains_unknown.cpp \
                   causalize/vector/contains_vector.cpp \
                   causalize/vector/graph_builder.cpp \
                   causalize/vector/causalization_algorithm.cpp \

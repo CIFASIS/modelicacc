@@ -37,6 +37,7 @@
 #include <boost/variant/get.hpp>
 #include <mmo/mmo_class.h>
 #include <util/ast_visitors/contains_expression.h>
+#include <causalize/contains_unknown.h>
 #include <util/ast_visitors/partial_eval_expression.h>
 #include <util/solve/solve.h>
 #include <fstream> 
@@ -63,11 +64,12 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
   _all_unknowns = unknowns;
 
   std::list<Vertex> eqVerts;
-  std::list<Vertex> unknownVerts;
+  std::vector<Vertex> unknownVerts;
 
   DEBUG('c', "Building causalization graph...\n");
   DEBUG('c', "Equation indexes:\n");
 
+  //Create equation vertexes
   foreach_(Equation e, equations) {
     VertexProperty vp;
     Equality &eq = get<Equality>(e);
@@ -86,6 +88,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
 
   DEBUG('c', "Unknown indexes:\n");
 
+  //Create unknown vertexes
   index = 0;
   foreach_(Expression e, unknowns) {
     VertexProperty vp;
@@ -101,18 +104,24 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class): _mmo_class(m
 
   DEBUG('c', "Graph edges as (equation_index, uknown_index):\n");
 
-  list<Vertex>::iterator acausalEqsIter, unknownsIter;
+
+  //Create edges
+  std::vector<Expression> definedUnks;
+  for (Vertex v: unknownVerts) {
+    definedUnks.push_back(_graph[v].unknown());
+  }
+
   foreach_(Vertex eqVertex, eqVerts) {
-    foreach_(Vertex unknownVertex , unknownVerts) {
-      Modelica::ContainsExpression occurrs(_graph[unknownVertex].unknown(), _mmo_class.syms());
-      Equation e = _graph[eqVertex].equation;
-      ERROR_UNLESS(is<Equality>(e), "Causalization of non-equality equation is not supported");
-      Equality eq = boost::get<Equality>(e);
-      const bool rl = Apply(occurrs,eq.left_ref());
-      const bool ll = Apply(occurrs,eq.right_ref()); 
-      if(rl || ll) {
-        add_edge(eqVertex, unknownVertex, _graph);
-        DEBUG('c', "(%d, %d) ", _graph[eqVertex].index, _graph[unknownVertex].index);
+    ContainsUnknown occurrs(definedUnks, _mmo_class.syms());
+    Equation e = _graph[eqVertex].equation;
+    ERROR_UNLESS(is<Equality>(e), "Causalization of non-equality equation is not supported");
+    Equality eq = boost::get<Equality>(e);
+    const bool rl = Apply(occurrs,eq.left_ref());
+    const bool ll = Apply(occurrs,eq.right_ref());
+    if(rl || ll) {
+      for (int u: occurrs.getUsages()) {
+        add_edge(eqVertex, unknownVerts[u], _graph);
+      DEBUG('c', "(%d, %d) ", _graph[eqVertex].index, _graph[unknownVerts[u]].index);
       }
     }
   }
