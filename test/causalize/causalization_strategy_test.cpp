@@ -10,7 +10,7 @@
 #include <mmo/mmo_class.h>
 #include <util/table.h>
 #include <util/debug.h>
-#include <util/ast_visitors/contains.h>
+#include <util/ast_visitors/contains_expression.h>
 
 #include <boost/variant/get.hpp>
 
@@ -49,7 +49,7 @@ void check_causality(MMO_Class &mmoClass, ExpList unknowns) {
     }
 
     foreach_(Expression unknown, unknowns) {
-      Modelica::contains occurrs(unknown);
+      Modelica::ContainsExpression occurrs(unknown);
       if (Apply(occurrs, eqEq.right_ref())) {
         bool isKnown = false;
         foreach_(Expression known, knowns) {
@@ -69,7 +69,7 @@ void rlc_test() {
 
   bool r;
 
-  StoredDef sd = parseFile("rlc.mo",r);
+  StoredDef sd = Parser::ParseFile("rlc.mo",r);
 
   if (!r)
     ERROR("Can't parse file\n");
@@ -80,8 +80,8 @@ void rlc_test() {
   UnknownsCollector collector(mmo);
   ExpList unknowns = collector.collectUnknowns();
 
-  CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize("Anything");
+  Causalize::CausalizationStrategy cStrategy(mmo);
+  cStrategy.Causalize();
 
   check_causality(mmo, unknowns);
 
@@ -91,7 +91,7 @@ void rlc_simple_test() {
 
   bool r;
 
-  StoredDef sd = parseFile("rlc.mo",r);
+  StoredDef sd = Parser::ParseFile("rlc.mo",r);
 
   if (!r)
     ERROR("Can't parse file\n");
@@ -102,8 +102,8 @@ void rlc_simple_test() {
   UnknownsCollector collector(mmo);
   ExpList unknowns = collector.collectUnknowns();
 
-  CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize_simple("Anything");
+  Causalize::CausalizationStrategy cStrategy(mmo);
+  cStrategy.CausalizeSimple();
 
   check_causality(mmo, unknowns);
 
@@ -113,7 +113,7 @@ void rlc_loop_test() {
 
   bool r;
 
-  StoredDef sd = parseFile("rlc_loop.mo",r);
+  StoredDef sd = Parser::ParseFile("rlc_loop.mo",r);
 
   if (!r)
     ERROR("Can't parse file\n");
@@ -124,8 +124,8 @@ void rlc_loop_test() {
   UnknownsCollector collector(mmo);
   ExpList unknowns = collector.collectUnknowns();
 
-  CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize("Anything");
+  Causalize::CausalizationStrategy cStrategy(mmo);
+  cStrategy.Causalize();
 
   check_causality(mmo, unknowns);
 
@@ -135,7 +135,7 @@ void rlc_loop_tarjan_test() {
 
   bool r;
 
-  StoredDef sd = parseFile("rlc_loop.mo",r);
+  StoredDef sd = Parser::ParseFile("rlc_loop.mo",r);
 
   if (!r)
     ERROR("Can't parse file\n");
@@ -146,8 +146,8 @@ void rlc_loop_tarjan_test() {
   UnknownsCollector collector(mmo);
   ExpList unknowns = collector.collectUnknowns();
 
-  CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize_tarjan("Anything");
+  Causalize::CausalizationStrategy cStrategy(mmo);
+  cStrategy.CausalizeTarjan();
 
   check_causality(mmo, unknowns);
 
@@ -157,7 +157,7 @@ void OneDHeatTransferTI_FD_test() {
 
   bool r;
 
-  StoredDef sd = parseFile("OneDHeatTransferTI_FD_100.mo",r);
+  StoredDef sd = Parser::ParseFile("OneDHeatTransferTI_FD_100.mo",r);
 
   if (!r)
     ERROR("Can't parse file\n");
@@ -168,8 +168,8 @@ void OneDHeatTransferTI_FD_test() {
   UnknownsCollector collector(mmo);
   ExpList unknowns = collector.collectUnknowns();
 
-  CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize("Anything");
+  Causalize::CausalizationStrategy cStrategy(mmo);
+  cStrategy.Causalize();
 
   check_causality(mmo, unknowns);
 
@@ -179,7 +179,7 @@ void OneDHeatTransferTI_FD_simple_test() {
 
   bool r;
 
-  StoredDef sd = parseFile("OneDHeatTransferTI_FD.mo",r);
+  StoredDef sd = Parser::ParseFile("OneDHeatTransferTI_FD.mo",r);
 
   if (!r)
     ERROR("Can't parse file\n");
@@ -190,8 +190,8 @@ void OneDHeatTransferTI_FD_simple_test() {
   UnknownsCollector collector(mmo);
   ExpList unknowns = collector.collectUnknowns();
 
-  CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize_simple("Anything");
+  Causalize::CausalizationStrategy cStrategy(mmo);
+  cStrategy.CausalizeSimple();
 
   check_causality(mmo, unknowns);
 

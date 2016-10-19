@@ -21,7 +21,7 @@ SRC_COMMON := \
 		parser/class.cpp \
 		parser/parser.cpp
 
-all: $(LIBMODELICA) doc
+all: $(LIBMODELICA) doc test/causalize/causalization_strategy_test
 
 include antialias/Makefile.include
 include mmo/Makefile.include
