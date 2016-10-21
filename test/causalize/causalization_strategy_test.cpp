@@ -3,6 +3,7 @@
 
 #include <causalize/unknowns_collector.h>
 #include <causalize/causalization_strategy.h>
+#include <causalize/contains_unknown.h>
 
 #include <parser/parser.h>
 #include <ast/ast_types.h>
@@ -16,52 +17,36 @@
 
 using namespace boost::unit_test;
 using namespace Modelica::AST;
+using namespace Causalize;
 
-void check_causality(MMO_Class &mmoClass, ExpList unknowns) {
+void check_causality(MMO_Class &mmo_class, ExpList unknowns) {
 
-  const EquationList &causalEqs = mmoClass.equations_ref().equations_ref();
+  const EquationList &causalEqs = mmo_class.equations_ref().equations_ref();
 
-  /*
-   * Here we collect the left side of each
-   * equation.
-   */
-  ExpList knowns;
+    foreach_(Equation equation, causalEqs) {
 
-  foreach_(Equation equation, causalEqs) {
-
-    Equality eqEq = boost::get<Equality>(equation);
-    Expression leftExpression = eqEq.left_ref();
-
-    if (is<Reference>(leftExpression)) {
-      knowns.push_back(leftExpression);
-    } else if (is<Call>(leftExpression)) {
-      Call call = boost::get<Call>(leftExpression);
-      if (call.name()=="der")
-        knowns.push_back(leftExpression);
-    } else if (is<Output>(leftExpression)) {
-      Output output = boost::get<Output>(leftExpression);
-      foreach_(OptExp oe, output.args()) {
-        if (oe)
-          knowns.push_back(oe.get());
+      ContainsUnknown occurrs(unknowns, mmo_class.syms());
+      ERROR_UNLESS(is<Equality>(equation),"Must be only equality equations here");
+      Equality eqEq = boost::get<Equality>(equation);
+      Apply(occurrs, eqEq.right_ref());
+      if (occurrs.getUsages().size()!=0) {
+        ERROR("Using no causalized unknown");
       }
+
+      ExpList::iterator known = std::find(unknowns.begin(), unknowns.end(), eqEq.left_ref());
+      if (known!=unknowns.end()) {
+        unknowns.erase(known);
+      } else {
+        ERROR("Causalizing unknown already causalized");
+      }
+
+    }
+
+    if (unknowns.size()!=0) {
+      ERROR("Uncausalized unknowns");
     } else {
-      ERROR("Unexpected type for equation's left expression\n");
+      std::cout << "Model causalized correctly\n";
     }
-
-    foreach_(Expression unknown, unknowns) {
-      Modelica::ContainsExpression occurrs(unknown);
-      if (Apply(occurrs, eqEq.right_ref())) {
-        bool isKnown = false;
-        foreach_(Expression known, knowns) {
-          if(known == unknown) {
-            isKnown = true;
-          }
-        }
-        BOOST_CHECK(isKnown);
-      }
-    }
-
-  }
 
 }
 

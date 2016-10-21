@@ -26,5 +26,8 @@
 
 namespace Causalize {
   void process_for_equations(Modelica::MMO_Class &mmo_class);
+  EquationList process_for_eq_1d(ForEq, VarSymbolTable &);
+  EquationList process_for_eq_2d(ForEq, VarSymbolTable &);
+  EquationList process_for_eq_3d(ForEq, VarSymbolTable &);
   Equation instantiate_equation(Equation, std::list<Name>, std::list<int>, VarSymbolTable &);
 }

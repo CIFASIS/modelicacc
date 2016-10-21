@@ -21,19 +21,21 @@
 #include <causalize/vector/causalization_algorithm.h>
 #include <causalize/vector/vector_graph_definition.h>
 #include <causalize/graph/graph_printer.h>
-#include <causalize/for_unrolling/process_for_equations.h>
+
 #include <util/debug.h>
 #include <util/solve/solve.h>
-#include <boost/tuple/tuple.hpp>
 
+#include <boost/tuple/tuple.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/variant/get.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/icl/discrete_interval.hpp>
 #include <boost/icl/interval_set.hpp>
-#include <sstream>
+
 #include <mmo/mmo_class.h>
 #include <ast/queries.h>
+
+#include <sstream>
 
 #define sz(a) int((a).size())
 
@@ -93,6 +95,7 @@ bool
 CausalizationStrategyVector::Causalize() {	
   int steps = 0;
   bool split = false;
+
   while(true) {
     bool causalize_some=false;
     assert(equationNumber == unknownNumber);
@@ -543,6 +546,6 @@ CausalizationStrategyVector::PrintCausalizationResult(){
     cout << "\n solve variable " << cv.unknown();
     cout << " in range " << cv.pairs << "\n";
   }
-  cout << "Cauzalization steps: " << sorted_vars.size() << "\n";
+  cout << "Causalization steps: " << sorted_vars.size() << "\n";
 }
 }

@@ -22,8 +22,7 @@ SRC_CAUSALIZE := causalize/main.cpp \
                   causalize/vector/splitfor.cpp \
                   causalize/vector/vector_graph_definition.cpp \
                   causalize/graph/graph_definition.cpp \
-                  mmo/mmo_class.cpp
-
+                  mmo/mmo_class.cpp \
 
 OBJS_CAUSALIZE = $(SRC_CAUSALIZE:.cpp=.o)
 -include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_CAUSALIZE)))
