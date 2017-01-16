@@ -138,7 +138,7 @@ int apply_tarjan(CausalizationGraph &graph, std::map<int, Causalize::ComponentPt
   DEBUG('c', "Collapsing matching vertices...\n");
 
   buildCollapsedGraph(graph, collapsedGraph);
-
+  
   std::map<DGVertex, int> vertex2component;
   boost::associative_property_map< std::map<DGVertex, int> >  component_map(vertex2component);
   std::map<DGVertex, int> dg_vertex2index;
