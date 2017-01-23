@@ -140,7 +140,6 @@ private:
     inline int Dimension() const {return intervals.size(); }
     int Size () const;
     std::list<MDI> operator-(const MDI& other);
-    std::list<MDI> Remove(const MDI& mdi, Offset offset);
     MDI ApplyOffset(Offset) const;
     MDI ApplyUsage(Usage, MDI ran = MDI({})) const;
     MDI RevertUsage(Usage usage, MDI dom = MDI({})) const;

@@ -272,24 +272,6 @@ namespace Causalize {
     return Filter(ret, other);
   }
 
-  std::list<MDI> MDI::Remove(const MDI &other, Offset offset) {
-    //TODO: Apply offset
-    if (this->Dimension()!=other.Dimension()) {
-      std::cout << *this << " " << other << "\n";
-      ERROR("Dimension error #4\n");
-    }
-    std::list<MDI> ret;
-    MDI::iterator iterA = this->begin();
-    MDI::const_iterator iterB = other.begin();
-    std::list<MDI> prod;
-    for(int i=0; i<this->Dimension(); i++) {
-      prod.push_back(Partition(*iterA,*iterB));
-      iterA++;
-      iterB++;
-    }
-    ret = CartProd(prod);
-    return Filter(ret, other);
-  }
 
   Option<MDI> MDI::operator&(const MDI &other) const {
     if (this->Dimension() != other.Dimension()) { //TODO: Is this condition OK?
