@@ -33,6 +33,7 @@ namespace Modelica {
 RemoveAlias::RemoveAlias(MMO_Class &c): _c(c) {
   StateVariablesFinder svf(c); 
   svf.findStateVariables();
+
 }
 void RemoveAlias::removeAliasEquations() {
   EquationList &el = _c.equations_ref().equations_ref();

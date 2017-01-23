@@ -36,7 +36,18 @@ using namespace Modelica;
 using namespace Modelica::AST ;
 
 namespace Causalize {
-  ContainsUnknown::ContainsUnknown(std::vector<Expression> unks, const VarSymbolTable &s): definedUnks(unks), syms(s){ }
+  ContainsUnknown::ContainsUnknown(std::vector<Expression> unks, const VarSymbolTable &s): syms(s){ 
+    int i=0;
+    for (Expression e: unks) {
+      std::stringstream ss;
+      ss << e;
+      definedUnks.insert(make_pair(ss.str(),i++));
+    }
+    
+  }
+  void ContainsUnknown::clear() {
+    usedUnks.clear(); 
+  }
 
   bool ContainsUnknown::operator()(Modelica::AST::Integer v) const { return false; }
 
@@ -98,6 +109,8 @@ namespace Causalize {
   }
 
   bool ContainsUnknown::operator()(Call call) const {
+    if ("der"!=call.name())
+      return false;
     int usage = IsUsed(call);
     if (usage!=-1) {
       usedUnks.insert(usage);
@@ -155,12 +168,13 @@ namespace Causalize {
   }
 
   int ContainsUnknown::IsUsed(Expression e) const {
-    for (int i=0; i < (int)definedUnks.size(); i++) {
-      if (definedUnks[i]==e) {
-        return i;
-      }
+    std::stringstream ss;
+    ss << e;
+    try {
+      return definedUnks.at(ss.str());
+    } catch (const std::out_of_range& oor) {
+      return -1;
     }
-    return -1;
   }
 
 }

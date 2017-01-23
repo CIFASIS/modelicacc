@@ -61,7 +61,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
   using namespace std;
   static int fsolve=1;
   Modelica::ConvertToGiNaC tog(syms);
-  Modelica::PartialEvalExpression peval(syms,true);
+  Modelica::PartialEvalExpression peval(syms,false);
   Modelica::EvalExpression eval(syms);
 
   const int size=eqs.size();
@@ -105,6 +105,8 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
       Equality eq = get<Equality>(e);
       Expression l=Apply(peval,eq.left_ref());
       Expression r=Apply(peval,eq.right_ref());
+      /*Expression l=eq.left_ref();
+      Expression r=eq.right_ref();*/
       GiNaC::ex left=Apply(tog,l);
       GiNaC::ex right=Apply(tog,r);
       if (debugIsEnabled('s')) 

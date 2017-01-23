@@ -64,10 +64,11 @@ namespace Causalize {
     bool operator()(Range) const;
 
     std::set<int> getUsages() const;
+    void clear();
   private:
     int IsUsed(Expression) const;
     mutable VarSymbolTable syms;
-    std::vector<Expression> definedUnks;
+    std::map<std::string,int> definedUnks;
     mutable std::set<int> usedUnks;
   };
 }

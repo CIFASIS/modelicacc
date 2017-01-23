@@ -33,12 +33,15 @@
 #include <iostream>
 #include <boost/variant/get.hpp>
 #include <causalize/vector/splitfor.h>
+#include "boost/date_time/posix_time/posix_time.hpp"
+
 
 
 using namespace std;
 using namespace Modelica;
 using namespace Modelica::AST;
 using namespace Causalize;
+bool solve = true;
 
 int main(int argc, char ** argv)
 {
@@ -47,7 +50,7 @@ int main(int argc, char ** argv)
   int opt;
   bool vectorial = false;
 
-  while ((opt = getopt(argc, argv, "d:v")) != -1) {
+  while ((opt = getopt(argc, argv, "d:vs")) != -1) {
     switch (opt) {
      case 'd':
        if (optarg != NULL && isDebugParam(optarg)) {
@@ -58,6 +61,9 @@ int main(int argc, char ** argv)
        break;
      case 'v':
        vectorial = true;
+       break;
+     case 's':
+       solve = false;
        break;
     }
   }
@@ -78,10 +84,14 @@ int main(int argc, char ** argv)
     sf.splitFor();
     ReducedGraphBuilder gb(mmo);
     VectorCausalizationGraph g = gb.makeGraph();
-    GraphPrinter<VectorVertexProperty,Label>  gp(g);
-    gp.printGraph("initial_graph.dot");
+    //GraphPrinter<VectorVertexProperty,Label>  gp(g);
+    //gp.printGraph("initial_graph.dot");
     CausalizationStrategyVector cs(g,mmo);
+    boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
     if(cs.Causalize()){ // Try vectorial causalization first
+      boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
+      boost::posix_time::time_duration diff = time_end - time_start;
+      std::cerr << diff.total_nanoseconds()/1e6 << std::endl;
       if(debugIsEnabled('c')){
         cs.PrintCausalizationResult();
       }
@@ -90,8 +100,12 @@ int main(int argc, char ** argv)
     }
     return 0;
   }
+  boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
   CausalizationStrategy cStrategy(mmo);
   cStrategy.Causalize();
+      boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
+      boost::posix_time::time_duration diff = time_end - time_start;
+      std::cerr << diff.total_nanoseconds()/1e6 << std::endl;
   DEBUG('c', "Causalized Equations:\n");
   foreach_(const Equation &e, mmo.equations_ref().equations_ref()) {
     if (debugIsEnabled('c'))

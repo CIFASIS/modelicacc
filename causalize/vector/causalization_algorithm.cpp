@@ -44,6 +44,7 @@ using namespace std;
 using namespace boost;
 using namespace boost::icl;
 
+extern bool solve;
 namespace Causalize {
 CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGraph g, MMO_Class &m): mmo(m){
 	graph = g;
@@ -103,7 +104,8 @@ CausalizationStrategyVector::Causalize() {
       // Finished causalizing :)
       if (debugIsEnabled('c'))
         PrintCausalizationResult();
-      SolveEquations();
+      if (solve)
+        SolveEquations();
       return true;
     }
 
@@ -185,10 +187,10 @@ CausalizationStrategyVector::Causalize() {
           remove_vertex(unk,graph);
           unknownDescriptors.remove(unk);
         }
-        stringstream ss;
+        /*stringstream ss;
         ss << "graph_" << step++ << ".dot";
         GraphPrinter<VectorVertexProperty,Label>  gp(graph);
-        gp.printGraph(ss.str());
+        gp.printGraph(ss.str());*/
       }
     }
 
@@ -268,10 +270,10 @@ CausalizationStrategyVector::Causalize() {
           remove_vertex(unk,graph);
           unknownDescriptors.erase(iter);
         }
-        stringstream ss;
+        /*stringstream ss;
         ss << "graph_" << step++ << ".dot";
         GraphPrinter<VectorVertexProperty,Label>  gp(graph);
-        gp.printGraph(ss.str());
+        gp.printGraph(ss.str());*/
       }
     }
 
