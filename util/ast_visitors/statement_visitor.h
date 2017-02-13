@@ -37,7 +37,7 @@ namespace Modelica {
       ExpList rl;
       
       if (st.rl()) {
-		  foreach_(Expression e, st.rl().get())
+		  foreach_(Expression &e, st.rl().get())
 			  rl.push_back(applyExp(e));
 		  return Assign(applyExp(left), Option<ExpList>(rl));		
 	  } else if (right) 
