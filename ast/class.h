@@ -131,7 +131,8 @@ namespace Modelica {
     DefClass,
     EnumClass,
     DerClass,
-    ExtendsClass
+    ExtendsClass,
+    ShortClass
   > ClassType;
   
   struct ClassType_ {

@@ -60,6 +60,7 @@ struct MMO_Class {
   void addStatement(Statement);
   void addInitStatement(Statement);
   
+  member_(bool,buffer);
   member_(ExtendList,extends);
   member_(ImportList,imports);
   member_(MMO_Class *,father);

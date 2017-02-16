@@ -50,7 +50,7 @@ public:
     
     void applyModification(MMO_Class &,MMO_Class &, Modification );
     void applyArgument(MMO_Class &,MMO_Class &, Argument );
-    void applyClassModification(MMO_Class &,MMO_Class &, ClassModification );
+    bool applyClassModification(MMO_Class &,MMO_Class &, ClassModification );
     
 private:
 

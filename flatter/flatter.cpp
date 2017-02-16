@@ -68,6 +68,9 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector,bool initial)
 			if (indexes.size() > 0 ) v.set_indices(indexes);
 			if ( is<Type::Class>(t_final)) {
 				MMO_Class down =  *(boost::get<Type::Class>(t_final).clase());
+        std::cout << "Flatening var " << n << "\n";
+        std::cout << "Flatening var " << down << "\n";
+        std::cout << "Flatening var " << down.buffer() << "\n";
 				//if (flatConnector || !down.isConnector()) {
 					if (v.modification()) re.applyModification(c,down,v.modification().get());
 					Flat(down,flatConnector,false);
@@ -114,8 +117,9 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector,bool initial)
 		foreach_(Equation &eq,c.initial_eqs_ref().equations_ref())	
 			eq = Apply(eqChange,eq);
 		
-		foreach_(Statement &st,c.statements_ref().statements_ref())	
+		foreach_(Statement &st,c.statements_ref().statements_ref())	{
 			st = Apply(stChange,st);
+    }
 		foreach_(Statement &st,c.initial_sts_ref().statements_ref())	
 			st = Apply(stChange,st);
 		c.types_ref().clear();	

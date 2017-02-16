@@ -49,6 +49,8 @@ void ClassFinder::expand(MMO_Class &up,MMO_Class & down)
 
 	foreach_(Name n, down.variables_ref()) {
 		Option<VarInfo> t = down.syms_ref()[n];
+    if (down.name()=="buffer")
+      continue;
 		if (t) {
 			VarInfo v = t.get();
 			OptTypeDefinition otd = resolveType(down, v.type());
@@ -80,7 +82,7 @@ void ClassFinder::expand(MMO_Class &up,MMO_Class & down)
 	foreach_(Import i, down.imports_ref())
 		up.imports_ref().push_back(i);
 
-	foreach_(Extends i, down.extends_ref())
+	foreach_(Extends i, down.extends_ref()) 
 		up.extends_ref().push_back(i);
 }
 
@@ -96,8 +98,12 @@ void ClassFinder::ExpandAll(MMO_Class &up)
 			if ( is<Type::Class>(t_final)) {
 				MMO_Class d = * (boost::get<Type::Class>(t_final).clase()) ;
 				ExpandAll(d);
-				if (e.modification())
-					applyClassModification(up,d,e.modification().get());
+				if (e.modification()) {
+					if (applyClassModification(up,d,e.modification().get())) {
+            std::cout << up.name() << " is a buffer\n";
+            up.set_buffer(true);
+          }
+        }
 				expand(up,d);
 
 			} else {std::cerr << "Error expandiendo. " << e.name() << " no es del tipo Class" << std::endl; exit(-1);}
@@ -219,11 +225,29 @@ void ClassFinder::applyModification(MMO_Class &contex, MMO_Class &target, Modifi
 	} else return;
 }
 
-void ClassFinder::applyClassModification(MMO_Class &contex, MMO_Class &target, ClassModification m)
+bool ClassFinder::applyClassModification(MMO_Class &contex, MMO_Class &target, ClassModification m)
 {
 	ExpandAll(target);
-	foreach_(Argument a , m)
+  bool flag = false;
+	foreach_(Argument a , m) {
+    if (target.name() == "buffer") {
+      if (is<ElRedecl>(a)) {
+        RedeclArg arg = get<ElRedecl>(a).argument();
+        if (is<ReplArg>(arg) && is<ShortClass>(get<ReplArg>(arg))) {
+          ShortClass sc = get<ShortClass>(get<ReplArg>(arg));
+          if (sc.derived()) { 
+            OptTypeDefinition otd = resolveType(contex, sc.derived().get());
+					  Type::Type t_final = get<1>(otd.get());
+            std::cout << "Type " << target.name();
+            std::cout << " is a buffer of " << sc.derived().get() << "\n";
+            flag = true;
+          }
+        }
+      }
+    }
 		applyArgument(contex,target,a);
+  }
+  return flag;
 }
 
 void removeArgument(ClassModification & args, Argument a)

@@ -72,8 +72,27 @@ int main(int argc, char ** argv)
 
 	if (ret) {
 		MMO_Tree mt;
-		MMO_Class mmo = mt.create(sd);
+     
+  
+    /* Add new buffer class */
+    Class c;
+    ElemList el;
+    ElemClass ec;
+    Composition comp;
+    ec.set_replaceable(true);
+    ec.set_class_element(ClassType_(ShortClass(ClassPrefixes(1,record), "T", TypePrefixes(), "Real", Option<ExpList>(), Option<ClassModification>(), Comment())));
+    el.push_back(Component(TypePrefixes(1,discrete), "Integer", Option<ExpList>(), DeclList(1,Declaration("size"))));
+    el.push_back(ec);
+    comp.set_external(false);
+    comp.set_elements(el);
+    c.set_prefixes(ClassPrefixes(1,class_prefix));
+    c.set_end_name("buffer");
+    c.set_name("buffer");
+    c.set_composition(comp);
+    sd.classes_ref().insert(sd.classes_ref().begin(), c);
+    /* Add new buffer class */
 
+		MMO_Class mmo = mt.create(sd);
 		Flatter f = Flatter();
 		Connectors co = Connectors(mmo);
     if (className == NULL) { // if no specified, flat last class

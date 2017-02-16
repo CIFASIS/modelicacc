@@ -51,7 +51,7 @@ struct SymbolTable: public std::map<Key,Value> {
 
 using namespace Modelica::AST;
 struct VarInfo {
-  VarInfo() { builtin_ = false; state_=false;};
+  VarInfo() { builtin_ = false; state_=false; buffer_=true;};
   VarInfo(TypePrefixes tp, Name n, Option<Comment> comm = Option<Comment>(), Option<Modification> mod = Option<Modification>(), Option<ExpList> ind = Option<ExpList>(), bool built = false);
   member_(TypePrefixes, prefixes);
   member_(Name, type);
@@ -60,6 +60,7 @@ struct VarInfo {
   member_(Option<ExpList>, indices);
   member_(bool, builtin);
   member_(bool, state);
+  member_(bool, buffer);
   bool isPrefix(TypePrefix);
   printable(VarInfo);
   void removePrefix(TypePrefix);

@@ -25,10 +25,11 @@
 #include <iostream>
 
 namespace Modelica {
-  MMO_Class::MMO_Class(){father_ = NULL;}
+  MMO_Class::MMO_Class(){father_ = NULL; buffer_=false;}
   MMO_Class::MMO_Class(Class &c): variables_() {
     using namespace boost;
     
+    buffer_=false;
     equations_.set_initial(false);
     statements_.set_initial(false);
     initial_eqs_.set_initial(true);
@@ -184,6 +185,7 @@ namespace Modelica {
   member_imp(MMO_Class,ExtendList,extends);
   member_imp(MMO_Class,ImportList,imports);
   member_imp(MMO_Class,MMO_Class *,father);
+  member_imp(MMO_Class,bool,buffer);
   
   bool MMO_Class::isConnector() 
   {

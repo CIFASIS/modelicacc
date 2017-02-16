@@ -103,10 +103,9 @@ void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarI
 			up.addEquation(Apply(eqChange,eq)); 
 		foreach_(Equation eq,down.initial_eqs_ref().equations())	
 			up.addInitEquation(Apply(eqChange,eq)); 
-			
-		foreach_(Statement st,down.statements_ref().statements())
+		foreach_(Statement st,down.statements_ref().statements()) 
 			up.addStatement(Apply(stChange,st));
-		foreach_(Statement st,down.initial_sts_ref().statements())
+		foreach_(Statement st,down.initial_sts_ref().statements()) 
 			up.addInitStatement(Apply(stChange,st));
 	} else {
 		ExpList index = viUp.indices().get();
@@ -133,8 +132,9 @@ void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarI
 		foreach_(Equation &eq,eqsI)	
 			eq = Apply(eqChange,eq);
 		
-		foreach_(Statement &st, sts)
+		foreach_(Statement &st, sts) {
 			st = Apply(stChange,st);
+    }
 		foreach_(Statement &st, stsI)
 			st = Apply(stChange,st);
 				
