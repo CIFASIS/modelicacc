@@ -37,6 +37,7 @@ namespace Causalize {
     } else {
       dimension = varInfo.indices().get().size();
     }
+    state = varInfo.state();
   }
 
   void VectorUnknown::SetIndex(Modelica::AST::ExpList index) {
@@ -630,6 +631,7 @@ namespace Causalize {
    ****                              LABEL                                  ****
    *****************************************************************************/
   Label::Label(IndexPairSet ips): ips(ips) {
+   def = false;
    this->RemoveDuplicates();
   }
 

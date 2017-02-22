@@ -43,7 +43,7 @@ using namespace Modelica;
 using namespace Modelica::AST;
 
 namespace Causalize { 
-ReducedGraphBuilder::ReducedGraphBuilder(MMO_Class &mmo_cl): mmo_class(mmo_cl), state_finder(mmo_cl) {
+ReducedGraphBuilder::ReducedGraphBuilder(MMO_Class &mmo_cl): mmo_class(mmo_cl), state_finder(mmo_cl, true) {
 }
 
 VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
@@ -111,6 +111,9 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
   foreach_ (VectorEquationVertex eq, equationDescriptorList){
     foreach_(VectorUnknownVertex un, unknownDescriptorList){
       Expression unknown = graph[un].unknown();
+      if (is<Call>(unknown)) {  
+        unknown = get<Call>(unknown).args().front();
+      }
       VarSymbolTable syms = mmo_class.syms_ref();
       Equation e = graph[eq].equation;
       if (is<Equality>(e)) {
@@ -120,6 +123,8 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         const bool rr = Apply(occurrs,eqq.right_ref()); 
         if(rl || rr) {
           Label ep(occurrs.GetOccurrenceIndexes());
+          if (rl && !rr) 
+            ep.def = true;
           add_edge(eq, un, ep, graph);
         } 
       } else if (is<ForEq>(e)) {
@@ -135,6 +140,8 @@ VectorCausalizationGraph ReducedGraphBuilder::makeGraph() {
         const bool rr = Apply(occurrs_for,eqq.right_ref()); 
         if(rl || rr) {
           Label ep(occurrs_for.GetOccurrenceIndexes());
+          if (rl && !rr) 
+            ep.def = true;
           add_edge(eq, un, ep, graph);
         } 
       } else

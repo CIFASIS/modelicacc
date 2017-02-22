@@ -42,6 +42,7 @@ namespace Causalize {
   struct VectorUnknown: Unknown {
     int dimension;
     std::vector<int> dimensionList;
+    bool state;
     VectorUnknown(){};
     VectorUnknown(VarInfo varInfo, Modelica::AST::Reference var);
     void SetIndex(Modelica::AST::ExpList index);
@@ -213,7 +214,7 @@ private:
    *****************************************************************************/
   class Label {
   public:
-    inline Label() {};
+    inline Label(): def(false) {};
     Label(IndexPairSet ips);
     void RemovePairs(IndexPairSet ips);
     void RemoveUnknowns(MDI const unk2remove);
@@ -221,7 +222,9 @@ private:
     unsigned long int EdgeCount();
     inline bool IsEmpty() { return ips.size()==0; }
     inline const IndexPairSet & Pairs() const { return ips; }
+    inline void SetPairs(IndexPairSet ip) { ips = ip; }
     friend std::ostream& operator<<(std::ostream& os, const Label& label);
+    bool def;
   private:
     IndexPairSet ips;
     void RemoveDuplicates();
