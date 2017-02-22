@@ -110,7 +110,7 @@ void ComputeStructure::Compute() {
               assert(omdi);
               MDI uk_dom = omdi.get();
               VectorVertex eq = GetEquation(e);
-              MDI eq_dom = uk_dom.RevertUsage(p.GetUsage());
+              MDI eq_dom = uk_dom.ApplyOffset(-p.GetOffset()).RevertUsage(p.GetUsage(), p.Dom());
               std::cout << "\tMust recompute " << graph[eq].index << " in eq range " << eq_dom << "\n";
               // Agregar al resultado las ecuaciones a calcular y sus rangos. Ojo con el orden //
              }

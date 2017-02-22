@@ -31,7 +31,7 @@ Unknown::Unknown() {}
 Unknown::Unknown(Modelica::AST::Expression exp): expression(exp) {}
 
 Unknown::Unknown(VarInfo varInfo, Modelica::AST::Reference var) {
-  if (varInfo.state()) {
+  if (false && varInfo.state()) {
     expression = Modelica::AST::Call("der",Modelica::AST::Reference(var));
   } else {
     expression = Modelica::AST::Reference(var);

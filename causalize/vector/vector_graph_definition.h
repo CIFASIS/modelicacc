@@ -76,7 +76,7 @@ namespace Causalize {
     inline void push_back(const int i) { usage.push_back(i); }
     inline bool operator==(const Usage& other) const { return this->usage == other.usage; };
     inline bool operator!=(const Usage& other) const { return this->usage != other.usage; };
-    inline int Size() { return usage.size(); }
+    inline int Size() const { return usage.size(); }
     inline bool isUnused() {
       for(int i: usage) {
         if (i!=-1) return false;
@@ -88,6 +88,7 @@ namespace Causalize {
     inline const_iterator begin() const { return usage.begin(); }
     inline iterator begin() { return usage.begin(); }
     inline iterator end() { return usage.end(); }
+    friend std::ostream& operator<<(std::ostream& os, const Usage &);
   private:
     std::vector<int> usage;
   };
@@ -120,6 +121,7 @@ namespace Causalize {
     inline iterator begin() { return offset.begin(); }
     inline iterator end() { return offset.end(); }
     inline unsigned int Size () const { return offset.size(); }
+    friend std::ostream& operator<<(std::ostream& os, const Offset &);
 private:
       std::vector<int> offset;
   };
@@ -142,6 +144,7 @@ private:
     int Size () const;
     std::list<MDI> operator-(const MDI& other);
     MDI ApplyOffset(Offset) const;
+    MDI ApplyOffset(Offset, Usage) const;
     MDI ApplyUsage(Usage, MDI ran = MDI({})) const;
     MDI RevertUsage(Usage usage, MDI dom = MDI({})) const;
     bool operator<(const MDI& other) const;

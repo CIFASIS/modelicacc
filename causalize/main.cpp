@@ -26,6 +26,7 @@
 #include <causalize/for_unrolling/process_for_equations.h>
 #include <causalize/causalization_strategy.h>
 #include <causalize/vector/causalization_algorithm.h>
+#include <causalize/vector/compute_structure.h>
 #include <causalize/vector/graph_builder.h>
 #include <causalize/graph/graph_printer.h>
 #include <cstdlib>
@@ -84,22 +85,13 @@ int main(int argc, char ** argv)
     sf.splitFor();
     ReducedGraphBuilder gb(mmo);
     VectorCausalizationGraph g = gb.makeGraph();
-    //GraphPrinter<VectorVertexProperty,Label>  gp(g);
-    //gp.printGraph("initial_graph.dot");
-    CausalizationStrategyVector cs(g,mmo);
-    boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
-    if(cs.Causalize()){ // Try vectorial causalization first
-      boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
-      boost::posix_time::time_duration diff = time_end - time_start;
-      std::cerr << diff.total_nanoseconds()/1e6 << std::endl;
-      if(debugIsEnabled('c')){
-        cs.PrintCausalizationResult();
-      }
-      cout << mmo << endl;
-      return 0;
-    }
+    GraphPrinter<VectorVertexProperty,Label>  gp(g);
+    gp.printGraph("initial_graph.dot");
+    ComputeStructure cs(g,mmo);
+    cs.Compute();
     return 0;
   }
+  abort();
   boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
   CausalizationStrategy cStrategy(mmo);
   cStrategy.Causalize();

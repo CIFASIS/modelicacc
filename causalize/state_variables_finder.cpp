@@ -34,7 +34,7 @@
 #include <util/debug.h>
 #include <cassert>
 
-StateVariablesFinder::StateVariablesFinder(MMO_Class &c): _c(c) { }
+StateVariablesFinder::StateVariablesFinder(MMO_Class &c, bool cs): _c(c), _consider_states(cs) { }
 
 void StateVariablesFinder::findStateVariables() {
   foreach_(Equation e, _c.equations().equations()) {
@@ -96,7 +96,7 @@ void StateVariablesFinder::findStateVariables() {
       abort();
     }
     void StateVariablesFinder::operator()(Call v) const { 
-      if (v.name()=="der") {
+      if (v.name()=="der"/* && !_consider_states*/) {
         ERROR_UNLESS(v.args().size()==1, "Call to der() with zero or more than one argument!");
         Expression e = v.args().front();
         ERROR_UNLESS(is<Reference>(e), "Argument to der is not a reference!");

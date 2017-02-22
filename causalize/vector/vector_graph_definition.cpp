@@ -53,6 +53,25 @@ namespace Causalize {
     }
   }
 
+  std::ostream& operator<<(std::ostream &os, const Offset &u) {
+    os << "[";
+    for (unsigned int i=0; i < u.Size() ; i++) {
+      os << u[i] << " ";
+      
+    }
+    os << "]";
+    return os;
+  }
+ 
+  std::ostream& operator<<(std::ostream &os, const Usage &u) {
+    os << "[";
+    for (int i=0; i < u.Size() ; i++) {
+      os << u[i] << " ";
+      
+    }
+    os << "]";
+    return os;
+  }
   std::ostream& operator<<(std::ostream &os, const IndexPairSet &ips) {
     std::list<std::string> ipsStList;
     foreach_(IndexPair ip, ips){
@@ -209,6 +228,17 @@ namespace Causalize {
     return mdiListRet;
   }
 
+  MDI MDI::ApplyOffset(Offset offset, Usage u) const {
+    if (this->Dimension()==0 || offset.Size()==0) {
+      return *this;
+    }
+    IntervalVector copyIntervals = intervals;
+    for(int i=0; i<(int)copyIntervals.size(); i++) {
+      copyIntervals[i] = CreateInterval(copyIntervals[i].lower()+offset[i],copyIntervals[i].upper()+offset[i]);
+    }
+    return MDI(copyIntervals);
+ 
+  }
   MDI MDI::ApplyOffset(Offset offset) const {
     //TODO: It is mandatory to "Apply" or "Revert" usage before applying this method
 //    ERROR_UNLESS((int)offset.Size()==this->Dimension(),"Dimension error applying offset"); //TODO: Review this error
