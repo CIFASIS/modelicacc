@@ -66,6 +66,7 @@ ComputeStructure::ComputeStructure(VectorCausalizationGraph g, MMO_Class& m)
 }
 
 MDI ComputeStructure::GetCandidate (VectorVertex u) {
+  // First try to use one of the ranges found on the edges
   foreach_(VectorEdge e, out_edges(u, graph)) {
     Label l = graph[e];
     for (IndexPair p : l.Pairs()) {
@@ -74,8 +75,27 @@ MDI ComputeStructure::GetCandidate (VectorVertex u) {
         return candidate;
     }
   }
-  abort();
-  return MDI();
+  // If none is found, take the first and do the intersection with the others
+  MDI candidate;
+  foreach_(VectorEdge e, out_edges(u, graph)) {
+    Label l = graph[e];
+    IndexPair p = *l.Pairs().begin();
+    candidate = p.Ran();
+    break;
+  }
+  // candidate is the first
+  //std::cout << "Taking candidate = " << candidate << " and doing intersection\n";
+  foreach_(VectorEdge e, out_edges(u, graph)) {
+    Label l = graph[e];
+    for (IndexPair p : l.Pairs()) {
+      Option<MDI> inter = p.Ran() & candidate;
+      if (inter) {
+        candidate = inter.get();
+        //std::cout << "After intersecting in with = " << p.Ran() << " candidate is " << candidate << "\n";
+      }
+    }
+  }
+  return candidate;
 }
 
 bool ComputeStructure::TestCandidate(VectorVertex u, MDI candidate) {
@@ -83,7 +103,8 @@ bool ComputeStructure::TestCandidate(VectorVertex u, MDI candidate) {
     Label l = graph[e];
     for (IndexPair p : l.Pairs()) {
       MDI m = p.Ran();
-      if (m & candidate && !m.Contains(candidate)) {
+      if ( (m & candidate) && !m.Contains(candidate)) {
+        //std::cout << "Range :" << candidate << " is bad because is not contained in " << m << "\n";
         return false;
       }
     }
@@ -95,6 +116,10 @@ void ComputeStructure::Compute() {
   int step = 0;
   for (VectorVertex u : unknownDescriptors) {
     if (graph[u].unknown.state) {
+      if (out_degree(u, graph) == 0) {// State variable not used :s
+        WARNING("State variable not used");
+        graph[u].count = 0;
+      }
       while (graph[u].count > 0) {
         MDI candidate = GetCandidate(u);
         std::cout << "For unknown " << graph[u].unknown() << " in range " << candidate << " of size " << candidate.Size() << "\n";
@@ -110,8 +135,9 @@ void ComputeStructure::Compute() {
               assert(omdi);
               MDI uk_dom = omdi.get();
               VectorVertex eq = GetEquation(e);
-              MDI eq_dom = uk_dom.ApplyOffset(-p.GetOffset()).RevertUsage(p.GetUsage(), p.Dom());
+              MDI eq_dom = p.RevertRange(uk_dom);
               std::cout << "\tMust recompute " << graph[eq].index << " in eq range " << eq_dom << "\n";
+              //std::cout << "\tP: Usage= " << p.GetUsage() << ". Offset = " << p.GetOffset() << "\n";
               // Agregar al resultado las ecuaciones a calcular y sus rangos. Ojo con el orden //
              }
          }
@@ -129,10 +155,11 @@ void ComputeStructure::Compute() {
           }
           for (VectorEdge e : rem_e)
             remove_edge(e,graph);
-          stringstream ss;
+          /*stringstream ss;
           ss << "graph_" << step++ << ".dot";
           GraphPrinter<VectorVertexProperty,Label>  gp(graph);
-          gp.printGraph(ss.str());
+          gp.printGraph(ss.str());*/
+          step++;
  
  
  

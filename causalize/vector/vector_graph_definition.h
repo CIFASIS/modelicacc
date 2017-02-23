@@ -155,8 +155,8 @@ private:
     inline bool operator==(const MDI& other) const { return this->intervals==other.intervals; };
     inline bool operator!=(const MDI& other) const { return !((*this)==other); };
 
-  private:
       IntervalVector intervals;
+  private:
       typedef IntervalVector::iterator iterator;
       typedef IntervalVector::const_iterator const_iterator;
       inline const_iterator begin() const { return intervals.begin(); }
@@ -197,6 +197,7 @@ private:
     friend std::ostream& operator<<(std::ostream& os, const IndexPair& ip);
     bool Contains(const IndexPair& other) const;
     IndexPairType Type() const;
+    MDI RevertRange(MDI unk) const;
   private:
     MDI dom, ran;
     Offset offset;

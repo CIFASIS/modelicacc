@@ -339,6 +339,36 @@ namespace Causalize {
   /*****************************************************************************
    ****                            INDEX PAIR                               ****
    *****************************************************************************/
+  MDI IndexPair::RevertRange(MDI r) const {
+    switch (this->Type()) {
+      case _N_N:  
+        {
+          Option<MDI> opt_inter = r & Ran();
+          if (opt_inter) {
+            MDI inter = opt_inter.get();
+            //std::cout << "Intersection " << inter << ":" << inter.ApplyOffset(-GetOffset()) << "\n";
+            inter = inter.ApplyOffset(-GetOffset());
+            IntervalVector newIntervals(usage.Size());
+            int usages = 0;
+            for (int i=0; i<usage.Size(); i++) {
+              if (usage[i]>=0) {
+                newIntervals[usage[i]] = inter.intervals[i];
+                usages++;
+              }
+            }
+            newIntervals.resize(usages);
+            return MDI(newIntervals);
+          }
+        }
+        break;
+      case _1_N:
+      case _N_1:
+        if (r & Ran())
+          return Dom();
+    }
+    return MDI();
+  
+  }
   std::list<IndexPair> IndexPair::operator-(const IndexPair& other) const {
     ERROR_UNLESS((this->Dom().Dimension()==other.Dom().Dimension()), "Domain dimension error in IndexPair subtraction");
     ERROR_UNLESS((this->Ran().Dimension()==other.Ran().Dimension()), "Range dimension error in IndexPair subtraction");
@@ -509,12 +539,16 @@ namespace Causalize {
   }
 
   IndexPairSet IndexPair::RemoveUnknowns(MDI unk2remove) {
+    //std::cout << "Removing " << unk2remove << " from " << *this << "\n";
     ERROR_UNLESS(this->Ran().Dimension()==unk2remove.Dimension(), "Removing unknowns of different dimension");
     switch (this->Type()) {
     case _N_N:
       if (Option<MDI> intersection = unk2remove & this->Ran()) {
         MDI ranToRemove = intersection.get();
-        MDI domToRemove = (ranToRemove.RevertUsage(usage, this->Dom())).ApplyOffset(-offset);
+        //std::cout << "ranToRemove" << ranToRemove << "\n";
+        MDI domToRemove = RevertRange(ranToRemove);
+        //MDI domToRemove = (ranToRemove.RevertUsage(usage, this->Dom())).ApplyOffset(-offset);
+        //std::cout << "domToRemove" << domToRemove << "\n";
         std::list<MDI> remainsDom = this->Dom()-domToRemove;
         std::list<MDI> remainsRan = this->Ran()-ranToRemove;
         ERROR_UNLESS(remainsDom.size()==remainsRan.size(), "Size error of remaining pairs");
@@ -724,7 +758,9 @@ namespace Causalize {
             case _N_N:
               if (checkingIP->GetUsage()==otherIP->GetUsage()) {
                 if (checkingIP->GetOffset()==otherIP->GetOffset()) { // Same usage same offset => are equals: SHOULD NOT OCCUR
-                  ERROR("This case should not occur since should not be equal pairs in a set");
+                  std::cerr << checkingIP->Ran() << ":" << otherIP->Ran() << "\n";
+                  std::cerr << checkingIP->GetOffset() << ":" << otherIP->GetOffset() << "\n";
+                  ERROR("This case should not occur since should not be equal pairs in a set1");
                   abort();
                 } else { // Same usage different offset => there is no intersection, nothing to remove
                   removeSomething = false;
@@ -773,7 +809,7 @@ namespace Causalize {
               }
             case _N_1:
               if (checkingIP->Ran()==otherIP->Ran()) { // Same range => are equals: SHOULD NOT OCCUR
-                ERROR("This case should not occur since should not be equal pairs in a set");
+                ERROR("This case should not occur since should not be equal pairs in a set2");
                 abort();
               }
               else { //No intersection => nothing to remove
@@ -799,7 +835,7 @@ namespace Causalize {
               abort();
             case _1_N:
               if (checkingIP->Dom()==otherIP->Dom()) { // Same range => are equals: SHOULD NOT OCCUR
-                ERROR("This case should not occur since should not be equal pairs in a set");
+                ERROR("This case should not occur since should not be equal pairs in a set3");
                 abort();
               }
               else { //No intersection => nothing to remove

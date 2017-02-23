@@ -114,6 +114,8 @@ namespace Causalize {
   }
 
   bool ContainsVector::operator()(Call call) const {
+    if (call.name()=="der")
+      return false;
     if (is<Call>(exp)) { //exp is a derivative expression
       Call callExpr=get<Call>(exp);
       if (call.name()=="der" && callExpr.name()=="der") {  //call and exp are derivative expressions
@@ -202,10 +204,13 @@ namespace Causalize {
              int v = get<Modelica::AST::Integer>(val);
              unk_indexes.push_back(Interval::closed(v,v)); 
              usage_indexes.push_back(-1);
-             offset_vector.push_back(0);
+             offset_vector.push_back(v);
           } else if (is<Reference>(val)) {
             Reference ind_ref = get<Reference>(val);
             std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
+            if (index_name==iterator_names.end()) {
+              std::cerr << unkRef;
+            }
             ERROR_UNLESS(index_name!=iterator_names.end(), "Usage of variable in index expression not found");
             Index i = indexes.at(index_name-iterator_names.begin());
             if (!i.exp())
@@ -229,6 +234,9 @@ namespace Causalize {
               offset *= -1;
             Reference ind_ref = get<Reference>(binop.left());
             std::vector<Name>::iterator index_name = std::find(iterator_names.begin(), iterator_names.end(), get<0>(ind_ref.ref().front()));
+            if (index_name==iterator_names.end()) {
+              std::cerr << unkRef;
+            }
             ERROR_UNLESS(index_name!=iterator_names.end(), "Usage of variable in index expression not found");
             Index i = indexes.at(index_name-iterator_names.begin());
             if (!i.exp())
