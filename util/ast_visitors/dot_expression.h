@@ -31,7 +31,7 @@ namespace Modelica {
   using namespace Modelica::AST;
   class DotExpression: public boost::static_visitor<Expression> {
   public:
-    DotExpression(Option<MMO_Class &> c, Name n, ExpList xs);
+    DotExpression(Option<MMO_Class &> c, Name n, ExpList xs, Option<MMO_Class &> cc = Option<MMO_Class &> ());
     Expression operator()(Integer v) const;
     Expression operator()(Boolean v) const;
     Expression operator()(String v) const;
@@ -53,7 +53,7 @@ namespace Modelica {
     Expression operator()(Range) const;
 	OptExp findConst(Reference v) const;
 	Option<VarSymbolTable &> syms;
-	Option<MMO_Class &> _class;
+	Option<MMO_Class &> _class, _class2;
     Name prefix;
     ExpList index;
   }; 

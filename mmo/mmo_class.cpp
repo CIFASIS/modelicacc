@@ -110,10 +110,10 @@ namespace Modelica {
 		out << INDENT << n << ";\n";
 		
     foreach_(Name n, c.types()) {
-		Option<Type::Type> t = tipos[n];
-		if (t) 
-			out << INDENT << (t.get()) << std::endl ;
-	}
+		  Option<Type::Type> t = tipos[n];
+		  if (t) 
+			  out << INDENT << (t.get()) << std::endl ;
+	  }
 	
     foreach_(Name n, c.variables()) {
       VarInfo vinfo = table[n].get();

@@ -24,7 +24,7 @@
 namespace Modelica {
 
     using namespace boost;
-    DotExpression::DotExpression(Option<MMO_Class &> m, Name n, ExpList xs): _class(m), prefix(n), index(xs) 
+    DotExpression::DotExpression(Option<MMO_Class &> m, Name n, ExpList xs, Option<MMO_Class &> cc): _class(m), prefix(n), index(xs), _class2(cc) 
     {
 	if (m)
 		syms = m.get().syms_ref();
@@ -98,6 +98,13 @@ namespace Modelica {
       ExpList list;
       foreach_(Expression e, v.args())
 		    list.push_back(ApplyThis(e));
+      std::cout << "Undotting " << v << "\n";
+      if ("put"==v.name()) {
+        return Call("BarrelB_put", list);
+      }
+      if ("pop"==v.name()) {
+        return Call("BarrelB_pop", list);
+      }
       return Call(v.name(),list);
     }
     Expression DotExpression::operator()(FunctionExp v) const { 
@@ -148,22 +155,20 @@ namespace Modelica {
 
     if (opt_vinfo) { // Check if it is a buffer
       Name ty = opt_vinfo.get().type();
+      VarInfo vinfo = opt_vinfo.get();
       if (_class) {
 	      MMO_Class c = _class.get();
-        if (v.ref().size() > 1 && get<0>(v.ref()[1])=="size") {
-	        ClassFinder cf = ClassFinder();
-          std::cerr  << "Assuming " << get<0>(v.ref()[0]) << " in " << c.name() << " is a buffer\n";
-          c.tyTable().dump();
-          syms.get().dump();
-          //Option<Type::Type> ot = c.tyTable()[get<0>(v.ref()[0])];
-		      OptTypeDefinition otd = cf.resolveDependencies(c,ty);
-          std::cout << "Type " << ty << "\n";
-		      if (otd) {
-			      typeDefinition td = otd.get();
-      			MMO_Class mc = * boost::get<Type::Class>(get <1>(td)).clase();
+        
+        if (vinfo.buffer()) {
+          ClassFinder cf = ClassFinder();
+          //std::cerr  << get<0>(v.ref()[0]) << " is a buffer!\n";
+          OptTypeDefinition otd = cf.resolveDependencies(c,ty);
+	        typeDefinition td = otd.get();
+          if (v.ref().size() > 1 && get<0>(v.ref()[1])=="size") { // Using size of buffer
+            return Call( ty + "_size",ExpList(1,Reference(get<0>(v.ref()[0]))));
+          } else if (v.ref().size() > 1) { // Accessing an message property
+            return Call( ty + "_peek_" +  get<0>(v.ref()[1]),{ Reference(get<0>(v.ref()[0])), get<1>(v.ref()[0]).front()} );
           }
-          return Call( ty + "_size",ExpList(1,Reference(get<0>(v.ref()[0]))));
-          //return Call( ty ++ "_size",ExpList(Reference(get<0>(v.ref()[0]))));
         }
         
       }
@@ -173,6 +178,36 @@ namespace Modelica {
           		return v;
         	}
 	}
+  if (_class2) {
+    MMO_Class class_buf = _class2.get();
+    VarSymbolTable vars = class_buf.syms();
+		Option<VarInfo> opt_vinfo = vars[get<0>(v.ref()[0])];
+    
+    if (opt_vinfo) { // Check if it is a buffer
+      VarInfo vinfo = opt_vinfo.get();
+      Name ty = opt_vinfo.get().type();
+        if (vinfo.buffer() && v.ref().size() > 1 && get<0>(v.ref()[1])=="size") {
+	        ClassFinder cf = ClassFinder();
+          std::cerr  << get<0>(v.ref()[0]) << " is a buffer\n";
+          //c.tyTable().dump();
+          //syms.get().dump();
+          //Option<Type::Type> ot = c.tyTable()[get<0>(v.ref()[0])];
+		      OptTypeDefinition otd = cf.resolveDependencies(class_buf,ty);
+          //std::cout << "Type " << ty << "\n";
+		      if (otd) {
+			      typeDefinition td = otd.get();
+      			MMO_Class mc = * boost::get<Type::Class>(get <1>(td)).clase();
+          }
+          return Call( ty + "_size",ExpList(1,Reference(get<0>(v.ref()[0]))));
+          //return Call( ty ++ "_size",ExpList(Reference(get<0>(v.ref()[0]))));
+        
+      }
+    }    
+
+
+
+  }
+
 	ExpList indices = index;
 	foreach_(RefTuple p,v.ref()) {
 		if (i==0 && syms)  {

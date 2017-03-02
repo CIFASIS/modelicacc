@@ -24,7 +24,7 @@
 using namespace Modelica::AST;
 
 VarInfo::VarInfo(TypePrefixes tp, Name n, Option<Comment> comm, Option<Modification> mod, Option<ExpList> ind, bool built):
-  prefixes_(tp), type_(n), comment_(comm), modification_(mod), indices_(ind), builtin_(built), state_(false) {};
+  prefixes_(tp), type_(n), comment_(comm), modification_(mod), indices_(ind), builtin_(built), state_(false), buffer_(false) {};
 member_imp(VarInfo,Modelica::AST::TypePrefixes, prefixes);
 member_imp(VarInfo,Name, type);
 member_imp(VarInfo,Option<Modelica::AST::Comment>, comment);
@@ -32,6 +32,7 @@ member_imp(VarInfo,Option<Modelica::AST::Modification>, modification);
 member_imp(VarInfo,Option<Modelica::AST::ExpList>, indices);
 member_imp(VarInfo,bool, builtin);
 member_imp(VarInfo,bool, state);
+member_imp(VarInfo,bool, buffer);
 bool VarInfo::isPrefix(TypePrefix p)
 {
 	foreach_(Option<TypePrefix> t, prefixes()) 

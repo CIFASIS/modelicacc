@@ -126,6 +126,7 @@ int main(int argc, char ** argv)
 		co.resolve(mmo);
 		if (debug) {
 			std::cerr <<  " - - - - - - - - - - - - - - - - - - - - - - - - "  << std::endl;
+			std::cerr <<  mmo  << std::endl;
 			co.Debug(filename);
 			std::cerr <<  " - - - - - - - - - - - - - - - - - - - - - - - - "  << std::endl;
 		}

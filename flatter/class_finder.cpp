@@ -100,7 +100,7 @@ void ClassFinder::ExpandAll(MMO_Class &up)
 				ExpandAll(d);
 				if (e.modification()) {
 					if (applyClassModification(up,d,e.modification().get())) {
-            std::cout << up.name() << " is a buffer\n";
+            //std::cout << up.name() << " is a buffer\n";
             up.set_buffer(true);
           }
         }
@@ -238,8 +238,8 @@ bool ClassFinder::applyClassModification(MMO_Class &contex, MMO_Class &target, C
           if (sc.derived()) { 
             OptTypeDefinition otd = resolveType(contex, sc.derived().get());
 					  Type::Type t_final = get<1>(otd.get());
-            std::cout << "Type " << target.name();
-            std::cout << " is a buffer of " << sc.derived().get() << "\n";
+            //std::cout << "Type " << target.name();
+            //std::cout << " is a buffer of " << sc.derived().get() << "\n";
             flag = true;
           }
         }

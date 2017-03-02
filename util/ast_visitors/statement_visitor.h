@@ -55,16 +55,16 @@ namespace Modelica {
     }
     
     Statement operator()(CallSt st) const { 
-		Expression n = st.n();
-		ExpList list; 
-		OptExpList out;
-		foreach_(Expression s, st.arg())
-			list.push_back(applyExp(s));
+		  Expression n = st.n();
+		  ExpList list; 
+  		OptExpList out;
+	  	foreach_(Expression s, st.arg())
+		  	list.push_back(applyExp(s));
 		
-		foreach_(OptExp s, st.out())
-			if (s) out.push_back(OptExp(applyExp(s.get())));
-			else out.push_back(OptExp());
-		  return CallSt(out,applyExp(n),list);	
+  		foreach_(OptExp s, st.out())
+	  		if (s) out.push_back(OptExp(applyExp(s.get())));
+		  	else out.push_back(OptExp());
+	    return CallSt(out,applyExp(n),list);	
     }
     
     Statement operator()(ForSt st) const { 

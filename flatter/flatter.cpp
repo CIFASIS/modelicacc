@@ -42,7 +42,13 @@ void Flatter::removeConnectorVar(MMO_Class &c)
 			if (m) {
 				typeDefinition td = m.get();
 				Type::Type t_final = get<1>(td);
+        //std::cout << "Var:" << n << ":" << vsd[n] << "\n";
 				if (!is<Type::Class>(t_final))  c.variables_ref().push_back(n);
+        if (is<Type::Class>(t_final)) {
+				  MMO_Class down =  *(boost::get<Type::Class>(t_final).clase());
+          if (down.buffer()) // Add external Object
+            c.variables_ref().push_back(n);
+        }
 			}
 	}
 }
@@ -68,9 +74,18 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector,bool initial)
 			if (indexes.size() > 0 ) v.set_indices(indexes);
 			if ( is<Type::Class>(t_final)) {
 				MMO_Class down =  *(boost::get<Type::Class>(t_final).clase());
-        std::cout << "Flatening var " << n << "\n";
-        std::cout << "Flatening var " << down << "\n";
-        std::cout << "Flatening var " << down.buffer() << "\n";
+        //std::cout << "Flatening var " << c.name() << "\n";
+        //std::cout << "Flatening var " << n << "\n";
+        //std::cout << "Flatening var " << down << "\n";
+        //std::cout << "Flatening var " << down.buffer() << "\n";
+        if (down.buffer()) {
+            Modification mod = ModEq(Call(down.name(), String(n)));
+            VarInfo vinfo(TypePrefixes(), down.name(), Option<Comment>(), mod);
+            vinfo.set_buffer(true);
+						c.syms_ref().insert(n,vinfo);
+				    c.variables_ref().push_back(n);
+            continue;
+        }
 				//if (flatConnector || !down.isConnector()) {
 					if (v.modification()) re.applyModification(c,down,v.modification().get());
 					Flat(down,flatConnector,false);
@@ -108,7 +123,7 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector,bool initial)
 	
 	//Eliminar Variables
 	if (initial) {
-		DotExpression dot = DotExpression(Option<MMO_Class &> (),"",ExpList());
+		DotExpression dot = DotExpression(Option<MMO_Class &> (),"",ExpList(), c);
 		EqDotExpression eqChange = EqDotExpression(dot);	
 		StDotExpression stChange = StDotExpression(dot);
 		
@@ -146,4 +161,5 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector,bool initial)
 		  foreach_(Equation &eq,to_delete) 
 		  eqs.erase(std::find(eqs.begin(),eqs.end(),eq));
    }
+
 }
