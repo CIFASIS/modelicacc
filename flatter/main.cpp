@@ -28,6 +28,38 @@
 #include <flatter/class_finder.h>
 #include <unistd.h>
 
+Class createFunction(Name n, Name type) {
+  Class c;
+  Composition comp;
+  ElemList el;
+  el.push_back(Component(TypePrefixes(1,input), type, Option<ExpList>(), DeclList(1,Declaration("i"))));
+  comp.set_elements(el);
+  c.set_composition(comp);
+  c.set_name(n);
+  c.set_end_name(n);
+  c.set_prefixes(ClassPrefixes(1,Modelica::AST::function));
+  std::cout << c << std::endl;
+  return c;
+}
+
+void addBufferFunctions(Name name, MMO_Class &mmo) {
+  createFunction(name + "_pop", "Barrel");
+//    Class c;
+//    ElemList el;
+//    ElemClass ec;
+//    Composition comp;
+//    ec.set_class_element(ClassType_(ShortClass(ClassPrefixes(1,record), "T", TypePrefixes(), "Real", Option<ExpList>(), Option<ClassModification>(), Comment())));
+//    el.push_back(Component(TypePrefixes(1,discrete), "Integer", Option<ExpList>(), DeclList(1,Declaration("size"))));
+//    el.push_back(ec);
+//    comp.set_external(false);
+//    comp.set_elements(el);
+//    c.set_prefixes(ClassPrefixes(1,class_prefix));
+//    c.set_end_name("buffer");
+//    c.set_name("buffer");
+//    c.set_composition(comp);
+//    //sd.classes_ref().insert(sd.classes_ref().begin(), c);
+}
+
 int main(int argc, char ** argv)
 {
 	using namespace std;
@@ -133,6 +165,11 @@ int main(int argc, char ** argv)
 
 		//f.Flat(mmo,true,true);
 		f.removeConnectorVar(mmo);
+    /* Complete buffer associated functions */
+    for (Name b : f.buffers) {
+      std::cout << "Add function for " << b << std::endl;
+      addBufferFunctions(b, mmo);
+    }
 		if (debug) std::cerr << "Final Result: " << endl;
 		if (out) {
 			if (debug) std::cout <<  mmo << std::endl;

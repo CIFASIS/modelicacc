@@ -115,8 +115,8 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
 
   EquationList ret;
   try  {
-    //if (size>1)
-    //  throw std::logic_error("Blahh");
+    if (size>1)
+      throw std::logic_error("Blahh");
     if (debugIsEnabled('s')) 
       std::cerr << "GiNaC equations " << eqns << "\n";
     GiNaC::ex solved= lsolve(eqns, vars,GiNaC::solve_algo::gauss);

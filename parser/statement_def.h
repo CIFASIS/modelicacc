@@ -34,12 +34,12 @@ BOOST_FUSION_ADAPT_STRUCT(
     (Modelica::AST::StatementList, statements_)
 )
 
-BOOST_FUSION_ADAPT_STRUCT(
+/*BOOST_FUSION_ADAPT_STRUCT(
     Modelica::AST::CallSt,
     (Modelica::AST::OptExpList, out_)
     (Modelica::AST::Expression, n_)
     (Modelica::AST::ExpList, arg_)
-)
+)*/
 
 BOOST_FUSION_ADAPT_STRUCT(
     Modelica::AST::IfSt,
@@ -109,8 +109,8 @@ namespace Modelica
 
       statement = 
                  (
-                   assign_statement
-                 | call_statement
+                   call_statement
+                 | assign_statement
                  | ret_break_st
                  | if_statement
                  | for_statement
@@ -127,7 +127,7 @@ namespace Modelica
  
       assign_statement =
                          (expression.component_reference >> ASSIGN > expression) [_val=construct<Assign>(_1,_2)]
-                       | (expression.component_reference >> expression.function_call_args) [_val=construct<Assign>(_1,_2)]
+                       //| (expression.component_reference >> expression.function_call_args) [_val=construct<Call>(_1,_2)]
                        |  expression.component_reference [_val=construct<Assign>(_1)]
                        ;
 
@@ -143,7 +143,8 @@ namespace Modelica
  
  
       call_statement =
-                          (OPAREN > expression.output_expression_list > CPAREN > ASSIGN > expression.component_reference > expression.function_call_args)
+                       (OPAREN > expression.output_expression_list > CPAREN > ASSIGN > expression.component_reference > expression.function_call_args) [ _val = construct<CallSt>(_1,_2,_3) ]
+                     | (expression.component_reference >> expression.function_call_args) [_val=construct<CallSt>(_1,_2)]
                       ;
 
       for_statement = 

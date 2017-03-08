@@ -32,6 +32,7 @@ namespace Modelica {
       
       CallSt(){};
       CallSt(OptExpList out, Expression name, ExpList args);
+      CallSt(Reference name, ExpList args);
       friend std::ostream& operator<<(std::ostream& out, const CallSt &a); // output
 
       bool operator==(const CallSt & other) const {
@@ -111,6 +112,7 @@ namespace Modelica {
     
       WhenSt(): When() {}
       WhenSt(Expression cond, StatementList el, ElseList elsew): When(cond,el,elsew) {}
+      WhenSt(Expression cond, StatementList el): When(cond,el) {}
     };
 
     struct ForSt: public For<Statement>, public StatementBase {

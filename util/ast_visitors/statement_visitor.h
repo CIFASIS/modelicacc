@@ -20,6 +20,7 @@
 #ifndef AST_VISITOR_ST
 #define AST_VISITOR_ST
 #include <boost/variant/static_visitor.hpp>
+#include <boost/variant/get.hpp>
 #include <ast/statement.h>
 
 namespace Modelica {
@@ -64,6 +65,14 @@ namespace Modelica {
   		foreach_(OptExp s, st.out())
 	  		if (s) out.push_back(OptExp(applyExp(s.get())));
 		  	else out.push_back(OptExp());
+      /* This is for buffer renaming */
+      if (is<Reference>(n)) {
+        Name name  = get<0>(get<Reference>(n).ref().front());
+		    Expression exp = Call(name,list);
+        exp = applyExp(exp);
+        Call call = get<Call>(exp);
+	      return CallSt(out,call.name(),call.args());	
+      }
 	    return CallSt(out,applyExp(n),list);	
     }
     

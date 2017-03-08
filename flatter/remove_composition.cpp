@@ -34,7 +34,7 @@ Remove_Composition::Remove_Composition() {}
 
 void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarInfo viUp)
 {
-	DotExpression _dot = DotExpression(Option<MMO_Class &> (down) ,nUp,ExpList());
+	DotExpression _dot = DotExpression(Option<MMO_Class &> (down) ,nUp,ExpList(),up);
 	foreach_(Name n,down.variables()) {
 		Option<VarInfo> viDown = down.syms_ref()[n];
 		if (viDown) {
@@ -79,7 +79,9 @@ void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarI
 			v.removePrefix(flow);
 			v.removePrefix(output);
 			v.removePrefix(input);
+      //std::cout << "Inserting " << newName << " to " << up.name() << "\n";
 			up.syms_ref().insert(newName,v);
+      //up.syms_ref().dump();
 			up.variables_ref().push_back(newName);
 		}
 	}	
@@ -95,7 +97,7 @@ void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarI
 	// MODIFICACIONES A LAS ECUACIONES Y LOS STATEMENTS 
 	
 	if (!viUp.indices()) {
-		DotExpression dot = DotExpression(Option<MMO_Class &> (down),nUp,ExpList());
+		DotExpression dot = DotExpression(Option<MMO_Class &> (down),nUp,ExpList(),down);
 		EqDotExpression eqChange = EqDotExpression(dot);	
 		StDotExpression stChange = StDotExpression(dot);
 		

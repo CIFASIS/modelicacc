@@ -48,7 +48,7 @@ void VarInfo::removePrefix(TypePrefix p)
 
 std::ostream& operator<<(std::ostream& out, const VarInfo &v) // output
 {
-  out << "type: " << v.type() << " state: " << v.state() << " builtin: " << v.builtin();
+  out << "type: " << v.type() << " state: " << v.state() << " builtin: " << v.builtin() << " buffer:" << v.buffer();
   return out;
 }
  

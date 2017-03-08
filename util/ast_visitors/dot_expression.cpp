@@ -15,243 +15,334 @@
     You should have received a copy of the GNU General Public License
     along with Modelica C Compiler.  If not, see <http://www.gnu.org/licenses/>.
 
-******************************************************************************/
-
+ ******************************************************************************/
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/lexical_cast.hpp>
 #include <util/ast_visitors/dot_expression.h>
 #include <ast/queries.h>
 #include <util/type.h>
 
 namespace Modelica {
 
-    using namespace boost;
-    DotExpression::DotExpression(Option<MMO_Class &> m, Name n, ExpList xs, Option<MMO_Class &> cc): _class(m), prefix(n), index(xs), _class2(cc) 
-    {
-	if (m)
-		syms = m.get().syms_ref();
-    };
-    Expression DotExpression::operator()(Integer v) const { 
-      return v;
-    }
-    Expression DotExpression::operator()(Boolean v) const { 
-      return v;
-    }
-    Expression DotExpression::operator()(String v) const {
-      return v;
-    }
-    Expression DotExpression::operator()(Name v) const { 
-      return v;
-    }
-    Expression DotExpression::operator()(Real v) const { 
-      return v;
-    }
-    Expression DotExpression::operator()(SubEnd v) const { 
-      return v;
-    }
-    Expression DotExpression::operator()(SubAll v) const { 
-      return v;
-    }
-    Expression DotExpression::operator()(BinOp v) const { 
-      Expression l=v.left(), r=v.right();
-      return BinOp(ApplyThis(l), v.op(), ApplyThis(r));
-    } 
-    Expression DotExpression::operator()(UnaryOp v) const { 
-      Expression e =v.exp();
-      return UnaryOp(ApplyThis(e),v.op());
-    } 
-    
-    Expression DotExpression::operator()(IfExp v) const { 
-      Expression cond = v.cond();
-      Expression then = v.then();
-      Expression elseexp = v.elseexp();
-      List<ExpPair> list;
-      foreach_(ExpPair p, v.elseif())
-		list.push_back( ExpPair( ApplyThis(get<0>(p)) , ApplyThis(get<1>(p))  ) );
-      return IfExp(ApplyThis(cond),ApplyThis(then),list,ApplyThis(elseexp));
-    }
-    
-    Expression DotExpression::operator()(Range v) const { 
-	  Expression start = v.start(),end=v.end();	
-	  if (v.step()) {
-		Expression step = v.step().get();  
-		return Range(ApplyThis(start),ApplyThis(step),ApplyThis(end));
-	  } else 
-		return Range(ApplyThis(start),ApplyThis(end));
-	  return v;
-    }
-    Expression DotExpression::operator()(Brace v) const { 
-      ExpList list;
-      foreach_(Expression e, v.args())
-		list.push_back(ApplyThis(e));
-      return Brace(list);
-    }
-    Expression DotExpression::operator()(Bracket v) const { 
-	  ExpListList list;
-	  foreach_(ExpList els, v.args()) {
-		  ExpList l;
-		  foreach_(Expression e, els)
-			l.push_back(ApplyThis(e));
-		  list.push_back(l); 	
-	  }	  
-      return Bracket(list);
-    }
-    Expression DotExpression::operator()(Call v) const { 
-      ExpList list;
-      foreach_(Expression e, v.args())
-		    list.push_back(ApplyThis(e));
-      std::cout << "Undotting " << v << "\n";
-      if ("put"==v.name()) {
-        return Call("BarrelB_put", list);
-      }
-      if ("pop"==v.name()) {
-        return Call("BarrelB_pop", list);
-      }
-      return Call(v.name(),list);
-    }
-    Expression DotExpression::operator()(FunctionExp v) const { 
-      ExpList list;
-      foreach_(Expression e, v.args())
-		list.push_back(ApplyThis(e));
-      return FunctionExp(v.name(),list);
-    }
+  using namespace boost;
 
-    Expression DotExpression::operator()(ForExp v) const {
-      Expression exp = v.exp();
-      IndexList indices;
-      foreach_(Index i, v.indices().indexes()) {
-        if (i.exp()) 
-		      indices.push_back(Index(i.name(),ApplyThis(i.exp().get())));
-        else
-		      indices.push_back(Index(i.name(),OptExp()));
-      }
-      return ForExp(ApplyThis(exp),Indexes(indices));
-    }
-    
-    Expression DotExpression::operator()(Named v) const {
-	  Expression exp = v.exp();
-      return Named(v.name(),ApplyThis(exp));
-    }
-    
-    Expression DotExpression::operator()(Output v) const {
-      OptExpList list;
-      foreach_(OptExp e, v.args())
-	     if (e)
-			list.push_back(ApplyThis(e.get()));
-		 else
-			list.push_back(OptExp());
-      return Output(list);
-    }
-  Expression DotExpression::operator()(Reference v) const {
-	int i = 0,j = v.ref().size();
-	Ref ref;
-	Name name;
-	if (syms) {
-		Option<VarInfo> opt_vinfo = syms.get()[get<0>(v.ref()[0])];
-		if (opt_vinfo && opt_vinfo.get().builtin()) { // If it is a builtin variable leave it as it is
-          		return v;	
-        	}
+  DotExpression::DotExpression(Option<MMO_Class &> m, Name n, ExpList xs, Option<MMO_Class &> cc) : _class(m), prefix(n), index(xs), _class2(cc) {
+    if (m)
+      syms = m.get().syms_ref();
+  };
 
-		OptExp opconst = findConst(v);
-		if (opconst) return opconst.get();
+  Expression DotExpression::operator()(Integer v) const {
+    return v;
+  }
 
-    if (opt_vinfo) { // Check if it is a buffer
-      Name ty = opt_vinfo.get().type();
-      VarInfo vinfo = opt_vinfo.get();
-      if (_class) {
-	      MMO_Class c = _class.get();
-        
-        if (vinfo.buffer()) {
-          ClassFinder cf = ClassFinder();
-          //std::cerr  << get<0>(v.ref()[0]) << " is a buffer!\n";
-          OptTypeDefinition otd = cf.resolveDependencies(c,ty);
-	        typeDefinition td = otd.get();
-          if (v.ref().size() > 1 && get<0>(v.ref()[1])=="size") { // Using size of buffer
-            return Call( ty + "_size",ExpList(1,Reference(get<0>(v.ref()[0]))));
-          } else if (v.ref().size() > 1) { // Accessing an message property
-            return Call( ty + "_peek_" +  get<0>(v.ref()[1]),{ Reference(get<0>(v.ref()[0])), get<1>(v.ref()[0]).front()} );
-          }
+  Expression DotExpression::operator()(Boolean v) const {
+    return v;
+  }
+
+  Expression DotExpression::operator()(String v) const {
+    return v;
+  }
+
+  Expression DotExpression::operator()(Name v) const {
+    return v;
+  }
+
+  Expression DotExpression::operator()(Real v) const {
+    return v;
+  }
+
+  Expression DotExpression::operator()(SubEnd v) const {
+    return v;
+  }
+
+  Expression DotExpression::operator()(SubAll v) const {
+    return v;
+  }
+
+  Expression DotExpression::operator()(BinOp v) const {
+    Expression l = v.left(), r = v.right();
+    return BinOp(ApplyThis(l), v.op(), ApplyThis(r));
+  }
+
+  Expression DotExpression::operator()(UnaryOp v) const {
+    Expression e = v.exp();
+    return UnaryOp(ApplyThis(e), v.op());
+  }
+
+  Expression DotExpression::operator()(IfExp v) const {
+    Expression cond = v.cond();
+    Expression then = v.then();
+    Expression elseexp = v.elseexp();
+    List<ExpPair> list;
+    foreach_(ExpPair p, v.elseif())
+    list.push_back(ExpPair(ApplyThis(get<0>(p)), ApplyThis(get<1>(p))));
+    return IfExp(ApplyThis(cond), ApplyThis(then), list, ApplyThis(elseexp));
+  }
+
+  Expression DotExpression::operator()(Range v) const {
+    Expression start = v.start(), end = v.end();
+    if (v.step()) {
+      Expression step = v.step().get();
+      return Range(ApplyThis(start), ApplyThis(step), ApplyThis(end));
+    } else
+      return Range(ApplyThis(start), ApplyThis(end));
+    return v;
+  }
+
+  Expression DotExpression::operator()(Brace v) const {
+    ExpList list;
+    foreach_(Expression e, v.args())
+    list.push_back(ApplyThis(e));
+    return Brace(list);
+  }
+
+  Expression DotExpression::operator()(Bracket v) const {
+    ExpListList list;
+
+    foreach_(ExpList els, v.args()) {
+      ExpList l;
+      foreach_(Expression e, els)
+      l.push_back(ApplyThis(e));
+      list.push_back(l);
+    }
+    return Bracket(list);
+  }
+  Expression DotExpression::operator()(Call v) const {
+    ExpList list;
+    foreach_(Expression e, v.args())
+      list.push_back(ApplyThis(e));
+    if ("couple" == v.name()) {
+      //std::cout << "Checking " << v << std::endl;
+      ERROR_UNLESS(is<Reference>(v.args().at(0)), "Calling couple with no buffer");
+      ERROR_UNLESS(is<Reference>(v.args().at(1)), "Calling couple with no buffer");
+      Name r = get<0>(get<Reference>(v.args().at(0)).ref().front());
+      Name without_prefix = (prefix.length() ? r.substr(prefix.length()+1) : r);
+      if (_class2) {
+        const VarSymbolTable &rootsyms = _class2.get().syms_ref();
+        Option<VarInfo> opt_vinfo = rootsyms[without_prefix];
+        if (opt_vinfo) {
+          VarInfo vinfo = opt_vinfo.get();
+          //std::cout << "Calling put on buffer of type " << vinfo.type() << "\n";
+          return Call(vinfo.type() + "_couple", list);
+
+        } else {
+          std::cout << "No info found for " << without_prefix << std::endl;
+          rootsyms.dump();
         }
-        
+            
+      } else if (syms) {
+        const VarSymbolTable &rootsyms = syms.get();
+        Option<VarInfo> opt_vinfo = rootsyms[without_prefix];
+        if (opt_vinfo) {
+          VarInfo vinfo = opt_vinfo.get();
+          //std::cout << "Calling put on buffer of type " << vinfo.type() << "\n";
+          return Call(vinfo.type() + "_couple", list);
+        }
       }
-    }    
+    }
+    if ("put" == v.name()) {
+      ERROR_UNLESS(is<Reference>(v.args().at(1)), "Calling put with no buffer");
+      Name r = get<0>(get<Reference>(v.args().at(1)).ref().front());
+      Name without_prefix = r.substr(prefix.length()+1);
+      if (_class2) {
+        VarSymbolTable rootsyms = _class2.get().syms_ref();
+        //TypeSymbolTable & tyTable = _class2.get().tyTable_ref();
+        Option<VarInfo> opt_vinfo = rootsyms[without_prefix];
+        if (opt_vinfo) {
+          VarInfo vinfo = opt_vinfo.get();
+          //std::cout << "Calling put on buffer of type " << vinfo.type() << "\n";
+          return Call(vinfo.type() + "_put", list);
 
-        	if (!opt_vinfo) {
-          		return v;
-        	}
-	}
-  if (_class2) {
-    MMO_Class class_buf = _class2.get();
-    VarSymbolTable vars = class_buf.syms();
-		Option<VarInfo> opt_vinfo = vars[get<0>(v.ref()[0])];
-    
-    if (opt_vinfo) { // Check if it is a buffer
-      VarInfo vinfo = opt_vinfo.get();
-      Name ty = opt_vinfo.get().type();
-        if (vinfo.buffer() && v.ref().size() > 1 && get<0>(v.ref()[1])=="size") {
-	        ClassFinder cf = ClassFinder();
-          std::cerr  << get<0>(v.ref()[0]) << " is a buffer\n";
+        } 
+      }
+      
+     /*  if (_class) {
+        Option<VarInfo> opt_vinfo = syms.get()[r];
+        if (opt_vinfo)
+          std::cout << "here3" << r << "\n";
+        else
+          std::cout << "No info1 for : " << r << "\n";
+      }*/
+      ERROR("Could not resolve type of buffer");
+    }
+    if ("pop" == v.name()) {
+      ERROR_UNLESS(is<Reference>(v.args().at(0)), "Calling pop with no buffer");
+      Name r = get<0>(get<Reference>(v.args().at(0)).ref().front());
+      Name without_prefix = 
+             (boost::starts_with(r, prefix+"_") ?
+               r.substr(prefix.length()+1)
+              : r);
+      if (_class2) {
+        VarSymbolTable rootsyms = _class2.get().syms_ref();
+        //TypeSymbolTable & tyTable = _class2.get().tyTable_ref();
+        Option<VarInfo> opt_vinfo = rootsyms[without_prefix];
+        if (opt_vinfo) {
+          VarInfo vinfo = opt_vinfo.get();
+          //std::cout << "Calling pop on buffer of type " << vinfo.type() << "\n";
+          return Call(vinfo.type() + "_pop", list);
+
+        } 
+      }
+      ERROR("Could not resolve type of buffer");
+    }
+    return Call(v.name(), list);
+  }
+
+  Expression DotExpression::operator()(FunctionExp v) const {
+    ExpList list;
+    foreach_(Expression e, v.args())
+    list.push_back(ApplyThis(e));
+    return FunctionExp(v.name(), list);
+  }
+
+  Expression DotExpression::operator()(ForExp v) const {
+    Expression exp = v.exp();
+    IndexList indices;
+
+    foreach_(Index i, v.indices().indexes()) {
+      if (i.exp())
+        indices.push_back(Index(i.name(), ApplyThis(i.exp().get())));
+      else
+        indices.push_back(Index(i.name(), OptExp()));
+    }
+    return ForExp(ApplyThis(exp), Indexes(indices));
+  }
+
+  Expression DotExpression::operator()(Named v) const {
+    Expression exp = v.exp();
+    return Named(v.name(), ApplyThis(exp));
+  }
+
+  Expression DotExpression::operator()(Output v) const {
+    OptExpList list;
+    foreach_(OptExp e, v.args())
+    if (e)
+      list.push_back(ApplyThis(e.get()));
+    else
+      list.push_back(OptExp());
+    return Output(list);
+  }
+
+  Expression DotExpression::operator()(Reference v) const {
+    int i = 0, j = v.ref().size();
+    Ref ref;
+    Name name;
+    if (syms) {
+      Option<VarInfo> opt_vinfo = syms.get()[get<0>(v.ref()[0])];
+      if (opt_vinfo && opt_vinfo.get().builtin()) { // If it is a builtin variable leave it as it is
+        return v;
+      }
+
+      OptExp opconst = findConst(v);
+      if (opconst) return opconst.get();
+
+      if (opt_vinfo ) { // Check if it is a buffer
+        
+        Name ty = opt_vinfo.get().type();
+        VarInfo vinfo = opt_vinfo.get();
+        if (_class) {
+          MMO_Class c = _class.get();
+
+          if (vinfo.buffer()) {
+            ClassFinder cf = ClassFinder();
+            //std::cerr  << get<0>(v.ref()[0]) << " is a buffer!\n";
+            OptTypeDefinition otd = cf.resolveDependencies(c, ty);
+            typeDefinition td = otd.get();
+            if (v.ref().size() > 1 && get<0>(v.ref()[1]) == "size") { // Using size of buffer
+              return Call(ty + "_size", ExpList(1, Reference(prefix + "_" + get<0>(v.ref()[0]))));
+            } else if (v.ref().size() > 1) { // Accessing an message property
+              return Call(ty + "_peek_" + get<0>(v.ref()[1]),{Reference(prefix + "_" +  get<0>(v.ref()[0])), get<1>(v.ref()[0]).front()});
+            }
+            else if (v.ref().size() == 1 && get<1>(v.ref().front()).size()) { // Accessing a message
+              return Call(ty + "_peek" ,{Reference(prefix + "_" +  get<0>(v.ref()[0])), get<1>(v.ref()[0]).front()});
+            }
+          }
+
+        }
+      }
+
+      if (!opt_vinfo) {
+        return v;
+      }
+    }
+    if (_class2) {
+      MMO_Class class_buf = _class2.get();
+      const VarSymbolTable &vars = class_buf.syms_ref();
+      Option<VarInfo> opt_vinfo = vars[get<0>(v.ref()[0])];
+      if (opt_vinfo) { // Check if it is a buffer
+        VarInfo vinfo = opt_vinfo.get();
+        Name ty = opt_vinfo.get().type();
+        //std::cout << "Checking " << v << ":" << vinfo << std::endl;
+
+        if (vinfo.buffer() && v.ref().size() > 1 && get<0>(v.ref()[1]) == "size") {
+          //std::cout << "Checking2 " << v << std::endl;
+          ClassFinder cf = ClassFinder();
+          //std::cerr << get<0>(v.ref()[0]) << " is a buffer\n";
           //c.tyTable().dump();
           //syms.get().dump();
           //Option<Type::Type> ot = c.tyTable()[get<0>(v.ref()[0])];
-		      OptTypeDefinition otd = cf.resolveDependencies(class_buf,ty);
+          OptTypeDefinition otd = cf.resolveDependencies(class_buf, ty);
           //std::cout << "Type " << ty << "\n";
-		      if (otd) {
-			      typeDefinition td = otd.get();
-      			MMO_Class mc = * boost::get<Type::Class>(get <1>(td)).clase();
+          if (otd) {
+            typeDefinition td = otd.get();
+            MMO_Class mc = *boost::get<Type::Class>(get <1>(td)).clase();
           }
-          return Call( ty + "_size",ExpList(1,Reference(get<0>(v.ref()[0]))));
+          return Call(ty + "_size", ExpList(1, Reference(get<0>(v.ref()[0]))));
           //return Call( ty ++ "_size",ExpList(Reference(get<0>(v.ref()[0]))));
-        
+
+        }
       }
-    }    
 
 
 
-  }
+    }
 
-	ExpList indices = index;
-	foreach_(RefTuple p,v.ref()) {
-		if (i==0 && syms)  {
-			if (syms.get()[get<0>(p)])
-				name = prefix + "_";
-		}
-    		name += get<0>(p) + ( i == j-1 ? "" : "_" );
-		indices += get<1>(p);
-		 i++;
-	}
-	ref.push_back(RefTuple(name,indices));
-      	return Reference(ref);
+    ExpList indices = index;
+
+    foreach_(RefTuple p, v.ref()) {
+      if (i == 0 && syms) {
+        if (syms.get()[get<0>(p)])
+          name = prefix + "_";
+      }
+      name += get<0>(p) + (i == j - 1 ? "" : "_");
+      indices += get<1>(p);
+      i++;
+    }
+    ref.push_back(RefTuple(name, indices));
+    return Reference(ref);
   }
 
   Option<Expression> DotExpression::findConst(Reference v) const {
-	ClassFinder cf = ClassFinder();
-	MMO_Class c = _class.get();
-	int i = 0;
-	foreach_(RefTuple p,v.ref()) {
-		Name n = get<0>(p);
-		OptTypeDefinition otd = cf.resolveDependencies(c,n);
-		if (otd) {
-			typeDefinition td = otd.get();
-      if (!is<Type::Class>(get <1>(td))) {
-        std::cerr << v << ":";
-        ERROR("Looking for class %s",n.c_str());
-      }
-			c = * boost::get<Type::Class>(get <1>(td)).clase();
-		} else if ( i != 0 ) {
-			Option<VarInfo> Opvv = c.syms_ref()[n];
-			if (Opvv) {
-				VarInfo vv = Opvv.get();
-				if (vv.modification() && is<ModEq>(vv.modification().get()))  {
-					Expression exp = get<ModEq>(vv.modification().get()).exp();
-					DotExpression  visitor = DotExpression(Option<MMO_Class &>(c),"",ExpList() );
-					Expression ret = Apply(visitor,exp);
-					return OptExp(ret);
-					//std::cerr << "Encontre al objetivo " << ret << std::endl;
-				}
-			} else return OptExp();
-		} else return OptExp();
-		i++;
-	}
-	return OptExp(); 
+    ClassFinder cf = ClassFinder();
+    MMO_Class c = _class.get();
+    int i = 0;
+
+    foreach_(RefTuple p, v.ref()) {
+      Name n = get<0>(p);
+      OptTypeDefinition otd = cf.resolveDependencies(c, n);
+      if (otd) {
+        typeDefinition td = otd.get();
+        if (!is<Type::Class>(get <1>(td))) {
+          std::cerr << v << ":";
+          ERROR("Looking for class %s", n.c_str());
+        }
+        c = *boost::get<Type::Class>(get <1>(td)).clase();
+      } else if (i != 0) {
+        Option<VarInfo> Opvv = c.syms_ref()[n];
+        if (Opvv) {
+          VarInfo vv = Opvv.get();
+          if (vv.modification() && is<ModEq>(vv.modification().get())) {
+            Expression exp = get<ModEq>(vv.modification().get()).exp();
+            DotExpression visitor = DotExpression(Option<MMO_Class &>(c), "", ExpList());
+            Expression ret = Apply(visitor, exp);
+            return OptExp(ret);
+            //std::cerr << "Encontre al objetivo " << ret << std::endl;
+          }
+        } else return OptExp();
+      } else return OptExp();
+      i++;
+    }
+    return OptExp();
   }
 
 }

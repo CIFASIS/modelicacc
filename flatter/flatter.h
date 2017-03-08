@@ -32,6 +32,7 @@
 #include <util/ast_visitors/dot_expression.h>
 #include <util/ast_visitors/mark_connector.h>
 #include <boost/variant/get.hpp>
+#include <set>
 
 class Flatter {
 public:
@@ -41,6 +42,7 @@ public:
 	Flatter();
 	void 			Flat(MMO_Class &c,bool flatConnector,bool initial);
 	void			removeConnectorVar(MMO_Class &c);
+        std::set<Name> buffers;
 };
 
 

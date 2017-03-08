@@ -83,8 +83,9 @@ namespace Modelica {
   member_imp(CallSt,OptExpList,out);
   member_imp(CallSt,Expression,n);
   member_imp(CallSt,ExpList,arg);
-  CallSt::CallSt(OptExpList out, Expression name, ExpList args):out_(out), n_(name), arg_(args){
-  };
+  CallSt::CallSt(OptExpList out, Expression name, ExpList args):out_(out), n_(name), arg_(args){ };
+
+  CallSt::CallSt(Reference name, ExpList args): n_(name), arg_(args){}
  
   member_imp(Assign,Modelica::AST::Expression,left);
   member_imp(Assign,OptExp,right);
