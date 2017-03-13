@@ -140,11 +140,13 @@ private:
     inline int Dimension() const {return intervals.size(); }
     int Size () const;
     std::list<MDI> operator-(const MDI& other);
+    std::list<MDI> Difference(const MDI& other) { return (*this)-other;} ;
     MDI ApplyOffset(Offset) const;
     MDI ApplyUsage(Usage, MDI ran = MDI({})) const;
     MDI RevertUsage(Usage usage, MDI dom = MDI({})) const;
     bool operator<(const MDI& other) const;
     Option<MDI> operator&(const MDI& other) const;
+    Option<MDI> Intersection (MDI& other) { return other & (*this) ;}
     friend std::ostream& operator<<(std::ostream& os, const MDI mdi);
     inline const IntervalVector & Intervals() const { return intervals; }
     bool Contains(const MDI& other) const;
@@ -186,6 +188,7 @@ private:
     inline Offset GetOffset() const { return offset; }
     inline Usage GetUsage() const { return usage; }
     std::list<IndexPair> operator-(const IndexPair& other) const;
+    std::list<IndexPair> Difference(const IndexPair& other) { return (*this) - other; }
     std::set<IndexPair> RemoveUnknowns(MDI unk2remove);
     std::set<IndexPair> RemoveEquations(MDI eqs2remove);
     bool operator<(const IndexPair& other) const;
