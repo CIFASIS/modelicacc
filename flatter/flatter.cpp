@@ -87,7 +87,7 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector, bool initial) {
           VarInfo vinfo(TypePrefixes(), down.name(), Option<Comment>(), mod);
           vinfo.set_buffer(true);
           c.syms_ref().insert(n, vinfo);
-          //std::cout << n << " is a buffer\n";
+          //std::cerr << n << " is a buffer\n";
           c.variables_ref().push_back(n);
           continue;
         }

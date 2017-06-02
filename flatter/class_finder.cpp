@@ -100,7 +100,7 @@ void ClassFinder::ExpandAll(MMO_Class &up)
 				ExpandAll(d);
 				if (e.modification()) {
 					if (applyClassModification(up,d,e.modification().get())) {
-            //std::cout << up.name() << " is a buffer\n";
+            //std::cerr << up.name() << " is a buffer\n";
             up.set_buffer(true);
           }
         }
@@ -203,6 +203,7 @@ OptTypeDefinition ClassFinder::resolveType(MMO_Class &c,Name t)
 			i++;
 		} else {
 			std::cerr << "Error buscando el tipo " << name << " en " << t << std::endl;
+			std::cerr << "Error buscando el tipo " << name << " en " << c << std::endl;
 			c.tyTable_ref().dump();
 			exit(-1);
 			return OptTypeDefinition();
@@ -230,6 +231,7 @@ bool ClassFinder::applyClassModification(MMO_Class &contex, MMO_Class &target, C
 	ExpandAll(target);
   bool flag = false;
 	foreach_(Argument a , m) {
+    //std::cout << "Here: " << target << "\n";
     if (target.name() == "buffer") {
       if (is<ElRedecl>(a)) {
         RedeclArg arg = get<ElRedecl>(a).argument();
