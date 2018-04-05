@@ -264,12 +264,12 @@ namespace Causalize {
     MDI::const_iterator iterB = other.begin();
     std::list<MDI> prod;
     for(int i=0; i<this->Dimension(); i++) {
-      prod.push_back(Partition(*iterA,*iterB));
+      prod.push_back(Partition(*iterA,*iterB)); // particiona en cada eje por posibles subconjuntos
       iterA++;
       iterB++;
     }
-    ret = CartProd(prod);
-    return Filter(ret, other);
+    ret = CartProd(prod); // Genera todos
+    return Filter(ret, other); // Filtra los que intersecan
   }
 
 
@@ -289,7 +289,7 @@ namespace Causalize {
 
   bool MDI::Contains(const MDI &other) const {
     if (this->Dimension()!=other.Dimension())
-      return false;
+      return false; // @karupayun: Is this ok?? And for example a line inside a square?
     else {
       for (int i=0; i<(int)this->intervals.size(); i++){
         if (!boost::icl::contains(this->intervals[i],other.intervals[i]))

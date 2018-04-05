@@ -104,7 +104,7 @@ CausalizationStrategyVector::Causalize() {
       // Finished causalizing :)
       if (debugIsEnabled('c'))
         PrintCausalizationResult();
-      if (solve)
+      if (solve) // @karupayun: assert(solve())?
         SolveEquations();
       return true;
     }
@@ -115,13 +115,13 @@ CausalizationStrategyVector::Causalize() {
 
     //First, we process the equations' side
     auxiliaryIter = equationDescriptors.begin();
-    for(iter = auxiliaryIter; iter != equationDescriptors.end(); iter = auxiliaryIter){
+    for(iter = auxiliaryIter; iter != equationDescriptors.end(); iter = auxiliaryIter){ // Ecuación
       // Additional iterator to erase while traversing
       auxiliaryIter++;
       EquationVertex eq = *iter;
       ERROR_UNLESS(out_degree(eq, graph) != 0, "Problem is singular, not supported yet\n");
       // Try to look for a set of indexes to causalize
-      Option<std::pair<VectorEdge,IndexPairSet> > op = CanCausalize(eq, kVertexEquation, split);
+      Option<std::pair<VectorEdge,IndexPairSet> > op = CanCausalize(eq, kVertexEquation, split); // Acá busca causalizar 
       // If we can causalize something
       if (op) {
         // We are going to causalize something
@@ -139,7 +139,7 @@ CausalizationStrategyVector::Causalize() {
         Causalize1toN(graph[unk].unknown, graph[eq].equation, causal_pair.second);
         // Update the pairs in the edge that is being causalized
         if (debugIsEnabled('c')) 
-          std::cerr << "Causalizing from the equaiton side " << causal_pair.second << std::endl;
+          std::cerr << "Causalizing from the equation side " << causal_pair.second << std::endl;
         graph[e].RemovePairs(causal_pair.second);
         // Decrement the number of uncausalized equations/unknowns
         graph[eq].count -= causal_pair.second.begin()->Dom().Size();
