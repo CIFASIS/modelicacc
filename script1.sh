@@ -1,2 +1,2 @@
 make
-bin/causalize -dc test/causalize/kofman.mo
+bin/causalize -dc -v test/causalize/pablo.mo
