@@ -6,6 +6,15 @@
 // Cada nodo debería ser (v, mdi), pero debería haber un NULL, no??
 // U = (u, mdi)
 // V = (v, mdi)
+
+struct PartVertex{
+	PartVertex (v, mdi);
+	Vertex v;
+	MDI mdi;
+};
+
+#define NIL PartVertex(NIL_VERTEX, NIL_MDI)
+
 // #define NIL = (NIL, mdiNIL)	
 // Pair_U[u] = Lista de (vertex_vecino, mdi)
 
@@ -40,15 +49,54 @@ function DFS (u) // DFS (u, mdiu)
         return false
     return true
 
+
+int DFS (PartVertex pv){
+		if (!isNil(pv.v)){
+			Vertex v = pv.v;
+			for (auto &adj : out_vertex(u)){
+				
+			}
+			
+		}
+}
+
+bool isNil (PartVertex pv){
+	return pv.v == NIL_VERTEX;
+}
+
+//findMDI , MAKE, NIL_VERTEX, NIL_MDI
+int Hopcroft-Karp (){
+		for (auto &ev : EQvertex){
+			MDI MDIev = findMDI (ev);
+			Pair_E[ev].pb (MAKE(MDIev, NIL)); // MDIev?
+		}
+		for (auto &uv : Uvertex){
+			MDI MDIuv = findMDI (ev);
+			Pair_U[uv].pb (MAKE(MDIuv, NIL));
+		}
+		int matching = 0;
+		while (BFS()){
+				for (auto &ev : EQvertex){
+						for (auto &pv : Pair_E[ev]){
+							if (isNIL(pv.v){
+								matching += DFS(pv);
+							}
+						}
+					
+				}
+		}
+		return matching;
+}
+
 function Hopcroft-Karp
     for each u in U
-        Pair_U[u] = NIL // Pair_U[u].pb(MDIentero, NIL) 
+        Pair_U[u] = NIL // Pair_U[u].pb(MDIentero, NIL) // DUDA1: "De donde saco el MDIentero?"
     for each v in V
         Pair_V[v] = NIL // Pair_V[V].pb(MDIentero, NIL)
     matching = 0 
     while BFS() == true
         for each u in U
-            if Pair_U[u] == NIL // Si alguna parte quedo con NIL
+            if Pair_U[u] == NIL // Buscamos para la parte de U que quedó en NIL
                 if DFS(u) == true // matching += DFS(parte_MDI_NIL, u)
                     matching = matching + 1
     return matching

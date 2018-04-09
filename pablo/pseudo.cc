@@ -106,3 +106,17 @@ Estructura del Algoritmo:
     }		
 	
 }
+
+/* En equations NtoN tengo la lista de vértices que luego vamos a laburar. 
+	TODO: Luego hay que crear el nuevo grafo, recorriendo esta lista y viendo si hay aristas en común (quizá ver lo que haya hecho para caso escalar)
+*/
+
+void 
+CausalizationStrategyVector::CausalizeNtoN(const VectorUnknown unk, const Equation eq, const IndexPairSet ips){
+	CausalizedVar c_var;
+	c_var.unknown = unk;
+	c_var.equation = eq;
+	c_var.pairs = ips;
+  equationsNtoN.insert(equationsNtoN.begin(), c_var);
+}
+
