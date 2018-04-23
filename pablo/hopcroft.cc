@@ -20,6 +20,31 @@ struct PartVertex{
 
 /* Quizá convenga que Dist[Vertex], sea lista de (mdi, dist) */
 
+bool BFS (){
+	Queue <PartVertex> queue;
+	for (auto &ev : EQvertex){
+		for (auto match : Pair_E[ev]){
+			MDI mdi = match.first;
+    if (match.second == NIL_VERTEX){
+		Dist[u].set_mdi (mdi, 0);
+		queue.push (PartVertex(ev, mdi));
+	}
+    else{
+		Dist[u].set_mdi (mdi, INF);
+	}
+    Dist[NIL_VERTEX].set_mdi(NIL_MDI, INF);
+    while (!queue.empty()){ 
+        PartVertex u = queue.front();
+		queue.pop();
+        if Dist[u] < Dist[NIL] // Para todo par de U que se interseque, y que la distancia se menor que la de NIL, (u', mdiu'), guardo Dist[u'] = du'
+            for each v in Adj[u] // Para todo (v, mdiv) que tengan intersección con los (u', mdiu')
+                if Dist[ Pair_V[v] ] == ∞ // Para todo mdi que interseca (v', mdiv') con dist inf
+                    Dist[ Pair_V[v] ] = Dist[u] + 1 // Esto es romper (TODO) dist[ (v, mdiv')] = du' + 1
+                    Enqueue(Q,Pair_V[v]) // Encolo (v', mdiv')
+    
+	return Dist[NIL] != ∞
+}
+
 function BFS () // Hecha(ponele)
     for each u in U
         if Pair_U[u] == NIL // Para todo par de Pair_U[u], (v_vecino, mdiU)  
@@ -63,27 +88,32 @@ int DFS (PartVertex pv){
 bool isNil (PartVertex pv){
 	return pv.v == NIL_VERTEX;
 }
+// Supuestamente están: set_mdi, buscar_value
+// Faltan: NIL_VERTEX (NIL_MDI)
 
-//findMDI , MAKE, NIL_VERTEX, NIL_MDI
 int Hopcroft-Karp (){
 		for (auto &ev : EQvertex){
-			MDI MDIev = findMDI (ev);
-			Pair_E[ev].pb (MAKE(MDIev, NIL)); // MDIev?
+			foreach_(VectorEdge e1, out_edges(ev,graph)) {
+				for (auto ip : e1.pairs()){
+					Pair_E[ev].set_mdi (ip.Dom(), NIL_VERTEX); 
+				}
+			}
 		}
 		for (auto &uv : Uvertex){
-			MDI MDIuv = findMDI (ev);
-			Pair_U[uv].pb (MAKE(MDIuv, NIL));
+			foreach_(VectorEdge e1, out_edges(uv,graph)) {
+				for (auto ip : e1.pairs()){
+					Pair_U[uv].set_mdi (ip.Ran(), NIL_VERTEX); 
+				}
+			}
 		}
 		int matching = 0;
 		while (BFS()){
-				for (auto &ev : EQvertex){
-						for (auto &pv : Pair_E[ev]){
-							if (isNIL(pv.v){
-								matching += DFS(pv);
-							}
-						}
-					
+			for (auto &ev : EQvertex){
+				vector <MDI> eps = buscar_value (Pair_E[ev], NIL_VERTEX);
+				for (auto ep : eps){
+					matching += DFS(pv);
 				}
+			}
 		}
 		return matching;
 }
