@@ -27,37 +27,39 @@ function DFS (u)
 
 struct PartVertex{
 	PartVertex (v, mdi);
-	Vertex v; // Vertice que te estas uniendo
+	Vertex v;
+	Vertex mv; // Vertice que te estas uniendo
 	VectorEdge e;
 	IndexPairSet ips;
 	IndexPair ip;
 };
 
 typedef map <MDI, PartVertex> MapMDI;
+  // if .get();
   
-MDI DFS (Vertex v, MDI mdi){ // visit, not_visited, inv_offset
+Option <MDI> DFS (Vertex v, MDI mdi){ // visit, not_visited, inv_offset
+	if (isNil(v)) return mdi; // Si es Nil retorno el MDI
+	vector <MDI> nv_mdi = filter_not_visited(u, mdi); // Para que sea un dfs filtro por no visitados
 	visit(v, mdi);
-	if (!isNil(v, mdi)){ // Filtrar la parte no nil, mepa. Pensar
+	for (auto mdi_actual : nv_mdi){
 		for (auto &edge : out_edges(v)){ // Busco todas las aristas
-			vector <MDI> mdis_unk = offsetear (mdi, label); // En base al MDI de EQ, offseteo y filtro de lo usado para tener el MDI del unknown
 			Unknown u = unknownFromEdge (edge); // Calculo la incognita de la arista
+			vector <MDI> mdis_unk = offsetear_filtrar (mdi, label); // En base al MDI de EQ, offseteo y filtro de lo usado para tener el MDI del unknown
 			for (auto mdi_unk : mdis_unk){
-				vector <MDI> nvis = not_visited (u ,mdi_unk); // Para que sea un dfs filtro por no visitados
-				visit (unk, mdi_unk); // Visito
-				for (auto mdiu : nvis){ // Para cada MDIu no visitado tenés que ver con quien matchea.
-//TODO(karupayun): Recuperar no solo el MDI sino todo.------------------------------------------------------------------------------
-					vector <MDI> match_mdi = buscar_value (Pair_U[u], mdiu); 
-					MDI matcheado_e = (DFS (match_mdi) = );
-					if (!empty(matcheado_v)){
-					  matcheado_u = inv_offset (matcheado_v);
-					  Pair_V[.set_mdi(arista??, U, matcheado_v);
-					  Pair_U.set_mdi(arista??, V, matcheado_u);
+				vector <mapMDI> match_mdis = buscar_todo (Pair_U[u], mdi_unk); // Toda la información de los matcheos de U, que se los paso a E
+				for (auto match_mdi : match_mdis){
+					MDI matcheado_e = DFS (match_mdi.V, match_mdi.ip.Dom()); //O algo así
+					if (!empty(matcheado_e)){
+						matcheado_u = inv_offset (matcheado_v);
+						Pair_V[.set_mdi(arista??, U, matcheado_v); // TODO: toda la info
+						Pair_U.set_mdi(arista??, V, matcheado_u); // + toda la info
+						return matcheado_e;
 					}
-//----------------------------------------------------------------------------------------------------------------------------------
 				}
 			}
 		}
 	}
+	return Option<MDI> (); // Return false
 }
 
 
@@ -65,7 +67,7 @@ int DFS-Match (){
 	for (auto &ev : EQvertex){
 		foreach_(VectorEdge e1, out_edges(ev,graph)) {
 			for (auto ip : e1.pairs()){
-				Pair_E[ev].set_mdi (ip.Dom(), NIL_VERTEX); 
+				Pair_E[ev].set_mdi (ip.Dom(), NIL_VERTEX); // TODO: No olvidar setear los offset y esas cosas para el DFS 
 			}
 		}
 	}
@@ -77,10 +79,20 @@ int DFS-Match (){
 		}
 	}
 	int matching = 0;
-	for (auto &ev : EQvertex){
-		vector <MDI> eps = buscar_value (Pair_E[ev], NIL_VERTEX); // Acá tiene que usarse buscar uno!
-		for (auto ep : eps){
-			matching += DFS(ev, ep);
+
+	bool founded = true;
+	while (founded){ 
+		founded = false;
+		for (auto &ev : EQvertex){
+			if (founded) break;
+			vector <MDI> eps = buscar_value (Pair_E[ev], NIL_VERTEX); // Acá tiene que usarse buscar uno!
+			for (auto ep : eps){
+				if (Option <MDI> aux_mdi = DFS (ev, ep)){
+					matching += aux_mdi.get().size;
+					founded = true;
+					break;
+				}
+			}
 		}
 	}
 	return matching;
