@@ -38,6 +38,30 @@ typedef std::map <MDI, Label> MapMDI;
 	std::map <VectorVertex, MapMDI> Pair_E;
 	std::map <VectorVertex, MapMDI> Pair_U;
 	
+	vector <MDI> buscar_mdi (MapMDI lv, MDI mdi){
+		vector <MDI> rta;
+		for (auto par : lv){
+			if (interseca (par.first, mdi)){
+				rta.push_back (intersection (par.first, mdi));
+			}
+		}
+		return rta;
+	}
+
+	vector <MDI> buscar_value (MapMDI lv){
+		vector <MDI> rta;
+		for (auto par : lv){
+			IndexPairSet ips = par.second.ips;
+			for (auto ip : ips){
+				if (isNil(ip.second){
+					rta.push_back (par.first);
+				}
+			}
+		}
+		return rta;
+	}
+	
+	
 	Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ // visit, not_visited, inv_offset
 		if (isNil(v, graph)) return mdi; // Si es Nil retorno el MDI
 		std::vector <MDI> nv_mdis = filter_not_visited(v, mdi); // Para que sea un dfs filtro por no visitados
@@ -52,8 +76,8 @@ typedef std::map <MDI, Label> MapMDI;
 					if (matcheado_e){
 						MDI matcheado_u = offset (matcheado_e, match_mdi);
 						MDI mdi_e = inv_offset (matcheado_v, edge);
-						Pair_E[v].set_mdi(mdi_e, edge);
-						Pair_U[u].set_mdi(matcheado_e, edge); 
+						Pair_E[v].set_mdi(mdi_e, edge, u);
+						Pair_U[u].set_mdi(matcheado_e, edge, v); 
 						return mdi_e;
 					}
 				}
@@ -85,7 +109,7 @@ typedef std::map <MDI, Label> MapMDI;
 			founded = false;
 			for (auto &ev : EQvertex){
 				if (founded) break;
-				vector <MDI> eps = buscar_value (Pair_E[ev], NIL_VERTEX); // Acá tiene que usarse buscar uno!
+				std::vector <MDI> eps = buscar_NIL (Pair_E[ev]); // Acá tiene que usarse buscar uno!
 				for (auto ep : eps){
 					if (Option <MDI> aux_mdi = DFS (ev, ep, graph)){
 						matching += aux_mdi.get().Size();
