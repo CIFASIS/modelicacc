@@ -64,15 +64,17 @@ bool isNil (PartVertex pv){
 	return pv.v == NIL_VERTEX;
 }
 
-//findMDI , MAKE, NIL_VERTEX, NIL_MDI
+//findMDIs, NIL_VERTEX, isNIL
 int Hopcroft-Karp (){
 		for (auto &ev : EQvertex){
-			MDI MDIev = findMDI (ev);
-			Pair_E[ev].pb (MAKE(MDIev, NIL)); // MDIev?
+			vector <MDI> MDIev = findMDIs (ev); // Esto lo puedo robar de CanCausalize(), recorriendo las aristas
+			forall (auto mdi : MDIev)
+				Pair_E[ev].set_mdi (mdi, NIL_VERTEX); // MDIev?
 		}
 		for (auto &uv : Uvertex){
-			MDI MDIuv = findMDI (ev);
-			Pair_U[uv].pb (MAKE(MDIuv, NIL));
+			vector <MDI> MDIuv = findMDIs (uv); // Esto lo puedo robar de CanCausalize(), recorriendo las aristas
+			forall (auto mdi : MDIuv)
+				Pair_U[uv].set_mdi (mdi, NIL_VERTEX); // MDIev?
 		}
 		int matching = 0;
 		while (BFS()){
@@ -82,7 +84,6 @@ int Hopcroft-Karp (){
 								matching += DFS(pv);
 							}
 						}
-					
 				}
 		}
 		return matching;
