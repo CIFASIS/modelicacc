@@ -17,6 +17,7 @@ OBJS_CAUSALIZE2 := $(OBJS_COMMON) \
             util/ginac_interface.o \
             causalize/state_variables_finder.o \
             causalize/unknowns_collector.o \
+            causalize/vector_matching.o\
 			causalize/causalization_strategy.o\
             causalize/cycles_identification_strategy.o \
             causalize/for_unrolling/process_for_equations.o

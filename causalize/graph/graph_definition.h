@@ -30,7 +30,7 @@
 
 namespace Causalize {
   /// @brief Vertex in the incidence graph can be either Equations or Unknowns. This type is used for distinguish between them
-  enum VertexType {kVertexEquation, kVertexUnknown};
+  enum VertexType {kVertexEquation, kVertexUnknown, kNilVertex};
 
   struct Unknown {
     Modelica::AST::Expression expression;

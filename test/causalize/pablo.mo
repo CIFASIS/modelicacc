@@ -1,5 +1,5 @@
 model RLC
-  constant Integer N = 5;
+  constant Integer N = 1000000000;
   Real A[N], B[N];
 equation
 	A[1] = 5;
