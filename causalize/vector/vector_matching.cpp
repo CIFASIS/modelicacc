@@ -86,18 +86,24 @@ typedef std::map <MDI, Label> MapMDI;
 		return Option<MDI> (); // Return false
 	}
 
+	Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ return Option<MDI> ();}
 
-	int dfs_matching (VectorCausalizationGraph graph){
-		for (auto &ev : EQvertex){
+	int dfs_matching (VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> EQVertex, 
+										std::list<Causalize::VectorVertex> UVertex){
+		VectorVertexProperty NIL;
+		NIL.type = kNilVertex;
+		VectorVertex NIL_VERTEX = add_vertex(NIL, graph); // TEST: Lo estará agregando? 
+		
+		for (auto &ev : EQVertex){
 			foreach_(VectorEdge e1, out_edges(ev,graph)) {
-				for (auto ip : e1.pairs()){
+				for (auto ip : graph[e1].Pairs()){
 					Pair_E[ev].set_mdi (ip.Dom(), NIL_VERTEX); // TODO: No olvidar setear los offset y esas cosas para el DFS 
 				}
 			}
 		}
-		for (auto &uv : Uvertex){
+		for (auto &uv : UVertex){
 			foreach_(VectorEdge e1, out_edges(uv,graph)) {
-				for (auto ip : e1.pairs()){
+				for (auto ip : graph[e1].Pairs()){
 					Pair_U[uv].set_mdi (ip.Ran(), NIL_VERTEX); 
 				}
 			}
@@ -107,7 +113,7 @@ typedef std::map <MDI, Label> MapMDI;
 		bool founded = true;
 		while (founded){ 
 			founded = false;
-			for (auto &ev : EQvertex){
+			for (auto &ev : EQVertex){
 				if (founded) break;
 				std::vector <MDI> eps = buscar_NIL (Pair_E[ev]); // Acá tiene que usarse buscar uno!
 				for (auto ep : eps){
@@ -120,6 +126,11 @@ typedef std::map <MDI, Label> MapMDI;
 			}
 		}
 		return matching;
+	}
+	
+	struct PalPair{ // De cada Vertex, MDI a esto:
+		VectorVertex v;
+		VectorEdge e; // Puede estar vacía si el v es NIL
 	}
 		
   
