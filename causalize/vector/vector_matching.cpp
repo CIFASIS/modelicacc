@@ -22,54 +22,90 @@
  *      Author: Pablo Zimmermann
  */
 
+#include <boost/graph/adjacency_list.hpp>
 #include <causalize/vector/vector_matching.h>
 #include <causalize/vector/vector_graph_definition.h>
+#include <causalize/vector/causalization_algorithm.h>
 #include <map>
+#include <list>
 #include <vector>
 
 namespace Causalize{
+
+struct Match{
+	Match (Label lab, VectorVertex v, VectorEdge e): lab(lab), v(v), e(e){}
+	Label lab;
+	VectorVertex v;
+	VectorEdge e;	
+};
   
-typedef std::map <MDI, Label> MapMDI;
+typedef std::map <MDI, Match> MapMDI;
+
+	Vertex GetEquation(Edge e, VectorCausalizationGraph graph) {
+	  return ((graph[(source(e,graph))].type==kVertexEquation))?source(e,graph):target(e,graph);
+	}
+
+
+	Vertex GetUnknown(Edge e, VectorCausalizationGraph graph) {
+	  return ((graph[(target(e,graph))].type==kVertexUnknown))?target(e,graph):source(e,graph);
+	}
+
   
 	bool isNil (VectorVertex v, VectorCausalizationGraph graph){
 		return graph[v].type == kNilVertex;
 	}
-	
+	// TODO(karupayun): Ver que son el Usage y el Offset
 	std::map <VectorVertex, MapMDI> Pair_E;
 	std::map <VectorVertex, MapMDI> Pair_U;
+	std::map <VectorVertex, std::list <MDI>> Visitados;
 	
-	vector <MDI> buscar_mdi (MapMDI lv, MDI mdi){
-		vector <MDI> rta;
+	void visit (VectorVertex v, MDI mdi){
+		Visitados[v].push_back(mdi);		
+	}
+	
+	std::list <MDI> filter_not_visited (VectorVertex v, MDI mdi){
+		std::list <MDI> rta (1,mdi);
+		for (auto vis : Visitados[v]){
+			std::list <MDI> new_list;
+			for (auto act_mdi : rta){
+				new_list.splice(new_list.end(), act_mdi-vis);
+			}
+			rta = new_list;
+		}
+		return rta;
+	}
+	
+	std::list <MDI> buscar_mdi (MapMDI lv, MDI mdi){
+		std::list <MDI> rta;
 		for (auto par : lv){
-			if (interseca (par.first, mdi)){
-				rta.push_back (intersection (par.first, mdi));
+			Option <MDI> inter_mdi = par.first & mdi;
+			if (inter_mdi){
+				rta.push_back (inter_mdi.get());
 			}
 		}
 		return rta;
 	}
 
-	vector <MDI> buscar_value (MapMDI lv){
-		vector <MDI> rta;
+	std::list <MDI> buscar_NIL (MapMDI lv, VectorCausalizationGraph graph){
+		std::list <MDI> rta;
 		for (auto par : lv){
-			IndexPairSet ips = par.second.ips;
-			for (auto ip : ips){
-				if (isNil(ip.second){
-					rta.push_back (par.first);
-				}
+			VectorVertex v = par.second.v;
+			if (isNil(v, graph)){
+				rta.push_back (par.first);
 			}
 		}
 		return rta;
 	}
 	
-	
 	Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ // visit, not_visited, inv_offset
 		if (isNil(v, graph)) return mdi; // Si es Nil retorno el MDI
-		std::vector <MDI> nv_mdis = filter_not_visited(v, mdi); // Para que sea un dfs filtro por no visitados
+		std::list <MDI> nv_mdis = filter_not_visited(v, mdi); // Para que sea un dfs filtro por no visitados
 		visit(v, mdi);
 		for (auto nv_mdi : nv_mdis){
-			for (auto &edge : out_edges(v, graph)){ // Busco todas las aristas
-				Unknown u = unknownFromEdge (edge); // Calculo la incognita de la arista
-				MDI unk_mdi = offsetear (mdi, label); // En base al MDI de EQ, offseteo para tener el MDI del unknown correspondiente
+			foreach_(VectorEdge edge, out_edges(v,graph)) { // Busco todas las aristas
+				Vertex u = GetUnknown (edge, graph); // Calculo la incognita de la arista
+				//TODO (karupayun): Pensar. Necesito aparte del Label el ip correspondiente? Capaz que si. Que necesito??
+				MDI unk_mdi = mdi.ApplyOffset (edge.label.Pairs()); // En base al MDI de EQ, offseteo para tener el MDI del unknown correspondiente
 				mapMDI match_mdis = get_match_mdis (Pair_U[u], unk_mdi); // Toda la información de los matcheos de U, que se los paso a E
 				for (auto match_mdi : match_mdis){
 					Option <MDI> matcheado_e = DFS (match_mdi.second.eq, match_mdi.first); 
@@ -87,40 +123,41 @@ typedef std::map <MDI, Label> MapMDI;
 	}
 
 
-	int dfs_matching (VectorCausalizationGraph graph){
-		for (auto &ev : EQvertex){
-			foreach_(VectorEdge e1, out_edges(ev,graph)) {
-				for (auto ip : e1.pairs()){
-					Pair_E[ev].set_mdi (ip.Dom(), NIL_VERTEX); // TODO: No olvidar setear los offset y esas cosas para el DFS 
-				}
-			}
-		}
-		for (auto &uv : Uvertex){
-			foreach_(VectorEdge e1, out_edges(uv,graph)) {
-				for (auto ip : e1.pairs()){
-					Pair_U[uv].set_mdi (ip.Ran(), NIL_VERTEX); 
-				}
-			}
-		}
-		int matching = 0;
+	//~ int dfs_matching (VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &equationDescriptors, std::list<Causalize::VectorVertex> &unknownDescriptors){
+		//~ //Crear Vértice NIL
+		//~ for (auto &ev : equationDescriptors){
+			//~ foreach_(VectorEdge e1, out_edges(ev,graph)) {
+				//~ for (auto ip : e1.pairs()){
+					//~ Pair_E[ev].set_mdi (ip.Dom(), NIL_VERTEX); // TODO: No olvidar setear los offset y esas cosas para el DFS 
+				//~ }
+			//~ }
+		//~ }
+		//~ for (auto &uv : Uvertex){
+			//~ foreach_(VectorEdge e1, out_edges(uv,graph)) {
+				//~ for (auto ip : e1.pairs()){
+					//~ Pair_U[uv].set_mdi (ip.Ran(), NIL_VERTEX); 
+				//~ }
+			//~ }
+		//~ }
+		//~ int matching = 0;
 
-		bool founded = true;
-		while (founded){ 
-			founded = false;
-			for (auto &ev : EQvertex){
-				if (founded) break;
-				std::vector <MDI> eps = buscar_NIL (Pair_E[ev]); // Acá tiene que usarse buscar uno!
-				for (auto ep : eps){
-					if (Option <MDI> aux_mdi = DFS (ev, ep, graph)){
-						matching += aux_mdi.get().Size();
-						founded = true;
-						break;
-					}
-				}
-			}
-		}
-		return matching;
-	}
+		//~ bool founded = true;
+		//~ while (founded){ 
+			//~ founded = false;
+			//~ for (auto &ev : EQvertex){
+				//~ if (founded) break;
+				//~ std::list <MDI> eps = buscar_NIL (Pair_E[ev]); // Acá tiene que usarse buscar uno!
+				//~ for (auto ep : eps){
+					//~ if (Option <MDI> aux_mdi = DFS (ev, ep, graph)){
+						//~ matching += aux_mdi.get().Size();
+						//~ founded = true;
+						//~ break;
+					//~ }
+				//~ }
+			//~ }
+		//~ }
+		//~ return matching;
+	//~ }
 		
   
 } // Causalize
