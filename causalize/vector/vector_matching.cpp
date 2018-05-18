@@ -105,7 +105,7 @@ typedef std::map <MDI, Match> MapMDI;
 			foreach_(VectorEdge edge, out_edges(v,graph)) { // Busco todas las aristas
 				Vertex u = GetUnknown (edge, graph); // Calculo la incognita de la arista
 				//TODO (karupayun): Pensar. Necesito aparte del Label el ip correspondiente? Capaz que si. Que necesito??
-				MDI unk_mdi = mdi.ApplyOffset (edge.label.Pairs()); // En base al MDI de EQ, offseteo para tener el MDI del unknown correspondiente
+				MDI unk_mdi = mdi.ApplyOffset (graph[edge].Pairs()); // En base al MDI de EQ, offseteo para tener el MDI del unknown correspondiente
 				mapMDI match_mdis = get_match_mdis (Pair_U[u], unk_mdi); // Toda la información de los matcheos de U, que se los paso a E
 				for (auto match_mdi : match_mdis){
 					Option <MDI> matcheado_e = DFS (match_mdi.second.eq, match_mdi.first); 
@@ -122,42 +122,53 @@ typedef std::map <MDI, Match> MapMDI;
 		return Option<MDI> (); // Return false
 	}
 
+	Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ return Option<MDI> ();}
 
-	//~ int dfs_matching (VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &equationDescriptors, std::list<Causalize::VectorVertex> &unknownDescriptors){
-		//~ //Crear Vértice NIL
-		//~ for (auto &ev : equationDescriptors){
-			//~ foreach_(VectorEdge e1, out_edges(ev,graph)) {
-				//~ for (auto ip : e1.pairs()){
-					//~ Pair_E[ev].set_mdi (ip.Dom(), NIL_VERTEX); // TODO: No olvidar setear los offset y esas cosas para el DFS 
-				//~ }
-			//~ }
-		//~ }
-		//~ for (auto &uv : Uvertex){
-			//~ foreach_(VectorEdge e1, out_edges(uv,graph)) {
-				//~ for (auto ip : e1.pairs()){
-					//~ Pair_U[uv].set_mdi (ip.Ran(), NIL_VERTEX); 
-				//~ }
-			//~ }
-		//~ }
-		//~ int matching = 0;
+	int dfs_matching (VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> EQVertex, 
+										std::list<Causalize::VectorVertex> UVertex){
+		VectorVertexProperty NIL;
+		NIL.type = kNilVertex;
+		VectorVertex NIL_VERTEX = add_vertex(NIL, graph); // TEST: Lo estará agregando? 
+		
+		for (auto &ev : EQVertex){
+			foreach_(VectorEdge e1, out_edges(ev,graph)) {
+				for (auto ip : graph[e1].Pairs()){
+					Pair_E[ev].set_mdi (ip.Dom(), NIL_VERTEX); // TODO: No olvidar setear los offset y esas cosas para el DFS 
+				}
+			}
+		}
+		for (auto &uv : UVertex){
+			foreach_(VectorEdge e1, out_edges(uv,graph)) {
+				for (auto ip : graph[e1].Pairs()){
+					Pair_U[uv].set_mdi (ip.Ran(), NIL_VERTEX); 
+				}
+			}
+		}
+		int matching = 0;
 
-		//~ bool founded = true;
-		//~ while (founded){ 
-			//~ founded = false;
-			//~ for (auto &ev : EQvertex){
-				//~ if (founded) break;
-				//~ std::list <MDI> eps = buscar_NIL (Pair_E[ev]); // Acá tiene que usarse buscar uno!
-				//~ for (auto ep : eps){
-					//~ if (Option <MDI> aux_mdi = DFS (ev, ep, graph)){
-						//~ matching += aux_mdi.get().Size();
-						//~ founded = true;
-						//~ break;
-					//~ }
-				//~ }
-			//~ }
-		//~ }
-		//~ return matching;
-	//~ }
+		bool founded = true;
+		while (founded){ 
+			founded = false;
+			for (auto &ev : EQVertex){
+				if (founded) break;
+				std::vector <MDI> eps = buscar_NIL (Pair_E[ev]); // Acá tiene que usarse buscar uno!
+				for (auto ep : eps){
+					if (Option <MDI> aux_mdi = DFS (ev, ep, graph)){
+						matching += aux_mdi.get().Size();
+						founded = true;
+						break;
+					}
+				}
+			}
+		}
+		return matching;
+	}
+	
+	struct PalPair{ // De cada Vertex, MDI a esto:
+		VectorVertex v;
+		VectorEdge e; // Puede estar vacía si el v es NIL
+	};
+
 		
   
 } // Causalize
