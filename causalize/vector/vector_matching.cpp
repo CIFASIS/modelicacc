@@ -1,3 +1,14 @@
+/***
+ * 
+ * 
+ * TODO: Tema de MatchStruct, está todo comentado
+ * 
+ * 
+ * 
+ * 
+ * ****************/
+
+
 /*****************************************************************************
 
     This file is part of Modelica C Compiler.
@@ -32,14 +43,15 @@
 
 namespace Causalize{
 
-struct Match{
-	Match (Label lab, VectorVertex v, VectorEdge e): lab(lab), v(v), e(e){}
-	Label lab;
-	VectorVertex v;
+struct MatchStruct{
+	//~ MatchStruct (IndexPair ip, VectorVertex v, VectorEdge e): ip(ip), v(v), e(e){}
+	//~ IndexPair ip;
+	Offset of;
+	VectorVertex v; // Matcheado
 	VectorEdge e;	
 };
   
-typedef std::map <MDI, Match> MapMDI;
+typedef std::map <MDI, MatchStruct> MapMDI;
 
 	Vertex GetEquation(Edge e, VectorCausalizationGraph graph) {
 	  return ((graph[(source(e,graph))].type==kVertexEquation))?source(e,graph):target(e,graph);
@@ -97,6 +109,37 @@ typedef std::map <MDI, Match> MapMDI;
 		return rta;
 	}
 	
+	MapMDI get_match_mdis (MapMDI map_unk, MDI unk_mdi){
+		MapMDI rta;
+		Option <MDI> aux;
+		for (auto par : map_unk){
+			if (aux = par.first & unk_mdi){
+				rta[aux.get()] = par.second;
+			}
+		}
+		return rta;	
+	} 
+	
+	void set_mdi_e (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e = VectorEdge()){
+		MapMDI rta;
+		for (auto par : Pair_E[v]){
+			MDI aux = par.first;
+			for (auto dif : aux-mdi)
+				rta[dif] = par.second;		
+		}
+		//~ rta[mdi] = MatchStruct (ip,v_match,e);
+	}
+	
+	void set_mdi_u (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e = VectorEdge()){
+		MapMDI rta;
+		for (auto par : Pair_U[v]){
+			MDI aux = par.first;
+			for (auto dif : aux-mdi)
+				rta[dif] = par.second;		
+		}
+		//~ rta[mdi] = MatchStruct (ip,v_match,e);
+	}
+	
 	Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ // visit, not_visited, inv_offset
 		if (isNil(v, graph)) return mdi; // Si es Nil retorno el MDI
 		std::list <MDI> nv_mdis = filter_not_visited(v, mdi); // Para que sea un dfs filtro por no visitados
@@ -104,25 +147,27 @@ typedef std::map <MDI, Match> MapMDI;
 		for (auto nv_mdi : nv_mdis){
 			foreach_(VectorEdge edge, out_edges(v,graph)) { // Busco todas las aristas
 				Vertex u = GetUnknown (edge, graph); // Calculo la incognita de la arista
-				//TODO (karupayun): Pensar. Necesito aparte del Label el ip correspondiente? Capaz que si. Que necesito??
-				MDI unk_mdi = mdi.ApplyOffset (graph[edge].Pairs()); // En base al MDI de EQ, offseteo para tener el MDI del unknown correspondiente
-				mapMDI match_mdis = get_match_mdis (Pair_U[u], unk_mdi); // Toda la información de los matcheos de U, que se los paso a E
-				for (auto match_mdi : match_mdis){
-					Option <MDI> matcheado_e = DFS (match_mdi.second.eq, match_mdi.first); 
-					if (matcheado_e){
-						MDI matcheado_u = offset (matcheado_e, match_mdi);
-						MDI mdi_e = inv_offset (matcheado_v, edge);
-						Pair_E[v].set_mdi(mdi_e, edge, u);
-						Pair_U[u].set_mdi(matcheado_e, edge, v); 
-						return mdi_e;
+				for (auto ip : graph[edge].Pairs()){
+					//TODO (karupayun): Pensar. Necesito aparte del Label el ip correspondiente? Capaz que si. Que necesito??
+					Option <MDI> inter_mdi = nv_mdi & ip.Dom();
+					if (!inter_mdi) continue;
+					MDI unk_mdi = inter_mdi.get().ApplyOffset (ip.GetOffset()); // En base al MDI de EQ, offseteo para tener el MDI del unknown correspondiente
+					MapMDI match_mdis = get_match_mdis (Pair_U[u], unk_mdi); // Toda la información de los matcheos de U, que se los paso a E
+					for (auto match_mdi : match_mdis){
+						Option <MDI> matcheado_e = DFS (match_mdi.second.v, match_mdi.first, graph); 
+						if (matcheado_e){
+							MDI matcheado_u = matcheado_e.get().ApplyOffset (-match_mdi.second.ip.GetOffset());
+							MDI mdi_e = matcheado_u.ApplyOffset(ip.GetOffset());
+							set_mdi_e(v, mdi_e, ip, u, edge);    
+							set_mdi_u(u, matcheado_u, ip, v, edge);
+							return mdi_e;
+						}
 					}
 				}
 			}
 		}
 		return Option<MDI> (); // Return false
 	}
-
-	Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ return Option<MDI> ();}
 
 	int dfs_matching (VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> EQVertex, 
 										std::list<Causalize::VectorVertex> UVertex){
@@ -133,14 +178,14 @@ typedef std::map <MDI, Match> MapMDI;
 		for (auto &ev : EQVertex){
 			foreach_(VectorEdge e1, out_edges(ev,graph)) {
 				for (auto ip : graph[e1].Pairs()){
-					Pair_E[ev].set_mdi (ip.Dom(), NIL_VERTEX); // TODO: No olvidar setear los offset y esas cosas para el DFS 
+					set_mdi_e (ev, ip.Dom(), ip, NIL_VERTEX);  // TODO: No olvidar setear los offset y esas cosas para el DFS
 				}
 			}
 		}
 		for (auto &uv : UVertex){
 			foreach_(VectorEdge e1, out_edges(uv,graph)) {
 				for (auto ip : graph[e1].Pairs()){
-					Pair_U[uv].set_mdi (ip.Ran(), NIL_VERTEX); 
+					set_mdi_u (uv, ip.Ran(), ip, NIL_VERTEX);
 				}
 			}
 		}
@@ -151,7 +196,7 @@ typedef std::map <MDI, Match> MapMDI;
 			founded = false;
 			for (auto &ev : EQVertex){
 				if (founded) break;
-				std::vector <MDI> eps = buscar_NIL (Pair_E[ev]); // Acá tiene que usarse buscar uno!
+				std::list <MDI> eps = buscar_NIL (Pair_E[ev], graph); // Acá tiene que usarse buscar uno!
 				for (auto ep : eps){
 					if (Option <MDI> aux_mdi = DFS (ev, ep, graph)){
 						matching += aux_mdi.get().Size();
