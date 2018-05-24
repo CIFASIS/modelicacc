@@ -23,11 +23,10 @@
 #include <causalize/vector/vector_graph_definition.h>
 
 namespace Causalize {
-  Vertex GetEquation(Edge e);
-  Vertex GetUnknown(Edge e);
-  //~ int dfs_matching(	VectorCausalizationGraph graph,
-					//~ std::list<Causalize::VectorVertex> &equationDescriptors,
-					//~ std::list<Causalize::VectorVertex> &unknownDescriptors); // Llamarla desde Algorithm
+  int dfs_matching(	VectorCausalizationGraph graph,
+					std::list<Causalize::VectorVertex> &equationDescriptors,
+					std::list<Causalize::VectorVertex> &unknownDescriptors); // Llamarla desde Algorithm
+	void hola(std::list<Causalize::VectorVertex> &equationDescriptors, std::list<Causalize::VectorVertex> &uDescriptors);
   int DFS (VectorVertex v, MDI mdi);
 
 } // Causalize

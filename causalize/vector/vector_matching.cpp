@@ -43,15 +43,16 @@
 
 namespace Causalize{
 
-struct MatchStruct{
-	//~ MatchStruct (IndexPair ip, VectorVertex v, VectorEdge e): ip(ip), v(v), e(e){}
+struct Match{
+  inline Match(){ };
+	Match (Offset of, VectorVertex v, VectorEdge e): of(of), v(v), e(e){}
 	//~ IndexPair ip;
 	Offset of;
 	VectorVertex v; // Matcheado
 	VectorEdge e;	
 };
   
-typedef std::map <MDI, MatchStruct> MapMDI;
+typedef std::map <MDI, Match> MapMDI;
 
 	Vertex GetEquation(Edge e, VectorCausalizationGraph graph) {
 	  return ((graph[(source(e,graph))].type==kVertexEquation))?source(e,graph):target(e,graph);
@@ -108,7 +109,9 @@ typedef std::map <MDI, MatchStruct> MapMDI;
 		}
 		return rta;
 	}
-	
+	void hola (std::list<Causalize::VectorVertex> &equationDescriptors, std::list<Causalize::VectorVertex> &unknownDescriptors){
+		return;
+	}
 	MapMDI get_match_mdis (MapMDI map_unk, MDI unk_mdi){
 		MapMDI rta;
 		Option <MDI> aux;
@@ -127,7 +130,7 @@ typedef std::map <MDI, MatchStruct> MapMDI;
 			for (auto dif : aux-mdi)
 				rta[dif] = par.second;		
 		}
-		//~ rta[mdi] = MatchStruct (ip,v_match,e);
+		rta[mdi] = Match (ip.GetOffset(),v_match,e);
 	}
 	
 	void set_mdi_u (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e = VectorEdge()){
@@ -137,7 +140,7 @@ typedef std::map <MDI, MatchStruct> MapMDI;
 			for (auto dif : aux-mdi)
 				rta[dif] = par.second;		
 		}
-		//~ rta[mdi] = MatchStruct (ip,v_match,e);
+		rta[mdi] = Match (ip.GetOffset(),v_match,e);
 	}
 	
 	Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ // visit, not_visited, inv_offset
@@ -156,7 +159,7 @@ typedef std::map <MDI, MatchStruct> MapMDI;
 					for (auto match_mdi : match_mdis){
 						Option <MDI> matcheado_e = DFS (match_mdi.second.v, match_mdi.first, graph); 
 						if (matcheado_e){
-							MDI matcheado_u = matcheado_e.get().ApplyOffset (-match_mdi.second.ip.GetOffset());
+							MDI matcheado_u = matcheado_e.get().ApplyOffset (-match_mdi.second.of);
 							MDI mdi_e = matcheado_u.ApplyOffset(ip.GetOffset());
 							set_mdi_e(v, mdi_e, ip, u, edge);    
 							set_mdi_u(u, matcheado_u, ip, v, edge);
