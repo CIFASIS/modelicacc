@@ -101,17 +101,17 @@ typedef std::map <MDI, Match> MapMDI;
 
 	std::list <MDI> buscar_NIL (MapMDI lv, VectorCausalizationGraph graph){
 		std::list <MDI> rta;
+		std::cout << "Size MapMDI     " << lv.size() << std::endl;
 		for (auto par : lv){
 			VectorVertex v = par.second.v;
+			std::cout << "Type  " << graph[v].type << std::endl;
 			if (isNil(v, graph)){
 				rta.push_back (par.first);
 			}
 		}
 		return rta;
 	}
-	void hola (std::list<Causalize::VectorVertex> &equationDescriptors, std::list<Causalize::VectorVertex> &unknownDescriptors){
-		return;
-	}
+
 	MapMDI get_match_mdis (MapMDI map_unk, MDI unk_mdi){
 		MapMDI rta;
 		Option <MDI> aux;
@@ -131,6 +131,7 @@ typedef std::map <MDI, Match> MapMDI;
 				rta[dif] = par.second;		
 		}
 		rta[mdi] = Match (ip.GetOffset(),v_match,e);
+		Pair_E[v] = rta;
 	}
 	
 	void set_mdi_u (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e = VectorEdge()){
@@ -141,24 +142,51 @@ typedef std::map <MDI, Match> MapMDI;
 				rta[dif] = par.second;		
 		}
 		rta[mdi] = Match (ip.GetOffset(),v_match,e);
+		Pair_U[v] = rta;
 	}
 	
 	Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ // visit, not_visited, inv_offset
+		std::cout << "DFS1" << std::endl;
+		
 		if (isNil(v, graph)) return mdi; // Si es Nil retorno el MDI
+		std::cout << "DFS2" << std::endl;
+
 		std::list <MDI> nv_mdis = filter_not_visited(v, mdi); // Para que sea un dfs filtro por no visitados
+		std::cout << "DFS3" << std::endl;
+
 		visit(v, mdi);
+		std::cout << "DFS4" << std::endl;
+
 		for (auto nv_mdi : nv_mdis){
+			std::cout << "DFS5" << std::endl;
+
 			foreach_(VectorEdge edge, out_edges(v,graph)) { // Busco todas las aristas
-				Vertex u = GetUnknown (edge, graph); // Calculo la incognita de la arista
+				std::cout << "DFS6" << std::endl;
+
+				VectorVertex u = GetUnknown (edge, graph); // Calculo la incognita de la arista
 				for (auto ip : graph[edge].Pairs()){
+					std::cout << "DFS7" << std::endl;
+
 					//TODO (karupayun): Pensar. Necesito aparte del Label el ip correspondiente? Capaz que si. Que necesito??
 					Option <MDI> inter_mdi = nv_mdi & ip.Dom();
+					std::cout << "DFS8" << std::endl;
+
 					if (!inter_mdi) continue;
+					std::cout << "DFS9" << std::endl;
+
 					MDI unk_mdi = inter_mdi.get().ApplyOffset (ip.GetOffset()); // En base al MDI de EQ, offseteo para tener el MDI del unknown correspondiente
+					std::cout << "DFS10  - " << graph[GetEquation(edge, graph)].equation << " , " << graph[u].unknown() << " , " << Pair_U[u].size() << std::endl;
+
 					MapMDI match_mdis = get_match_mdis (Pair_U[u], unk_mdi); // Toda la información de los matcheos de U, que se los paso a E
+					std::cout << "DFS11" << std::endl;
+
 					for (auto match_mdi : match_mdis){
+						std::cout << "DFS12" << std::endl;
+
 						Option <MDI> matcheado_e = DFS (match_mdi.second.v, match_mdi.first, graph); 
 						if (matcheado_e){
+							std::cout << "DFS13" << std::endl;
+
 							MDI matcheado_u = matcheado_e.get().ApplyOffset (-match_mdi.second.of);
 							MDI mdi_e = matcheado_u.ApplyOffset(ip.GetOffset());
 							set_mdi_e(v, mdi_e, ip, u, edge);    
@@ -172,16 +200,19 @@ typedef std::map <MDI, Match> MapMDI;
 		return Option<MDI> (); // Return false
 	}
 
-	int dfs_matching (VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> EQVertex, 
-										std::list<Causalize::VectorVertex> UVertex){
+	int dfs_matching (VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &EQVertex, 
+										std::list<Causalize::VectorVertex> &UVertex){
+		std::cout << "\n\ndfs_matching\n\n";
+
 		VectorVertexProperty NIL;
 		NIL.type = kNilVertex;
 		VectorVertex NIL_VERTEX = add_vertex(NIL, graph); // TEST: Lo estará agregando? 
-		
+		std::cout << "\nisNil\n" << isNil(NIL_VERTEX, graph);
 		for (auto &ev : EQVertex){
 			foreach_(VectorEdge e1, out_edges(ev,graph)) {
 				for (auto ip : graph[e1].Pairs()){
 					set_mdi_e (ev, ip.Dom(), ip, NIL_VERTEX);  // TODO: No olvidar setear los offset y esas cosas para el DFS
+					std::cout << "\nbuscarNIL.size\n" << buscar_NIL(Pair_E[ev], graph).size() << std::endl;
 				}
 			}
 		}
@@ -198,8 +229,11 @@ typedef std::map <MDI, Match> MapMDI;
 		while (founded){ 
 			founded = false;
 			for (auto &ev : EQVertex){
+				std::cout << "\nEQ VERTEX\n " << std::endl;
 				if (founded) break;
 				std::list <MDI> eps = buscar_NIL (Pair_E[ev], graph); // Acá tiene que usarse buscar uno!
+				std::cout << "\nList-SIze\n " << eps.size() << std::endl;
+				
 				for (auto ep : eps){
 					if (Option <MDI> aux_mdi = DFS (ev, ep, graph)){
 						matching += aux_mdi.get().Size();

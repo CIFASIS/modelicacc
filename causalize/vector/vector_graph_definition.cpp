@@ -275,6 +275,7 @@ namespace Causalize {
 
   Option<MDI> MDI::operator&(const MDI &other) const {
     if (this->Dimension() != other.Dimension()) { //TODO: Is this condition OK?
+		std::cout << this->Dimension() << " " << other.Dimension() << std::endl;
       ERROR("Dimension error #5\n");
     }
     IntervalList intersection;

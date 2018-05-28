@@ -23,10 +23,7 @@
 #include <causalize/vector/vector_graph_definition.h>
 
 namespace Causalize {
-  int dfs_matching(	VectorCausalizationGraph graph,
-					std::list<Causalize::VectorVertex> &equationDescriptors,
-					std::list<Causalize::VectorVertex> &unknownDescriptors); // Llamarla desde Algorithm
-	void hola(std::list<Causalize::VectorVertex> &equationDescriptors, std::list<Causalize::VectorVertex> &uDescriptors);
+  int dfs_matching(VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &equationDescriptors, std::list<Causalize::VectorVertex> &uDescriptors); // Llamarla desde Algorithm
   int DFS (VectorVertex v, MDI mdi);
 
 } // Causalize
