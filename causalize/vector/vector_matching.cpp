@@ -107,6 +107,7 @@ typedef std::map <MDI, Match> MapMDI;
 			std::cout << "Type  " << graph[v].type << std::endl;
 			if (isNil(v, graph)){
 				rta.push_back (par.first);
+				std::cout << "par.first  " << par.first << std::endl;
 			}
 		}
 		return rta;
@@ -127,10 +128,16 @@ typedef std::map <MDI, Match> MapMDI;
 		MapMDI rta;
 		for (auto par : Pair_E[v]){
 			MDI aux = par.first;
-			for (auto dif : aux-mdi)
-				rta[dif] = par.second;		
+			for (auto dif : aux-mdi){
+				rta[dif] = par.second;	
+				std::cout << "DIF    " << dif << std::endl;
+				std::cout << "Aux    " << aux << std::endl;
+				std::cout << "Mdi    " << mdi << std::endl;
+			}	
 		}
 		rta[mdi] = Match (ip.GetOffset(),v_match,e);
+		std::cout << "Mdi    " << mdi << std::endl;
+
 		Pair_E[v] = rta;
 	}
 	
@@ -150,7 +157,7 @@ typedef std::map <MDI, Match> MapMDI;
 		
 		if (isNil(v, graph)) return mdi; // Si es Nil retorno el MDI
 		std::cout << "DFS2" << std::endl;
-
+		std::cout << "MDI     " << mdi << std::endl;
 		std::list <MDI> nv_mdis = filter_not_visited(v, mdi); // Para que sea un dfs filtro por no visitados
 		std::cout << "DFS3" << std::endl;
 
@@ -168,12 +175,15 @@ typedef std::map <MDI, Match> MapMDI;
 					std::cout << "DFS7" << std::endl;
 
 					//TODO (karupayun): Pensar. Necesito aparte del Label el ip correspondiente? Capaz que si. Que necesito??
+					std::cout << "nv_MDI   " << nv_mdi << std::endl;
+					std::cout << "ip.Dom()   " << ip.Dom() << std::endl;
+
 					Option <MDI> inter_mdi = nv_mdi & ip.Dom();
 					std::cout << "DFS8" << std::endl;
 
 					if (!inter_mdi) continue;
 					std::cout << "DFS9" << std::endl;
-
+					std::cout << "Inter_MDI   " << inter_mdi.get() << std::endl;
 					MDI unk_mdi = inter_mdi.get().ApplyOffset (ip.GetOffset()); // En base al MDI de EQ, offseteo para tener el MDI del unknown correspondiente
 					std::cout << "DFS10  - " << graph[GetEquation(edge, graph)].equation << " , " << graph[u].unknown() << " , " << Pair_U[u].size() << std::endl;
 
@@ -186,9 +196,11 @@ typedef std::map <MDI, Match> MapMDI;
 						Option <MDI> matcheado_e = DFS (match_mdi.second.v, match_mdi.first, graph); 
 						if (matcheado_e){
 							std::cout << "DFS13" << std::endl;
-
 							MDI matcheado_u = matcheado_e.get().ApplyOffset (-match_mdi.second.of);
 							MDI mdi_e = matcheado_u.ApplyOffset(ip.GetOffset());
+							std::cout << " Matcheado_E   " << matcheado_e.get() << std::endl;
+							std::cout << " Matcheado_U   " << matcheado_u << std::endl;
+							std::cout << " MDI_E   " << mdi_e << std::endl;
 							set_mdi_e(v, mdi_e, ip, u, edge);    
 							set_mdi_u(u, matcheado_u, ip, v, edge);
 							return mdi_e;
@@ -212,6 +224,7 @@ typedef std::map <MDI, Match> MapMDI;
 			foreach_(VectorEdge e1, out_edges(ev,graph)) {
 				for (auto ip : graph[e1].Pairs()){
 					set_mdi_e (ev, ip.Dom(), ip, NIL_VERTEX);  // TODO: No olvidar setear los offset y esas cosas para el DFS
+					std::cout << "IP.DOM()   " << ip.Dom() << std::endl;
 					std::cout << "\nbuscarNIL.size\n" << buscar_NIL(Pair_E[ev], graph).size() << std::endl;
 				}
 			}
@@ -235,9 +248,12 @@ typedef std::map <MDI, Match> MapMDI;
 				std::cout << "\nList-SIze\n " << eps.size() << std::endl;
 				
 				for (auto ep : eps){
+					std::cout << "EP     " << ep << std::endl;
 					if (Option <MDI> aux_mdi = DFS (ev, ep, graph)){
 						matching += aux_mdi.get().Size();
 						founded = true;
+						std::cout << "MATCHING   " << matching << std::endl;
+
 						break;
 					}
 				}
