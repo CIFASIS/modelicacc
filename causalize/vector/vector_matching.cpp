@@ -154,7 +154,8 @@ typedef std::map <MDI, Match> MapMDI;
 	
 	Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ // visit, not_visited, inv_offset
 		std::cout << "DFS1" << std::endl;
-		
+		std::cout << graph[v].equation <<  "      "  << mdi << std::endl;
+
 		if (isNil(v, graph)) return mdi; // Si es Nil retorno el MDI
 		std::cout << "DFS2" << std::endl;
 		std::cout << "MDI     " << mdi << std::endl;
