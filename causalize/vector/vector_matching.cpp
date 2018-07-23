@@ -72,6 +72,10 @@ typedef std::map <MDI, Match> MapMDI;
 	std::map <VectorVertex, MapMDI> Pair_U;
 	std::map <VectorVertex, std::list <MDI>> Visitados;
 	
+	void inicializar_dfs(){
+		Visitados.clear();
+	}
+	
 	void visit (VectorVertex v, MDI mdi){
 		Visitados[v].push_back(mdi);		
 	}
@@ -242,6 +246,8 @@ typedef std::map <MDI, Match> MapMDI;
 		bool founded = true;
 		while (founded){ 
 			founded = false;
+			inicializar_dfs(); // Ver porque no funciona esto.
+
 			for (auto &ev : EQVertex){
 				std::cout << "\nEQ VERTEX\n " << std::endl;
 				if (founded) break;
@@ -254,7 +260,6 @@ typedef std::map <MDI, Match> MapMDI;
 						matching += aux_mdi.get().Size();
 						founded = true;
 						std::cout << "MATCHING   " << matching << std::endl;
-
 						break;
 					}
 				}
