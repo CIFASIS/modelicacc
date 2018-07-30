@@ -135,9 +135,9 @@ typedef std::map <MDI, Match> MapMDI;
 			MDI aux = par.first;
 			for (auto dif : aux-mdi){
 				rta[dif] = par.second;	
-				std::cout << "DIF    " << dif << std::endl;
-				std::cout << "Aux    " << aux << std::endl;
-				std::cout << "Mdi    " << mdi << std::endl;
+				//~ std::cout << "DIF    " << dif << std::endl;
+				//~ std::cout << "Aux    " << aux << std::endl;
+				//~ std::cout << "Mdi    " << mdi << std::endl;
 			}	
 		}
 		rta[mdi] = Match (ip, ip.GetOffset(),v_match,e);
@@ -171,7 +171,7 @@ typedef std::map <MDI, Match> MapMDI;
 		std::cout << graph[v].equation <<  "      "  << mdi << std::endl;
 
 		if (isNil(v, graph)) return mdi; // Si es Nil retorno el MDI
-		std::cout << "MDI     " << mdi << std::endl;
+		//~ std::cout << "MDI     " << mdi << std::endl;
 		std::list <MDI> nv_mdis = filter_not_visited(v, mdi); // Para que sea un dfs filtro por no visitados
 
 		visit(v, mdi);
@@ -184,12 +184,12 @@ typedef std::map <MDI, Match> MapMDI;
 				for (auto ip : graph[edge].Pairs()){
 
 					//TODO (karupayun): Pensar. Necesito aparte del Label el ip correspondiente? Capaz que si. Que necesito??
-					std::cout << "nv_MDI   " << nv_mdi << std::endl;
-					std::cout << "ip.Dom()   " << ip.Dom() << std::endl;
+					//~ std::cout << "nv_MDI   " << nv_mdi << std::endl;
+					//~ std::cout << "ip.Dom()   " << ip.Dom() << std::endl;
 
 					Option <MDI> inter_mdi = nv_mdi & ip.Dom();
 					if (!inter_mdi) continue;
-					std::cout << "Inter_MDI   " << inter_mdi.get() << std::endl;
+					//~ std::cout << "Inter_MDI   " << inter_mdi.get() << std::endl;
 					MDI unk_mdi = domToRan(inter_mdi.get(), ip);
 					//~ MDI unk_mdi = inter_mdi.get().ApplyOffset (ip.GetOffset()); // En base al MDI de EQ, offseteo para tener el MDI del unknown correspondiente
 					
@@ -206,9 +206,9 @@ typedef std::map <MDI, Match> MapMDI;
 							//~ MDI matcheado_u = dfs_matcheado_e.get().ApplyOffset (match_mdi.second.of);
 							MDI mdi_e = ranToDom(matcheado_u, ip);
 							//~ MDI mdi_e = matcheado_u.ApplyOffset(-ip.GetOffset());
-							std::cout << " Matcheado_E   " << dfs_matcheado_e.get() << std::endl;
-							std::cout << " Matcheado_U   " << matcheado_u << std::endl;
-							std::cout << " MDI_E   " << mdi_e << std::endl;
+							//~ std::cout << " Matcheado_E   " << dfs_matcheado_e.get() << std::endl;
+							//~ std::cout << " Matcheado_U   " << matcheado_u << std::endl;
+							//~ std::cout << " MDI_E   " << mdi_e << std::endl;
 							set_mdi_e(v, mdi_e, ip, u, edge);    
 							set_mdi_u(u, matcheado_u, ip, v, edge);
 							return mdi_e;
@@ -232,18 +232,18 @@ typedef std::map <MDI, Match> MapMDI;
 
 						set_mdi_e (ev, ip.Dom(), ip, NIL_VERTEX);  // TODO: No olvidar setear los offset y esas cosas para el DFS
 						
-						std::cout << "IP.DOM()   " << ip.Dom() << std::endl;
-						std::cout << "IP.RAN()   " << ip.Ran() << std::endl;
-						std::cout << "IP.OFF()   "; 
-						for (auto it : ip.GetOffset())
-						  std::cout << it << " ";
-						std::cout << std::endl;
-						std::cout << "IP.USA()   "; 
-						for (auto it : ip.GetUsage())
-						  std::cout << it << " ";
-						std::cout << std::endl;
-						std::cout << "IP.domToRan()   " << domToRan(ip.Dom(), ip) << std::endl;
-						std::cout << "IP.ranToDom()  " << ranToDom(ip.Ran(), ip) << std::endl;
+						//~ std::cout << "IP.DOM()   " << ip.Dom() << std::endl;
+						//~ std::cout << "IP.RAN()   " << ip.Ran() << std::endl;
+						//~ std::cout << "IP.OFF()   "; 
+						//~ for (auto it : ip.GetOffset())
+						  //~ std::cout << it << " ";
+						//~ std::cout << std::endl;
+						//~ std::cout << "IP.USA()   "; 
+						//~ for (auto it : ip.GetUsage())
+						  //~ std::cout << it << " ";
+						//~ std::cout << std::endl;
+						//~ std::cout << "IP.domToRan()   " << domToRan(ip.Dom(), ip) << std::endl;
+						//~ std::cout << "IP.ranToDom()  " << ranToDom(ip.Ran(), ip) << std::endl;
 						//~ std::cout << "IP.AUsaOff()   " << ip.Dom().ApplyUsage(ip.GetUsage()).ApplyOffset(ip.GetOffset()) << std::endl;
 						//~ std::cout << "IP.RUsaOff()   " << ip.Dom().RevertUsage(ip.GetUsage()).ApplyOffset(ip.GetOffset()) << std::endl;
 					//~ }
@@ -272,15 +272,24 @@ typedef std::map <MDI, Match> MapMDI;
 				
 				for (auto ep : eps){
 					if (Option <MDI> aux_mdi = DFS (ev, ep, graph)){
-						std::cout << "\nEQ VERTEX:   " << graph[ev].equation << std::endl;
+						//~ std::cout << "\nEQ VERTEX:   " << graph[ev].equation << std::endl;
 						matching += aux_mdi.get().Size();
 						founded = true;
-						std::cout << "MATCHING   " << matching << std::endl;
+						//~ std::cout << "MATCHING   " << matching << std::endl;
 						break;
 					}
 				}
 			}
 		}
+		//~ for (auto &ev : EQVertex)
+				//~ for (auto mmdi : Pair_E[ev]){
+						//~ std::cout << "\nEQ: " << graph[ev].equation << " MDI: " << mmdi.first << " UNK: " << graph[mmdi.second.v].unknown() << std::endl << std::endl; 
+				//~ }
+		for (auto &uv : UVertex)
+				for (auto mmdi : Pair_U[uv]){
+						std::cout << "\nMatcheamos la Incognita: " << graph[uv].unknown() << "en el rango: " << mmdi.first << " con la ecuación:\n" << graph[mmdi.second.v].equation << std::endl << std::endl; 
+				}
+		
 		return matching;
 	}
 	
