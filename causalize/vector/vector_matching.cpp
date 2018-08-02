@@ -167,8 +167,34 @@ typedef std::map <MDI, Match> MapMDI;
 		return rta;
 	}
 	
+	void testDR (IndexPair ip){
+		if (ip.Dom() != ranToDom(ip.Ran(), ip) || ip.Ran() != domToRan(ip.Dom(), ip))
+			std::cout << "--------------No son iguales!!!!!--------------\n" << "Dom: " << ip.Dom() << " Ran: " << ip.Ran() << 
+			" DomToRan: " << domToRan(ip.Dom(), ip) << " RanToDom: " << ranToDom(ip.Ran(), ip) << std::endl;
+	}
+	
+	void isOK (VectorCausalizationGraph graph, int matching){
+		
+		VectorCausalizationGraph::vertex_iterator vi, vi_end;
+		int equationNumber = 0, unknownNumber = 0;
+		for(boost::tie(vi, vi_end) = vertices(graph); vi != vi_end; vi++){
+			VectorVertex current_element = *vi;
+			if(graph[current_element].type == kVertexEquation){
+				equationNumber += graph[current_element].count;
+			}
+			else{
+				unknownNumber += graph[current_element].count;
+			}
+		}
+		if(equationNumber != matching){
+		printf("The model being causalized is not full-matched.\n"
+			  "There are %d equations and the matching is %d\n", 
+			  equationNumber, matching);		
+		}
+	}
+	
 	Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ // visit, not_visited, inv_offset
-		std::cout << graph[v].equation <<  "      "  << mdi << std::endl;
+		//~ std::cout << graph[v].equation <<  "      "  << mdi << std::endl;
 
 		if (isNil(v, graph)) return mdi; // Si es Nil retorno el MDI
 		//~ std::cout << "MDI     " << mdi << std::endl;
@@ -228,12 +254,15 @@ typedef std::map <MDI, Match> MapMDI;
 		for (auto &ev : EQVertex){
 			foreach_(VectorEdge e1, out_edges(ev,graph)) {
 				for (auto ip : graph[e1].Pairs()){
-					//~ if (!ip.GetUsage().isUnused()){
+					
 
 						set_mdi_e (ev, ip.Dom(), ip, NIL_VERTEX);  // TODO: No olvidar setear los offset y esas cosas para el DFS
+					//~ if (!ip.GetUsage().isUnused()){	
 						
-						//~ std::cout << "IP.DOM()   " << ip.Dom() << std::endl;
-						//~ std::cout << "IP.RAN()   " << ip.Ran() << std::endl;
+						std::cout << "EQ   " << graph[ev].equation << std::endl;
+						std::cout << "Unk   " << graph[target(e1, graph)].unknown() << std::endl;
+						std::cout << "IP.DOM()   " << ip.Dom() << std::endl;
+						std::cout << "IP.RAN()   " << ip.Ran() << std::endl;
 						//~ std::cout << "IP.OFF()   "; 
 						//~ for (auto it : ip.GetOffset())
 						  //~ std::cout << it << " ";
@@ -242,10 +271,9 @@ typedef std::map <MDI, Match> MapMDI;
 						//~ for (auto it : ip.GetUsage())
 						  //~ std::cout << it << " ";
 						//~ std::cout << std::endl;
+						testDR (ip);
 						//~ std::cout << "IP.domToRan()   " << domToRan(ip.Dom(), ip) << std::endl;
 						//~ std::cout << "IP.ranToDom()  " << ranToDom(ip.Ran(), ip) << std::endl;
-						//~ std::cout << "IP.AUsaOff()   " << ip.Dom().ApplyUsage(ip.GetUsage()).ApplyOffset(ip.GetOffset()) << std::endl;
-						//~ std::cout << "IP.RUsaOff()   " << ip.Dom().RevertUsage(ip.GetUsage()).ApplyOffset(ip.GetOffset()) << std::endl;
 					//~ }
 				}
 			}
@@ -287,9 +315,9 @@ typedef std::map <MDI, Match> MapMDI;
 				//~ }
 		for (auto &uv : UVertex)
 				for (auto mmdi : Pair_U[uv]){
-						std::cout << "\nMatcheamos la Incognita: " << graph[uv].unknown() << "en el rango: " << mmdi.first << " con la ecuación:\n" << graph[mmdi.second.v].equation << std::endl << std::endl; 
+						std::cout << "\nMatcheamos la Incognita: " << graph[uv].unknown() << " en el rango: " << mmdi.first << " con la ecuación:\n" << graph[mmdi.second.v].equation << " en el rango " << ranToDom(mmdi.first, mmdi.second.ip) << std::endl << std::endl; 
 				}
-		
+		isOK (graph, matching);
 		return matching;
 	}
 	
