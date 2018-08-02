@@ -173,7 +173,86 @@ typedef std::map <MDI, Match> MapMDI;
 			" DomToRan: " << domToRan(ip.Dom(), ip) << " RanToDom: " << ranToDom(ip.Ran(), ip) << std::endl;
 	}
 	
-	void isOK (VectorCausalizationGraph graph, int matching){
+	bool dom_unique (VectorVertex ev, VectorEdge e1, MDI mdi, VectorCausalizationGraph graph){
+		std::list <MDI> resto;
+		std::list <MDI> aux;
+		resto.push_back (mdi);
+		foreach_(VectorEdge edge, out_edges(ev,graph)) {
+			if (e1 != edge){
+				IndexPairSet ips = graph[e1].Pairs();
+				for (auto ip : ips){
+					for (auto r : resto){
+						std::list <MDI> toAdd = r - ip.Dom();
+						for (auto add : toAdd)
+							aux.push_back(add);
+					}
+					resto = aux;
+					aux.clear();
+				}
+			}
+		}
+		return !resto.empty();
+	}
+	
+	bool ran_unique (VectorVertex uv, VectorEdge e1, MDI mdi, VectorCausalizationGraph graph){
+		std::list <MDI> resto;
+		std::list <MDI> aux;
+		resto.push_back (mdi);
+		foreach_(VectorEdge edge, out_edges(uv,graph)) {
+			if (e1 != edge){
+				IndexPairSet ips = graph[e1].Pairs();
+				for (auto ip : ips){
+					for (auto r : resto){
+						std::list <MDI> toAdd = r - ip.Ran();
+						for (auto add : toAdd)
+							aux.push_back(add);
+					}
+					resto = aux;
+					aux.clear();
+				}
+			}
+		}
+		return !resto.empty();
+	}
+	
+	bool dom_matched (VectorVertex ev, MDI mdi, VectorCausalizationGraph graph){
+		std::list<MDI> nil_mdi = buscar_NIL (Pair_E[ev], graph);
+		int tamano = mdi.Size();
+		for (auto it : nil_mdi){
+			if(auto aux = it & mdi)
+				tamano -= aux.get().Size();
+		}
+		return tamano == 0;		
+	}
+	bool ran_matched (VectorVertex uv, MDI mdi, VectorCausalizationGraph graph){
+		std::list<MDI> nil_mdi = buscar_NIL (Pair_U[uv], graph);
+		int tamano = mdi.Size();
+		for (auto it : nil_mdi){
+			if(auto aux = it & mdi)
+				tamano -= aux.get().Size();
+		}
+		return tamano == 0;		
+	}
+	
+	int heuristica_inicial(VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &EQVertex){ // Elije el matching inicial de una forma heurística para ahorrarse casos complicados
+		for (auto &ev : EQVertex){
+			foreach_(VectorEdge edge, out_edges(ev,graph)) {
+				for (auto ip : graph[edge].Pairs()){
+					VectorVertex uv = target (edge,graph);
+					if (dom_matched(ev, ip.Dom(), graph)) continue;
+					if (ran_matched(uv, ip.Ran(), graph)) continue;
+					if (dom_unique(ev, edge, ip.Dom(), graph) || ran_unique(uv, edge, ip.Ran(), graph)) {
+						set_mdi_e(ev, ip.Dom(), ip, uv, edge);
+						set_mdi_u(uv, ip.Ran(), ip, ev, edge);	
+						return ip.Dom().Size();					
+					}
+				}
+			}
+		}
+		return 0;
+	}
+	
+	bool isOK (VectorCausalizationGraph graph, int matching){
 		
 		VectorCausalizationGraph::vertex_iterator vi, vi_end;
 		int equationNumber = 0, unknownNumber = 0;
@@ -187,10 +266,12 @@ typedef std::map <MDI, Match> MapMDI;
 			}
 		}
 		if(equationNumber != matching){
-		printf("The model being causalized is not full-matched.\n"
+			printf("The model being causalized is not full-matched.\n"
 			  "There are %d equations and the matching is %d\n", 
-			  equationNumber, matching);		
+			  equationNumber, matching);
+			return false;
 		}
+		return true;
 	}
 	
 	Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ // visit, not_visited, inv_offset
@@ -286,13 +367,21 @@ typedef std::map <MDI, Match> MapMDI;
 				}
 			}
 		}
-		int matching = 0;
-
-		bool founded = true;
+	
+		int matching = 0; // TODO:karupayun( TESTEAR LA HEURISTICA)
+		while (true){ // Matchea con la heurística inicial suponiendo que las aristas van completan.
+			int new_matching = heuristica_inicial(graph, EQVertex);
+			if (!new_matching) break;
+			matching += new_matching;
+		}
+		
+		
+		bool founded = !isOK(graph, matching);
+		
 		while (founded){ 
 
 			founded = false;
-			inicializar_dfs(); // Ver porque no funciona esto.
+			inicializar_dfs(); 
 
 			for (auto &ev : EQVertex){
 				if (founded) break;
