@@ -173,14 +173,29 @@ typedef std::map <MDI, Match> MapMDI;
 			" DomToRan: " << domToRan(ip.Dom(), ip) << " RanToDom: " << ranToDom(ip.Ran(), ip) << std::endl;
 	}
 	
-	bool dom_unique (VectorVertex ev, VectorEdge e1, MDI mdi, VectorCausalizationGraph graph){
+	int size_MDIS (std::list <MDI> &mdis){
+		int rta = 0;
+		for (auto mdi : mdis){
+			rta += mdi.Size();
+			//~ std::cout << mdi << "     "  << mdi.Size() << std::endl;
+
+		}
+		return rta;
+	}
+	
+	bool differents (VectorEdge e1, VectorEdge e2, IndexPair ip1, IndexPair ip2){
+		return e1 != e2 || ip1.Dom() != ip2.Dom() || ip1.Ran() != ip2.Ran();
+	}
+	
+	bool dom_unique (VectorVertex ev, VectorEdge e1, IndexPair ip1, MDI mdi, VectorCausalizationGraph graph){
 		std::list <MDI> resto;
 		std::list <MDI> aux;
 		resto.push_back (mdi);
 		foreach_(VectorEdge edge, out_edges(ev,graph)) {
-			if (e1 != edge){
-				IndexPairSet ips = graph[e1].Pairs();
-				for (auto ip : ips){
+			IndexPairSet ips = graph[edge].Pairs();
+			for (auto ip : ips){
+				if (differents(e1, edge, ip1, ip)){
+					//~ std::cout << ip << std::endl;
 					for (auto r : resto){
 						std::list <MDI> toAdd = r - ip.Dom();
 						for (auto add : toAdd)
@@ -191,17 +206,20 @@ typedef std::map <MDI, Match> MapMDI;
 				}
 			}
 		}
-		return !resto.empty();
+		//~ std::cout << "DOM-UNIQUE     " << size_MDIS(resto) << "    " << resto << std::endl;
+		return size_MDIS(resto);
 	}
 	
-	bool ran_unique (VectorVertex uv, VectorEdge e1, MDI mdi, VectorCausalizationGraph graph){
+	bool ran_unique (VectorVertex uv, VectorEdge e1, IndexPair ip1, MDI mdi, VectorCausalizationGraph graph){
 		std::list <MDI> resto;
 		std::list <MDI> aux;
 		resto.push_back (mdi);
 		foreach_(VectorEdge edge, out_edges(uv,graph)) {
-			if (e1 != edge){
-				IndexPairSet ips = graph[e1].Pairs();
-				for (auto ip : ips){
+			IndexPairSet ips = graph[edge].Pairs();
+			for (auto ip : ips){
+				if (differents(e1, edge, ip1, ip)){
+					//~ std::cout << ip << std::endl;
+
 					for (auto r : resto){
 						std::list <MDI> toAdd = r - ip.Ran();
 						for (auto add : toAdd)
@@ -212,7 +230,9 @@ typedef std::map <MDI, Match> MapMDI;
 				}
 			}
 		}
-		return !resto.empty();
+		//~ std::cout << "RAN-UNIQUE     " << size_MDIS(resto) << "    " << resto << std::endl;
+
+		return size_MDIS(resto);
 	}
 	
 	bool dom_matched (VectorVertex ev, MDI mdi, VectorCausalizationGraph graph){
@@ -222,7 +242,8 @@ typedef std::map <MDI, Match> MapMDI;
 			if(auto aux = it & mdi)
 				tamano -= aux.get().Size();
 		}
-		return tamano == 0;		
+		//~ std::cout << "TAMAÑO-DOM    " << tamano << std::endl;
+		return tamano != 0; // Lo que no es NIL.		
 	}
 	bool ran_matched (VectorVertex uv, MDI mdi, VectorCausalizationGraph graph){
 		std::list<MDI> nil_mdi = buscar_NIL (Pair_U[uv], graph);
@@ -231,7 +252,9 @@ typedef std::map <MDI, Match> MapMDI;
 			if(auto aux = it & mdi)
 				tamano -= aux.get().Size();
 		}
-		return tamano == 0;		
+		//~ std::cout << "TAMAÑO-RAN    " << tamano << std::endl;
+
+		return tamano != 0; // Lo que no es NIL.	
 	}
 	
 	int heuristica_inicial(VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &EQVertex){ // Elije el matching inicial de una forma heurística para ahorrarse casos complicados
@@ -241,7 +264,7 @@ typedef std::map <MDI, Match> MapMDI;
 					VectorVertex uv = target (edge,graph);
 					if (dom_matched(ev, ip.Dom(), graph)) continue;
 					if (ran_matched(uv, ip.Ran(), graph)) continue;
-					if (dom_unique(ev, edge, ip.Dom(), graph) || ran_unique(uv, edge, ip.Ran(), graph)) {
+					if (dom_unique(ev, edge, ip, ip.Dom(), graph) || ran_unique(uv, edge, ip, ip.Ran(), graph)) {
 						set_mdi_e(ev, ip.Dom(), ip, uv, edge);
 						set_mdi_u(uv, ip.Ran(), ip, ev, edge);	
 						return ip.Dom().Size();					
@@ -340,10 +363,10 @@ typedef std::map <MDI, Match> MapMDI;
 						set_mdi_e (ev, ip.Dom(), ip, NIL_VERTEX);  // TODO: No olvidar setear los offset y esas cosas para el DFS
 					//~ if (!ip.GetUsage().isUnused()){	
 						
-						std::cout << "EQ   " << graph[ev].equation << std::endl;
-						std::cout << "Unk   " << graph[target(e1, graph)].unknown() << std::endl;
-						std::cout << "IP.DOM()   " << ip.Dom() << std::endl;
-						std::cout << "IP.RAN()   " << ip.Ran() << std::endl;
+						//~ std::cout << "EQ   " << graph[ev].equation << std::endl;
+						//~ std::cout << "Unk   " << graph[target(e1, graph)].unknown() << std::endl;
+						//~ std::cout << "IP.DOM()   " << ip.Dom() << std::endl;
+						//~ std::cout << "IP.RAN()   " << ip.Ran() << std::endl;
 						//~ std::cout << "IP.OFF()   "; 
 						//~ for (auto it : ip.GetOffset())
 						  //~ std::cout << it << " ";
@@ -373,8 +396,10 @@ typedef std::map <MDI, Match> MapMDI;
 			int new_matching = heuristica_inicial(graph, EQVertex);
 			if (!new_matching) break;
 			matching += new_matching;
+			//~ std::cout << "TAMAÑO-MATCH    " << matching << std::endl;
+
 		}
-		
+		//~ return matching;
 		
 		bool founded = !isOK(graph, matching);
 		
@@ -398,6 +423,7 @@ typedef std::map <MDI, Match> MapMDI;
 				}
 			}
 		}
+		//~ return matching;
 		//~ for (auto &ev : EQVertex)
 				//~ for (auto mmdi : Pair_E[ev]){
 						//~ std::cout << "\nEQ: " << graph[ev].equation << " MDI: " << mmdi.first << " UNK: " << graph[mmdi.second.v].unknown() << std::endl << std::endl; 
@@ -407,6 +433,8 @@ typedef std::map <MDI, Match> MapMDI;
 						std::cout << "\nMatcheamos la Incognita: " << graph[uv].unknown() << " en el rango: " << mmdi.first << " con la ecuación:\n" << graph[mmdi.second.v].equation << " en el rango " << ranToDom(mmdi.first, mmdi.second.ip) << std::endl << std::endl; 
 				}
 		isOK (graph, matching);
+						std::cout << matching << std::endl;
+
 		return matching;
 	}
 	
