@@ -19,7 +19,6 @@
 
 #include <causalize/vector/vector_graph_definition.h>
 #include <causalize/vector/vector_matching.h>
-
 #include <mmo/mmo_class.h>
 
 namespace Causalize {

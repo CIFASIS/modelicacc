@@ -42,49 +42,19 @@
 #include <vector>
 
 namespace Causalize{
-
-struct Match{
-  inline Match(){ };
-	Match (IndexPair ip, Offset of, VectorVertex v, VectorEdge e): ip(ip), of(of), v(v), e(e){}
-	IndexPair ip;
-	Offset of;
-	//~ Usage us;
-	VectorVertex v; // Matcheado
-	VectorEdge e;	
-};
-  
-typedef std::map <MDI, Match> MapMDI;
-
+//---------------------------------- Funciones Auxiliares ----------------------------------/
+	typedef std::map <MDI, Matching> MapMDI;
 	Vertex GetEquation(Edge e, VectorCausalizationGraph graph) {
 	  return ((graph[(source(e,graph))].type==kVertexEquation))?source(e,graph):target(e,graph);
 	}
-
-
 	Vertex GetUnknown(Edge e, VectorCausalizationGraph graph) {
 	  return ((graph[(target(e,graph))].type==kVertexUnknown))?target(e,graph):source(e,graph);
-	}
-
-  
+	}  
 	bool isNil (VectorVertex v, VectorCausalizationGraph graph){
 		return graph[v].type == kNilVertex;
 	}
-	// TODO(karupayun): Ver que son el Usage y el Offset
-	std::map <VectorVertex, MapMDI> Pair_E;
-	std::map <VectorVertex, MapMDI> Pair_U;
-	std::map <VectorVertex, std::list <MDI>> Visitados;
 	
-	void inicializar_dfs(){
-		Visitados.clear();
-	}
-	void contVisit(){
-		for (auto it : Visitados)
-			std::cout << "\nVISITADOS-i-SIZE    " << it.second.size() << std::endl;
-	}
-	void visit (VectorVertex v, MDI mdi){
-		Visitados[v].push_back(mdi);		
-	}
-	
-	std::list <MDI> filter_not_visited (VectorVertex v, MDI mdi){
+	std::list <MDI> Matching::filter_not_visited (VectorVertex v, MDI mdi){
 		std::list <MDI> rta (1,mdi);
 		for (auto vis : Visitados[v]){
 			std::list <MDI> new_list;
@@ -96,18 +66,7 @@ typedef std::map <MDI, Match> MapMDI;
 		return rta;
 	}
 	
-	std::list <MDI> buscar_mdi (MapMDI lv, MDI mdi){
-		std::list <MDI> rta;
-		for (auto par : lv){
-			Option <MDI> inter_mdi = par.first & mdi;
-			if (inter_mdi){
-				rta.push_back (inter_mdi.get());
-			}
-		}
-		return rta;
-	}
-
-	std::list <MDI> buscar_NIL (MapMDI lv, VectorCausalizationGraph graph){
+	std::list <MDI> Matching::buscar_NIL (MapMDI lv, VectorCausalizationGraph graph){
 		std::list <MDI> rta;
 		for (auto par : lv){
 			VectorVertex v = par.second.v;
@@ -118,7 +77,7 @@ typedef std::map <MDI, Match> MapMDI;
 		return rta;
 	}
 
-	MapMDI get_match_mdis (MapMDI map_unk, MDI unk_mdi){
+	MapMDI Matching::get_match_mdis (MapMDI map_unk, MDI unk_mdi){
 		MapMDI rta;
 		Option <MDI> aux;
 		for (auto par : map_unk){
@@ -129,7 +88,7 @@ typedef std::map <MDI, Match> MapMDI;
 		return rta;	
 	} 
 	
-	void set_mdi_e (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e = VectorEdge()){
+	void Matching::set_mdi_e (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e = VectorEdge()){
 		MapMDI rta;
 		for (auto par : Pair_E[v]){
 			MDI aux = par.first;
@@ -140,18 +99,18 @@ typedef std::map <MDI, Match> MapMDI;
 				//~ std::cout << "Mdi    " << mdi << std::endl;
 			}	
 		}
-		rta[mdi] = Match (ip, ip.GetOffset(),v_match,e);
+		rta[mdi] = Matching (ip, v_match,e);
 		Pair_E[v] = rta;
 	}
 	
-	void set_mdi_u (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e = VectorEdge()){
+	void Matching::set_mdi_u (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e = VectorEdge()){
 		MapMDI rta;
 		for (auto par : Pair_U[v]){
 			MDI aux = par.first;
 			for (auto dif : aux-mdi)
 				rta[dif] = par.second;		
 		}
-		rta[mdi] = Match (ip, ip.GetOffset(),v_match,e);
+		rta[mdi] = Matching (ip, v_match, e);
 		Pair_U[v] = rta;
 	}
 	
@@ -166,19 +125,11 @@ typedef std::map <MDI, Match> MapMDI;
 		rta = rta.ApplyOffset(-ip.GetOffset());
 		return rta;
 	}
-	
-	void testDR (IndexPair ip){
-		if (ip.Dom() != ranToDom(ip.Ran(), ip) || ip.Ran() != domToRan(ip.Dom(), ip))
-			std::cout << "--------------No son iguales!!!!!--------------\n" << "Dom: " << ip.Dom() << " Ran: " << ip.Ran() << 
-			" DomToRan: " << domToRan(ip.Dom(), ip) << " RanToDom: " << ranToDom(ip.Ran(), ip) << std::endl;
-	}
-	
+
 	int size_MDIS (std::list <MDI> &mdis){
 		int rta = 0;
 		for (auto mdi : mdis){
 			rta += mdi.Size();
-			//~ std::cout << mdi << "     "  << mdi.Size() << std::endl;
-
 		}
 		return rta;
 	}
@@ -187,7 +138,7 @@ typedef std::map <MDI, Match> MapMDI;
 		return e1 != e2 || ip1.Dom() != ip2.Dom() || ip1.Ran() != ip2.Ran();
 	}
 	
-	bool dom_unique (VectorVertex ev, VectorEdge e1, IndexPair ip1, MDI mdi, VectorCausalizationGraph graph){
+	bool Matching::is_dom_unique (VectorVertex ev, VectorEdge e1, IndexPair ip1, MDI mdi, VectorCausalizationGraph graph){
 		std::list <MDI> resto;
 		std::list <MDI> aux;
 		resto.push_back (mdi);
@@ -210,7 +161,7 @@ typedef std::map <MDI, Match> MapMDI;
 		return size_MDIS(resto);
 	}
 	
-	bool ran_unique (VectorVertex uv, VectorEdge e1, IndexPair ip1, MDI mdi, VectorCausalizationGraph graph){
+	bool Matching::is_ran_unique (VectorVertex uv, VectorEdge e1, IndexPair ip1, MDI mdi, VectorCausalizationGraph graph){
 		std::list <MDI> resto;
 		std::list <MDI> aux;
 		resto.push_back (mdi);
@@ -235,7 +186,7 @@ typedef std::map <MDI, Match> MapMDI;
 		return size_MDIS(resto);
 	}
 	
-	bool dom_matched (VectorVertex ev, MDI mdi, VectorCausalizationGraph graph){
+	bool Matching::is_dom_matched (VectorVertex ev, MDI mdi, VectorCausalizationGraph graph){
 		std::list<MDI> nil_mdi = buscar_NIL (Pair_E[ev], graph);
 		int tamano = mdi.Size();
 		for (auto it : nil_mdi){
@@ -245,7 +196,7 @@ typedef std::map <MDI, Match> MapMDI;
 		//~ std::cout << "TAMAÑO-DOM    " << tamano << std::endl;
 		return tamano != 0; // Lo que no es NIL.		
 	}
-	bool ran_matched (VectorVertex uv, MDI mdi, VectorCausalizationGraph graph){
+	bool Matching::is_ran_matched (VectorVertex uv, MDI mdi, VectorCausalizationGraph graph){
 		std::list<MDI> nil_mdi = buscar_NIL (Pair_U[uv], graph);
 		int tamano = mdi.Size();
 		for (auto it : nil_mdi){
@@ -257,14 +208,14 @@ typedef std::map <MDI, Match> MapMDI;
 		return tamano != 0; // Lo que no es NIL.	
 	}
 	
-	int heuristica_inicial(VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &EQVertex){ // Elije el matching inicial de una forma heurística para ahorrarse casos complicados
+	int Matching::heuristica_inicial(VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &EQVertex){ // Elije el matching inicial de una forma heurística para ahorrarse casos complicados
 		for (auto &ev : EQVertex){
 			foreach_(VectorEdge edge, out_edges(ev,graph)) {
 				for (auto ip : graph[edge].Pairs()){
 					VectorVertex uv = target (edge,graph);
-					if (dom_matched(ev, ip.Dom(), graph)) continue;
-					if (ran_matched(uv, ip.Ran(), graph)) continue;
-					if (dom_unique(ev, edge, ip, ip.Dom(), graph) || ran_unique(uv, edge, ip, ip.Ran(), graph)) {
+					if (is_dom_matched(ev, ip.Dom(), graph)) continue;
+					if (is_ran_matched(uv, ip.Ran(), graph)) continue;
+					if (is_dom_unique(ev, edge, ip, ip.Dom(), graph) || is_ran_unique(uv, edge, ip, ip.Ran(), graph)) {
 						set_mdi_e(ev, ip.Dom(), ip, uv, edge);
 						set_mdi_u(uv, ip.Ran(), ip, ev, edge);	
 						return ip.Dom().Size();					
@@ -275,7 +226,7 @@ typedef std::map <MDI, Match> MapMDI;
 		return 0;
 	}
 	
-	bool isOK (VectorCausalizationGraph graph, int matching){
+	bool Matching::isOK (VectorCausalizationGraph graph, int matching){
 		
 		VectorCausalizationGraph::vertex_iterator vi, vi_end;
 		int equationNumber = 0, unknownNumber = 0;
@@ -297,7 +248,7 @@ typedef std::map <MDI, Match> MapMDI;
 		return true;
 	}
 	
-	Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ // visit, not_visited, inv_offset
+	Option <MDI> Matching::DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ // visit, not_visited, inv_offset
 		//~ std::cout << graph[v].equation <<  "      "  << mdi << std::endl;
 
 		if (isNil(v, graph)) return mdi; // Si es Nil retorno el MDI
@@ -350,7 +301,7 @@ typedef std::map <MDI, Match> MapMDI;
 		return Option<MDI> (); // Return false
 	}
 
-	int dfs_matching (VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &EQVertex, 
+	int Matching::dfs_matching (VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &EQVertex, 
 										std::list<Causalize::VectorVertex> &UVertex){
 		VectorVertexProperty NIL;
 		NIL.type = kNilVertex;
@@ -375,7 +326,6 @@ typedef std::map <MDI, Match> MapMDI;
 						//~ for (auto it : ip.GetUsage())
 						  //~ std::cout << it << " ";
 						//~ std::cout << std::endl;
-						testDR (ip);
 						//~ std::cout << "IP.domToRan()   " << domToRan(ip.Dom(), ip) << std::endl;
 						//~ std::cout << "IP.ranToDom()  " << ranToDom(ip.Ran(), ip) << std::endl;
 					//~ }
@@ -438,12 +388,6 @@ typedef std::map <MDI, Match> MapMDI;
 		return matching;
 	}
 	
-	struct PalPair{ // De cada Vertex, MDI a esto:
-		VectorVertex v;
-		VectorEdge e; // Puede estar vacía si el v es NIL
-	};
-
-		
-  
+ 
 } // Causalize
 
