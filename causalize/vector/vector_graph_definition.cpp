@@ -223,6 +223,9 @@ namespace Causalize {
   }
 
   MDI MDI::ApplyUsage(Usage usage, MDI ran) const {
+		if (usage.Size()==0 || usage.isUnused() || ran.Dimension()==0) {
+      return ran;
+    }
     IntervalVector newIntervals(usage.Size());
     for(int i=0; i<(int)usage.Size(); i++) {
       if (usage[i]>=0) {
