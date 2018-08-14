@@ -42,78 +42,8 @@
 #include <vector>
 
 namespace Causalize{
+		typedef std::map <MDI, Match> MapMDI;
 //---------------------------------- Funciones Auxiliares ----------------------------------/
-	typedef std::map <MDI, Matching> MapMDI;
-	Vertex GetEquation(Edge e, VectorCausalizationGraph graph) {
-	  return ((graph[(source(e,graph))].type==kVertexEquation))?source(e,graph):target(e,graph);
-	}
-	Vertex GetUnknown(Edge e, VectorCausalizationGraph graph) {
-	  return ((graph[(target(e,graph))].type==kVertexUnknown))?target(e,graph):source(e,graph);
-	}  
-	bool isNil (VectorVertex v, VectorCausalizationGraph graph){
-		return graph[v].type == kNilVertex;
-	}
-	
-	std::list <MDI> Matching::filter_not_visited (VectorVertex v, MDI mdi){
-		std::list <MDI> rta (1,mdi);
-		for (auto vis : Visitados[v]){
-			std::list <MDI> new_list;
-			for (auto act_mdi : rta){
-				new_list.splice(new_list.end(), act_mdi-vis);
-			}
-			rta = new_list;
-		}
-		return rta;
-	}
-	
-	std::list <MDI> Matching::buscar_NIL (MapMDI lv, VectorCausalizationGraph graph){
-		std::list <MDI> rta;
-		for (auto par : lv){
-			VectorVertex v = par.second.v;
-			if (isNil(v, graph)){
-				rta.push_back (par.first);
-			}
-		}
-		return rta;
-	}
-
-	MapMDI Matching::get_match_mdis (MapMDI map_unk, MDI unk_mdi){
-		MapMDI rta;
-		Option <MDI> aux;
-		for (auto par : map_unk){
-			if (aux = par.first & unk_mdi){
-				rta[aux.get()] = par.second;
-			}
-		}
-		return rta;	
-	} 
-	
-	void Matching::set_mdi_e (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e = VectorEdge()){
-		MapMDI rta;
-		for (auto par : Pair_E[v]){
-			MDI aux = par.first;
-			for (auto dif : aux-mdi){
-				rta[dif] = par.second;	
-				//~ std::cout << "DIF    " << dif << std::endl;
-				//~ std::cout << "Aux    " << aux << std::endl;
-				//~ std::cout << "Mdi    " << mdi << std::endl;
-			}	
-		}
-		rta[mdi] = Matching (ip, v_match,e);
-		Pair_E[v] = rta;
-	}
-	
-	void Matching::set_mdi_u (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e = VectorEdge()){
-		MapMDI rta;
-		for (auto par : Pair_U[v]){
-			MDI aux = par.first;
-			for (auto dif : aux-mdi)
-				rta[dif] = par.second;		
-		}
-		rta[mdi] = Matching (ip, v_match, e);
-		Pair_U[v] = rta;
-	}
-	
 	MDI domToRan (MDI dom, IndexPair ip){
 		MDI rta = dom.ApplyUsage(ip.GetUsage(), ip.Ran());
 		rta = rta.ApplyOffset(ip.GetOffset());
@@ -122,10 +52,26 @@ namespace Causalize{
 	
 	MDI ranToDom (MDI ran, IndexPair ip){
 		MDI rta = ran.RevertUsage(ip.GetUsage(), ip.Dom());
-		rta = rta.ApplyOffset(-ip.GetOffset());
+		rta = rta.ApplyOffset(-ip.GetOffset());		
 		return rta;
 	}
 
+	void VectorMatching::check(VectorVertex ev, IndexPair ip){
+		if (ip.Dom() == ranToDom(ip.Ran(), ip) && ip.Ran() == domToRan(ip.Dom(), ip)) return;
+		std::cout << "EQ   " << graph[ev].equation << std::endl;
+		std::cout << "IP.DOM()   " << ip.Dom() << std::endl;
+		std::cout << "IP.RAN()   " << ip.Ran() << std::endl;
+		std::cout << "IP.OFF()   "; 
+		for (auto it : ip.GetOffset()) std::cout << it << " ";
+		std::cout << std::endl;
+		std::cout << "IP.USA()   "; 
+		for (auto it : ip.GetUsage()) std::cout << it << " ";
+		std::cout << std::endl;
+		std::cout << "IP.domToRan()   " << domToRan(ip.Dom(), ip) << std::endl;
+		std::cout << "IP.ranToDom()  " << ranToDom(ip.Ran(), ip) << std::endl;
+	}	
+
+	// Cuantos MDI's tenemos en la lista
 	int size_MDIS (std::list <MDI> &mdis){
 		int rta = 0;
 		for (auto mdi : mdis){
@@ -137,8 +83,79 @@ namespace Causalize{
 	bool differents (VectorEdge e1, VectorEdge e2, IndexPair ip1, IndexPair ip2){
 		return e1 != e2 || ip1.Dom() != ip2.Dom() || ip1.Ran() != ip2.Ran();
 	}
+//---------------------------------- ------------------------------------------------------/
+
+
+
+	bool VectorMatching::isNil (VectorVertex v){
+		return graph[v].type == kNilVertex;
+	}
 	
-	bool Matching::is_dom_unique (VectorVertex ev, VectorEdge e1, IndexPair ip1, MDI mdi, VectorCausalizationGraph graph){
+	// Filtra los no-visitados para el dfs
+	std::list <MDI> VectorMatching::filter_not_visited (VectorVertex v, MDI mdi){
+		std::list <MDI> rta (1,mdi);
+		for (auto vis : Visitados[v]){
+			std::list <MDI> new_list;
+			for (auto act_mdi : rta){
+				new_list.splice(new_list.end(), act_mdi-vis);
+			}
+			rta = new_list;
+		}
+		return rta;
+	}
+	
+	// Busca solo los MDI que no estén matcheados
+	std::list <MDI> VectorMatching::buscar_NIL (MapMDI lv){
+		std::list <MDI> rta;
+		for (auto par : lv){
+			VectorVertex v = par.second.v;
+			if (isNil(v)){
+				rta.push_back (par.first);
+			}
+		}
+		return rta;
+	}
+
+	MapMDI VectorMatching::get_match_mdis (MapMDI map_unk, MDI unk_mdi){
+		MapMDI rta;
+		Option <MDI> aux;
+		for (auto par : map_unk){
+			if (aux = par.first & unk_mdi){
+				rta[aux.get()] = par.second;
+			}
+		}
+		return rta;	
+	} 
+	
+	// dado V y MDI, matcheo V-MDI con el V_match usando la arista e
+	void VectorMatching::set_mdi_e (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e = VectorEdge()){
+		MapMDI rta;
+		for (auto par : Pair_E[v]){
+			MDI aux = par.first;
+			for (auto dif : aux-mdi){
+				rta[dif] = par.second;	
+			}	
+		}
+		rta[mdi] = Match (ip, v_match,e);
+		Pair_E[v] = rta;
+	}
+	
+	void VectorMatching::set_mdi_u (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e = VectorEdge()){
+		MapMDI rta;
+		for (auto par : Pair_U[v]){
+			MDI aux = par.first;
+			for (auto dif : aux-mdi)
+				rta[dif] = par.second;		
+		}
+		rta[mdi] = Match (ip, v_match, e);
+		Pair_U[v] = rta;
+	}
+
+
+
+// --------------------------------------------- Heurística Inicial --------------------------------------------------//
+	// Usado en la heurística, matcheamos la arista si tiene alguna parte del dominio que nadie más tiene
+	bool VectorMatching::is_dom_unique (VectorVertex ev, VectorEdge e1, IndexPair ip1, MDI mdi){
 		std::list <MDI> resto;
 		std::list <MDI> aux;
 		resto.push_back (mdi);
@@ -146,7 +163,6 @@ namespace Causalize{
 			IndexPairSet ips = graph[edge].Pairs();
 			for (auto ip : ips){
 				if (differents(e1, edge, ip1, ip)){
-					//~ std::cout << ip << std::endl;
 					for (auto r : resto){
 						std::list <MDI> toAdd = r - ip.Dom();
 						for (auto add : toAdd)
@@ -157,11 +173,10 @@ namespace Causalize{
 				}
 			}
 		}
-		//~ std::cout << "DOM-UNIQUE     " << size_MDIS(resto) << "    " << resto << std::endl;
 		return size_MDIS(resto);
 	}
 	
-	bool Matching::is_ran_unique (VectorVertex uv, VectorEdge e1, IndexPair ip1, MDI mdi, VectorCausalizationGraph graph){
+	bool VectorMatching::is_ran_unique (VectorVertex uv, VectorEdge e1, IndexPair ip1, MDI mdi){
 		std::list <MDI> resto;
 		std::list <MDI> aux;
 		resto.push_back (mdi);
@@ -169,8 +184,6 @@ namespace Causalize{
 			IndexPairSet ips = graph[edge].Pairs();
 			for (auto ip : ips){
 				if (differents(e1, edge, ip1, ip)){
-					//~ std::cout << ip << std::endl;
-
 					for (auto r : resto){
 						std::list <MDI> toAdd = r - ip.Ran();
 						for (auto add : toAdd)
@@ -181,41 +194,39 @@ namespace Causalize{
 				}
 			}
 		}
-		//~ std::cout << "RAN-UNIQUE     " << size_MDIS(resto) << "    " << resto << std::endl;
-
 		return size_MDIS(resto);
 	}
 	
-	bool Matching::is_dom_matched (VectorVertex ev, MDI mdi, VectorCausalizationGraph graph){
-		std::list<MDI> nil_mdi = buscar_NIL (Pair_E[ev], graph);
+	// Usado en la heurística, matchea aristas en su totalidad, por lo que si una parte ya está usada no se usa.
+	bool VectorMatching::is_dom_matched (VectorVertex ev, MDI mdi){
+		std::list<MDI> nil_mdi = buscar_NIL (Pair_E[ev]);
 		int tamano = mdi.Size();
 		for (auto it : nil_mdi){
 			if(auto aux = it & mdi)
 				tamano -= aux.get().Size();
 		}
-		//~ std::cout << "TAMAÑO-DOM    " << tamano << std::endl;
-		return tamano != 0; // Lo que no es NIL.		
-	}
-	bool Matching::is_ran_matched (VectorVertex uv, MDI mdi, VectorCausalizationGraph graph){
-		std::list<MDI> nil_mdi = buscar_NIL (Pair_U[uv], graph);
-		int tamano = mdi.Size();
-		for (auto it : nil_mdi){
-			if(auto aux = it & mdi)
-				tamano -= aux.get().Size();
-		}
-		//~ std::cout << "TAMAÑO-RAN    " << tamano << std::endl;
-
-		return tamano != 0; // Lo que no es NIL.	
+		return tamano != 0; 		
 	}
 	
-	int Matching::heuristica_inicial(VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &EQVertex){ // Elije el matching inicial de una forma heurística para ahorrarse casos complicados
-		for (auto &ev : EQVertex){
+	bool VectorMatching::is_ran_matched (VectorVertex uv, MDI mdi){
+		std::list<MDI> nil_mdi = buscar_NIL (Pair_U[uv]);
+		int tamano = mdi.Size();
+		for (auto it : nil_mdi){
+			if(auto aux = it & mdi)
+				tamano -= aux.get().Size();
+		}
+		return tamano != 0; 	
+	}
+	
+	// Elije el matching inicial de una forma heurística para ahorrarse casos complicados
+	int VectorMatching::heuristica_inicial(){ 
+		for (auto &ev : eqDescriptors){
 			foreach_(VectorEdge edge, out_edges(ev,graph)) {
 				for (auto ip : graph[edge].Pairs()){
 					VectorVertex uv = target (edge,graph);
-					if (is_dom_matched(ev, ip.Dom(), graph)) continue;
-					if (is_ran_matched(uv, ip.Ran(), graph)) continue;
-					if (is_dom_unique(ev, edge, ip, ip.Dom(), graph) || is_ran_unique(uv, edge, ip, ip.Ran(), graph)) {
+					if (is_dom_matched(ev, ip.Dom())) continue;
+					if (is_ran_matched(uv, ip.Ran())) continue;
+					if (is_dom_unique(ev, edge, ip, ip.Dom()) || is_ran_unique(uv, edge, ip, ip.Ran())) {
 						set_mdi_e(ev, ip.Dom(), ip, uv, edge);
 						set_mdi_u(uv, ip.Ran(), ip, ev, edge);	
 						return ip.Dom().Size();					
@@ -225,8 +236,9 @@ namespace Causalize{
 		}
 		return 0;
 	}
-	
-	bool Matching::isOK (VectorCausalizationGraph graph, int matching){
+// ------------------------------------------------------------------------------------------------------------------ //
+
+	bool VectorMatching::isOK (int matching, bool print_message = false){
 		
 		VectorCausalizationGraph::vertex_iterator vi, vi_end;
 		int equationNumber = 0, unknownNumber = 0;
@@ -240,56 +252,33 @@ namespace Causalize{
 			}
 		}
 		if(equationNumber != matching){
-			printf("The model being causalized is not full-matched.\n"
-			  "There are %d equations and the matching is %d\n", 
-			  equationNumber, matching);
+			if (print_message)
+				printf("The model being causalized is not full-matched.\n"
+					"There are %d equations and the matching is %d\n", 
+					equationNumber, matching);
 			return false;
 		}
 		return true;
 	}
 	
-	Option <MDI> Matching::DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph){ // visit, not_visited, inv_offset
-		//~ std::cout << graph[v].equation <<  "      "  << mdi << std::endl;
-
-		if (isNil(v, graph)) return mdi; // Si es Nil retorno el MDI
-		//~ std::cout << "MDI     " << mdi << std::endl;
+	Option <MDI> VectorMatching::DFS (VectorVertex v, MDI mdi){ // visit, not_visited, inv_offset
+		if (isNil(v)) return mdi; // Si es Nil retorno el MDI
 		std::list <MDI> nv_mdis = filter_not_visited(v, mdi); // Para que sea un dfs filtro por no visitados
-
 		visit(v, mdi);
-
 		for (auto nv_mdi : nv_mdis){
-
 			foreach_(VectorEdge edge, out_edges(v,graph)) { // Busco todas las aristas
-
-				VectorVertex u = GetUnknown (edge, graph); // Calculo la incognita de la arista
+				VectorVertex u = target(edge,graph); // Calculo la incognita de la arista
 				for (auto ip : graph[edge].Pairs()){
-
-					//TODO (karupayun): Pensar. Necesito aparte del Label el ip correspondiente? Capaz que si. Que necesito??
-					//~ std::cout << "nv_MDI   " << nv_mdi << std::endl;
-					//~ std::cout << "ip.Dom()   " << ip.Dom() << std::endl;
-
 					Option <MDI> inter_mdi = nv_mdi & ip.Dom();
 					if (!inter_mdi) continue;
-					//~ std::cout << "Inter_MDI   " << inter_mdi.get() << std::endl;
 					MDI unk_mdi = domToRan(inter_mdi.get(), ip);
-					//~ MDI unk_mdi = inter_mdi.get().ApplyOffset (ip.GetOffset()); // En base al MDI de EQ, offseteo para tener el MDI del unknown correspondiente
-					
-
 					MapMDI match_mdis = get_match_mdis (Pair_U[u], unk_mdi); // Toda la información de los matcheos de U, que se los paso a E
-
 					for (auto match_mdi : match_mdis){
-					
 						MDI dfs_mdi_e = ranToDom(match_mdi.first, match_mdi.second.ip);
-						//~ MDI dfs_mdi_e = match_mdi.first.ApplyOffset(-match_mdi.second.of);
-						Option <MDI> dfs_matcheado_e = DFS (match_mdi.second.v, dfs_mdi_e, graph); 
+						Option <MDI> dfs_matcheado_e = DFS (match_mdi.second.v, dfs_mdi_e); 
 						if (dfs_matcheado_e){
 							MDI matcheado_u = domToRan(dfs_matcheado_e.get(), match_mdi.second.ip);
-							//~ MDI matcheado_u = dfs_matcheado_e.get().ApplyOffset (match_mdi.second.of);
 							MDI mdi_e = ranToDom(matcheado_u, ip);
-							//~ MDI mdi_e = matcheado_u.ApplyOffset(-ip.GetOffset());
-							//~ std::cout << " Matcheado_E   " << dfs_matcheado_e.get() << std::endl;
-							//~ std::cout << " Matcheado_U   " << matcheado_u << std::endl;
-							//~ std::cout << " MDI_E   " << mdi_e << std::endl;
 							set_mdi_e(v, mdi_e, ip, u, edge);    
 							set_mdi_u(u, matcheado_u, ip, v, edge);
 							return mdi_e;
@@ -301,39 +290,19 @@ namespace Causalize{
 		return Option<MDI> (); // Return false
 	}
 
-	int Matching::dfs_matching (VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &EQVertex, 
-										std::list<Causalize::VectorVertex> &UVertex){
+	int VectorMatching::dfs_matching (){
 		VectorVertexProperty NIL;
 		NIL.type = kNilVertex;
-		VectorVertex NIL_VERTEX = add_vertex(NIL, graph); // TEST: Lo estará agregando? 
-		for (auto &ev : EQVertex){
+		VectorVertex NIL_VERTEX = add_vertex(NIL, graph);
+		for (auto &ev : eqDescriptors){
 			foreach_(VectorEdge e1, out_edges(ev,graph)) {
 				for (auto ip : graph[e1].Pairs()){
-					
-
-						set_mdi_e (ev, ip.Dom(), ip, NIL_VERTEX);  // TODO: No olvidar setear los offset y esas cosas para el DFS
-					//~ if (!ip.GetUsage().isUnused()){	
-						
-						//~ std::cout << "EQ   " << graph[ev].equation << std::endl;
-						//~ std::cout << "Unk   " << graph[target(e1, graph)].unknown() << std::endl;
-						//~ std::cout << "IP.DOM()   " << ip.Dom() << std::endl;
-						//~ std::cout << "IP.RAN()   " << ip.Ran() << std::endl;
-						//~ std::cout << "IP.OFF()   "; 
-						//~ for (auto it : ip.GetOffset())
-						  //~ std::cout << it << " ";
-						//~ std::cout << std::endl;
-						//~ std::cout << "IP.USA()   "; 
-						//~ for (auto it : ip.GetUsage())
-						  //~ std::cout << it << " ";
-						//~ std::cout << std::endl;
-						//~ std::cout << "IP.domToRan()   " << domToRan(ip.Dom(), ip) << std::endl;
-						//~ std::cout << "IP.ranToDom()  " << ranToDom(ip.Ran(), ip) << std::endl;
-					//~ }
+					check(ev, ip);
+					set_mdi_e (ev, ip.Dom(), ip, NIL_VERTEX);
 				}
 			}
 		}
-		//~ return 0;
-		for (auto &uv : UVertex){
+		for (auto &uv : uDescriptors){
 			foreach_(VectorEdge e1, out_edges(uv,graph)) {
 				for (auto ip : graph[e1].Pairs()){
 					set_mdi_u (uv, ip.Ran(), ip, NIL_VERTEX);
@@ -341,50 +310,36 @@ namespace Causalize{
 			}
 		}
 	
-		int matching = 0; // TODO:karupayun( TESTEAR LA HEURISTICA)
+		int matching = 0; 
 		while (true){ // Matchea con la heurística inicial suponiendo que las aristas van completan.
-			int new_matching = heuristica_inicial(graph, EQVertex);
+			int new_matching = heuristica_inicial();
 			if (!new_matching) break;
 			matching += new_matching;
-			//~ std::cout << "TAMAÑO-MATCH    " << matching << std::endl;
-
 		}
-		//~ return matching;
-		
-		bool founded = !isOK(graph, matching);
-		
+	
+		bool founded = !isOK(matching);
 		while (founded){ 
 
 			founded = false;
 			inicializar_dfs(); 
 
-			for (auto &ev : EQVertex){
+			for (auto &ev : eqDescriptors){
 				if (founded) break;
-				std::list <MDI> eps = buscar_NIL (Pair_E[ev], graph); // Acá tiene que usarse buscar uno!
-				
+				std::list <MDI> eps = buscar_NIL (Pair_E[ev]); // Acá tiene que usarse buscar uno!
 				for (auto ep : eps){
-					if (Option <MDI> aux_mdi = DFS (ev, ep, graph)){
-						//~ std::cout << "\nEQ VERTEX:   " << graph[ev].equation << std::endl;
+					if (Option <MDI> aux_mdi = DFS (ev, ep)){
 						matching += aux_mdi.get().Size();
 						founded = true;
-						//~ std::cout << "MATCHING   " << matching << std::endl;
 						break;
 					}
 				}
 			}
 		}
-		//~ return matching;
-		//~ for (auto &ev : EQVertex)
-				//~ for (auto mmdi : Pair_E[ev]){
-						//~ std::cout << "\nEQ: " << graph[ev].equation << " MDI: " << mmdi.first << " UNK: " << graph[mmdi.second.v].unknown() << std::endl << std::endl; 
-				//~ }
-		for (auto &uv : UVertex)
+		for (auto &uv : uDescriptors)
 				for (auto mmdi : Pair_U[uv]){
 						std::cout << "\nMatcheamos la Incognita: " << graph[uv].unknown() << " en el rango: " << mmdi.first << " con la ecuación:\n" << graph[mmdi.second.v].equation << " en el rango " << ranToDom(mmdi.first, mmdi.second.ip) << std::endl << std::endl; 
 				}
-		isOK (graph, matching);
-						std::cout << matching << std::endl;
-
+		isOK (matching, true);
 		return matching;
 	}
 	

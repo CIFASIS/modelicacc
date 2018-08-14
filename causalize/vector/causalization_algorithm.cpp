@@ -97,8 +97,8 @@ bool
 CausalizationStrategyVector::Causalize() {	
   int steps = 0;
   bool split = false;
-	Matching m;
-	m.dfs_matching(graph, equationDescriptors, unknownDescriptors);
+	VectorMatching m(graph, equationDescriptors, unknownDescriptors);
+	m.dfs_matching();
 	return false;
   while(true) {
     bool causalize_some=false;

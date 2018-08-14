@@ -24,40 +24,52 @@
 
 namespace Causalize {
 
-	class Matching{
-	typedef std::map <MDI, Matching> MapMDI;
+	class Match{
 
 	public:
-		Matching(){ };
-		Matching(IndexPair ip, VectorVertex v, VectorEdge e): ip(ip), v(v), e(e){}
-	  int dfs_matching(VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &equationDescriptors, std::list<Causalize::VectorVertex> &uDescriptors); // Llamarla desde Algorithm
-		Option <MDI> DFS (VectorVertex v, MDI mdi, VectorCausalizationGraph graph);	
+		Match(){ };
+		Match(IndexPair ip, VectorVertex v, VectorEdge e): ip(ip), v(v), e(e){}
+
+		IndexPair ip;
+		VectorVertex v; // Vertice Matcheado
+		VectorEdge e;
+	};
 		
+	typedef std::map <MDI, Match> MapMDI;
+
+	class VectorMatching{
+		
+	public:
+		VectorMatching(){ };
+		VectorMatching(VectorCausalizationGraph graph, std::list <VectorVertex> &eqDescriptors, std::list <VectorVertex> &uDescriptors)
+			:graph(graph), eqDescriptors(eqDescriptors), uDescriptors(uDescriptors){};
+	  int dfs_matching();
+		Option <MDI> DFS (VectorVertex v, MDI mdi);	
 
 	private:
 		void inicializar_dfs(){ Visitados.clear(); }
 		void visit (VectorVertex v, MDI mdi){ Visitados[v].push_back(mdi); }
 		std::list <MDI> filter_not_visited (VectorVertex v, MDI mdi);
-		std::list <MDI> buscar_NIL (MapMDI lv, VectorCausalizationGraph graph);
+		std::list <MDI> buscar_NIL (MapMDI lv);
 		MapMDI get_match_mdis (MapMDI map_unk, MDI unk_mdi);
 		void set_mdi_e (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e);
 		void set_mdi_u (VectorVertex v, MDI mdi, IndexPair ip, VectorVertex v_match, VectorEdge e);
-		bool is_dom_unique (VectorVertex ev, VectorEdge e1, IndexPair ip1, MDI mdi, VectorCausalizationGraph graph);
-		bool is_ran_unique (VectorVertex uv, VectorEdge e1, IndexPair ip1, MDI mdi, VectorCausalizationGraph graph);
-		bool is_dom_matched (VectorVertex ev, MDI mdi, VectorCausalizationGraph graph);
-		bool is_ran_matched (VectorVertex uv, MDI mdi, VectorCausalizationGraph graph);
-		int heuristica_inicial(VectorCausalizationGraph graph, std::list<Causalize::VectorVertex> &EQVertex);
-		bool isOK (VectorCausalizationGraph graph, int matching);
-
-
+		bool is_dom_unique (VectorVertex ev, VectorEdge e1, IndexPair ip1, MDI mdi);
+		bool is_ran_unique (VectorVertex uv, VectorEdge e1, IndexPair ip1, MDI mdi);
+		bool is_dom_matched (VectorVertex ev, MDI mdi);
+		bool is_ran_matched (VectorVertex uv, MDI mdi);
+		int heuristica_inicial();
+		bool isOK (int matching, bool print_message);
+		bool isNil (VectorVertex v);
+		void check(VectorVertex ev, IndexPair ip);
+		
+		VectorCausalizationGraph graph;
+		std::list <VectorVertex> eqDescriptors;
+		std::list <VectorVertex> uDescriptors;
 
 		std::map <VectorVertex, MapMDI> Pair_E; // Con quien se aparean las ecuaciones
 		std::map <VectorVertex, MapMDI> Pair_U; // Con quien se aparean las incognitas
 		std::map <VectorVertex, std::list <MDI>> Visitados; // Para el DFS
-		
-		IndexPair ip;
-		VectorVertex v; // Vertice Matcheado
-		VectorEdge e;	
 	};
-} // Causalize
+}; // Causalize
 #endif
