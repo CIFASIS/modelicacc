@@ -99,7 +99,7 @@ CausalizationStrategyVector::Causalize() {
   bool split = false;
 	VectorMatching m(graph, equationDescriptors, unknownDescriptors);
 	m.dfs_matching();
-	return false;
+	//~ return false;
   while(true) {
     bool causalize_some=false;
     assert(equationNumber == unknownNumber);

@@ -52,7 +52,7 @@ namespace Causalize{
 	
 	MDI ranToDom (MDI ran, IndexPair ip){
 		MDI rta = ran.RevertUsage(ip.GetUsage(), ip.Dom());
-		rta = rta.ApplyOffset(-ip.GetOffset());		
+		rta = rta.ApplyOffset(-ip.GetOffset());
 		return rta;
 	}
 
@@ -224,6 +224,7 @@ namespace Causalize{
 			foreach_(VectorEdge edge, out_edges(ev,graph)) {
 				for (auto ip : graph[edge].Pairs()){
 					VectorVertex uv = target (edge,graph);
+					if (ip.Ran().Size() < ip.Dom().Size()) continue; //Quiero matchear eq completas
 					if (is_dom_matched(ev, ip.Dom())) continue;
 					if (is_ran_matched(uv, ip.Ran())) continue;
 					if (is_dom_unique(ev, edge, ip, ip.Dom()) || is_ran_unique(uv, edge, ip, ip.Ran())) {
@@ -275,12 +276,19 @@ namespace Causalize{
 					MapMDI match_mdis = get_match_mdis (Pair_U[u], unk_mdi); // Toda la información de los matcheos de U, que se los paso a E
 					for (auto match_mdi : match_mdis){
 						MDI dfs_mdi_e = ranToDom(match_mdi.first, match_mdi.second.ip);
-						Option <MDI> dfs_matcheado_e = DFS (match_mdi.second.v, dfs_mdi_e); 
-						if (dfs_matcheado_e){
-							MDI matcheado_u = domToRan(dfs_matcheado_e.get(), match_mdi.second.ip);
+						Option <MDI> opt_dfs_matcheado_e = DFS (match_mdi.second.v, dfs_mdi_e); 
+						if (opt_dfs_matcheado_e){
+							MDI dfs_matcheado_e = opt_dfs_matcheado_e.get();
+							MDI matcheado_u = domToRan(dfs_matcheado_e, match_mdi.second.ip);
 							MDI mdi_e = ranToDom(matcheado_u, ip);
-							set_mdi_e(v, mdi_e, ip, u, edge);    
-							set_mdi_u(u, matcheado_u, ip, v, edge);
+							if (unk_mdi.Size()<= 1){ // Parche para que funcione en casos borde (for i 
+								dfs_matcheado_e = inter_mdi.get();
+								mdi_e = dfs_matcheado_e;
+							}
+							if (unk_mdi.Size() < dfs_matcheado_e.Size()) continue; // Sino no tiene sentido intentar matchear
+							IndexPair ip2(mdi_e, matcheado_u, ip.GetOffset(), ip.GetUsage());
+							set_mdi_e(v, mdi_e, ip2, u, edge);    
+							set_mdi_u(u, matcheado_u, ip2, v, edge);
 							return mdi_e;
 						}
 					}
@@ -316,13 +324,10 @@ namespace Causalize{
 			if (!new_matching) break;
 			matching += new_matching;
 		}
-	
-		bool founded = !isOK(matching);
+		bool founded = !isOK(matching, true);
 		while (founded){ 
-
 			founded = false;
 			inicializar_dfs(); 
-
 			for (auto &ev : eqDescriptors){
 				if (founded) break;
 				std::list <MDI> eps = buscar_NIL (Pair_E[ev]); // Acá tiene que usarse buscar uno!
@@ -335,10 +340,13 @@ namespace Causalize{
 				}
 			}
 		}
-		for (auto &uv : uDescriptors)
+		for (auto &uv : uDescriptors){
 				for (auto mmdi : Pair_U[uv]){
 						std::cout << "\nMatcheamos la Incognita: " << graph[uv].unknown() << " en el rango: " << mmdi.first << " con la ecuación:\n" << graph[mmdi.second.v].equation << " en el rango " << ranToDom(mmdi.first, mmdi.second.ip) << std::endl << std::endl; 
 				}
+				
+			}
+				
 		isOK (matching, true);
 		return matching;
 	}
