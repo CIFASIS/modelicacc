@@ -27,19 +27,21 @@ namespace Causalize {
   struct TarjanVertexProperty: VertexProperty {
   /// @brief Represent the conexion into a Unknown and a Equation
     IndexPair ip;
+		std::list <MDI> rest;
   };
 	struct TarjanEdgeProperty {
 		MDI dom;
 		MDI ran;		
 	};
-	typedef std::map <MDI, Match> MapMDI;
+
 	/// @brief This is the definition of the Incidence graph for the vector case.
 	typedef boost::adjacency_list<boost::listS, boost::listS, boost::directedS, TarjanVertexProperty, TarjanEdgeProperty> VectorTarjanGraph;
 	/// @brief This a node from the vectorized incidence graph
 	typedef Causalize::VectorTarjanGraph::vertex_descriptor TarjanVertex;
 	/// @brief This a node from the vectorized incidence graph
 	typedef VectorCausalizationGraph::edge_descriptor VectorEdge;
-
+	typedef std::pair <TarjanVertex, MDI> TarjanPart;
+	typedef std::map <MDI, Match> MapMDI;
 
 
 
@@ -47,14 +49,13 @@ namespace Causalize {
 		
 	public:
 		VectorTarjan(){ };
-		VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> &Pair_E, std::map <VectorVertex, MapMDI> &Pair_U) : graph(graph){
-			
-		};
+		VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> &Pair_E, std::map <VectorVertex, MapMDI> &Pair_U);
 
 	private:
 
-
-		VectorTarjanGraph	tarjan_graph;
+		std::map <TarjanPart, int> lowlinks;
+		std::list <std::list <TarjanPart> > strongly_connected_component;
+		VectorTarjanGraph	tgraph;
 		VectorCausalizationGraph graph;
 	};
 }; // Causalize

@@ -22,6 +22,7 @@ SRC_CAUSALIZE := causalize/main.cpp \
                   causalize/vector/splitfor.cpp \
                   causalize/vector/vector_graph_definition.cpp \
                   causalize/vector/vector_matching.cpp \
+                  causalize/vector/vector_tarjan.cpp \
                   causalize/graph/graph_definition.cpp \
                   mmo/mmo_class.cpp \
 
