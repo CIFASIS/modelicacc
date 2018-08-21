@@ -21,6 +21,7 @@
 #include <causalize/vector/causalization_algorithm.h>
 #include <causalize/vector/vector_graph_definition.h>
 #include <causalize/vector/vector_matching.h>
+#include <causalize/vector/vector_tarjan.h>
 #include <causalize/graph/graph_printer.h>
 
 #include <util/debug.h>
@@ -99,6 +100,8 @@ CausalizationStrategyVector::Causalize() {
   bool split = false;
 	VectorMatching m(graph, equationDescriptors, unknownDescriptors);
 	m.dfs_matching();
+	VectorTarjan t(graph, m.getPairE(), m.getPairU());
+
 	//~ return false;
   while(true) {
     bool causalize_some=false;

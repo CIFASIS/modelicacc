@@ -44,7 +44,9 @@ namespace Causalize {
 		VectorMatching(VectorCausalizationGraph graph, std::list <VectorVertex> &eqDescriptors, std::list <VectorVertex> &uDescriptors)
 			:graph(graph), eqDescriptors(eqDescriptors), uDescriptors(uDescriptors){};
 	  int dfs_matching();
-		Option <MDI> DFS (VectorVertex v, MDI mdi);	
+		Option <MDI> DFS (VectorVertex v, MDI mdi);
+		std::map <VectorVertex, MapMDI> &getPairE () {return Pair_E;}	
+		std::map <VectorVertex, MapMDI> &getPairU () {return Pair_U;}	
 
 	private:
 		void inicializar_dfs(){ Visitados.clear(); }
