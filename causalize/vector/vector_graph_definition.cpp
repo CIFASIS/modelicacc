@@ -258,6 +258,19 @@ namespace Causalize {
     }
   }
 
+  MDI MDI::DomToRan(IndexPair ip) const {
+	MDI rta = this->ApplyUsage(ip.GetUsage(), ip.Ran());
+	rta = rta.ApplyOffset(ip.GetOffset());
+	return rta;
+  } 
+  
+  
+  MDI MDI::RanToDom(IndexPair ip) const {
+    MDI rta = this->RevertUsage(ip.GetUsage(), ip.Dom());
+    rta = rta.ApplyOffset(-ip.GetOffset());
+	return rta;
+  }
+	
   std::list<MDI> MDI::operator-(const MDI &other) {
     if (this->Dimension()!=other.Dimension()) {
       ERROR("Dimension error #3\n");

@@ -42,22 +42,35 @@
 #include <list>
 #include <vector>
 
+#define dprint(v) std::cout << #v"=" << v << std::endl //;)
+
+
 namespace Causalize{
 
 	
-	VectorTarjan::VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> &Pair_E, std::map <VectorVertex, MapMDI> &Pair_U) : graph(graph){
+	VectorTarjan::VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> Pair_E, std::map <VectorVertex, MapMDI> Pair_U) : graph(graph){
 			for (auto p : Pair_E){
 				VectorVertex v = p.first;
 				for (auto mm : p.second){
+					dprint(graph[v].equation);
 					TarjanVertex tv = add_vertex (tgraph);
 					tgraph[tv].equation = graph[v].equation;
 					tgraph[tv].unknown = graph[mm.second.v].unknown();
-					tgraph[tv].ip = IndexPair (mm.first, domToRan (mm.first, mm.second.ip), mm.second.ip.GetOffset(), mm.second.ip.GetUsage());
+					tgraph[tv].ip = IndexPair (mm.first, mm.first.DomToRan (mm.second.ip), mm.second.ip.GetOffset(), mm.second.ip.GetUsage());
 					tgraph[tv].rest = std::list <MDI> ();
 					tgraph[tv].rest.push_back (mm.first);
 				}				
 			}
-			
+			TarjanGraph::vertex_iterator vi, vi_end; int counter = 1;
+			for(boost::tie(vi, vi_end) = vertices(tgraph); vi != vi_end; vi++){
+				dprint(counter);counter++;
+				dprint(tgraph[*vi].equation);
+				dprint(tgraph[*vi].unknown());
+				dprint(tgraph[*vi].ip.Dom());
+				dprint(tgraph[*vi].ip.Ran());
+			}
+			strongly_connected_component = std::list <std::list <TarjanPart> > ();
+			lowlinks = std::map <TarjanPart, int> ();
 	};
 } // Causalize
 

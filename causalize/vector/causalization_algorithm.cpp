@@ -102,7 +102,7 @@ CausalizationStrategyVector::Causalize() {
 	m.dfs_matching();
 	VectorTarjan t(graph, m.getPairE(), m.getPairU());
 
-	//~ return false;
+	return false;
   while(true) {
     bool causalize_some=false;
     assert(equationNumber == unknownNumber);

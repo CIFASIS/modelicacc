@@ -38,7 +38,7 @@
 namespace ICL = boost::icl;
 namespace Causalize {
   /// @brief This is the property for a vertex in the incidence graph. Nodes can be of two types: Equation or Unknow.
-
+  class IndexPair;
   struct VectorUnknown: Unknown {
     int dimension;
     std::vector<int> dimensionList;
@@ -126,7 +126,6 @@ private:
    ****************************************************************************/
 
 
-
   /*****************************************************************************
    ****                               MDI                                   ****
    *****************************************************************************/
@@ -144,6 +143,9 @@ private:
     MDI ApplyOffset(Offset) const;
     MDI ApplyUsage(Usage, MDI ran = MDI({})) const;
     MDI RevertUsage(Usage usage, MDI dom = MDI({})) const;
+     // karupayun - Para moverse usando la info de la conexion entre Dom y Ran
+    MDI DomToRan(IndexPair ip) const; 
+    MDI RanToDom(IndexPair ip) const;              
     bool operator<(const MDI& other) const;
     Option<MDI> operator&(const MDI& other) const;
     Option<MDI> Intersection (MDI& other) { return other & (*this) ;}

@@ -26,8 +26,8 @@
 namespace Causalize {
   struct TarjanVertexProperty: VertexProperty {
   /// @brief Represent the conexion into a Unknown and a Equation
-    IndexPair ip;
-		std::list <MDI> rest;
+    IndexPair ip; // La forma de conexión
+	std::list <MDI> rest; // Resto que falta matchear
   };
 	struct TarjanEdgeProperty {
 		MDI dom;
@@ -35,27 +35,23 @@ namespace Causalize {
 	};
 
 	/// @brief This is the definition of the Incidence graph for the vector case.
-	typedef boost::adjacency_list<boost::listS, boost::listS, boost::directedS, TarjanVertexProperty, TarjanEdgeProperty> VectorTarjanGraph;
+	typedef boost::adjacency_list<boost::listS, boost::listS, boost::directedS, TarjanVertexProperty, TarjanEdgeProperty> TarjanGraph;
 	/// @brief This a node from the vectorized incidence graph
-	typedef Causalize::VectorTarjanGraph::vertex_descriptor TarjanVertex;
+	typedef Causalize::TarjanGraph::vertex_descriptor TarjanVertex;
 	/// @brief This a node from the vectorized incidence graph
 	typedef VectorCausalizationGraph::edge_descriptor VectorEdge;
 	typedef std::pair <TarjanVertex, MDI> TarjanPart;
 	typedef std::map <MDI, Match> MapMDI;
 
-
-
 	class VectorTarjan{
-		
 	public:
 		VectorTarjan(){ };
-		VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> &Pair_E, std::map <VectorVertex, MapMDI> &Pair_U);
+		VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> Pair_E, std::map <VectorVertex, MapMDI> Pair_U);
 
 	private:
-
 		std::map <TarjanPart, int> lowlinks;
 		std::list <std::list <TarjanPart> > strongly_connected_component;
-		VectorTarjanGraph	tgraph;
+		TarjanGraph	tgraph;
 		VectorCausalizationGraph graph;
 	};
 }; // Causalize

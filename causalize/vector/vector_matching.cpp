@@ -44,20 +44,8 @@
 namespace Causalize{
 		typedef std::map <MDI, Match> MapMDI;
 //---------------------------------- Funciones Auxiliares ----------------------------------/
-	MDI domToRan (MDI dom, IndexPair ip){
-		MDI rta = dom.ApplyUsage(ip.GetUsage(), ip.Ran());
-		rta = rta.ApplyOffset(ip.GetOffset());
-		return rta;
-	}
-	
-	MDI ranToDom (MDI ran, IndexPair ip){
-		MDI rta = ran.RevertUsage(ip.GetUsage(), ip.Dom());
-		rta = rta.ApplyOffset(-ip.GetOffset());
-		return rta;
-	}
-
 	void VectorMatching::check(VectorVertex ev, IndexPair ip){
-		if (ip.Dom() == ranToDom(ip.Ran(), ip) && ip.Ran() == domToRan(ip.Dom(), ip)) return;
+		if (ip.Dom() == ip.Ran().RanToDom(ip) && ip.Ran() == ip.Dom().DomToRan(ip)) return;
 		std::cout << "EQ   " << graph[ev].equation << std::endl;
 		std::cout << "IP.DOM()   " << ip.Dom() << std::endl;
 		std::cout << "IP.RAN()   " << ip.Ran() << std::endl;
@@ -67,8 +55,8 @@ namespace Causalize{
 		std::cout << "IP.USA()   "; 
 		for (auto it : ip.GetUsage()) std::cout << it << " ";
 		std::cout << std::endl;
-		std::cout << "IP.domToRan()   " << domToRan(ip.Dom(), ip) << std::endl;
-		std::cout << "IP.ranToDom()  " << ranToDom(ip.Ran(), ip) << std::endl;
+		std::cout << "IP.DomToRan()   " << ip.Dom().DomToRan(ip) << std::endl;
+		std::cout << "IP.RanToDom()  " << ip.Ran().RanToDom(ip) << std::endl;
 	}	
 
 	// Cuantos MDI's tenemos en la lista
@@ -272,15 +260,15 @@ namespace Causalize{
 				for (auto ip : graph[edge].Pairs()){
 					Option <MDI> inter_mdi = nv_mdi & ip.Dom();
 					if (!inter_mdi) continue;
-					MDI unk_mdi = domToRan(inter_mdi.get(), ip);
+					MDI unk_mdi = inter_mdi.get().DomToRan(ip);
 					MapMDI match_mdis = get_match_mdis (Pair_U[u], unk_mdi); // Toda la información de los matcheos de U, que se los paso a E
 					for (auto match_mdi : match_mdis){
-						MDI dfs_mdi_e = ranToDom(match_mdi.first, match_mdi.second.ip);
+						MDI dfs_mdi_e = match_mdi.first.RanToDom(match_mdi.second.ip);
 						Option <MDI> opt_dfs_matcheado_e = DFS (match_mdi.second.v, dfs_mdi_e); 
 						if (opt_dfs_matcheado_e){
 							MDI dfs_matcheado_e = opt_dfs_matcheado_e.get();
-							MDI matcheado_u = domToRan(dfs_matcheado_e, match_mdi.second.ip);
-							MDI mdi_e = ranToDom(matcheado_u, ip);
+							MDI matcheado_u = dfs_matcheado_e.DomToRan(match_mdi.second.ip);
+							MDI mdi_e = matcheado_u.RanToDom(ip);
 							if (unk_mdi.Size()<= 1){ // Parche para que funcione en casos borde (for i 
 								dfs_matcheado_e = inter_mdi.get();
 								mdi_e = dfs_matcheado_e;
@@ -342,10 +330,16 @@ namespace Causalize{
 		}
 		for (auto &uv : uDescriptors){
 				for (auto mmdi : Pair_U[uv]){
-						std::cout << "\nMatcheamos la Incognita: " << graph[uv].unknown() << " en el rango: " << mmdi.first << " con la ecuación:\n" << graph[mmdi.second.v].equation << " en el rango " << ranToDom(mmdi.first, mmdi.second.ip) << std::endl << std::endl; 
+						std::cout << "\nMatcheamos la Incognita: " << graph[uv].unknown() << " en el rango: " << mmdi.first << " con la ecuación:\n" << graph[mmdi.second.v].equation << " en el rango " << mmdi.first.RanToDom(mmdi.second.ip) << std::endl << std::endl; 
 				}
 				
 			}
+		//~ for (auto &ev : eqDescriptors){
+				//~ for (auto mmdi : Pair_E[ev]){
+						//~ std::cout << "\nMatcheamos la Ecuación: " << graph[ev].equation << " en el rango: " << mmdi.first << " con la incognita:\n" << graph[mmdi.second.v].unknown() << " en el rango " << mmdi.first.DomToRan(mmdi.second.ip) << std::endl << std::endl; 
+				//~ }
+				
+			//~ }
 				
 		isOK (matching, true);
 		return matching;
