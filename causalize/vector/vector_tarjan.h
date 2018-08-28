@@ -28,6 +28,7 @@ namespace Causalize {
   /// @brief Represent the conexion into a Unknown and a Equation
     IndexPair ip; // La forma de conexión
 	std::list <MDI> rest; // Resto que falta matchear
+		int number;
   };
 	struct TarjanEdgeProperty {
 		MDI dom;
@@ -39,7 +40,7 @@ namespace Causalize {
 	/// @brief This a node from the vectorized incidence graph
 	typedef Causalize::TarjanGraph::vertex_descriptor TarjanVertex;
 	/// @brief This a node from the vectorized incidence graph
-	typedef VectorCausalizationGraph::edge_descriptor VectorEdge;
+	typedef Causalize::TarjanGraph::edge_descriptor TarjanEdge;
 	typedef std::pair <TarjanVertex, MDI> TarjanPart;
 	typedef std::map <MDI, Match> MapMDI;
 
@@ -49,6 +50,9 @@ namespace Causalize {
 		VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> Pair_E, std::map <VectorVertex, MapMDI> Pair_U);
 
 	private:
+		bool Identical (TarjanVertex v1, VectorEdge e1, IndexPair ip);
+	
+	
 		std::map <TarjanPart, int> lowlinks;
 		std::list <std::list <TarjanPart> > strongly_connected_component;
 		TarjanGraph	tgraph;

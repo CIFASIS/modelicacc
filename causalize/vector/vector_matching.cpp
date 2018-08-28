@@ -59,21 +59,10 @@ namespace Causalize{
 		std::cout << "IP.RanToDom()  " << ip.Ran().RanToDom(ip) << std::endl;
 	}	
 
-	// Cuantos MDI's tenemos en la lista
-	int size_MDIS (std::list <MDI> &mdis){
-		int rta = 0;
-		for (auto mdi : mdis){
-			rta += mdi.Size();
-		}
-		return rta;
-	}
-	
 	bool differents (VectorEdge e1, VectorEdge e2, IndexPair ip1, IndexPair ip2){
 		return e1 != e2 || ip1.Dom() != ip2.Dom() || ip1.Ran() != ip2.Ran();
 	}
 //---------------------------------- ------------------------------------------------------/
-
-
 
 	bool VectorMatching::isNil (VectorVertex v){
 		return graph[v].type == kNilVertex;
@@ -161,7 +150,7 @@ namespace Causalize{
 				}
 			}
 		}
-		return size_MDIS(resto);
+		return sum_size(resto);
 	}
 	
 	bool VectorMatching::is_ran_unique (VectorVertex uv, VectorEdge e1, IndexPair ip1, MDI mdi){
@@ -182,7 +171,7 @@ namespace Causalize{
 				}
 			}
 		}
-		return size_MDIS(resto);
+		return sum_size(resto);
 	}
 	
 	// Usado en la heurística, matchea aristas en su totalidad, por lo que si una parte ya está usada no se usa.

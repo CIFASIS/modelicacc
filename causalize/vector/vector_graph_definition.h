@@ -172,7 +172,8 @@ private:
   };
   /*****************************************************************************
    ****************************************************************************/
-
+	typedef std::list<MDI> MDIL; // //Multi-Dimensional Interval List
+	int sum_size (std::list <MDI> &mdis); // Sumas de los tamaños de los MDI's de la lista
 
   std::ostream& operator<<(std::ostream &os, const std::list<MDI> &mdiList);
   enum IndexPairType{
