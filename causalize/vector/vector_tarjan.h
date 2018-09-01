@@ -22,17 +22,20 @@
 
 #include <causalize/vector/vector_graph_definition.h>
 #include <causalize/vector/vector_matching.h>
+#include <stack>
 
 namespace Causalize {
   struct TarjanVertexProperty: VertexProperty {
   /// @brief Represent the conexion into a Unknown and a Equation
     IndexPair ip; // La forma de conexión
-	std::list <MDI> rest; // Resto que falta matchear
-		int number;
+	MDI mdi; // Equation
+	int number;
+	VectorEdge edge;
   };
 	struct TarjanEdgeProperty {
 		MDI dom;
-		MDI ran;		
+		MDI ran;
+		IndexPair ip;		
 	};
 
 	/// @brief This is the definition of the Incidence graph for the vector case.
@@ -41,20 +44,29 @@ namespace Causalize {
 	typedef Causalize::TarjanGraph::vertex_descriptor TarjanVertex;
 	/// @brief This a node from the vectorized incidence graph
 	typedef Causalize::TarjanGraph::edge_descriptor TarjanEdge;
-	typedef std::pair <TarjanVertex, MDI> TarjanPart;
+	struct TarjanData{
+		int id;
+		int low;
+		bool onStack;
+	};
+	typedef std::pair <TarjanVertex, MDI> VertexPart;
+	typedef std::list < VertexPart > ConnectedComponent;
 	typedef std::map <MDI, Match> MapMDI;
 
 	class VectorTarjan{
 	public:
 		VectorTarjan(){ };
 		VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> Pair_E, std::map <VectorVertex, MapMDI> Pair_U);
+		std::list <ConnectedComponent> GetConnectedComponent();
 
 	private:
-		bool Identical (TarjanVertex v1, VectorEdge e1, IndexPair ip);
-	
-	
-		std::map <TarjanPart, int> lowlinks;
-		std::list <std::list <TarjanPart> > strongly_connected_component;
+		void DFS(TarjanVertex tv, MDI mdi);
+		int id;
+		MDIL find (TarjanVertex tv, MDI mdi, bool onlyNV = false);
+
+		std::stack <VertexPart> stack;
+		std::list <ConnectedComponent> strongly_connected_component;
+		std::map <VertexPart, TarjanData> data;
 		TarjanGraph	tgraph;
 		VectorCausalizationGraph graph;
 	};

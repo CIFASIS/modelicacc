@@ -38,6 +38,7 @@
 #include <ast/queries.h>
 
 #include <sstream>
+#define dprint(v) std::cout << #v"=" << v << std::endl //;)
 
 #define sz(a) int((a).size())
 
@@ -101,6 +102,15 @@ CausalizationStrategyVector::Causalize() {
 	VectorMatching m(graph, equationDescriptors, unknownDescriptors);
 	m.dfs_matching();
 	VectorTarjan t(graph, m.getPairE(), m.getPairU());
+	std::list <ConnectedComponent> scc = t.GetConnectedComponent();
+	//~ for (auto cc : scc){
+		//~ dprint("New");
+		//~ for (auto vp:cc){
+			//~ dprint(vp.first.equation);
+			//~ dprint(vp.first.unknown());
+			//~ dprint(vp.second);
+		//~ }
+	//~ }
 
 	return false;
   while(true) {

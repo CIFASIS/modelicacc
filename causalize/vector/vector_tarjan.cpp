@@ -45,16 +45,9 @@
 #define dprint(v) std::cout << #v"=" << v << std::endl //;)
 
 
+
 namespace Causalize{
 
-	bool VectorTarjan::Identical (TarjanVertex v1, VectorEdge ei, IndexPair ip){
-		if (graph[source(ei, graph)].equation != tgraph[v1].equation) return false;
-		if (graph[target(ei, graph)].unknown() != tgraph[v1].unknown()) return false;
-		if (ip.GetOffset() != tgraph[v1].ip.GetOffset()) return false;
-		if (ip.GetUsage() != tgraph[v1].ip.GetUsage()) return false;
-		return true;
-	}
-	
 	MDIL inter1a1 (MDIL l1, MDIL l2){
 		MDIL rta;
 		assert (l1.size() == l2.size());
@@ -108,107 +101,204 @@ namespace Causalize{
 	}
 		
 	VectorTarjan::VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> Pair_E, std::map <VectorVertex, MapMDI> Pair_U) : graph(graph){
-			int counter = 1;
-			for (auto p : Pair_E){
-				VectorVertex v = p.first;
-				for (auto mm : p.second){
-					dprint(graph[v].equation);
-					TarjanVertex tv = add_vertex (tgraph);
-					tgraph[tv].equation = graph[v].equation;
-					tgraph[tv].unknown = graph[mm.second.v].unknown();
-					tgraph[tv].ip = IndexPair (mm.first, mm.first.DomToRan (mm.second.ip), mm.second.ip.GetOffset(), mm.second.ip.GetUsage());
-					tgraph[tv].rest = std::list <MDI> ();
-					tgraph[tv].rest.push_back (mm.first);
-					tgraph[tv].number = counter++;
-				}				
-			}
-			
-			VectorCausalizationGraph::edge_iterator ei, ei_end; 
-			TarjanGraph::vertex_iterator v1, v1_end, v2, v2_end; 
-			foreach_(VectorEdge ei, edges(graph)) {
-				for (auto ip : graph[ei].Pairs()){
-					std::list<MDI> dom; dom.push_back(ip.Dom());
-					std::list<MDI> ran; ran.push_back(ip.Ran());
-					
-					for(boost::tie(v1, v1_end) = vertices(tgraph); v1 != v1_end; v1++){
-						if (Identical(*v1, ei, ip)){
-							dom = resta (dom, tgraph[*v1].ip.Dom());
-							ran = resta (ran, tgraph[*v1].ip.Ran());
-							//~ MDIL ran2 = DomToRanList (ip, dom, ran);
-							//~ ran = inter1a1 (ran, ran2);
-														
-							//~ MDIL dom2 = RanToDomList (ip, ran, dom);
-							//~ dom = inter1a1 (dom, dom2);
+		int counter = 1;
+		for (auto p : Pair_E){
+			VectorVertex v = p.first;
+			for (auto mm : p.second){
+				dprint(graph[v].equation);
+				TarjanVertex tv = add_vertex (tgraph);
+				tgraph[tv].equation = graph[v].equation;
+				tgraph[tv].unknown = graph[mm.second.v].unknown();
+				tgraph[tv].ip = IndexPair (mm.first, mm.first.DomToRan (mm.second.ip), mm.second.ip.GetOffset(), mm.second.ip.GetUsage());
+				tgraph[tv].mdi = mm.first;
+				tgraph[tv].number = counter++;
+				tgraph[tv].edge = mm.second.e;
+			}				
+		}
+	
 
-							//~ break;
-						} 
-					}
-					
-					//~ dprint(size(ran));
-					//~ dprint(size(dom));
-					if (size(ran) != size(dom)) { // Parche en el caso de 1 con todos
-						if (size(ran) == 0){
-							for (auto _ : dom){
-								ran.push_back(ip.Ran());
-							}
+		
+		VectorCausalizationGraph::edge_iterator ei, ei_end; 
+		TarjanGraph::vertex_iterator v1, v1_end, v2, v2_end;
+		for(boost::tie(v1, v1_end) = vertices(tgraph); v1 != v1_end; v1++){
+			dprint('\n');
+			dprint(tgraph[*v1].number);
+			dprint(tgraph[*v1].equation);
+			dprint(tgraph[*v1].unknown());
+			dprint(tgraph[*v1].ip.Dom());
+			dprint(tgraph[*v1].ip.Ran());
+		} 
+		foreach_(VectorEdge ei, edges(graph)) {
+			for (auto ip : graph[ei].Pairs()){
+			
+				std::list<MDI> dom; dom.push_back(ip.Dom());
+				std::list<MDI> ran; ran.push_back(ip.Ran());
+				
+				for(boost::tie(v1, v1_end) = vertices(tgraph); v1 != v1_end; v1++){
+					if (tgraph[*v1].edge == ei){ // Borrar la parte del matching
+						dom = resta (dom, tgraph[*v1].ip.Dom());
+						ran = resta (ran, tgraph[*v1].ip.Ran());
+					} 
+				}
+				//~ dprint(size(ran));
+				//~ dprint(size(dom));
+				if (size(ran) != size(dom)) { // Parche en el caso de 1 con todos
+					if (size(ran) == 0){
+						for (auto _ : dom){
+							ran.push_back(ip.Ran());
 						}
-						else if (size(dom) == 0){
-							for (auto _ : ran){
-								ran.push_back(ip.Dom());
-							}
-						}
-						else assert(false);
 					}
-						
-					
-					if (sum_size(dom) == 0) continue; // Si es 0 no queda nada
-					if (sum_size(ran) == 0) continue; // Si es 0 no queda nada
-					//~ return;
-					auto mran = ran.begin();
-					// TODO(karupayun): Ver el ejemplo de complicated. bin/causalize -v test/causalize/OneDHeatTransferTI_FD_complicated.mo
-					for (auto mdom : dom){
-						for(boost::tie(v1, v1_end) = vertices(tgraph); v1 != v1_end; v1++){
-							if (graph[source(ei, graph)].equation == tgraph[*v1].equation){
-								if (!(tgraph[*v1].ip.Dom() & mdom)) continue;
-								MDI new_dom = (tgraph[*v1].ip.Dom() & mdom).get();
-								for(boost::tie(v2, v2_end) = vertices(tgraph); v2 != v2_end; v2++){
-									if (graph[target(ei, graph)].unknown() == tgraph[*v2].unknown()){
-										if (!(tgraph[*v2].ip.Ran() & *mran)) continue;
-										MDI new_ran = (tgraph[*v2].ip.Ran() & *mran).get();
-										if (!(new_dom.DomToRan(ip) & new_ran)) continue;
-										if (!(new_ran.RanToDom(ip) & new_dom)) continue;
-										new_ran = (new_ran & new_dom.DomToRan(ip)).get();
-										new_dom = (new_dom & new_ran.RanToDom(ip)).get();
-										TarjanEdge te = add_edge (*v1, *v2, tgraph).first;
-										tgraph[te].dom = new_dom;
-										tgraph[te].ran = new_ran;
-										dprint('\n');
-										dprint(tgraph[*v1].number);
-										dprint(tgraph[*v2].number);
-										//~ dprint(tgraph[te].dom);
-										//~ dprint(tgraph[te].ran);
-									}
+					else if (size(dom) == 0){
+						for (auto _ : ran){
+							ran.push_back(ip.Dom());
+						}
+					}
+					else assert(false);
+				}
+							
+				if (sum_size(dom) == 0) continue; // Si es 0 no queda nada
+				if (sum_size(ran) == 0) continue; // Si es 0 no queda nada
+				auto mran = ran.begin();
+				for (auto mdom : dom){
+					for(boost::tie(v1, v1_end) = vertices(tgraph); v1 != v1_end; v1++){
+						if (graph[source(ei, graph)].equation == tgraph[*v1].equation){
+							for(boost::tie(v2, v2_end) = vertices(tgraph); v2 != v2_end; v2++){
+								if (graph[target(ei, graph)].unknown() == tgraph[*v2].unknown()){
+									// Intersección dominios arista con v1
+									if (!(tgraph[*v1].ip.Dom() & mdom)) continue; 
+									MDI new_dom = (tgraph[*v1].ip.Dom() & mdom).get(); 
+									
+									// Intersección rangos arista con v2
+									if (!(tgraph[*v2].ip.Ran() & *mran)) continue; 							
+									MDI new_ran = (tgraph[*v2].ip.Ran() & *mran).get();
+
+									// Interseco ambos rangos para ver las verdaderas dependencias
+									if (!(new_dom.DomToRan(ip) & new_ran)) continue;
+									if (!(new_ran.RanToDom(ip) & new_dom)) continue;
+									new_ran = (new_ran & new_dom.DomToRan(ip)).get();
+									new_dom = (new_dom & new_ran.RanToDom(ip)).get();
+									
+									// Solo vamos a guardar una arista de Dom a Dom
+									new_ran = new_ran.RanToDom(tgraph[*v2].ip);
+								
+									if ((v1 == v2) && (new_dom == new_ran)) continue; // No have sense this kind of edges
+									TarjanEdge te = add_edge (*v1, *v2, tgraph).first;
+									tgraph[te].dom = new_dom;
+									tgraph[te].ran = new_ran;
+									tgraph[te].ip = ip;
+									dprint('\n');
+									dprint(tgraph[*v1].number);
+									dprint(tgraph[*v2].number);
+									dprint(tgraph[te].dom);
+									dprint(tgraph[te].ran);
 								}
 							}
 						}
-						mran++;
+					}
+					mran++;
+				}
+			}
+		}
+	};
+
+	MDIL VectorTarjan::find (TarjanVertex tv, MDI mdi, bool onlyNV){
+		MDIL rta;
+		for (auto pair : data){
+			auto mdi2 = pair.first.second;
+			auto tv2 = pair.first.first;
+			auto td = pair.second;
+			if ((tv == tv2) && (mdi & mdi2)){
+				if (mdi != mdi2){ // Debo quebrar
+					if (td.id != -1) // Visitado y otro MDI, caso no encontrado
+						assert(false);						
+					data.erase(pair.first);
+					VertexPart vp;
+					for (auto m : mdi2 - mdi){
+						vp = std::make_pair(tv2, m);
+						data[vp] = td;
+					}
+					vp = std::make_pair(tv2, (mdi&mdi2).get());
+					data[vp] = td;
+					rta.push_back((mdi&mdi2).get());
+				}
+				if (td.id == -1 || !onlyNV)
+					rta.push_back(mdi);
+			}
+		}
+		return rta;
+	}
+	
+	void VectorTarjan::DFS(TarjanVertex tv, MDI mdi){
+		MDIL mdil = find (tv, mdi);
+		for (auto mdi : mdil){ // Visited
+			VertexPart at = (std::make_pair (tv, mdi)); 
+			stack.push(at);
+			data[at].id = data[at].low = id;
+		}
+		id++;
+		for (auto mdi : mdil){ // DFS
+			VertexPart at = (std::make_pair (tv, mdi)); 
+			foreach_(TarjanEdge edge, out_edges(tv,tgraph)) {
+				TarjanVertex tv2 = target(edge, tgraph);
+				MDI mdi2 = mdi.DomToRan(tgraph[edge].ip);
+				MDIL mdil = find (tv2, mdi2, true);
+				for (auto m : mdil){
+					VertexPart to = std::make_pair(tv2,m);
+					if (data[to].id == -1) DFS (to.first, to.second);
+					if (data[to].onStack) 
+						data[at].low = std::min (data[at].low, data[to].low);
+				}
+			}
+			if (data[at].id == data[at].low){
+				ConnectedComponent scc;
+				while (1){
+					VertexPart node = stack.top();
+					stack.pop();
+					data[node].onStack = false;
+					data[node].low = data[at].id;
+					scc.push_back(node);
+					if (node == at) {
+						strongly_connected_component.push_back(scc);
+						break;
 					}
 				}
 			}
 
+			//~ for (
+		}
+		
+	}
+	
+	std::list <ConnectedComponent> VectorTarjan::GetConnectedComponent(){
+		id = 0;
+		
+		TarjanGraph::vertex_iterator vi, vi_end;
+		for(boost::tie(vi, vi_end) = vertices(tgraph); vi != vi_end; vi++){
+			TarjanData td;
+			td.id = -1;
+			td.low = 0;
+			td.onStack = false;
 			
-			for(boost::tie(v1, v1_end) = vertices(tgraph); v1 != v1_end; v1++){
-				dprint('\n');
-				dprint(tgraph[*v1].number);
-				dprint(tgraph[*v1].equation);
-				dprint(tgraph[*v1].unknown());
-				dprint(tgraph[*v1].ip.Dom());
-				dprint(tgraph[*v1].ip.Ran());
+			VertexPart vp = std::make_pair (*vi, tgraph[*vi].mdi);
+			data[vp] = td;
+		}
+		
+		for (auto pair : data){
+			DFS(pair.first.first, pair.first.second);
+		}
+	
+		/* Si volvemos a un mismo vértice con otro rango del que salimos, lo vamos a consider como un caso no resuelto todavía. Si volvemos con el mismo, es trivial:
+			 * Hay N ciclos.
+			 * */
+	 	for (auto cc : strongly_connected_component){
+			dprint("New");
+			for (auto vp:cc){
+				dprint(tgraph[vp.first].equation);
+				dprint(tgraph[vp.first].unknown());
+				dprint(vp.second);
 			}
-
-			
-			strongly_connected_component = std::list <std::list <TarjanPart> > ();
-			lowlinks = std::map <TarjanPart, int> ();
-	};
+		}
+		return strongly_connected_component;
+	}
 } // Causalize
 

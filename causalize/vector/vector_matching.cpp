@@ -113,7 +113,7 @@ namespace Causalize{
 				rta[dif] = par.second;	
 			}	
 		}
-		rta[mdi] = Match (ip, v_match,e);
+		rta[mdi] = Match (ip, v_match, e);
 		Pair_E[v] = rta;
 	}
 	
