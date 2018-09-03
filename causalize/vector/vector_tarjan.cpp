@@ -204,9 +204,13 @@ namespace Causalize{
 	MDIL VectorTarjan::find (TarjanVertex tv, MDI mdi, bool onlyNV){
 		MDIL rta;
 		for (auto pair : data){
-			auto mdi2 = pair.first.second;
+			//~ dprint("find");
+			//~ dprint(tgraph[tv].number);
+			MDI mdi2 = pair.first.second;
 			auto tv2 = pair.first.first;
 			auto td = pair.second;
+			//~ dprint(mdi);
+			//~ dprint(mdi2);
 			if ((tv == tv2) && (mdi & mdi2)){
 				if (mdi != mdi2){ // Debo quebrar
 					if (td.id != -1) // Visitado y otro MDI, caso no encontrado
@@ -229,18 +233,29 @@ namespace Causalize{
 	}
 	
 	void VectorTarjan::DFS(TarjanVertex tv, MDI mdi){
+					//~ dprint(tgraph[tv].equation);
+					dprint("DFS");
+					//~ dprint(tgraph[tv].number);
+					//~ dprint(mdi);
 		MDIL mdil = find (tv, mdi);
 		for (auto mdi : mdil){ // Visited
-			VertexPart at = (std::make_pair (tv, mdi)); 
-			stack.push(at);
+			//~ dprint(tgraph[tv].number);
+			//~ dprint(tgraph[tv].equation);
+			VertexPart at = (std::make_pair (tv, mdi));
 			data[at].id = data[at].low = id;
+			data[at].onStack = true;
+ 			stack.push(at);
 		}
 		id++;
 		for (auto mdi : mdil){ // DFS
 			VertexPart at = (std::make_pair (tv, mdi)); 
 			foreach_(TarjanEdge edge, out_edges(tv,tgraph)) {
 				TarjanVertex tv2 = target(edge, tgraph);
-				MDI mdi2 = mdi.DomToRan(tgraph[edge].ip);
+				// Esto es un parche. Pasar pasar de Dom1 a Dom2, paso de Dom1 a Ran2 y de Ran2 a Dom2
+				MDI mdi2 = mdi.DomToRan(tgraph[edge].ip).RanToDom(tgraph[tv2].ip); 
+				// --------------------------------------------
+				//~ dprint(mdi);
+				//~ dprint(mdi2);
 				MDIL mdil = find (tv2, mdi2, true);
 				for (auto m : mdil){
 					VertexPart to = std::make_pair(tv2,m);
@@ -252,8 +267,16 @@ namespace Causalize{
 			if (data[at].id == data[at].low){
 				ConnectedComponent scc;
 				while (1){
+					dprint(stack.size());
 					VertexPart node = stack.top();
 					stack.pop();
+					dprint(1);
+					dprint(tgraph[node.first].number);
+					dprint(tgraph[at.first].number);
+					//~ dprint(tgraph[node.first].equation);
+					//~ dprint(tgraph[node.first].equation);
+					//~ dprint(tgraph[node.first].number);
+					//~ dprint(tgraph[node.first].equation);
 					data[node].onStack = false;
 					data[node].low = data[at].id;
 					scc.push_back(node);
@@ -284,7 +307,8 @@ namespace Causalize{
 		}
 		
 		for (auto pair : data){
-			DFS(pair.first.first, pair.first.second);
+			if (pair.second.id == -1)
+				DFS(pair.first.first, pair.first.second);
 		}
 	
 		/* Si volvemos a un mismo vértice con otro rango del que salimos, lo vamos a consider como un caso no resuelto todavía. Si volvemos con el mismo, es trivial:
@@ -293,8 +317,8 @@ namespace Causalize{
 	 	for (auto cc : strongly_connected_component){
 			dprint("New");
 			for (auto vp:cc){
-				dprint(tgraph[vp.first].equation);
-				dprint(tgraph[vp.first].unknown());
+				dprint(tgraph[vp.first].number);
+				//~ dprint(tgraph[vp.first].unknown());
 				dprint(vp.second);
 			}
 		}
