@@ -330,7 +330,7 @@ namespace Causalize{
 				
 			//~ }
 				
-		isOK (matching, true);
+		if (!isOK (matching, true)) assert(false);
 		return matching;
 	}
 	

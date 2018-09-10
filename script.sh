@@ -1,2 +1,2 @@
 make
-bin/causalize -dc -v test/causalize/tarjan3.mo
+bin/causalize -v test/causalize/tarjan1.mo

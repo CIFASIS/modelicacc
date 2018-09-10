@@ -205,16 +205,25 @@ namespace Causalize{
 		MDIL rta;
 		for (auto pair : data){
 			//~ dprint("find");
-			//~ dprint(tgraph[tv].number);
+
 			MDI mdi2 = pair.first.second;
 			auto tv2 = pair.first.first;
 			auto td = pair.second;
+			//~ dprint(tgraph[tv].number);
+			//~ dprint(tgraph[tv2].number);
 			//~ dprint(mdi);
 			//~ dprint(mdi2);
+			//~ dprint((tv == tv2));
 			if ((tv == tv2) && (mdi & mdi2)){
 				if (mdi != mdi2){ // Debo quebrar
-					if (td.id != -1) // Visitado y otro MDI, caso no encontrado
-						assert(false);						
+					
+					if (td.id != -1){ // Visitado y otro MDI, caso no encontrado
+						dprint(td.id);
+						dprint(mdi);
+						dprint(mdi2);
+						dprint(tgraph[tv].number);						
+						assert(false);
+					}					
 					data.erase(pair.first);
 					VertexPart vp;
 					for (auto m : mdi2 - mdi){
@@ -234,8 +243,8 @@ namespace Causalize{
 	
 	void VectorTarjan::DFS(TarjanVertex tv, MDI mdi){
 					//~ dprint(tgraph[tv].equation);
-					dprint("DFS");
-					//~ dprint(tgraph[tv].number);
+					//~ dprint("DFS");
+					dprint(tgraph[tv].number);
 					//~ dprint(mdi);
 		MDIL mdil = find (tv, mdi);
 		for (auto mdi : mdil){ // Visited
@@ -256,29 +265,41 @@ namespace Causalize{
 				// --------------------------------------------
 				//~ dprint(mdi);
 				//~ dprint(mdi2);
-				MDIL mdil = find (tv2, mdi2, true);
-				for (auto m : mdil){
+				if (!(tgraph[tv2].mdi & mdi2)) continue;
+				MDIL mdil2 = find (tv2, (tgraph[tv2].mdi & mdi2).get(), false);
+				//~ dprint (mdil2.size());
+				//~ dprint(tgraph[tv2].number);
+				//~ dprint(mdi2);
+				for (auto m : mdil2){
 					VertexPart to = std::make_pair(tv2,m);
 					if (data[to].id == -1) DFS (to.first, to.second);
-					if (data[to].onStack) 
+					//~ dprint(data[to].id);
+					//~ dprint(data[to].onStack);
+
+					if (data[to].onStack) {
+						//~ dprint(data[at].low);
 						data[at].low = std::min (data[at].low, data[to].low);
+						//~ dprint(data[at].low);
+
+					}
 				}
 			}
 			if (data[at].id == data[at].low){
 				ConnectedComponent scc;
 				while (1){
-					dprint(stack.size());
+					//~ dprint(stack.size());
 					VertexPart node = stack.top();
 					stack.pop();
-					dprint(1);
-					dprint(tgraph[node.first].number);
-					dprint(tgraph[at.first].number);
+					//~ dprint(1);
+					//~ dprint(tgraph[node.first].number);
+					//~ dprint(tgraph[at.first].number);
 					//~ dprint(tgraph[node.first].equation);
 					//~ dprint(tgraph[node.first].equation);
 					//~ dprint(tgraph[node.first].number);
 					//~ dprint(tgraph[node.first].equation);
 					data[node].onStack = false;
 					data[node].low = data[at].id;
+					dprint(data[node].low);
 					scc.push_back(node);
 					if (node == at) {
 						strongly_connected_component.push_back(scc);
@@ -314,13 +335,13 @@ namespace Causalize{
 		/* Si volvemos a un mismo vértice con otro rango del que salimos, lo vamos a consider como un caso no resuelto todavía. Si volvemos con el mismo, es trivial:
 			 * Hay N ciclos.
 			 * */
-	 	for (auto cc : strongly_connected_component){
-			dprint("New");
-			for (auto vp:cc){
-				dprint(tgraph[vp.first].number);
+	 	//~ for (auto cc : strongly_connected_component){
+			//~ dprint("New");
+			//~ for (auto vp:cc){
+				//~ dprint(tgraph[vp.first].number);
 				//~ dprint(tgraph[vp.first].unknown());
-				dprint(vp.second);
-			}
+				//~ dprint(vp.second);
+			//~ }
 		}
 		return strongly_connected_component;
 	}

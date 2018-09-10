@@ -103,16 +103,16 @@ CausalizationStrategyVector::Causalize() {
 	m.dfs_matching();
 	VectorTarjan t(graph, m.getPairE(), m.getPairU());
 	std::list <ConnectedComponent> scc = t.GetConnectedComponent();
-	//~ for (auto cc : scc){
-		//~ dprint("New");
-		//~ for (auto vp:cc){
-			//~ dprint(vp.first.equation);
-			//~ dprint(vp.first.unknown());
-			//~ dprint(vp.second);
-		//~ }
-	//~ }
+	for (auto cc : scc){
+		dprint("New");
+		for (auto vp:cc){
+			dprint(vp.first.equation);
+			dprint(vp.first.unknown());
+			dprint(vp.second);
+		}
+	}
 
-	return false;
+	//~ return false;
   while(true) {
     bool causalize_some=false;
     assert(equationNumber == unknownNumber);
