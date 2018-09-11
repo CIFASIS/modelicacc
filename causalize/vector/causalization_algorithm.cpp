@@ -102,17 +102,28 @@ CausalizationStrategyVector::Causalize() {
 	VectorMatching m(graph, equationDescriptors, unknownDescriptors);
 	m.dfs_matching();
 	VectorTarjan t(graph, m.getPairE(), m.getPairU());
-	std::list <ConnectedComponent> scc = t.GetConnectedComponent();
+	std::list <CausalizeEquations> scc = t.GetConnectedComponent();
 	for (auto cc : scc){
 		dprint("New");
 		for (auto vp:cc){
-			dprint(vp.first.equation);
-			dprint(vp.first.unknown());
-			dprint(vp.second);
+			Causalize1toN(vp.unknown, vp.equation, vp.pairs);
 		}
 	}
-
-	//~ return false;
+	//~ for (auto cc : scc){
+		//~ for (auto vp:cc){
+			//~ IndexPair ip2 = vp.first.ip;
+			//~ ip2.Dom() = vp.second;
+			//~ dprint(vp.first.equation);
+			//~ dprint(vp.first.unknown());
+			//~ dprint(vp.second);
+		//~ }
+	//~ }
+			if (debugIsEnabled('c'))
+        PrintCausalizationResult();
+      if (solve) // @karupayun: assert(solve())?
+        SolveEquations();
+     
+	return true;
   while(true) {
     bool causalize_some=false;
     assert(equationNumber == unknownNumber);

@@ -108,7 +108,7 @@ namespace Causalize{
 				dprint(graph[v].equation);
 				TarjanVertex tv = add_vertex (tgraph);
 				tgraph[tv].equation = graph[v].equation;
-				tgraph[tv].unknown = graph[mm.second.v].unknown();
+				tgraph[tv].unknown = graph[mm.second.v].unknown;
 				tgraph[tv].ip = IndexPair (mm.first, mm.first.DomToRan (mm.second.ip), mm.second.ip.GetOffset(), mm.second.ip.GetUsage());
 				tgraph[tv].mdi = mm.first;
 				tgraph[tv].number = counter++;
@@ -313,7 +313,7 @@ namespace Causalize{
 		
 	}
 	
-	std::list <ConnectedComponent> VectorTarjan::GetConnectedComponent(){
+	std::list <CausalizeEquations> VectorTarjan::GetConnectedComponent(){
 		id = 0;
 		
 		TarjanGraph::vertex_iterator vi, vi_end;
@@ -335,15 +335,30 @@ namespace Causalize{
 		/* Si volvemos a un mismo vértice con otro rango del que salimos, lo vamos a consider como un caso no resuelto todavía. Si volvemos con el mismo, es trivial:
 			 * Hay N ciclos.
 			 * */
-	 	//~ for (auto cc : strongly_connected_component){
-			//~ dprint("New");
-			//~ for (auto vp:cc){
+	 	std::list <CausalizeEquations> rta;
+		for (auto cc : strongly_connected_component){
+			dprint("New");
+			CausalizeEquations ces;
+			for (auto vp:cc){ // vp = std::pair <TarjanVertex, MDI>
+				MDI dom = vp.second;
+				MDI ran = dom.DomToRan (tgraph[vp.first].ip);
+				IndexPair ip (dom, ran, tgraph[vp.first].ip.GetOffset(), tgraph[vp.first].ip.GetUsage()); 
+				IndexPairSet ips = {ip};
 				//~ dprint(tgraph[vp.first].number);
 				//~ dprint(tgraph[vp.first].unknown());
 				//~ dprint(vp.second);
-			//~ }
+				CausalizedVar ce;
+				ce.pairs = ips;
+				ce.equation = tgraph[vp.first].equation;
+				ce.unknown = tgraph[vp.first].unknown;
+				ces.push_back(ce);
+			}
+			rta.push_back(ces);
 		}
-		return strongly_connected_component;
+		
+		
+		
+		return rta;
 	}
 } // Causalize
 

@@ -25,7 +25,7 @@
 #include <stack>
 
 namespace Causalize {
-  struct TarjanVertexProperty: VertexProperty {
+  struct TarjanVertexProperty: VectorVertexProperty {
   /// @brief Represent the conexion into a Unknown and a Equation
     IndexPair ip; // La forma de conexión
 	MDI mdi; // Equation
@@ -49,15 +49,18 @@ namespace Causalize {
 		int low;
 		bool onStack;
 	};
+
+	typedef std::list <CausalizedVar> CausalizeEquations;
 	typedef std::pair <TarjanVertex, MDI> VertexPart;
 	typedef std::list < VertexPart > ConnectedComponent;
 	typedef std::map <MDI, Match> MapMDI;
+	
 
 	class VectorTarjan{
 	public:
 		VectorTarjan(){ };
 		VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> Pair_E, std::map <VectorVertex, MapMDI> Pair_U);
-		std::list <ConnectedComponent> GetConnectedComponent();
+		std::list <CausalizeEquations> GetConnectedComponent();
 
 	private:
 		void DFS(TarjanVertex tv, MDI mdi);
