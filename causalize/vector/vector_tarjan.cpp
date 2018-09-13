@@ -105,7 +105,7 @@ namespace Causalize{
 		for (auto p : Pair_E){
 			VectorVertex v = p.first;
 			for (auto mm : p.second){
-				dprint(graph[v].equation);
+				//~ dprint(graph[v].equation);
 				TarjanVertex tv = add_vertex (tgraph);
 				tgraph[tv].equation = graph[v].equation;
 				tgraph[tv].unknown = graph[mm.second.v].unknown;
@@ -120,14 +120,14 @@ namespace Causalize{
 		
 		VectorCausalizationGraph::edge_iterator ei, ei_end; 
 		TarjanGraph::vertex_iterator v1, v1_end, v2, v2_end;
-		for(boost::tie(v1, v1_end) = vertices(tgraph); v1 != v1_end; v1++){
-			dprint('\n');
-			dprint(tgraph[*v1].number);
-			dprint(tgraph[*v1].equation);
-			dprint(tgraph[*v1].unknown());
-			dprint(tgraph[*v1].ip.Dom());
-			dprint(tgraph[*v1].ip.Ran());
-		} 
+		//~ for(boost::tie(v1, v1_end) = vertices(tgraph); v1 != v1_end; v1++){
+			//~ dprint('\n');
+			//~ dprint(tgraph[*v1].number);
+			//~ dprint(tgraph[*v1].equation);
+			//~ dprint(tgraph[*v1].unknown());
+			//~ dprint(tgraph[*v1].ip.Dom());
+			//~ dprint(tgraph[*v1].ip.Ran());
+		//~ } 
 		foreach_(VectorEdge ei, edges(graph)) {
 			for (auto ip : graph[ei].Pairs()){
 			
@@ -186,11 +186,12 @@ namespace Causalize{
 									tgraph[te].dom = new_dom;
 									tgraph[te].ran = new_ran;
 									tgraph[te].ip = ip;
-									dprint('\n');
+									
 									dprint(tgraph[*v1].number);
 									dprint(tgraph[*v2].number);
-									dprint(tgraph[te].dom);
-									dprint(tgraph[te].ran);
+									dprint('\n');
+									//~ dprint(tgraph[te].dom);
+									//~ dprint(tgraph[te].ran);
 								}
 							}
 						}
@@ -244,7 +245,7 @@ namespace Causalize{
 	void VectorTarjan::DFS(TarjanVertex tv, MDI mdi){
 					//~ dprint(tgraph[tv].equation);
 					//~ dprint("DFS");
-					dprint(tgraph[tv].number);
+					//~ dprint(tgraph[tv].number);
 					//~ dprint(mdi);
 		MDIL mdil = find (tv, mdi);
 		for (auto mdi : mdil){ // Visited
@@ -299,7 +300,7 @@ namespace Causalize{
 					//~ dprint(tgraph[node.first].equation);
 					data[node].onStack = false;
 					data[node].low = data[at].id;
-					dprint(data[node].low);
+					//~ dprint(data[node].low);
 					scc.push_back(node);
 					if (node == at) {
 						strongly_connected_component.push_back(scc);
@@ -337,7 +338,7 @@ namespace Causalize{
 			 * */
 	 	std::list <CausalizeEquations> rta;
 		for (auto cc : strongly_connected_component){
-			dprint("New");
+			//~ dprint("New");
 			CausalizeEquations ces;
 			for (auto vp:cc){ // vp = std::pair <TarjanVertex, MDI>
 				MDI dom = vp.second;
