@@ -42,6 +42,7 @@ using namespace Modelica;
 using namespace Modelica::AST;
 using namespace Causalize;
 bool solve = true;
+bool tarjan = false;
 
 int main(int argc, char ** argv)
 {
@@ -49,7 +50,7 @@ int main(int argc, char ** argv)
   bool r;
   int opt;
   bool vectorial = false;
-
+	
   while ((opt = getopt(argc, argv, "d:vs")) != -1) {
     switch (opt) {
      case 'd':
@@ -61,6 +62,11 @@ int main(int argc, char ** argv)
        break;
      case 'v':
        vectorial = true;
+ 			 tarjan = true;
+       break;
+     case 't':
+			 tarjan = true;
+			 vectorial = true;
        break;
      case 's':
        solve = false;
