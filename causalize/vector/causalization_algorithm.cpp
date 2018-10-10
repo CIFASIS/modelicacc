@@ -49,10 +49,7 @@ using namespace boost::icl;
 
 extern bool solve;
 extern bool tarjan;
-<<<<<<< HEAD
-=======
 
->>>>>>> ef41d7d1f794650fbcd267fdb3ebd09a801ebf20
 namespace Causalize {
 CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGraph g, MMO_Class &m): mmo(m){
 	graph = g;
@@ -89,7 +86,6 @@ CausalizationStrategyVector::Causalize1toN(const VectorUnknown unk, const Equati
 	c_var.equation = eq;
 	c_var.pairs = ips;
 	equations1toN.push_back(c_var);
-	std::cout << "EE" << std::endl;
 }
 
 void 
@@ -98,12 +94,11 @@ CausalizationStrategyVector::CausalizeNto1(const VectorUnknown unk, const Equati
 	c_var.unknown = unk;
 	c_var.equation = eq;
 	c_var.pairs = ips;
-  equationsNto1.insert(equationsNto1.begin(), c_var);
+    equationsNto1.insert(equationsNto1.begin(), c_var);
 }
 
 bool
 CausalizationStrategyVector::Causalize() {	
-<<<<<<< HEAD
   if (tarjan){
 	VectorMatching m(graph, equationDescriptors, unknownDescriptors);
 	m.dfs_matching();
@@ -133,51 +128,7 @@ CausalizationStrategyVector::Causalize() {
   int steps = 0;
   bool split = false;
 
-  while(true) {
-=======
-  int steps = 0;
-  bool split = false;
-	if (tarjan){
-		VectorMatching m(graph, equationDescriptors, unknownDescriptors);
-		m.dfs_matching();
-		VectorTarjan t(graph, m.getPairE(), m.getPairU());
-		std::list <CausalizeEquations> scc = t.GetConnectedComponent();
-		for (auto cc : scc){
-			dprint("New");
-			if (cc.size() == 1){
-				Causalize1toN(cc.begin() -> unknown, cc.begin() -> equation, cc.begin() -> pairs);
-			}
-			else{
-			  for (auto vp:cc){;
-					//~ SolveEquations2();
-					Causalize1toN(vp.unknown, vp.equation, vp.pairs);
-				}
-			  //~ std::list<std::string> c_code;
-				//~ ClassList cl;
-				//~ EquationList causalEqs = EquationSolver::Solve(eqs, unknowns, mmo.syms_ref(), c_code, cl, mmo.name());
-				//~ Causalize1toN)
-						//~ mmo.equations_ref().equations_ref()=causalEqs;
-
-				//~ for (auto eq : causalEqs)
-					//~ std::cout << eq << std::endl;
-			}
-								SolveEquations2();
-
-		}
-		//~ SolveEquations();
-
-		if (debugIsEnabled('c'))
-			PrintCausalizationResult();
-		//~ if (solve) // @karupayun: assert(solve())?
-			//~ SolveEquations2();
-    mmo.equations_ref().equations_ref()=rta; 
-		return true;	
-	} 
-	
-	
-	
-	while(true) { // Old code: When we weren't making tarjan algorithm for vectorial cases.
->>>>>>> ef41d7d1f794650fbcd267fdb3ebd09a801ebf20
+  while(true) { // Old code: When we weren't making tarjan algorithm for vectorial cases.
     bool causalize_some=false;
     assert(equationNumber == unknownNumber);
     if(equationDescriptors.empty() && unknownDescriptors.empty()) {
