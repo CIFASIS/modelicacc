@@ -230,10 +230,10 @@ namespace Causalize{
 			}
 		}
 		if(equationNumber != matching){
-			if (print_message)
-				printf("The model being causalized is not full-matched.\n"
-					"There are %d equations and the matching is %d\n", 
-					equationNumber, matching);
+			//~ if (print_message)
+				//~ printf("The model being causalized is not full-matched.\n"
+					//~ "There are %d equations and the matching is %d\n", 
+					//~ equationNumber, matching);
 			return false;
 		}
 		return true;

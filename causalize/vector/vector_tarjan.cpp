@@ -187,9 +187,9 @@ namespace Causalize{
 									tgraph[te].ran = new_ran;
 									tgraph[te].ip = ip;
 									
-									dprint(tgraph[*v1].number);
-									dprint(tgraph[*v2].number);
-									dprint('\n');
+									//~ dprint(tgraph[*v1].number);
+									//~ dprint(tgraph[*v2].number);
+									//~ dprint('\n');
 									//~ dprint(tgraph[te].dom);
 									//~ dprint(tgraph[te].ran);
 								}

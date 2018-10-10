@@ -48,6 +48,7 @@ using namespace boost;
 using namespace boost::icl;
 
 extern bool solve;
+extern bool tarjan;
 namespace Causalize {
 CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGraph g, MMO_Class &m): mmo(m){
 	graph = g;
@@ -97,14 +98,13 @@ CausalizationStrategyVector::CausalizeNto1(const VectorUnknown unk, const Equati
 
 bool
 CausalizationStrategyVector::Causalize() {	
-  int steps = 0;
-  bool split = false;
+  if (tarjan){
 	VectorMatching m(graph, equationDescriptors, unknownDescriptors);
 	m.dfs_matching();
 	VectorTarjan t(graph, m.getPairE(), m.getPairU());
 	std::list <CausalizeEquations> scc = t.GetConnectedComponent();
 	for (auto cc : scc){
-		dprint("New");
+		//~ dprint("New");
 		for (auto vp:cc){
 			Causalize1toN(vp.unknown, vp.equation, vp.pairs);
 		}
@@ -118,12 +118,15 @@ CausalizationStrategyVector::Causalize() {
 			//~ dprint(vp.second);
 		//~ }
 	//~ }
-			if (debugIsEnabled('c'))
-        PrintCausalizationResult();
-      if (solve) // @karupayun: assert(solve())?
-        SolveEquations();
-     
-	return true;
+	if (debugIsEnabled('c'))
+      PrintCausalizationResult();
+    if (solve) // @karupayun: assert(solve())?
+      SolveEquations();
+  	return true;
+  }
+  int steps = 0;
+  bool split = false;
+
   while(true) {
     bool causalize_some=false;
     assert(equationNumber == unknownNumber);
