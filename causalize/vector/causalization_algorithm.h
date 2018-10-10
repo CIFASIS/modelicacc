@@ -29,6 +29,7 @@ class CausalizationStrategyVector{
 		void PrintCausalizationResult();
 	private:
 		void SolveEquations();
+		void SolveEquations2();
 		void Causalize1toN(const VectorUnknown unknown, const Equation equation, const IndexPairSet ips);
 		void CausalizeNto1(const VectorUnknown unknown, const Equation equation, const IndexPairSet ips);
     Vertex GetEquation(Edge e);
@@ -42,6 +43,7 @@ class CausalizationStrategyVector{
                                  IndexPairSet::iterator candidate_pair);
     bool CollisionPairInEdge(IndexPair ip, VectorEdge edge, VertexType vt);
 
+		EquationList rta;
     int step;
 		int equationNumber;
 		int unknownNumber;
