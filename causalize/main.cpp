@@ -62,11 +62,6 @@ int main(int argc, char ** argv)
        break;
      case 'v':
        vectorial = true;
- 			 tarjan = true;
-       break;
-     case 't':
-			 tarjan = true;
-			 vectorial = true;
        break;
      case 't':
 	   tarjan = true;
