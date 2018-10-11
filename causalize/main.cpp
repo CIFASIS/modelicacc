@@ -51,7 +51,7 @@ int main(int argc, char ** argv)
   int opt;
   bool vectorial = false;
 	
-  while ((opt = getopt(argc, argv, "d:vs")) != -1) {
+  while ((opt = getopt(argc, argv, "d:vst")) != -1) {
     switch (opt) {
      case 'd':
        if (optarg != NULL && isDebugParam(optarg)) {

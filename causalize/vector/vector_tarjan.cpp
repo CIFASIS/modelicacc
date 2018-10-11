@@ -108,6 +108,8 @@ namespace Causalize{
 				//~ dprint(graph[v].equation);
 				TarjanVertex tv = add_vertex (tgraph);
 				tgraph[tv].equation = graph[v].equation;
+				tgraph[tv].index = counter;
+				tgraph[tv].count = mm.first.Size();
 				tgraph[tv].unknown = graph[mm.second.v].unknown;
 				tgraph[tv].ip = IndexPair (mm.first, mm.first.DomToRan (mm.second.ip), mm.second.ip.GetOffset(), mm.second.ip.GetUsage());
 				tgraph[tv].mdi = mm.first;
@@ -115,8 +117,6 @@ namespace Causalize{
 				tgraph[tv].edge = mm.second.e;
 			}				
 		}
-	
-
 		
 		VectorCausalizationGraph::edge_iterator ei, ei_end; 
 		TarjanGraph::vertex_iterator v1, v1_end, v2, v2_end;
@@ -182,10 +182,16 @@ namespace Causalize{
 									new_ran = new_ran.RanToDom(tgraph[*v2].ip);
 								
 									if ((v1 == v2) && (new_dom == new_ran)) continue; // No have sense this kind of edges
-									TarjanEdge te = add_edge (*v1, *v2, tgraph).first;
-									tgraph[te].dom = new_dom;
-									tgraph[te].ran = new_ran;
-									tgraph[te].ip = ip;
+									IndexPair new_ip (new_dom, new_ran, ip.GetOffset(), ip.GetUsage());
+									IndexPairSet ips;
+									ips.insert(new_ip);
+									Label lab (ips);
+									add_edge (*v1, *v2, lab, tgraph).first;
+
+									//~ tgraph[te].dom = new_dom;
+									//~ tgraph[te].ran = new_ran;
+									//~ tgraph[te].Label = ips;
+									//~ tgraph[te].ip = new_ip;
 									
 									//~ dprint(tgraph[*v1].number);
 									//~ dprint(tgraph[*v2].number);
@@ -262,7 +268,7 @@ namespace Causalize{
 			foreach_(TarjanEdge edge, out_edges(tv,tgraph)) {
 				TarjanVertex tv2 = target(edge, tgraph);
 				// Esto es un parche. Pasar pasar de Dom1 a Dom2, paso de Dom1 a Ran2 y de Ran2 a Dom2
-				MDI mdi2 = mdi.DomToRan(tgraph[edge].ip).RanToDom(tgraph[tv2].ip); 
+				MDI mdi2 = mdi.DomToRan(*tgraph[edge].Pairs().begin()).RanToDom(tgraph[tv2].ip); 
 				// --------------------------------------------
 				//~ dprint(mdi);
 				//~ dprint(mdi2);

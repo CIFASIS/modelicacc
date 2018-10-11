@@ -31,15 +31,15 @@ namespace Causalize {
 	MDI mdi; // Equation
 	int number;
 	VectorEdge edge;
-  };
-	struct TarjanEdgeProperty {
+	};
+	struct TarjanEdgeProperty: Label {
 		MDI dom;
 		MDI ran;
 		IndexPair ip;		
 	};
 
 	/// @brief This is the definition of the Incidence graph for the vector case.
-	typedef boost::adjacency_list<boost::listS, boost::listS, boost::directedS, TarjanVertexProperty, TarjanEdgeProperty> TarjanGraph;
+	typedef boost::adjacency_list<boost::listS, boost::listS, boost::directedS, TarjanVertexProperty, Label> TarjanGraph;
 	/// @brief This a node from the vectorized incidence graph
 	typedef Causalize::TarjanGraph::vertex_descriptor TarjanVertex;
 	/// @brief This a node from the vectorized incidence graph
@@ -61,6 +61,7 @@ namespace Causalize {
 		VectorTarjan(){ };
 		VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> Pair_E, std::map <VectorVertex, MapMDI> Pair_U);
 		std::list <CausalizeEquations> GetConnectedComponent();
+		TarjanGraph	tgraph;
 
 	private:
 		void DFS(TarjanVertex tv, MDI mdi);
@@ -70,7 +71,6 @@ namespace Causalize {
 		std::stack <VertexPart> stack;
 		std::list <ConnectedComponent> strongly_connected_component;
 		std::map <VertexPart, TarjanData> data;
-		TarjanGraph	tgraph;
 		VectorCausalizationGraph graph;
 	};
 }; // Causalize

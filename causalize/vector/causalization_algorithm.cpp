@@ -103,6 +103,12 @@ CausalizationStrategyVector::Causalize() {
 	VectorMatching m(graph, equationDescriptors, unknownDescriptors);
 	m.dfs_matching();
 	VectorTarjan t(graph, m.getPairE(), m.getPairU());
+ 
+  stringstream ss;
+  ss << "graph_" << step++ << ".dot";
+  GraphPrinterDirected<TarjanVertexProperty,Label> gp(t.tgraph);
+  gp.printGraph(ss.str());
+	
 	std::list <CausalizeEquations> scc = t.GetConnectedComponent();
 	for (auto cc : scc){
 		//~ dprint("New");
@@ -147,6 +153,10 @@ CausalizationStrategyVector::Causalize() {
     //First, we process the equations' side
     auxiliaryIter = equationDescriptors.begin();
     for(iter = auxiliaryIter; iter != equationDescriptors.end(); iter = auxiliaryIter){ // Ecuación
+			      stringstream ss;
+        ss << "graph_" << step++ << ".dot";
+        GraphPrinter<VectorVertexProperty,Label>  gp(graph);
+        gp.printGraph(ss.str());
       // Additional iterator to erase while traversing
       auxiliaryIter++;
       EquationVertex eq = *iter;
@@ -218,10 +228,10 @@ CausalizationStrategyVector::Causalize() {
           remove_vertex(unk,graph);
           unknownDescriptors.remove(unk);
         }
-        stringstream ss;
-        ss << "graph_" << step++ << ".dot";
-        GraphPrinter<VectorVertexProperty,Label>  gp(graph);
-        gp.printGraph(ss.str());
+        //~ stringstream ss;
+        //~ ss << "graph_" << step++ << ".dot";
+        //~ GraphPrinter<VectorVertexProperty,Label>  gp(graph);
+        //~ gp.printGraph(ss.str());
       }
     }
 
