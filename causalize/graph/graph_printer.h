@@ -180,12 +180,12 @@ namespace Causalize {
 		  GraphPrinterDirected(const Graph &g): graph(g) {
       	typename Graph::vertex_iterator vi, vi_end;
 	      for(tie(vi, vi_end) = vertices(graph); vi!= vi_end; vi++){
-		      if(graph[*vi].type == kVertexEquation){
+		      //~ if(graph[*vi].type == kVertexEquation){
       			equationDescriptors.push_back(*vi);
 						//~ std::cout << graph[*vi].equation << std::endl;
-      		}else{
-      		  unknownDescriptors.push_back(*vi);		
-    		  }
+      		//~ }else{
+      		  //~ unknownDescriptors.push_back(*vi);		
+    		  //~ }
     	  }
       };
 
@@ -195,91 +195,85 @@ namespace Causalize {
 	      int depth = 0;
         typedef typename list<Vertex>::iterator Iterator;
       
-	      stri << "graph G{" << endl;
+	      stri << "digraph D{" << endl;
 	      INSERT_TAB
 		      MAKE_SPACE
-		      stri << "subgraph cluster0{" << endl;
-		      INSERT_TAB
-			      MAKE_SPACE
-			      stri << "label = \"Equations\";" << endl;
-			      MAKE_SPACE
-			      stri << "edge [style=invis];" << endl;
-			      MAKE_SPACE
+		      stri << "  rankdir=LR" << endl;
+		      stri << "  size=\"4,3\"" << endl;
+		      stri << "  ratio=\"fill\"" << endl;
+		      stri << "  edge[style=\"bold\"]" << endl;
+		      stri << "  node[shape=\"circle\"]" << endl;
+		      //~ stri << "  subgraph cluster0{" << endl;
             //stringstream colors2;
-			      for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
-				      Iterator aux = it;
-				      aux++;
-				      stri << "eq" << graph[*it].index;
-				      if((aux) != equationDescriptors.end()){
-					      stri << " -- ";		
-				      }else{
-					      stri << ";" << endl;		
-				      }
-              /*if (out_degree(*it,graph)==0)
-                colors2 << "    " << graph[*it].index << "[ color=\"red\" ];" << endl;*/
-			      }
+			      //~ for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
+				      //~ Iterator aux = it;
+				      //~ aux++;
+				      //~ stri << "eq" << graph[*it].index;
+				      //~ if((aux) != equationDescriptors.end()){
+					      //~ stri << " -- ";		
+				      //~ }else{
+					      //~ stri << ";" << endl;		
+				      //~ }
+
+			      //~ }
 			      for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
 			        MAKE_SPACE
-#ifdef HAS_COUNT
-				      stri << "eq" << graph[*it].index << " [label=\"Eq. " << graph[*it].index << "\nCount=" << graph[*it].count << "\"];" << endl;
-#else 
-				      stri << "eq" << graph[*it].index << " [label=\"Eq. " << graph[*it].index << "\"];" << endl;
+				      stri << "eq" << graph[*it].index << " [fontsize=35 label=\"Eq. " << graph[*it].number << "\n" << graph[*it].mdi <<  "\"];" << endl;
 
-#endif
             }
             //stri << colors2.str();
-		      DELETE_TAB
-		      MAKE_SPACE
-		      stri << "}" << endl;
+		      //~ DELETE_TAB
+		      //~ MAKE_SPACE
+		      //~ stri << "}" << endl;
 	      DELETE_TAB
       
       
-	      INSERT_TAB
-		      MAKE_SPACE
-		      stri << "subgraph cluster1{" << endl;
-		      INSERT_TAB
-			      MAKE_SPACE
-			      stri << "label = \"Unknowns\";" << endl;
-			      MAKE_SPACE
-			      stri << "edge [style=invis];" << endl;
-			      MAKE_SPACE
-            stringstream colors;
-			      for(Iterator it=unknownDescriptors.begin(); it!=unknownDescriptors.end(); it++){
-				      Iterator aux = it;
-				      aux++;
-				      stri << "var" << graph[*it].index;
-				      if((aux) != unknownDescriptors.end()){
-					      stri << " -- ";		
-				      }else{
-					      stri << ";" << endl;		
-				      }
-			      }
-			      for(Iterator it=unknownDescriptors.begin(); it!=unknownDescriptors.end(); it++){
-		          MAKE_SPACE
-#ifdef HAS_COUNT
-				      stri << "var" << graph[*it].index << " [ label = \"" << graph[*it].unknown() << "\nCount=" << graph[*it].count << "\"];" << endl;
-#else
-				      stri << "var" << graph[*it].index << " [ label = \"" << graph[*it].unknown() << "\"];" << endl;
-#endif
-            }
-		      DELETE_TAB
-		      MAKE_SPACE
-		      stri << colors.str();
-		      stri << "}" << endl;
-	      DELETE_TAB
+	      //~ INSERT_TAB
+		      //~ MAKE_SPACE
+		      //~ stri << "subgraph cluster1{" << endl;
+		      //~ INSERT_TAB
+			      //~ MAKE_SPACE
+			      //~ stri << "label = \"Unknowns\";" << endl;
+			      //~ MAKE_SPACE
+			      //~ stri << "edge [style=invis];" << endl;
+			      //~ MAKE_SPACE
+            //~ stringstream colors;
+			      //~ for(Iterator it=unknownDescriptors.begin(); it!=unknownDescriptors.end(); it++){
+				      //~ Iterator aux = it;
+				      //~ aux++;
+				      //~ stri << "var" << graph[*it].index;
+				      //~ if((aux) != unknownDescriptors.end()){
+					      //~ stri << " -- ";		
+				      //~ }else{
+					      //~ stri << ";" << endl;		
+				      //~ }
+			      //~ }
+			      //~ for(Iterator it=unknownDescriptors.begin(); it!=unknownDescriptors.end(); it++){
+		          //~ MAKE_SPACE
+//~ #ifdef HAS_COUNT
+				      //~ stri << "var" << graph[*it].index << " [ label = \"" << graph[*it].unknown() << "\nCount=" << graph[*it].count << "\"];" << endl;
+//~ #else
+				      //~ stri << "var" << graph[*it].index << " [ label = \"" << graph[*it].unknown() << "\"];" << endl;
+//~ #endif
+            //~ }
+		      //~ DELETE_TAB
+		      //~ MAKE_SPACE
+		      //~ stri << colors.str();
+		      //~ stri << "}" << endl;
+	      //~ DELETE_TAB
       
 	      INSERT_TAB
 		      MAKE_SPACE
-		      stri << "edge [constraint=false];" << endl;
+		      //~ stri << "edge [constraint=false];" << endl;
 		      for(Iterator eq_it = equationDescriptors.begin(); eq_it != equationDescriptors.end(); eq_it++){
 			      EdgeIterator ei, ei_end;
 			      for(tie(ei, ei_end) = out_edges(*eq_it, graph); ei != ei_end; ei++){
-				      Vertex unknown = target(*ei, graph);
+				      Vertex e2 = target(*ei, graph);
 				      MAKE_SPACE;
 				      string name;
-    	        stri << "eq" << graph[*eq_it].index << " -- var" << graph[unknown].index;
+    	        stri << "eq" << graph[*eq_it].index << " -> eq" << graph[e2].index;
               EdgeProperty ep = graph[*ei];
-              stri << "[label = \"" << ep << "\"];";
+              stri << "[fontsize=30 label = \"" << ep << "\"];";
 			      }
 		      }
 	      DELETE_TAB

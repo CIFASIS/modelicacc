@@ -101,21 +101,22 @@ namespace Causalize{
 	}
 		
 	VectorTarjan::VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> Pair_E, std::map <VectorVertex, MapMDI> Pair_U) : graph(graph){
-		int counter = 1;
+		int counter = 1, counter2 = 1;
 		for (auto p : Pair_E){
 			VectorVertex v = p.first;
 			for (auto mm : p.second){
 				//~ dprint(graph[v].equation);
 				TarjanVertex tv = add_vertex (tgraph);
 				tgraph[tv].equation = graph[v].equation;
-				tgraph[tv].index = counter;
+				tgraph[tv].index = counter++;
 				tgraph[tv].count = mm.first.Size();
 				tgraph[tv].unknown = graph[mm.second.v].unknown;
 				tgraph[tv].ip = IndexPair (mm.first, mm.first.DomToRan (mm.second.ip), mm.second.ip.GetOffset(), mm.second.ip.GetUsage());
 				tgraph[tv].mdi = mm.first;
-				tgraph[tv].number = counter++;
+				tgraph[tv].number = counter2;
 				tgraph[tv].edge = mm.second.e;
-			}				
+			}
+			counter2++;				
 		}
 		
 		VectorCausalizationGraph::edge_iterator ei, ei_end; 

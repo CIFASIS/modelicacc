@@ -105,7 +105,7 @@ CausalizationStrategyVector::Causalize() {
 	VectorTarjan t(graph, m.getPairE(), m.getPairU());
  
   stringstream ss;
-  ss << "graph_" << step++ << ".dot";
+  ss << "graph_tarjan_" << step++ << ".dot";
   GraphPrinterDirected<TarjanVertexProperty,Label> gp(t.tgraph);
   gp.printGraph(ss.str());
 	
