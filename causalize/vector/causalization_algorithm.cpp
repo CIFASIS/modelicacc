@@ -38,7 +38,6 @@
 
 using namespace Modelica;
 using namespace std;
-using namespace boost;
 using namespace boost::icl;
 
 namespace Causalize {
@@ -104,7 +103,6 @@ CausalizationStrategyVector::Causalize() {
       return true;
     }
 
-    list<VectorVertex>::size_type numAcausalEqs = equationDescriptors.size();
     list<VectorVertex>::iterator iter, auxiliaryIter;
 
 

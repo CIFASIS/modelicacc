@@ -83,8 +83,8 @@ namespace Modelica {
     member_imp(BinOp,BinOpType,op);
     
     IfExp::IfExp () {};
-    IfExp::IfExp (Expression a, Expression b, std::vector<fusion::vector2<Expression, Expression> > elseif, Expression c): cond_(a), then_(b), elseexp_(c) {
-      typedef fusion::vector2<Expression,Expression> P;
+    IfExp::IfExp (Expression a, Expression b, std::vector<boost::fusion::vector2<Expression, Expression> > elseif, Expression c): cond_(a), then_(b), elseexp_(c) {
+      typedef boost::fusion::vector2<Expression,Expression> P;
       foreach_ (P f, elseif) 
         elseif_.push_back(ExpPair(get<0>(f),get<1>(f)));
     };

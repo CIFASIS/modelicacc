@@ -23,8 +23,6 @@
 
 namespace Modelica {
 
-    using namespace boost;
- 
     EquationList SplitForVisitor::operator()(Connect eq) const {
         return EquationList(1, eq);
     };

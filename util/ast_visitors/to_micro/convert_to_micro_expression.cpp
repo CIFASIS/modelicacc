@@ -25,7 +25,6 @@
 
 namespace Modelica {
 
-    using namespace boost;
     ConvertToMicroExpression::ConvertToMicroExpression(MMO_Class &cl, unsigned int &discont, bool w, bool in_alg): mmo_class(cl), 
                                                 disc_count(discont), when(w), in_algorithm(in_alg) {
     };

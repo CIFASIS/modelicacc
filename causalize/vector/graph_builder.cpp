@@ -37,7 +37,6 @@
 #define DEBUG_MSG(str) do {std::cout << str << std::endl;} while( false )
 
 using namespace std;
-using namespace boost;
 using namespace boost::icl;
 using namespace Modelica;
 using namespace Modelica::AST;

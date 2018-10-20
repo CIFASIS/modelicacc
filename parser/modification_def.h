@@ -228,7 +228,7 @@ namespace Modelica
                                                          REDECLARE("redeclare"), EACH("each"), FINAL("final") {
       using qi::_1;
       using qi::_val;
-      using phoenix::construct;
+      using boost::phoenix::construct;
       using qi::on_error;
       using qi::_2;
       using qi::_3;
@@ -236,10 +236,10 @@ namespace Modelica
       using qi::_5;
       using qi::_6;
       using qi::_7;
-      using phoenix::val;
+      using boost::phoenix::val;
       using qi::fail;
       using qi::matches;
-      using phoenix::bind;
+      using boost::phoenix::bind;
       /*using qi::char_;
       using phoenix::val;
       using qi::fail;
