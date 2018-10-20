@@ -25,7 +25,6 @@
 
 namespace Modelica {
 
-    using namespace boost;
     PartialEvalExpression::PartialEvalExpression(const VarSymbolTable &v, bool eval):vtable(v),eval_parameters(eval) {};
     Expression PartialEvalExpression::operator()(Integer v) const { 
       if (v<0) return Output(v);

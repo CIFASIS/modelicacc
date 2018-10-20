@@ -38,7 +38,6 @@
 
 using namespace Modelica;
 using namespace std;
-using namespace boost;
 using namespace boost::icl;
 
 namespace Causalize {

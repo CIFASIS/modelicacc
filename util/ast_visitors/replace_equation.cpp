@@ -22,7 +22,6 @@
 
 namespace Modelica {
 
-    using namespace boost;
     ReplaceEquation::ReplaceEquation(Expression l, Expression r): look(l), rep(r), replace_exp(look,rep) {
       replace_exp.ignoreIndexes();
     };

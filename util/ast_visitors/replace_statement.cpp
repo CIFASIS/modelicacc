@@ -22,7 +22,6 @@
 
 namespace Modelica {
 
-    using namespace boost;
     ReplaceStatement::ReplaceStatement(Expression l, Expression r): look(l), rep(r), replace_exp(look,rep) {};
     Statement ReplaceStatement::operator()(Break v) const {
       return v;

@@ -96,9 +96,9 @@ namespace Modelica
       using qi::_3;
       using qi::_4;
       using qi::_val;
-      using phoenix::bind;
-      using phoenix::construct;
-      using phoenix::val;
+      using boost::phoenix::bind;
+      using boost::phoenix::construct;
+      using boost::phoenix::val;
       using qi::fail;
       using qi::on_error;
       using qi::matches;

@@ -75,7 +75,7 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector,bool initial)
 					if (down.isConnector()) {
 						c.variables_ref().push_back(n);
 						Type::Class tc = boost::get<Type::Class>(t_final);
-						Name newType = replace_all_copy(v.type(),".","_");
+						Name newType = boost::algorithm::replace_all_copy(v.type(),".","_");
 	                                        c.types_ref().push_back(newType);
         	                                c.tyTable_ref().insert(newType,t_final);
 						v.set_type(newType);

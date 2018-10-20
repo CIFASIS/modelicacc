@@ -22,7 +22,6 @@
 
 namespace Modelica {
 
-    using namespace boost;
     ReplaceExpression::ReplaceExpression(Expression l, Expression r): look(l), rep(r), check_indexes(true) {};
     Expression ReplaceExpression::operator()(Integer v) const { 
       if (look==Expression(v))

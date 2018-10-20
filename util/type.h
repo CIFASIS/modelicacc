@@ -31,7 +31,8 @@ namespace Modelica {
 }
 
 namespace Type {
-    using namespace boost;
+    using boost::variant;
+    using boost::recursive_wrapper;
     using namespace Modelica;
 	typedef std::string     Name;
 	

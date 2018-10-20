@@ -29,8 +29,11 @@
 namespace Modelica {
   namespace AST {
 
-    using namespace boost;
-    
+    using boost::get;
+    using boost::recursive_wrapper;
+    using boost::tuple;
+    using boost::variant;
+
     extern const char *BinOpTypeName[];
     typedef int             Integer;
     typedef double          Real;
@@ -133,7 +136,7 @@ namespace Modelica {
     struct IfExp {
       IfExp ();
       IfExp (Expression a, Expression b, List<ExpPair> elseif, Expression c);
-      IfExp (Expression a, Expression b, std::vector<fusion::vector2<Expression, Expression> > elseif, Expression c);
+      IfExp (Expression a, Expression b, std::vector<boost::fusion::vector2<Expression, Expression> > elseif, Expression c);
       comparable(IfExp);
       printable(IfExp);
       member_(Expression,cond);

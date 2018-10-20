@@ -21,7 +21,6 @@
 
 namespace Modelica {
 
-    using namespace boost;
     ConstantExpression::ConstantExpression() {};
     bool ConstantExpression::operator()(Integer v) const { 
       return true;
