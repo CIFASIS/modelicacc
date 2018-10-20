@@ -26,7 +26,6 @@
 #include <util/ast_visitors/partial_eval_expression.h>
 #include <ast/queries.h>
 
-using namespace boost;
 using namespace Modelica;
 using namespace Modelica::AST ;
 

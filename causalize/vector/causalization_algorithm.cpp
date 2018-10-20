@@ -44,7 +44,6 @@
 
 using namespace Modelica;
 using namespace std;
-using namespace boost;
 using namespace boost::icl;
 
 extern bool solve;
@@ -76,6 +75,11 @@ CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGrap
 			  "There are %d equations and %d variables\n", 
 			  equationNumber, unknownNumber);		
 	}
+
+  stringstream ss;
+  ss << "initial_graph.dot";
+  GraphPrinter<VectorVertexProperty,VectorEdgeProperty>  gp(graph);
+  gp.printGraph(ss.str());
 }
 
 
@@ -145,6 +149,7 @@ CausalizationStrategyVector::Causalize() {
         SolveEquations();
       return true;
     }
+
 
     //list<VectorVertex>::size_type numAcausalEqs = equationDescriptors.size();
     list<VectorVertex>::iterator iter, auxiliaryIter;

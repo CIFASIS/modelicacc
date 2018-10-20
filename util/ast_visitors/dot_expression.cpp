@@ -23,7 +23,6 @@
 
 namespace Modelica {
 
-    using namespace boost;
     DotExpression::DotExpression(Option<MMO_Class &> m, Name n, ExpList xs): _class(m), prefix(n), index(xs) 
     {
 	if (m)

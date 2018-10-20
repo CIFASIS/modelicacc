@@ -25,7 +25,6 @@
 
 namespace Modelica {
 
-    using namespace boost;
     EvalExpression::EvalExpression(const VarSymbolTable &v):vtable(v) {};
     EvalExpression::EvalExpression(const VarSymbolTable &v,Name n, Real r):vtable(v),name(n),val(r) {};
     Real EvalExpression::operator()(Integer v) const { 

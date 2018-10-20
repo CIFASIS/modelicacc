@@ -110,7 +110,7 @@ namespace Modelica
     c.set_annotation(a);
     return c;
   }
-   ClassType add_enc_prefixes(fusion::vector2<bool, ClassPrefixes> a, ClassType c) {
+   ClassType add_enc_prefixes(boost::fusion::vector2<bool, ClassPrefixes> a, ClassType c) {
     const bool &encap = get<0>(a);
     const ClassPrefixes &pre = get<1>(a);
     if (is<Class>(c)) {
@@ -216,9 +216,9 @@ namespace Modelica
       using qi::_4;
       using qi::_5;
       using qi::_val;
-      using phoenix::bind;
-      using phoenix::construct;
-      using phoenix::val;
+      using boost::phoenix::bind;
+      using boost::phoenix::construct;
+      using boost::phoenix::val;
       using qi::fail;
       using qi::on_error;
       using qi::matches;

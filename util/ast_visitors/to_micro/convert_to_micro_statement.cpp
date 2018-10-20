@@ -25,7 +25,6 @@
 
 namespace Modelica {
 
-    using namespace boost;
     ConvertToMicroStatement::ConvertToMicroStatement(MMO_Class &cl, unsigned int &discont): mmo_class(cl), disc_count(discont) {
     };
     Statement ConvertToMicroStatement::operator()(Assign v) const { 

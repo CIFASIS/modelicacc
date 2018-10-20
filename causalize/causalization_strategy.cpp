@@ -165,7 +165,9 @@ void CausalizationStrategy::Causalize() {
    MMO_Class *mmo = new MMO_Class(c);
    _mmo_class.tyTable_ref().insert(c.name(), Type::Class(c.name(),mmo));
  }
- std::fstream fs (_mmo_class.name()+ ".c", std::fstream::out);
+ std::stringstream s;
+ s << _mmo_class.name() << ".c";
+ std::fstream fs (s.str().c_str(), std::fstream::out);
  fs << "#include <gsl/gsl_multiroots.h>\n";
  fs << "#define pre(X) X\n";
  foreach_(std::string s, c_code)
@@ -191,7 +193,9 @@ void CausalizationStrategy::CausalizeSimple() {
    MMO_Class *mmo = new MMO_Class(c);
    _mmo_class.tyTable_ref().insert(c.name(), Type::Class(c.name(),mmo));
  }
- std::fstream fs (_mmo_class.name() + ".c", std::fstream::out);
+ std::stringstream s;
+ s << _mmo_class.name() << ".c";
+ std::fstream fs (s.str().c_str(), std::fstream::out);
  fs << "#include <gsl/gsl_multiroots.h>\n";
  fs << "#define pre(X) X\n";
  foreach_(std::string s, c_code)
@@ -214,7 +218,9 @@ void CausalizationStrategy::CausalizeTarjan() {
    MMO_Class *mmo = new MMO_Class(c);
    _mmo_class.tyTable_ref().insert(c.name(), Type::Class(c.name(),mmo));
  }
- std::fstream fs (_mmo_class.name() + ".c", std::fstream::out);
+ std::stringstream s;
+ s << _mmo_class.name() << ".c";
+ std::fstream fs (s.str().c_str(), std::fstream::out);
  fs << "#include <gsl/gsl_multiroots.h>\n";
  fs << "#define pre(X) X\n";
  foreach_(std::string s, c_code)
@@ -306,8 +312,10 @@ void CausalizationStrategy::MakeCausalBegining(Equation e, Expression unknown) {
       cout << std::endl;
   }
   if (solve) {
-    Equation causalEq = EquationSolver::Solve(e, unknown, _mmo_class.syms_ref(), c_code, _cl, _mmo_class.name());
-    _causalEqsBegining.push_back(causalEq);
+	  std::stringstream s;
+	  s << _mmo_class.name() << ".c";
+	  Equation causalEq = EquationSolver::Solve(e, unknown, _mmo_class.syms_ref(), c_code, _cl, s.str());
+	  _causalEqsBegining.push_back(causalEq);
   }
 }
 
@@ -321,10 +329,14 @@ void CausalizationStrategy::MakeCausalEnd(Equation e, Expression unknown) {
     cout << std::endl << e;
     cout << std::endl;
   }
+
   if (solve) {
-    Equation causalEq = EquationSolver::Solve(e, unknown, _mmo_class.syms_ref(), c_code, _cl, _mmo_class.name());
+    std::stringstream s;
+    s << _mmo_class.name() << ".c";
+    Equation causalEq = EquationSolver::Solve(e, unknown, _mmo_class.syms_ref(), c_code, _cl, s.str());
     _causalEqsEnd[_causalEqsEndIndex--] = causalEq;
   }
+
 }
 
 /**
@@ -358,7 +370,9 @@ void CausalizationStrategy::MakeCausalMiddle() {
       eqs.push_back(eq);
     }
 
-    EquationList causalEqs = EquationSolver::Solve(eqs, unknowns, _mmo_class.syms_ref(), c_code, _cl, _mmo_class.name());
+    std::stringstream s;
+    s << _mmo_class.name() << ".c";
+    EquationList causalEqs = EquationSolver::Solve(eqs, unknowns, _mmo_class.syms_ref(), c_code, _cl, s.str());
     _causalEqsMiddle.insert(_causalEqsMiddle.end(), causalEqs.begin(), causalEqs.end());
   }
 }
