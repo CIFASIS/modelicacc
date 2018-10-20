@@ -153,7 +153,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
         ret.push_back(Equality(lhs,rhs_exp));
       }
     }
-  } catch (std::logic_error) {    
+  } catch (std::logic_error &) {
     ERROR_UNLESS(!for_eq, "Non linear solving of for loops not suported yet");
     OptExpList ol;
     std::set<Name> args;
