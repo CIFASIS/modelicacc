@@ -179,7 +179,7 @@ namespace Modelica {
         foreach_(Expression e, oel.get()) {
           nl.push_back(ApplyThis(e));
         }
-        return Ref(1,RefTuple(s,nl));
+        return Reference(Ref(1,RefTuple(s,nl)));
       }
       return v;
     }
