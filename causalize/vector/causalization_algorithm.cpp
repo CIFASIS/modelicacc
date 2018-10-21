@@ -78,7 +78,7 @@ CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGrap
 
   stringstream ss;
   ss << "initial_graph.dot";
-  GraphPrinter<VectorVertexProperty,VectorEdgeProperty>  gp(graph);
+  GraphPrinter<VectorVertexProperty,Label>  gp(graph);
   gp.printGraph(ss.str());
 }
 

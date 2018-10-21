@@ -323,12 +323,12 @@ namespace Causalize{
 				//~ }
 				
 			//~ }
-		//~ for (auto &ev : eqDescriptors){
-				//~ for (auto mmdi : Pair_E[ev]){
-						//~ std::cout << "\nMatcheamos la Ecuación: " << graph[ev].equation << " en el rango: " << mmdi.first << " con la incognita:\n" << graph[mmdi.second.v].unknown() << " en el rango " << mmdi.first.DomToRan(mmdi.second.ip) << std::endl << std::endl; 
-				//~ }
+		for (auto &ev : eqDescriptors){
+				for (auto mmdi : Pair_E[ev]){
+						std::cout << "\nMatcheamos la Ecuación: " << graph[ev].equation << " en el rango: " << mmdi.first << " con la incognita:\n" << graph[mmdi.second.v].unknown() << " en el rango " << mmdi.first.DomToRan(mmdi.second.ip) << std::endl << std::endl; 
+				}
 				
-			//~ }
+			}
 				
 		if (!isOK (matching, true)) assert(false);
 		return matching;

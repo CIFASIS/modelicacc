@@ -143,13 +143,13 @@ namespace Causalize{
 				}
 				//~ dprint(size(ran));
 				//~ dprint(size(dom));
-				if (size(ran) != size(dom)) { // Parche en el caso de 1 con todos
-					if (size(ran) == 0){
+				if ((ran.size()) != (dom.size())) { // Parche en el caso de 1 con todos
+					if ((ran.size()) == 0){
 						for (auto _ : dom){
 							ran.push_back(ip.Ran());
 						}
 					}
-					else if (size(dom) == 0){
+					else if ((dom.size()) == 0){
 						for (auto _ : ran){
 							ran.push_back(ip.Dom());
 						}

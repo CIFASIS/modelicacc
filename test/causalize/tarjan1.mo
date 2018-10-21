@@ -1,5 +1,5 @@
 model RLC
-  constant Integer N = 5;
+  constant Integer N = 10;
   Real A[N], B[N];
 equation
 	for i in 1:N loop

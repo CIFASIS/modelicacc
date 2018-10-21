@@ -369,10 +369,10 @@ namespace Modelica {
         try {
           el.push_back(boost::lexical_cast<int>(s));
         } catch (boost::bad_lexical_cast) { // Unprocess offset  
-          if (find_first(s, "@")) {
+          if (boost::algorithm::find_first(s, "@")) {
             boost::algorithm::split(bop, s, boost::is_any_of("@"));
             el.push_back(BinOp(Reference(bop.front()), Add, boost::lexical_cast<int>(bop.at(1))));
-          } else if (find_first(s, "#")) {
+          } else if (boost::algorithm::find_first(s, "#")) {
             boost::algorithm::split(bop, s, boost::is_any_of("#"));
             el.push_back(BinOp(Reference(bop.front()), Sub, boost::lexical_cast<int>(bop.at(1))));
           } else {  

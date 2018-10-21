@@ -92,7 +92,7 @@ namespace Causalize {
 
 #endif
             }
-              stri << colors2.str();
+              //~ stri << colors2.str();
 		      DELETE_TAB
 		      MAKE_SPACE
 		      stri << "}" << endl;

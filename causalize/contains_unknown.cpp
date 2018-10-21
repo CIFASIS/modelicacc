@@ -101,12 +101,14 @@ namespace Causalize {
 
   bool ContainsUnknown::operator()(Bracket v) const {
     bool ret = false;
-    for (Expression exp: v.args()) {
+    for (auto &list: v.args()) {
+      for (Expression exp: list) {
       bool b = ApplyThis(exp);
       ret |= b;
+	  }
     }
     return ret;
-  }
+  } // TODO: Warning! Modificado para que compile.
 
   bool ContainsUnknown::operator()(Call call) const {
     if ("der"!=call.name())
