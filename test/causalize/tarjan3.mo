@@ -1,5 +1,5 @@
 model RLC
-  constant Integer N = 1000000;
+  constant Integer N = 10;
   Real Y, A[N];
 equation
 	A[3] = 4;

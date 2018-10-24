@@ -61,64 +61,32 @@ namespace Causalize {
         typedef typename list<Vertex>::iterator Iterator;
       
 	      stri << "graph G{" << endl;
-	      INSERT_TAB
+		INSERT_TAB
 		      MAKE_SPACE
-		      stri << "subgraph cluster0{" << endl;
+		      stri << "  rankdir=LR" << endl;
+		      stri << "  ratio=\"fill\"" << endl;
+		      //~ stri << "  edge[style=\"bold\"]" << endl;
+		      stri << "  node[shape=\"ellipse\"]" << endl;
 		      INSERT_TAB
-			      MAKE_SPACE
-			      stri << "label = \"Equations\";" << endl;
-			      MAKE_SPACE
-			      stri << "edge [style=invis];" << endl;
 			      MAKE_SPACE
             //stringstream colors2;
 			      for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
-				      Iterator aux = it;
-				      aux++;
-				      stri << "eq" << graph[*it].index;
-				      if((aux) != equationDescriptors.end()){
-					      stri << " -- ";		
-				      }else{
-					      stri << ";" << endl;		
-				      }
-              /*if (out_degree(*it,graph)==0)
-                colors2 << "    " << graph[*it].index << "[ color=\"red\" ];" << endl;*/
-			      }
-			      for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
 			        MAKE_SPACE
 #ifdef HAS_COUNT
-				      stri << "eq" << graph[*it].index << " [label=\"Eq. " << graph[*it].index << "\nCount=" << graph[*it].count << "\"];" << endl;
+				      stri << "eq" << graph[*it].index << " [label=\"Eq. " << graph[*it].index+1 << "\nCount=" << graph[*it].count << "\"];" << endl;
 #else 
-				      stri << "eq" << graph[*it].index << " [label=\"Eq. " << graph[*it].index << "\"];" << endl;
+				      stri << "eq" << graph[*it].index << " [label=\"Eq. " << graph[*it].index+1 << "\"];" << endl;
 
 #endif
             }
               //~ stri << colors2.str();
 		      DELETE_TAB
-		      MAKE_SPACE
-		      stri << "}" << endl;
 	      DELETE_TAB
       
       
 	      INSERT_TAB
-		      MAKE_SPACE
-		      stri << "subgraph cluster1{" << endl;
 		      INSERT_TAB
-			      MAKE_SPACE
-			      stri << "label = \"Unknowns\";" << endl;
-			      MAKE_SPACE
-			      stri << "edge [style=invis];" << endl;
-			      MAKE_SPACE
-            stringstream colors;
-			      for(Iterator it=unknownDescriptors.begin(); it!=unknownDescriptors.end(); it++){
-				      Iterator aux = it;
-				      aux++;
-				      stri << "var" << graph[*it].index;
-				      if((aux) != unknownDescriptors.end()){
-					      stri << " -- ";		
-				      }else{
-					      stri << ";" << endl;		
-				      }
-			      }
+			      stringstream colors;
 			      for(Iterator it=unknownDescriptors.begin(); it!=unknownDescriptors.end(); it++){
 		          MAKE_SPACE
 #ifdef HAS_COUNT
@@ -130,12 +98,10 @@ namespace Causalize {
 		      DELETE_TAB
 		      MAKE_SPACE
 		      stri << colors.str();
-		      stri << "}" << endl;
 	      DELETE_TAB
       
 	      INSERT_TAB
 		      MAKE_SPACE
-		      stri << "edge [constraint=false];" << endl;
 		      for(Iterator eq_it = equationDescriptors.begin(); eq_it != equationDescriptors.end(); eq_it++){
 			      EdgeIterator ei, ei_end;
 			      for(tie(ei, ei_end) = out_edges(*eq_it, graph); ei != ei_end; ei++){
@@ -198,10 +164,9 @@ namespace Causalize {
 	      INSERT_TAB
 		      MAKE_SPACE
 		      stri << "  rankdir=LR" << endl;
-		      stri << "  size=\"4,3\"" << endl;
 		      stri << "  ratio=\"fill\"" << endl;
-		      stri << "  edge[style=\"bold\"]" << endl;
-		      stri << "  node[shape=\"circle\"]" << endl;
+		      //~ stri << "  edge[style=\"bold\"]" << endl;
+		      stri << "  node[shape=\"ellipse\"]" << endl;
 		      //~ stri << "  subgraph cluster0{" << endl;
             //stringstream colors2;
 			      //~ for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
@@ -217,7 +182,7 @@ namespace Causalize {
 			      //~ }
 			      for(Iterator it=equationDescriptors.begin(); it!=equationDescriptors.end(); it++){
 			        MAKE_SPACE
-				      stri << "eq" << graph[*it].index << " [fontsize=35 label=\"Eq. " << graph[*it].number << "\n" << graph[*it].mdi <<  "\"];" << endl;
+				      stri << "eq" << graph[*it].index << " [label=\"Eq. " << graph[*it].number << "\n" << graph[*it].mdi <<  "\"];" << endl;
 
             }
             //stri << colors2.str();
@@ -272,7 +237,7 @@ namespace Causalize {
 				      string name;
     	        stri << "eq" << graph[*eq_it].index << " -> eq" << graph[e2].index;
               EdgeProperty ep = graph[*ei];
-              stri << "[fontsize=30 label = \"" << ep << "\"];";
+              stri << "[label = \"" << ep << "\"];";
 			      }
 		      }
 	      DELETE_TAB

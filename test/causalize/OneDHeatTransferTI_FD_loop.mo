@@ -1,6 +1,6 @@
-model OneDHeatTransferTI_FD
+model OneDHeatTransferTI_FD_loop
   parameter Real L = 0.2;
-  constant Integer N = 1000000000;
+  constant Integer N = 10;
   parameter Real T0 = 273.15;
   parameter Real TN = 330;
   parameter Real cp = 910 ;
@@ -33,4 +33,4 @@ equation
 		Tolerance={1e-6},
 		AbsTolerance={1e-6}
 	));
-end OneDHeatTransferTI_FD;
+end OneDHeatTransferTI_FD_loop;

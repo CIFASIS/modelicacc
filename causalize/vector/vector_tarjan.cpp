@@ -230,7 +230,7 @@ namespace Causalize{
 						dprint(mdi);
 						dprint(mdi2);
 						dprint(tgraph[tv].number);						
-						assert(false);
+						isOk = false;
 					}					
 					data.erase(pair.first);
 					VertexPart vp;
@@ -321,7 +321,8 @@ namespace Causalize{
 		
 	}
 	
-	std::list <CausalizeEquations> VectorTarjan::GetConnectedComponent(){
+	 bool VectorTarjan::GetConnectedComponent(std::list <CausalizeEquations> &scc){
+		isOk = true;
 		id = 0;
 		
 		TarjanGraph::vertex_iterator vi, vi_end;
@@ -343,8 +344,7 @@ namespace Causalize{
 		/* Si volvemos a un mismo vértice con otro rango del que salimos, lo vamos a consider como un caso no resuelto todavía. Si volvemos con el mismo, es trivial:
 			 * Hay N ciclos.
 			 * */
-	 	std::list <CausalizeEquations> rta;
-		for (auto cc : strongly_connected_component){
+	 	for (auto cc : strongly_connected_component){
 			//~ dprint("New");
 			CausalizeEquations ces;
 			for (auto vp:cc){ // vp = std::pair <TarjanVertex, MDI>
@@ -361,12 +361,10 @@ namespace Causalize{
 				ce.unknown = tgraph[vp.first].unknown;
 				ces.push_back(ce);
 			}
-			rta.push_back(ces);
-		}
+			scc.push_back(ces);
+		}		
 		
-		
-		
-		return rta;
+		return isOk;
 	}
 } // Causalize
 

@@ -60,7 +60,7 @@ namespace Causalize {
 	public:
 		VectorTarjan(){ };
 		VectorTarjan(VectorCausalizationGraph graph, std::map <VectorVertex, MapMDI> Pair_E, std::map <VectorVertex, MapMDI> Pair_U);
-		std::list <CausalizeEquations> GetConnectedComponent();
+		bool GetConnectedComponent(std::list <CausalizeEquations> &scc);
 		TarjanGraph	tgraph;
 
 	private:
@@ -68,6 +68,7 @@ namespace Causalize {
 		int id;
 		MDIL find (TarjanVertex tv, MDI mdi, bool onlyNV = false);
 
+		bool isOk;
 		std::stack <VertexPart> stack;
 		std::list <ConnectedComponent> strongly_connected_component;
 		std::map <VertexPart, TarjanData> data;

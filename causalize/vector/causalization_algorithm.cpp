@@ -103,7 +103,7 @@ CausalizationStrategyVector::CausalizeNto1(const VectorUnknown unk, const Equati
 
 bool
 CausalizationStrategyVector::Causalize() {	
-  if (tarjan){
+  while (tarjan){ // El while es para salir si encuentra q no funciona el vectorial
 	VectorMatching m(graph, equationDescriptors, unknownDescriptors);
 	m.dfs_matching();
 	VectorTarjan t(graph, m.getPairE(), m.getPairU());
@@ -113,7 +113,11 @@ CausalizationStrategyVector::Causalize() {
   GraphPrinterDirected<TarjanVertexProperty,Label> gp(t.tgraph);
   gp.printGraph(ss.str());
 	
-	std::list <CausalizeEquations> scc = t.GetConnectedComponent();
+	std::list <CausalizeEquations> scc;
+	if(!t.GetConnectedComponent(scc)){
+		tarjan = false; // No se puede resolver con Tarjan
+		continue;
+	}
 	for (auto cc : scc){
 		//~ dprint("New");
 		for (auto vp:cc){
@@ -145,7 +149,7 @@ CausalizationStrategyVector::Causalize() {
       // Finished causalizing :)
       if (debugIsEnabled('c'))
         PrintCausalizationResult();
-      if (solve) // @karupayun: assert(solve())?
+      if (solve) 
         SolveEquations();
       return true;
     }

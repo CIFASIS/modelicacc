@@ -1,5 +1,5 @@
 model REDRC
-  constant Integer N = 1000;
+  constant Integer N = 5;
   Real iC[N];
 	Real iR[N];
 	Real uR[N];
