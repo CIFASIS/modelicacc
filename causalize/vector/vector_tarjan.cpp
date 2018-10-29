@@ -245,15 +245,17 @@ namespace Causalize{
 	
 	void VectorTarjan::DFS(TarjanVertex tv, MDI mdi){
 		MDIL mdil = find (tv, mdi); // Función que se encarga de trabajar con los distintos conjuntos
-		for (auto mdi : mdil){ // Marco como visitado
+		//~ for (auto mdi : mdil){ // Marco como visitado
+			//~ VertexPart at = (std::make_pair (tv, mdi));
+
+		//~ }
+
+		for (auto mdi : mdil){ // DFS
 			VertexPart at = (std::make_pair (tv, mdi));
 			data[at].id = data[at].low = id;
 			data[at].onStack = true;
- 			stack.push(at);
-		}
-		id++;
-		for (auto mdi : mdil){ // DFS
-			VertexPart at = (std::make_pair (tv, mdi)); 
+ 			stack.push(at); 
+ 			id++;
 			foreach_(TarjanEdge edge, out_edges(tv,tgraph)) {
 				TarjanVertex tv2 = target(edge, tgraph);
 				// Pasar pasar de Dom1 a Dom2, paso de Dom1 a Ran2 y de Ran2 a Dom2
@@ -310,7 +312,7 @@ namespace Causalize{
 			 * Hay N ciclos.
 			 * */
 	 	for (auto cc : strongly_connected_component){
-			//~ dprint("New");
+			dprint("New");
 			CausalizeEquations ces;
 			for (auto vp:cc){ // vp = std::pair <TarjanVertex, MDI>
 				MDI dom = vp.second;
