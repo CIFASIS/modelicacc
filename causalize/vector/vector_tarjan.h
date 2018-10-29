@@ -66,7 +66,7 @@ namespace Causalize {
 	private:
 		void DFS(TarjanVertex tv, MDI mdi);
 		int id;
-		MDIL find (TarjanVertex tv, MDI mdi, bool onlyNV = false);
+		MDIL find (TarjanVertex tv, MDI mdi, bool onlyNV = true);
 
 		bool isOk;
 		std::stack <VertexPart> stack;

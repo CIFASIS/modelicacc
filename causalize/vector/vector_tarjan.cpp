@@ -50,7 +50,7 @@ namespace Causalize{
 
 	MDIL inter1a1 (MDIL l1, MDIL l2){
 		MDIL rta;
-		assert (l1.size() == l2.size());
+		assert (l1.size() == l2.size()); 
 		auto pm2 = l2.begin();
 		for (auto m1 : l1){
 			if (m1 & *pm2)
@@ -209,23 +209,17 @@ namespace Causalize{
 		}
 	};
 
+	// Busca el conjunto de nodos que representa el mdi y ese vértice. 
+	//   Devuelve un conjunto disjunto de partes. El booleano representa si solo buscamos elementos no visitados anteriormente.
 	MDIL VectorTarjan::find (TarjanVertex tv, MDI mdi, bool onlyNV){
 		MDIL rta;
 		for (auto pair : data){
-			//~ dprint("find");
-
 			MDI mdi2 = pair.first.second;
 			auto tv2 = pair.first.first;
 			auto td = pair.second;
-			//~ dprint(tgraph[tv].number);
-			//~ dprint(tgraph[tv2].number);
-			//~ dprint(mdi);
-			//~ dprint(mdi2);
-			//~ dprint((tv == tv2));
 			if ((tv == tv2) && (mdi & mdi2)){
 				if (mdi != mdi2){ // Debo quebrar
-					
-					if (td.id != -1){ // Visitado y otro MDI, caso no encontrado
+					if (td.id != -1){ // Visitado con otro MDI no disjunto, caso no resuelto todavía.
 						dprint(td.id);
 						dprint(mdi);
 						dprint(mdi2);
@@ -250,14 +244,8 @@ namespace Causalize{
 	}
 	
 	void VectorTarjan::DFS(TarjanVertex tv, MDI mdi){
-					//~ dprint(tgraph[tv].equation);
-					//~ dprint("DFS");
-					//~ dprint(tgraph[tv].number);
-					//~ dprint(mdi);
-		MDIL mdil = find (tv, mdi);
-		for (auto mdi : mdil){ // Visited
-			//~ dprint(tgraph[tv].number);
-			//~ dprint(tgraph[tv].equation);
+		MDIL mdil = find (tv, mdi); // Función que se encarga de trabajar con los distintos conjuntos
+		for (auto mdi : mdil){ // Marco como visitado
 			VertexPart at = (std::make_pair (tv, mdi));
 			data[at].id = data[at].low = id;
 			data[at].onStack = true;
@@ -268,46 +256,26 @@ namespace Causalize{
 			VertexPart at = (std::make_pair (tv, mdi)); 
 			foreach_(TarjanEdge edge, out_edges(tv,tgraph)) {
 				TarjanVertex tv2 = target(edge, tgraph);
-				// Esto es un parche. Pasar pasar de Dom1 a Dom2, paso de Dom1 a Ran2 y de Ran2 a Dom2
+				// Pasar pasar de Dom1 a Dom2, paso de Dom1 a Ran2 y de Ran2 a Dom2
 				MDI mdi2 = mdi.DomToRan(*tgraph[edge].Pairs().begin()).RanToDom(tgraph[tv2].ip); 
 				// --------------------------------------------
-				//~ dprint(mdi);
-				//~ dprint(mdi2);
-				if (!(tgraph[tv2].mdi & mdi2)) continue;
+				if (!(tgraph[tv2].mdi & mdi2)) continue; // TODO(karupayun): Falta analizar que hacer si estamos cayendo a un MDI que no figuraba anteriormente. Esta línea deberíamos borrarla.
 				MDIL mdil2 = find (tv2, (tgraph[tv2].mdi & mdi2).get(), false);
-				//~ dprint (mdil2.size());
-				//~ dprint(tgraph[tv2].number);
-				//~ dprint(mdi2);
 				for (auto m : mdil2){
 					VertexPart to = std::make_pair(tv2,m);
-					if (data[to].id == -1) DFS (to.first, to.second);
-					//~ dprint(data[to].id);
-					//~ dprint(data[to].onStack);
-
+					if (data[to].id == -1) DFS (to.first, to.second); // Si no está visitado, lo visitamos
 					if (data[to].onStack) {
-						//~ dprint(data[at].low);
-						data[at].low = std::min (data[at].low, data[to].low);
-						//~ dprint(data[at].low);
-
+						data[at].low = std::min (data[at].low, data[to].low); // Si está en stack actualizamos el mínimo
 					}
 				}
 			}
 			if (data[at].id == data[at].low){
 				ConnectedComponent scc;
 				while (1){
-					//~ dprint(stack.size());
 					VertexPart node = stack.top();
-					stack.pop();
-					//~ dprint(1);
-					//~ dprint(tgraph[node.first].number);
-					//~ dprint(tgraph[at.first].number);
-					//~ dprint(tgraph[node.first].equation);
-					//~ dprint(tgraph[node.first].equation);
-					//~ dprint(tgraph[node.first].number);
-					//~ dprint(tgraph[node.first].equation);
+					stack.pop(); // TODO(karupayun): Si cambió el conjunto esto no sería así. Pensar que hacer para trabajar ese caso difícil.
 					data[node].onStack = false;
 					data[node].low = data[at].id;
-					//~ dprint(data[node].low);
 					scc.push_back(node);
 					if (node == at) {
 						strongly_connected_component.push_back(scc);
@@ -315,10 +283,7 @@ namespace Causalize{
 					}
 				}
 			}
-
-			//~ for (
 		}
-		
 	}
 	
 	 bool VectorTarjan::GetConnectedComponent(std::list <CausalizeEquations> &scc){
