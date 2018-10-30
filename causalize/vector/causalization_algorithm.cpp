@@ -48,6 +48,7 @@ using namespace boost::icl;
 
 extern bool solve;
 extern bool tarjan;
+extern bool vectorial;
 
 namespace Causalize {
 CausalizationStrategyVector::CausalizationStrategyVector(VectorCausalizationGraph g, MMO_Class &m): mmo(m){
@@ -115,7 +116,9 @@ CausalizationStrategyVector::Causalize() {
 	
 	std::list <CausalizeEquations> scc;
 	if(!t.GetConnectedComponent(scc)){
-		tarjan = false; // No se puede resolver con Tarjan
+		// No se puede resolver con Tarjan Vectorial
+		tarjan = false; 
+		vectorial = false; 
 		continue;
 	}
 	for (auto cc : scc){

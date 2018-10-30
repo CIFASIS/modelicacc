@@ -42,15 +42,15 @@ using namespace Modelica::AST;
 using namespace Causalize;
 bool solve = true;
 bool tarjan = false;
+bool vectorial = false;
+
 
 int main(int argc, char ** argv)
 {
 
   bool r;
   int opt;
-  bool vectorial = false;
-	
-  while ((opt = getopt(argc, argv, "d:vst")) != -1) {
+	while ((opt = getopt(argc, argv, "d:vst")) != -1) {
     switch (opt) {
      case 'd':
        if (optarg != NULL && isDebugParam(optarg)) {
