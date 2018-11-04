@@ -312,7 +312,7 @@ namespace Causalize{
 			 * Hay N ciclos.
 			 * */
 	 	for (auto cc : strongly_connected_component){
-			dprint("New");
+			//~ dprint("New");
 			CausalizeEquations ces;
 			for (auto vp:cc){ // vp = std::pair <TarjanVertex, MDI>
 				MDI dom = vp.second;

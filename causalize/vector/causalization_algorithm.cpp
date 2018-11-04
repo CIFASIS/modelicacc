@@ -123,23 +123,20 @@ CausalizationStrategyVector::Causalize() {
 	}
 	for (auto cc : scc){
 		//~ dprint("New");
+		std::vector<CausalizedVar> vars;
 		for (auto vp:cc){
-			Causalize1toN(vp.unknown, vp.equation, vp.pairs);
+			CausalizedVar c_var;
+			c_var.unknown = vp.unknown;
+			c_var.equation = vp.equation;
+			c_var.pairs = vp.pairs;
+			vars.push_back(c_var);
 		}
+		tarjan_equations.push_back(vars);
 	}
-	//~ for (auto cc : scc){
-		//~ for (auto vp:cc){
-			//~ IndexPair ip2 = vp.first.ip;
-			//~ ip2.Dom() = vp.second;
-			//~ dprint(vp.first.equation);
-			//~ dprint(vp.first.unknown());
-			//~ dprint(vp.second);
-		//~ }
-	//~ }
 	if (debugIsEnabled('c'))
       PrintCausalizationResult();
     if (solve) // @karupayun: assert(solve())?
-      SolveEquations();
+      SolveEquations2();
   	return true;
   }
   int steps = 0;
@@ -510,93 +507,89 @@ bool CausalizationStrategyVector::CollisionPairInEdge(IndexPair ip, VectorEdge e
 }
 
 
-void CausalizationStrategyVector::SolveEquations2() {
-  //~ EquationList all;
-	EquationList eqs;
-	ExpList unknowns;
-  vector<CausalizedVar> sorted_vars = equations1toN;
-  //~ sorted_vars.insert(sorted_vars.end(),equationsNto1.begin(), equationsNto1.end());
-  foreach_(CausalizedVar cv, sorted_vars) {
-    Equation equation = cv.equation;
-    if(is<ForEq>(equation)) {
-      ERROR_UNLESS(cv.pairs.size() == 1, "Solving scalar equation with more than one index pair");
-      IndexPair ip = *cv.pairs.begin();
-      MDI dom = ip.Dom(), ran = ip.Ran();
-      //~ dom = MDI (1,1,1), ran = MDI (1,1,1);
-      //ERROR_UNLESS(ip.GetOffset().isZeros(), "Solving with offset not implemented");
-      ERROR_UNLESS(dom.Size() == ran.Size(), "Solving with ranges of different size");
-      ForEq feq = get<ForEq>(equation);
-      VarSymbolTable syms = mmo.syms_ref();
-      int index = 0;
-      for(Index & i : feq.range_ref().indexes_ref()) {
-         VarInfo vinfo = VarInfo(TypePrefixes(), "Integer", Option<Comment>(), Modification());
-         syms.insert(i.name(),vinfo);
-         i.exp_ref() = Expression(Range(dom.Intervals().at(index).lower(),dom.Intervals().at(index).upper()));
-         index++;
-      }
-      ExpList el;
-      index = 0;
-      Usage us = ip.GetUsage();
-      Offset offset = ip.GetOffset();
-      for (Interval i: ran.Intervals()) {
-        if (boost::icl::size(i)==1 && us[index]==-1) { // The unknown is used in a unitary range
-          el.push_back(i.lower());
-        } else {// The unknown index is using a iterator
-          ERROR_UNLESS(index<us.Size(), "Range not found in usages");
-          Index i = feq.range().indexes().at(us[index]);
-          if (offset[index]!=0) {
-            el.push_back(BinOp(Reference(i.name()),Add, Expression(offset[index]))) ;
-          } else { 
-            el.push_back(Reference(i.name())) ;
-          }
-        }
-        index++;
-      }
-      cv.unknown.SetIndex(el);
-      if (debugIsEnabled('c')) {
-        std::cout << "Solving:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
-      }
-      std::list<std::string> c_code;
-      ClassList cl;
-			eqs.push_back (feq);
-			std::cout << equation << std::endl;
-			std::cout << feq << std::endl;
-			std::cout << cv.unknown() << std::endl;
-			unknowns.push_back (cv.unknown());
-      //~ rta.push_back(EquationSolver::Solve(feq, cv.unknown(), syms, c_code, cl, mmo.name() + ".c"));
-			//~ equations1toN.clear();
-			//~ return;
-    } else{
-      ExpList varIndexes;;
-      if (cv.unknown.dimension == 0) {
-        cv.unknown.SetIndex(varIndexes);
-      } else {
-         ERROR_UNLESS(cv.pairs.size() == 1, "Solving scalar equation with more than one index pair");
-         MDI mdi = cv.pairs.begin()->Ran();
-         for(Interval i : mdi.Intervals()) {
-          ERROR_UNLESS(boost::icl::size(i)==1, "Interval of size>1 used for solving a scalar equation"); 
-          varIndexes.push_back(Expression(i.lower()));
-         }
-      }
-      cv.unknown.SetIndex(varIndexes);
-	std::list<std::string> c_code;
-  ClassList cl;
-      if (debugIsEnabled('c')) {
-        std::cout << "Solving\n" << equation << "\nfor variable " << cv.unknown() << "\n";
-      }
-			eqs.push_back (equation);
-			unknowns.push_back (cv.unknown());
-			//~ rta.push_back(EquationSolver::Solve(equation, cv.unknown(), mmo.syms_ref(),c_code, cl, mmo.name() + ".c"));
 
-    }
-  }
-	std::list<std::string> c_code;
-  ClassList cl;
-	EquationList causalEqs = (EquationSolver::Solve(eqs, unknowns, mmo.syms_ref(),c_code, cl, mmo.name() + ".c"));
-	for (auto eq : causalEqs)
-		rta.push_back (eq);
-	equations1toN.clear();
+void CausalizationStrategyVector::SolveEquations2() {
+  EquationList all;
+
+
+  VarSymbolTable syms = mmo.syms_ref();
+  foreach_(vector<CausalizedVar> cvv, tarjan_equations){
+	   EquationList eql;
+	ExpList epl;
+	  foreach_(CausalizedVar cv, cvv) {
+		Equation equation = cv.equation;
+		if(is<ForEq>(equation)) {
+		  ERROR_UNLESS(cv.pairs.size() == 1, "Solving scalar equation with more than one index pair");
+		  IndexPair ip = *cv.pairs.begin();
+		  MDI dom = ip.Dom(), ran = ip.Ran();
+		  //ERROR_UNLESS(ip.GetOffset().isZeros(), "Solving with offset not implemented");
+		  ERROR_UNLESS(dom.Size() == ran.Size(), "Solving with ranges of different size");
+		  ForEq feq = get<ForEq>(equation);
+		  int index = 0;
+		  for(Index & i : feq.range_ref().indexes_ref()) {
+			 VarInfo vinfo = VarInfo(TypePrefixes(), "Integer", Option<Comment>(), Modification());
+			 syms.insert(i.name(),vinfo);
+			 i.exp_ref() = Expression(Range(dom.Intervals().at(index).lower(),dom.Intervals().at(index).upper()));
+			 index++;
+		  }
+		  ExpList el;
+		  index = 0;
+		  Usage us = ip.GetUsage();
+		  Offset offset = ip.GetOffset();
+		  for (Interval i: ran.Intervals()) {
+			if (boost::icl::size(i)==1 && us[index]==-1) { // The unknown is used in a unitary range
+			  el.push_back(i.lower());
+			} else {// The unknown index is using a iterator
+			  ERROR_UNLESS(index<us.Size(), "Range not found in usages");
+			  Index i = feq.range().indexes().at(us[index]);
+			  if (offset[index]!=0) {
+				el.push_back(BinOp(Reference(i.name()),Add, Expression(offset[index]))) ;
+			  } else { 
+				el.push_back(Reference(i.name())) ;
+			  }
+			}
+			index++;
+		  }
+		  cv.unknown.SetIndex(el);
+		  if (debugIsEnabled('c')) {
+			std::cout << "Solving:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
+		  }
+
+
+		  
+		  eql.push_back(feq);
+		  epl.push_back(cv.unknown());
+
+		} else{
+		  ExpList varIndexes;;
+		  if (cv.unknown.dimension == 0) {
+			cv.unknown.SetIndex(varIndexes);
+		  } else {
+			 ERROR_UNLESS(cv.pairs.size() == 1, "Solving scalar equation with more than one index pair");
+			 MDI mdi = cv.pairs.begin()->Ran();
+			 for(Interval i : mdi.Intervals()) {
+			  ERROR_UNLESS(boost::icl::size(i)==1, "Interval of size>1 used for solving a scalar equation"); 
+			  varIndexes.push_back(Expression(i.lower()));
+			 }
+		  }
+		  cv.unknown.SetIndex(varIndexes);
+		  eql.push_back(equation);
+		  epl.push_back(cv.unknown());
+		  if (debugIsEnabled('c')) {
+			std::cout << "Solving\n" << equation << "\nfor variable " << cv.unknown() << "\n";
+		  }
+		}
+
+
+	  }
+      std::list<std::string> c_code;
+	  ClassList cl;
+	  auto cc_eqs = (EquationSolver::Solve(eql, epl, syms, c_code, cl, mmo.name() + ".c"));
+	  all.insert(all.end(), cc_eqs.begin(), cc_eqs.end());
+	}
+  mmo.equations_ref().equations_ref()=all;
 }
+
 
 
 void CausalizationStrategyVector::SolveEquations() {

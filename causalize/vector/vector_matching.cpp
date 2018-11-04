@@ -33,6 +33,7 @@
  *      Author: Pablo Zimmermann
  */
 
+#include <util/debug.h>
 #include <boost/graph/adjacency_list.hpp>
 #include <causalize/vector/vector_matching.h>
 #include <causalize/vector/vector_graph_definition.h>
@@ -323,13 +324,14 @@ namespace Causalize{
 				//~ }
 				
 			//~ }
-		for (auto &ev : eqDescriptors){
-				for (auto mmdi : Pair_E[ev]){
-						std::cout << "\nMatcheamos la Ecuación: " << graph[ev].equation << " en el rango: " << mmdi.first << " con la incognita:\n" << graph[mmdi.second.v].unknown() << " en el rango " << mmdi.first.DomToRan(mmdi.second.ip) << std::endl << std::endl; 
+		if (debugIsEnabled('c')) {
+			for (auto &ev : eqDescriptors){
+					for (auto mmdi : Pair_E[ev]){
+							std::cout << "\nMatcheamos la Ecuación: " << graph[ev].equation << " en el rango: " << mmdi.first << " con la incognita:\n" << graph[mmdi.second.v].unknown() << " en el rango " << mmdi.first.DomToRan(mmdi.second.ip) << std::endl << std::endl; 
+					}
+					
 				}
-				
-			}
-				
+			}	
 		if (!isOK (matching, true)) assert(false);
 		return matching;
 	}
