@@ -23,6 +23,7 @@
 #include <ast/expression.h>
 #include <util/table.h>
 #include <map>
+#include <unordered_set>
 
 namespace Modelica {
 
@@ -53,8 +54,9 @@ namespace Modelica {
     const VarSymbolTable &vtable; 
     bool eval_parameters;
   private:
-		std::map <std::pair< Expression, Indexes>, int> reference_names; 
-		std::map < Expression , int> reference_names2; 
+		//~ std::map <Expression, int> reference_names; 
+		//~ std::map < int , int> reference_names2; 
+		//~ std::unordered_set < Expression > reference_names; 
 		int counter;
   }; 
 }
