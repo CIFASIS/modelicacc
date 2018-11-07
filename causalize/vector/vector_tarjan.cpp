@@ -218,6 +218,8 @@ namespace Causalize{
 			auto tv2 = pair.first.first;
 			auto td = pair.second;
 			if ((tv == tv2) && (mdi & mdi2)){
+				if (mdi2.Contains(mdi) && (td.id != -1) && (!td.onStack)) // Si ya fue visitado y seleccionada su componente conexa, lo ignoramos en el dfs.
+						return rta;
 				if (mdi != mdi2){ // Debo quebrar
 					if (td.id != -1){ // Visitado con otro MDI no disjunto, caso no resuelto todavía.
 						dprint(td.id);

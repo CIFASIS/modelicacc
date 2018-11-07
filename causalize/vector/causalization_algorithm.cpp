@@ -137,7 +137,7 @@ CausalizationStrategyVector::Causalize() {
       PrintCausalizationResult();
     if (solve) // @karupayun: assert(solve())?
       SolveEquations2();
-  	return true;
+			return true;
   }
   int steps = 0;
   bool split = false;
@@ -510,7 +510,7 @@ bool CausalizationStrategyVector::CollisionPairInEdge(IndexPair ip, VectorEdge e
 
 void CausalizationStrategyVector::SolveEquations2() {
   EquationList all;
-
+  std::list<std::string> c_code;
 
   VarSymbolTable syms = mmo.syms_ref();
   foreach_(vector<CausalizedVar> cvv, tarjan_equations){
@@ -582,11 +582,18 @@ void CausalizationStrategyVector::SolveEquations2() {
 
 
 	  }
-      std::list<std::string> c_code;
 	  ClassList cl;
 	  auto cc_eqs = (EquationSolver::Solve(eql, epl, syms, c_code, cl, mmo.name() + ".c"));
 	  all.insert(all.end(), cc_eqs.begin(), cc_eqs.end());
 	}
+	 std::stringstream s;
+	 s << mmo.name() << ".c";
+	 std::fstream fs (s.str().c_str(), std::fstream::out);
+	 fs << "#include <gsl/gsl_multiroots.h>\n";
+	 fs << "#define pre(X) X\n";
+	 foreach_(std::string s, c_code)
+	 fs << s;
+	 fs.close();
   mmo.equations_ref().equations_ref()=all;
 }
 
@@ -651,13 +658,14 @@ void CausalizationStrategyVector::SolveEquations() {
          }
       }
       cv.unknown.SetIndex(varIndexes);
-      std::list<std::string> c_code;
+  std::list<std::string> c_code;
+
       ClassList cl;
       if (debugIsEnabled('c')) {
         std::cout << "Solving\n" << equation << "\nfor variable " << cv.unknown() << "\n";
       }
       all.push_back(EquationSolver::Solve(equation, cv.unknown(), mmo.syms_ref(),c_code, cl, mmo.name() + ".c"));
-    }
+		}
   }
   mmo.equations_ref().equations_ref()=all;
 }

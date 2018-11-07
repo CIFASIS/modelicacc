@@ -1,8 +1,11 @@
 model RLC
-  constant Integer N = 10;
-  Real A[N];
+  constant Integer N = 3;
+  Real A[N],B[N];
 equation
-	for i in 1:N loop
-		A[i] = i;
+	B[1] = 1;
+	B[2] = 2;
+	B[3] = 3;
+  for i in 1:N loop
+	A[i] * A[i] + B[i] = 9;
 	end for;
 end RLC;

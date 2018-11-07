@@ -145,7 +145,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
       }
     }
   } catch (std::logic_error &) {
-    ERROR_UNLESS(!for_eq, "Non linear solving of for loops not suported yet");
+    //~ ERROR_UNLESS(!for_eq, "Non linear solving of for loops not suported yet");
     OptExpList ol;
     std::vector<Reference> args;
     foreach_(Expression exp,crs) 
@@ -170,23 +170,37 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
             Reference var(val.first, ExpList(1,i));
             Modelica::ContainsExpression con(var);
             foreach_ (Equation &e, eqs) {
-              ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
-              Equality eq = get<Equality>(e);
-              if (Apply(con,eq.left_ref()) || Apply(con,eq.right_ref())) { 
-                if (crs.end()==std::find(crs.begin(),crs.end(),Expression( var ))) 
-                  args.push_back(var);
-              }
+							Equality eq;
+					    //~ ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
+							if (is<ForEq>(e)) {
+								  ForEq feq = get<ForEq>(e);
+									eq = get<Equality>(feq.elements().front());
+							}
+							else{
+								eq = get<Equality>(e);
+							}
+							if (Apply(con,eq.left_ref()) || Apply(con,eq.right_ref())) { 
+									if (crs.end()==std::find(crs.begin(),crs.end(),Expression( var ))) 
+										args.push_back(var);
+							}
             }
           }
         } else {
           Modelica::ContainsExpression con(Reference(val.first));
           foreach_ (Equation &e, eqs) {
-            ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
-            Equality eq = get<Equality>(e);
-            if (Apply(con,eq.left_ref()) || Apply(con,eq.right_ref())) { 
-                args.push_back(Reference(val.first));
+						Equality eq;
+						if (is<ForEq>(e)) {
+							ForEq feq = get<ForEq>(e);
+							eq = get<Equality>(feq.elements().front());
+						}
+						else{
+            //~ ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
+							eq = get<Equality>(e);
             }
-          }
+						if (Apply(con,eq.left_ref()) || Apply(con,eq.right_ref())) { 
+                args.push_back(Reference(val.first));
+						}
+					}
         }
     }
     std::ostringstream code;
@@ -203,11 +217,19 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     }
     i=0;
     foreach_ (Equation &e, eqs) {
-          ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
-          Equality eq = get<Equality>(e);
+				Equality eq;
+				if (is<ForEq>(e)) {
+					  ForEq feq = get<ForEq>(e);
+						eq = get<Equality>(feq.elements().front());
+				}
+				else{
+          //~ ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
+          eq = get<Equality>(e);
           //loop.push_back(Equality(Apply(peval,eq.left_ref()), Apply(peval,eq.right_ref())));
-          code << "  gsl_vector_set (__f," << i++ << ", (" << 
+        }
+				  code << "  gsl_vector_set (__f," << i++ << ", (" << 
             Apply(peval,eq.left_ref()) << ") - (" << Apply(peval,eq.right_ref()) << "));\n";
+				
     }
     code << "  return GSL_SUCCESS;\n";
     code << "}\n";
@@ -326,10 +348,21 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     
     ExpList exp_args(args.begin(), args.end());
     i=0;
-    if (crs.size()>1)
-      ret.push_back(Equality(Output(ol), Call(fun_name.str(),exp_args)));
-    else
-      ret.push_back(Equality(crs.front(), Call(fun_name.str(),exp_args)));
+		// Escribir fors
+		if(for_eq){
+			ForEq feq  = get<ForEq>(eqs.front());
+		  if (crs.size()>1)
+				feq.elements_ref().front() = (Equality(Output(ol), Call(fun_name.str(),exp_args)));
+			else
+				feq.elements_ref().front() = (Equality(crs.front(), Call(fun_name.str(),exp_args)));
+			ret.push_back(feq);
+		}
+		else{
+			if (crs.size()>1)
+				ret.push_back(Equality(Output(ol), Call(fun_name.str(),exp_args)));
+			else
+				ret.push_back(Equality(crs.front(), Call(fun_name.str(),exp_args)));
+		}
     Class c;
     c.name_ref()=fun_name.str();
     Composition com;
