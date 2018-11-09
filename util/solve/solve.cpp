@@ -30,6 +30,7 @@
 #include <util/ast_visitors/ginac_interface.h>
 #include <util/ast_visitors/contains_expression.h>
 #include <util/ast_visitors/partial_eval_expression.h>
+#include <util/ast_visitors/all_expressions.h>
 #include <util/ast_visitors/eval_expression.h>
 #include <util/solve/solve.h>
 #include <util/debug.h>
@@ -146,10 +147,10 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     }
   } catch (std::logic_error &) {
     //~ ERROR_UNLESS(!for_eq, "Non linear solving of for loops not suported yet");
-    OptExpList ol;
+    OptExpList ol, crs_copy;
     std::vector<Reference> args;
-    foreach_(Expression exp,crs) 
-      ol.push_back(exp);
+    foreach_(Expression exp,crs) // TODO (tener cuidado en el crs)
+      ol.push_back(exp), crs_copy.push_back(exp);
     std::stringstream fun_name;
     fun_name << "fsolve"<< fsolve++;
     EquationList loop;
@@ -167,39 +168,62 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
         if (vinfo.indices()) {
           int size = Apply(eval,vinfo.indices().get().front());
           for (int i=1; i<= size ; i++) {
-            Reference var(val.first, ExpList(1,i));
-            Modelica::ContainsExpression con(var);
+			
+			Reference var(val.first, vinfo.indices().get().front());
+            Modelica::AllExpressions all(var);// Este es el visitor que hay que modificar para que me devuelva todas las expresiones.
             foreach_ (Equation &e, eqs) {
 							Equality eq;
-					    //~ ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
 							if (is<ForEq>(e)) {
-								  ForEq feq = get<ForEq>(e);
-									eq = get<Equality>(feq.elements().front());
+								ForEq feq = get<ForEq>(e);
+								ERROR_UNLESS(is<Equality>(feq.elements().front()),"Algebraic loop including non-equality equations not supported");
+								eq = get<Equality>(feq.elements().front());
 							}
 							else{
+								ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
 								eq = get<Equality>(e);
 							}
-							if (Apply(con,eq.left_ref()) || Apply(con,eq.right_ref())) { 
-									if (crs.end()==std::find(crs.begin(),crs.end(),Expression( var ))) 
-										args.push_back(var);
+							auto rta = Apply(all,eq.left_ref());
+							auto aux = Apply(all,eq.right_ref());
+						    rta.insert(rta.end(), aux.begin(), aux.end());
+
+							for(Expression exp : rta){
+								if (crs_copy.end()==std::find(crs_copy.begin(),crs_copy.end(),Expression( exp ))){
+									crs_copy.push_back(Expression(exp));
+									if (is<Reference>(exp)) {
+										Reference ref = get<Reference>(exp);
+										args.push_back(ref); 
+									}
+								}
 							}
             }
           }
         } else {
-          Modelica::ContainsExpression con(Reference(val.first));
+          Modelica::AllExpressions all(Reference(val.first));
           foreach_ (Equation &e, eqs) {
 						Equality eq;
 						if (is<ForEq>(e)) {
 							ForEq feq = get<ForEq>(e);
+							ERROR_UNLESS(is<Equality>(feq.elements().front()),"Algebraic loop including non-equality equations not supported");
 							eq = get<Equality>(feq.elements().front());
 						}
 						else{
-            //~ ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
+							ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
 							eq = get<Equality>(e);
-            }
-						if (Apply(con,eq.left_ref()) || Apply(con,eq.right_ref())) { 
-                args.push_back(Reference(val.first));
 						}
+						auto rta = Apply(all,eq.left_ref());
+						auto aux = Apply(all,eq.right_ref());
+							for(Expression exp : rta){
+									std::cout << "VAR " << exp << std::endl;
+								
+									if (crs_copy.end()==std::find(crs_copy.begin(),crs_copy.end(),Expression( exp ))){
+										//~ std::cout << "VAR " << exp << std::endl;
+										crs_copy.push_back(Expression(exp));
+									    if (is<Reference>(exp)) {
+											Reference ref = get<Reference>(exp);
+											args.push_back(ref); 
+										}
+									}
+							}
 					}
         }
     }
@@ -220,13 +244,14 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
 				Equality eq;
 				if (is<ForEq>(e)) {
 					  ForEq feq = get<ForEq>(e);
-						eq = get<Equality>(feq.elements().front());
+					  ERROR_UNLESS(is<Equality>(feq.elements().front()),"Algebraic loop including non-equality equations not supported");
+					  eq = get<Equality>(feq.elements().front());
 				}
 				else{
-          //~ ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
-          eq = get<Equality>(e);
+				  ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
+				  eq = get<Equality>(e);
           //loop.push_back(Equality(Apply(peval,eq.left_ref()), Apply(peval,eq.right_ref())));
-        }
+				}
 				  code << "  gsl_vector_set (__f," << i++ << ", (" << 
             Apply(peval,eq.left_ref()) << ") - (" << Apply(peval,eq.right_ref()) << "));\n";
 				

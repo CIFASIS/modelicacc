@@ -22,8 +22,9 @@
 #include <boost/variant/static_visitor.hpp>
 #include <ast/expression.h>
 #include <util/table.h>
-#include <map>
-#include <unordered_set>
+#include <unordered_map>
+#include <boost/functional/hash.hpp>
+#include <boost/variant.hpp>
 
 namespace Modelica {
 
@@ -53,11 +54,13 @@ namespace Modelica {
     Expression operator()(Range) const;
     const VarSymbolTable &vtable; 
     bool eval_parameters;
+    int counter;
   private:
 		//~ std::map <Expression, int> reference_names; 
+		std::unordered_map<Expression, int, boost::hash<Expression>> table;
 		//~ std::map < int , int> reference_names2; 
 		//~ std::unordered_set < Expression > reference_names; 
-		int counter;
+		
   }; 
 }
 #endif // AST_VISITOR_REPLACEINDEX

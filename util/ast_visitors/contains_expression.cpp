@@ -120,8 +120,10 @@ namespace Modelica {
       if (is<Reference>(exp)) {
         Reference ref = get<Reference>(exp);
         // Check wheter a[1] is contained in a
-        if (get<0>(v.ref().front())==get<0>(ref.ref().front()) && get<1>(v.ref().front()).size()==0)
-          return true;
+        return true;
+			if (get<0>(v.ref().front())==get<0>(ref.ref().front()) && get<1>(v.ref().front()).size()==1 && get<1>(ref.ref().front()).size()==1)
+			return get<1>(v.ref().front()) == get<1>(ref.ref().front());
+
       }
       return false;
     }

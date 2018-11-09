@@ -136,11 +136,9 @@ namespace Modelica {
     Expression ReplaceIndex::operator()(ForExp v) const {
 			Expression e = v.exp_;
 			Indexes i = v.indices_;
-			//~ reference_names2.count(3);
-			//~ reference_names.find(e);
-			//~ if (reference_names2.count(3)){
-				//~ ;
-				//~ reference_names2.at(e) = 1;
+			//~ table[e] = 1;
+			//~ if (!table.count(e)){;
+				//~ table[e] = counter++;
 			//~ }
 		return e;
       //~ return e++reference_names2[e];
