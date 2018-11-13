@@ -32,6 +32,7 @@
 #include <util/ast_visitors/partial_eval_expression.h>
 #include <util/ast_visitors/all_expressions.h>
 #include <util/ast_visitors/eval_expression.h>
+#include <util/ast_visitors/replace_expression.h>
 #include <util/solve/solve.h>
 #include <util/debug.h>
 #include <parser/parser.h>
@@ -63,6 +64,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
   static int fsolve=1;
   Modelica::ConvertToGiNaC tog(syms);
   Modelica::PartialEvalExpression peval(syms,false);
+  //~ Modelica::ReplaceExpression eee(*crs.begin(),*crs.begin());
   Modelica::EvalExpression eval(syms);
 
   const int size=eqs.size();
@@ -227,16 +229,45 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
 					}
         }
     }
+		int i;
+		   Class c;
+    c.name_ref()=fun_name.str();
+    Composition com;
+    External ext;
+		std::vector<Reference> c_args;
+		std::vector<Expression> c_crs;
+
+    i=0;
+    foreach_(Reference n, args) {
+      std::stringstream arg_name;
+      arg_name << "u_" << i;
+      com.elements_ref().push_back(Component(TypePrefixes(1,input),"Real",Option<ExpList>(),DeclList(1,Declaration(arg_name.str()))));
+      ext.args_ref().push_back(Expression(Reference(arg_name.str())));
+			c_args.push_back(Reference(arg_name.str()));
+      i++;
+    }
+    i=0;
+    foreach_(Expression e, crs) {
+      std::stringstream arg_name;
+      arg_name << "y_" << i;
+      com.elements_ref().push_back(Component(TypePrefixes(1,output),"Real",Option<ExpList>(),DeclList(1,Declaration(arg_name.str()))));
+      if (crs.size()>1){
+        ext.args_ref().push_back( Expression(Reference(arg_name.str())));
+				c_args.push_back(Reference(arg_name.str()));
+		   }
+		  c_crs.push_back(Expression(Reference(arg_name.str())));
+      i++;
+    }
     std::ostringstream code;
     setCFlag(code,1);
     code << "int " << fun_name.str() << "_eval(const gsl_vector * __x, void * __p, gsl_vector * __f) {\n";
     code << "  double *args=(double*)__p;\n";
-    int i=0;
-    foreach_ (Expression e, crs) {
+    //~ int i=0;
+    foreach_ (Expression e, c_crs) {
       code << "  const double " << e << " = gsl_vector_get(__x," << i++ << ");\n";
     }
     i=0;
-    foreach_ (Reference n, args) {
+    foreach_ (Reference n, c_args) {
       code << "  const double " << n << " = args[" << i++ << "];\n";
     }
     i=0;
@@ -252,27 +283,43 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
 				  eq = get<Equality>(e);
           //loop.push_back(Equality(Apply(peval,eq.left_ref()), Apply(peval,eq.right_ref())));
 				}
+				Expression l = Apply(peval,eq.left_ref());
+				Expression r = Apply(peval,eq.right_ref());
+				i = 0;
+				for(Expression e : crs){
+						Modelica::ReplaceExpression repl(e, c_crs[i++]);
+						l = Apply(repl, l);
+						r = Apply(repl, r);
+				}
+				i = 0;
+				for(Reference ref : args){
+						Modelica::ReplaceExpression repl(Expression(ref), Expression(c_args[i++]));
+						l = Apply(repl, l);
+						r = Apply(repl, r);
+				}
+				
+				
 				  code << "  gsl_vector_set (__f," << i++ << ", (" << 
-            Apply(peval,eq.left_ref()) << ") - (" << Apply(peval,eq.right_ref()) << "));\n";
+            l << ") - (" << r << "));\n";
 				
     }
     code << "  return GSL_SUCCESS;\n";
     code << "}\n";
-    if (crs.size()>1)
+    if (c_crs.size()>1)
       code << "void " << fun_name.str() << "(";
     else 
       code << "double " << fun_name.str() << "(";
     i=0;
-    foreach_(Reference n, args) {
+    foreach_(Reference n, c_args) {
       code << (++i>1 ? "," : "") << "double " << n;
     }
     i=0;
-    if (crs.size()>1) {
-      if (args.size())
+    if (c_crs.size()>1) {
+      if (c_args.size())
         code << ",";
-      foreach_(Expression e, crs) {
+      foreach_(Expression e, c_crs) {
         code << "double *" << e;
-        if (++i<(int)crs.size()) 
+        if (++i<(int)c_crs.size()) 
           code << ",";
       }
     }
@@ -323,7 +370,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     code << "  __F.f = " << fun_name.str() << "_eval;\n";
     code << "  double __args[" << args.size() << "];\n";
     i=0;
-    foreach_ (Reference n, args) {
+    foreach_ (Reference n, c_args) {
       code << "  __args[" << i++ << "] = " << n << ";\n";
     }
     code << "   __F.params  = __args;\n";
@@ -333,11 +380,11 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     code << "   if (gsl_multiroot_test_residual(__f, 1e-7)==GSL_SUCCESS) {\n";
     code << "       gsl_vector_free(__f);\n";
     code << "       gsl_multiroot_fsolver_free (__s);\n";
-    if (crs.size()==1) {
+    if (c_crs.size()==1) {
     code << "       return gsl_vector_get (__x, 0 );\n";
     } else {
         i=0;
-        foreach_(Expression e, crs) {
+        foreach_(Expression e, c_crs) {
             code << "       " << e << "[0] = " << "gsl_vector_get(__x," << i << ");\n";
             i++;
         }
@@ -354,15 +401,15 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     code << "   } while (__status == GSL_CONTINUE && __iter < 100);\n";
     code << "   if (__iter == 100) printf(\"Warning: GSL could not solve an algebraic loop after %d iterations\\n\",(int) __iter); \n";
     i=0;
-    if (crs.size()>1) {
-      foreach_(Expression e, crs) {
+    if (c_crs.size()>1) {
+      foreach_(Expression e, c_crs) {
         code << "  " << e << "[0] = " << "gsl_vector_get(__s->x," << i << ");\n";
         code << "  gsl_vector_set (__x, " << i << " , gsl_vector_get(__s->x, " << i << "));\n";
         i++;
       }
       code << "   gsl_multiroot_fsolver_free (__s);\n";
     }
-    if (crs.size()==1) {
+    if (c_crs.size()==1) {
         code << "  " << "double ret = " << "gsl_vector_get(__s->x,0);\n";
         code << "  gsl_vector_set (__x, 0 , ret);\n";
         code << "  gsl_multiroot_fsolver_free (__s);\n";
@@ -388,27 +435,22 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
 			else
 				ret.push_back(Equality(crs.front(), Call(fun_name.str(),exp_args)));
 		}
-    Class c;
-    c.name_ref()=fun_name.str();
-    Composition com;
-    External ext;
-    i=0;
-    foreach_(Reference n, args) {
-      std::stringstream arg_name;
-      arg_name << "u_" << i;
-      com.elements_ref().push_back(Component(TypePrefixes(1,input),"Real",Option<ExpList>(),DeclList(1,Declaration(arg_name.str()))));
-      ext.args_ref().push_back(Expression(Reference(arg_name.str())));
-      i++;
-    }
-    i=0;
-    foreach_(Expression e, crs) {
-      std::stringstream arg_name;
-      arg_name << "y_" << i;
-      com.elements_ref().push_back(Component(TypePrefixes(1,output),"Real",Option<ExpList>(),DeclList(1,Declaration(arg_name.str()))));
-      if (crs.size()>1)
-        ext.args_ref().push_back( Expression(Reference(arg_name.str())));
-      i++;
-    }
+    //~ foreach_(Reference n, args) {
+      //~ std::stringstream arg_name;
+      //~ arg_name << "u_" << i;
+      //~ com.elements_ref().push_back(Component(TypePrefixes(1,input),"Real",Option<ExpList>(),DeclList(1,Declaration(arg_name.str()))));
+      //~ ext.args_ref().push_back(Expression(Reference(arg_name.str())));
+      //~ i++;
+    //~ }
+    //~ i=0;
+    //~ foreach_(Expression e, crs) {
+      //~ std::stringstream arg_name;
+      //~ arg_name << "y_" << i;
+      //~ com.elements_ref().push_back(Component(TypePrefixes(1,output),"Real",Option<ExpList>(),DeclList(1,Declaration(arg_name.str()))));
+      //~ if (crs.size()>1)
+        //~ ext.args_ref().push_back( Expression(Reference(arg_name.str())));
+      //~ i++;
+    //~ }
     if (crs.size()==1)
         ext.comp_ref_ref() = Expression(Reference("y_0"));
     c.prefixes_ref()=ClassPrefixes(1,Modelica::function);
@@ -423,7 +465,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     Annotation ext_anot(ClassModification(Argument(ElMod("Library",ModEq(Brace(el)))), Argument(ElMod("Include",ModEq(String("#include \\\"" + path + "\\\""))))  ));
     com.ext_annot_ref()=ext_anot;
     c.composition_ref()=com;
-    
+    std::cout<<ext.fun_ref()<<std::endl;
     funs.push_back(c);
 
  

@@ -7,7 +7,7 @@ equation
 		C[i] = i;
    end for;
   for i in 1:N loop
-		A[i] * A[i] + B[i] * B[i] * B[i] + C[i]+i = 9;
+		A[i] * A[i] + B[i] * B[i] * B[i] + C[i] = 9;
 		A[i] * A[i] * A[i] + B[i] * B[i] = 10;
 	end for;
 end LAZO_NEWTON;

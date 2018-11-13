@@ -582,10 +582,15 @@ void CausalizationStrategyVector::SolveEquations2() {
 
 
 	  }
-	  ClassList cl;
-	  auto cc_eqs = (EquationSolver::Solve(eql, epl, syms, c_code, cl, mmo.name() + ".c"));
+	  auto cc_eqs = (EquationSolver::Solve(eql, epl, syms, c_code, _cl, mmo.name() + ".c"));
 	  all.insert(all.end(), cc_eqs.begin(), cc_eqs.end());
 	}
+  foreach_(ClassType ct, _cl) {
+     Class c = get<Class>(ct);
+     mmo.types_ref().push_back(c.name());
+     MMO_Class *mmo2 = new MMO_Class(c);
+     mmo.tyTable_ref().insert(c.name(), Type::Class(c.name(),mmo2));
+ }
 	 std::stringstream s;
 	 s << mmo.name() << ".c";
 	 std::fstream fs (s.str().c_str(), std::fstream::out);
@@ -601,6 +606,8 @@ void CausalizationStrategyVector::SolveEquations2() {
 
 void CausalizationStrategyVector::SolveEquations() {
   EquationList all;
+  std::list<std::string> c_code;
+
   vector<CausalizedVar> sorted_vars = equations1toN;
   sorted_vars.insert(sorted_vars.end(),equationsNto1.begin(), equationsNto1.end());
   foreach_(CausalizedVar cv, sorted_vars) {
@@ -642,9 +649,7 @@ void CausalizationStrategyVector::SolveEquations() {
       if (debugIsEnabled('c')) {
         std::cout << "Solving:\n" << equation << "\nfor variable " << cv.unknown() << "\n";
       }
-      std::list<std::string> c_code;
-      ClassList cl;
-      all.push_back(EquationSolver::Solve(feq, cv.unknown(), syms, c_code, cl, mmo.name() + ".c"));
+      all.push_back(EquationSolver::Solve(feq, cv.unknown(), syms, c_code, _cl, mmo.name() + ".c"));
     } else{
       ExpList varIndexes;;
       if (cv.unknown.dimension == 0) {
@@ -658,15 +663,27 @@ void CausalizationStrategyVector::SolveEquations() {
          }
       }
       cv.unknown.SetIndex(varIndexes);
-  std::list<std::string> c_code;
 
-      ClassList cl;
       if (debugIsEnabled('c')) {
         std::cout << "Solving\n" << equation << "\nfor variable " << cv.unknown() << "\n";
       }
-      all.push_back(EquationSolver::Solve(equation, cv.unknown(), mmo.syms_ref(),c_code, cl, mmo.name() + ".c"));
+      all.push_back(EquationSolver::Solve(equation, cv.unknown(), mmo.syms_ref(),c_code, _cl, mmo.name() + ".c"));
 		}
   }
+	  foreach_(ClassType ct, _cl) {
+     Class c = get<Class>(ct);
+     mmo.types_ref().push_back(c.name());
+     MMO_Class *mmo2 = new MMO_Class(c);
+     mmo.tyTable_ref().insert(c.name(), Type::Class(c.name(),mmo2));
+ }
+	 std::stringstream s;
+	 s << mmo.name() << ".c";
+	 std::fstream fs (s.str().c_str(), std::fstream::out);
+	 fs << "#include <gsl/gsl_multiroots.h>\n";
+	 fs << "#define pre(X) X\n";
+	 foreach_(std::string s, c_code)
+	 fs << s;
+	 fs.close();
   mmo.equations_ref().equations_ref()=all;
 }
 

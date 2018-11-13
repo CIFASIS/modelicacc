@@ -53,5 +53,6 @@ class CausalizationStrategyVector{
 		std::vector<Causalize::CausalizedVar> equationsNto1;
 		std::vector<std::vector<Causalize::CausalizedVar> > tarjan_equations;
     Modelica::MMO_Class &mmo;
+	  Modelica::AST::ClassList _cl;
 };
 }
