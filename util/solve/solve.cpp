@@ -218,7 +218,6 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
 									std::cout << "VAR " << exp << std::endl;
 								
 									if (crs_copy.end()==std::find(crs_copy.begin(),crs_copy.end(),Expression( exp ))){
-										//~ std::cout << "VAR " << exp << std::endl;
 										crs_copy.push_back(Expression(exp));
 									    if (is<Reference>(exp)) {
 											Reference ref = get<Reference>(exp);
@@ -253,7 +252,6 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
       com.elements_ref().push_back(Component(TypePrefixes(1,output),"Real",Option<ExpList>(),DeclList(1,Declaration(arg_name.str()))));
       if (crs.size()>1){
         ext.args_ref().push_back( Expression(Reference(arg_name.str())));
-				c_args.push_back(Reference(arg_name.str()));
 		   }
 		  c_crs.push_back(Expression(Reference(arg_name.str())));
       i++;
@@ -420,7 +418,6 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     
     ExpList exp_args(args.begin(), args.end());
     i=0;
-		// Escribir fors
 		if(for_eq){
 			ForEq feq  = get<ForEq>(eqs.front());
 		  if (crs.size()>1)
@@ -435,22 +432,6 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
 			else
 				ret.push_back(Equality(crs.front(), Call(fun_name.str(),exp_args)));
 		}
-    //~ foreach_(Reference n, args) {
-      //~ std::stringstream arg_name;
-      //~ arg_name << "u_" << i;
-      //~ com.elements_ref().push_back(Component(TypePrefixes(1,input),"Real",Option<ExpList>(),DeclList(1,Declaration(arg_name.str()))));
-      //~ ext.args_ref().push_back(Expression(Reference(arg_name.str())));
-      //~ i++;
-    //~ }
-    //~ i=0;
-    //~ foreach_(Expression e, crs) {
-      //~ std::stringstream arg_name;
-      //~ arg_name << "y_" << i;
-      //~ com.elements_ref().push_back(Component(TypePrefixes(1,output),"Real",Option<ExpList>(),DeclList(1,Declaration(arg_name.str()))));
-      //~ if (crs.size()>1)
-        //~ ext.args_ref().push_back( Expression(Reference(arg_name.str())));
-      //~ i++;
-    //~ }
     if (crs.size()==1)
         ext.comp_ref_ref() = Expression(Reference("y_0"));
     c.prefixes_ref()=ClassPrefixes(1,Modelica::function);
@@ -465,7 +446,6 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     Annotation ext_anot(ClassModification(Argument(ElMod("Library",ModEq(Brace(el)))), Argument(ElMod("Include",ModEq(String("#include \\\"" + path + "\\\""))))  ));
     com.ext_annot_ref()=ext_anot;
     c.composition_ref()=com;
-    std::cout<<ext.fun_ref()<<std::endl;
     funs.push_back(c);
 
  

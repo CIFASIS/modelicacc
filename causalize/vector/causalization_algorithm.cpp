@@ -117,6 +117,7 @@ CausalizationStrategyVector::Causalize() {
 	std::list <CausalizeEquations> scc;
 	if(!t.GetConnectedComponent(scc)){
 		// No se puede resolver con Tarjan Vectorial
+		std::cout << "No se puede resolver con Tarjan Vectorial, procederemos con el método escalar" << std::endl;
 		tarjan = false; 
 		vectorial = false; 
 		continue;
