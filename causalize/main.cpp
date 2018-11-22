@@ -50,7 +50,7 @@ int main(int argc, char ** argv)
 
   bool r;
   int opt;
-	while ((opt = getopt(argc, argv, "d:vst")) != -1) {
+  while ((opt = getopt(argc, argv, "d:vst")) != -1) {
     switch (opt) {
      case 'd':
        if (optarg != NULL && isDebugParam(optarg)) {
