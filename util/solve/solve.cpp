@@ -64,7 +64,6 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
   static int fsolve=1;
   Modelica::ConvertToGiNaC tog(syms);
   Modelica::PartialEvalExpression peval(syms,false);
-  //~ Modelica::ReplaceExpression eee(*crs.begin(),*crs.begin());
   Modelica::EvalExpression eval(syms);
 
   const int size=eqs.size();
@@ -184,8 +183,10 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
 								ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
 								eq = get<Equality>(e);
 							}
-							auto rta = Apply(all,eq.left_ref());
-							auto aux = Apply(all,eq.right_ref());
+							Expression pev = Apply(peval,eq.left_ref());
+							auto rta = Apply(all,pev);
+							pev = Apply(peval,eq.right_ref());
+							auto aux = Apply(all,pev);
 						    rta.insert(rta.end(), aux.begin(), aux.end());
 
 							for(Expression exp : rta){
@@ -212,11 +213,12 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
 							ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
 							eq = get<Equality>(e);
 						}
-						auto rta = Apply(all,eq.left_ref());
-						auto aux = Apply(all,eq.right_ref());
+						Expression pev = Apply(peval,eq.left_ref());
+						auto rta = Apply(all,pev);
+						pev = Apply(peval,eq.right_ref());
+						auto aux = Apply(all,pev);
+						rta.insert(rta.end(), aux.begin(), aux.end());
 							for(Expression exp : rta){
-									std::cout << "VAR " << exp << std::endl;
-								
 									if (crs_copy.end()==std::find(crs_copy.begin(),crs_copy.end(),Expression( exp ))){
 										crs_copy.push_back(Expression(exp));
 									    if (is<Reference>(exp)) {
@@ -395,7 +397,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     code << "     __status = gsl_multiroot_fsolver_iterate (__s);\n";
     code << "     if (__status)   /* check if solver is stuck */\n";
     code << "       break;\n";
-    code << "       __status = gsl_multiroot_test_residual (__s->f, 1e-7);\n";
+    code << "     __status = gsl_multiroot_test_residual (__s->f, 1e-7);\n";
     code << "   } while (__status == GSL_CONTINUE && __iter < 100);\n";
     code << "   if (__iter == 100) printf(\"Warning: GSL could not solve an algebraic loop after %d iterations\\n\",(int) __iter); \n";
     i=0;
