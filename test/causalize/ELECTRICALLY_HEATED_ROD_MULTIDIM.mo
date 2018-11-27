@@ -20,7 +20,7 @@ equation
 		der (T[i,j]) = omega * ((T[i+1,j] - 2 * T[i,j] + T[i-1,j]) / delR + (T[i+1,j]-T[i-1,j]) / (r * 2 * delR) + (T[i,j+1] - 2 * T[i,j] + T[i,j-1]) / delX + p_elec / deltav);
   end for;
 	for j in 1:M loop
-    T0[M] = 4 / 3 * T[1,M] - T[2,M];
+	  T0[j] = 4 / 3 * T[1,j] - T[2,j];
 	  dTdrR[j] = -k1 * (TL[j] ^ 4 - Troom ^ 4) - k2 * (TL[j] - Troom);
 	  dTdrR[j] = (-3 * TL[j] - 4*T[N,j] - T[N-1,j]) / (2*delR);
   end for;
