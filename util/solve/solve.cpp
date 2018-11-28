@@ -163,43 +163,45 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
         if (crs.end()!=std::find(crs.begin(),crs.end(),Expression( Reference(val.first))) )
           continue;
         VarInfo vinfo = val.second;
-        if (vinfo.indices() && vinfo.indices().get().size() > 1 ) {
-          ERROR("Multidimensional arrays not supported yet");
-        }
+        //~ if (vinfo.indices() && vinfo.indices().get().size() > 1 ) {
+          //~ ERROR("Multidimensional arrays not supported yet");
+        //~ }
         if (vinfo.indices()) {
-          int size = Apply(eval,vinfo.indices().get().front());
-          for (int i=1; i<= size ; i++) {
-			
-			Reference var(val.first, vinfo.indices().get().front());
-            Modelica::AllExpressions all(var);// Este es el visitor que hay que modificar para que me devuelva todas las expresiones.
-            foreach_ (Equation &e, eqs) {
-							Equality eq;
-							if (is<ForEq>(e)) {
-								ForEq feq = get<ForEq>(e);
-								ERROR_UNLESS(is<Equality>(feq.elements().front()),"Algebraic loop including non-equality equations not supported");
-								eq = get<Equality>(feq.elements().front());
-							}
-							else{
-								ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
-								eq = get<Equality>(e);
-							}
-							Expression pev = Apply(peval,eq.left_ref());
-							auto rta = Apply(all,pev);
-							pev = Apply(peval,eq.right_ref());
-							auto aux = Apply(all,pev);
-						    rta.insert(rta.end(), aux.begin(), aux.end());
+          //~ Apply(eval,vinfo.indices().get().front());
+		
+		  //~ ExpList expi = vinfo.indices().get();
+		  //~ for (auto exp1 : expi)
+		  	//~ Apply(eval, exp1);
+		
+		Reference var(val.first, vinfo.indices().get().front());
+		Modelica::AllExpressions all(var);// Este es el visitor que hay que modificar para que me devuelva todas las expresiones.
+		foreach_ (Equation &e, eqs) {
+						Equality eq;
+						if (is<ForEq>(e)) {
+							ForEq feq = get<ForEq>(e);
+							ERROR_UNLESS(is<Equality>(feq.elements().front()),"Algebraic loop including non-equality equations not supported");
+							eq = get<Equality>(feq.elements().front());
+						}
+						else{
+							ERROR_UNLESS(is<Equality>(e),"Algebraic loop including non-equality equations not supported");
+							eq = get<Equality>(e);
+						}
+						Expression pev = Apply(peval,eq.left_ref());
+						auto rta = Apply(all,pev);
+						pev = Apply(peval,eq.right_ref());
+						auto aux = Apply(all,pev);
+						rta.insert(rta.end(), aux.begin(), aux.end());
 
-							for(Expression exp : rta){
-								if (crs_copy.end()==std::find(crs_copy.begin(),crs_copy.end(),Expression( exp ))){
-									crs_copy.push_back(Expression(exp));
-									if (is<Reference>(exp)) {
-										Reference ref = get<Reference>(exp);
-										args.push_back(ref); 
-									}
+						for(Expression exp : rta){
+							if (crs_copy.end()==std::find(crs_copy.begin(),crs_copy.end(),Expression( exp ))){
+								crs_copy.push_back(Expression(exp));
+								if (is<Reference>(exp)) {
+									Reference ref = get<Reference>(exp);
+									args.push_back(ref); 
 								}
 							}
-            }
-          }
+						}
+		  }
         } else {
           Modelica::AllExpressions all(Reference(val.first));
           foreach_ (Equation &e, eqs) {
@@ -262,7 +264,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     setCFlag(code,1);
     code << "int " << fun_name.str() << "_eval(const gsl_vector * __x, void * __p, gsl_vector * __f) {\n";
     code << "  double *args=(double*)__p;\n";
-    //~ int i=0;
+    i=0;
     foreach_ (Expression e, c_crs) {
       code << "  const double " << e << " = gsl_vector_get(__x," << i++ << ");\n";
     }
