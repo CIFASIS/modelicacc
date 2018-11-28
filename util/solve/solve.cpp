@@ -287,15 +287,15 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
 				}
 				Expression l = Apply(peval,eq.left_ref());
 				Expression r = Apply(peval,eq.right_ref());
-				i = 0;
+				int j = 0;
 				for(Expression e : crs){
-						Modelica::ReplaceExpression repl(e, c_crs[i++]);
+						Modelica::ReplaceExpression repl(e, c_crs[j++]);
 						l = Apply(repl, l);
 						r = Apply(repl, r);
 				}
-				i = 0;
+				j = 0;
 				for(Reference ref : args){
-						Modelica::ReplaceExpression repl(Expression(ref), Expression(c_args[i++]));
+						Modelica::ReplaceExpression repl(Expression(ref), Expression(c_args[j++]));
 						l = Apply(repl, l);
 						r = Apply(repl, r);
 				}
