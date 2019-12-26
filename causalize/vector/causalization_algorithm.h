@@ -21,27 +21,28 @@
 #include <mmo/mmo_class.h>
 
 namespace Causalize {
-class CausalizationStrategyVector{
-	public:
-		CausalizationStrategyVector(Causalize::VectorCausalizationGraph g, Modelica::MMO_Class &m);			
-		bool Causalize();
-		void PrintCausalizationResult();
-	private:
-		void SolveEquations();
-		void Causalize1toN(const Unknown unknown, const Equation equation, const IndexPairSet ips);
-		void CausalizeNto1(const Unknown unknown, const Equation equation, const IndexPairSet ips);
-    Vertex GetEquation(Edge e);
-    Vertex GetUnknown(Edge e);
-    Option<std::pair<VectorEdge,IndexPairSet> > CanCausalizeEquation(VectorEquationVertex eq);
-    Option<std::pair<VectorEdge,IndexPairSet> > CanCausalizeUnknown(VectorUnknownVertex eq);
+class CausalizationStrategyVector {
+  public:
+  CausalizationStrategyVector(Causalize::VectorCausalizationGraph g, Modelica::MMO_Class &m);
+  bool Causalize();
+  void PrintCausalizationResult();
 
-    int step;
-		int equationNumber;
-		int unknownNumber;
-		Causalize::VectorCausalizationGraph graph;
-		std::list<Causalize::VectorVertex> equationDescriptors, unknownDescriptors;
-		std::vector<Causalize::CausalizedVar> equations1toN;
-		std::vector<Causalize::CausalizedVar> equationsNto1;
-    Modelica::MMO_Class &mmo;
+  private:
+  void SolveEquations();
+  void Causalize1toN(const Unknown unknown, const Equation equation, const IndexPairSet ips);
+  void CausalizeNto1(const Unknown unknown, const Equation equation, const IndexPairSet ips);
+  Vertex GetEquation(Edge e);
+  Vertex GetUnknown(Edge e);
+  Option<std::pair<VectorEdge, IndexPairSet>> CanCausalizeEquation(VectorEquationVertex eq);
+  Option<std::pair<VectorEdge, IndexPairSet>> CanCausalizeUnknown(VectorUnknownVertex eq);
+
+  int step;
+  int equationNumber;
+  int unknownNumber;
+  Causalize::VectorCausalizationGraph graph;
+  std::list<Causalize::VectorVertex> equationDescriptors, unknownDescriptors;
+  std::vector<Causalize::CausalizedVar> equations1toN;
+  std::vector<Causalize::CausalizedVar> equationsNto1;
+  Modelica::MMO_Class &mmo;
 };
-}
+}  // namespace Causalize

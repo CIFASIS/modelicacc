@@ -17,7 +17,6 @@
 
 ******************************************************************************/
 
-
 #ifndef STATEMENT_PARSER
 #define STATEMENT_PARSER
 #include <boost/spirit/include/qi.hpp>
@@ -29,34 +28,32 @@
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;
 namespace Modelica {
-  namespace Parser {
+namespace Parser {
 
-    template <typename Iterator>
-    struct StatementRule: qi::grammar<Iterator,Skipper<Iterator>,Statement()>
-    {
-      StatementRule(Iterator &it);
+template <typename Iterator>
+struct StatementRule : qi::grammar<Iterator, Skipper<Iterator>, Statement()> {
+  StatementRule(Iterator &it);
 
+  // Rules
+  qi::rule<Iterator, Skipper<Iterator>, Statement()> statement;
+  ModificationRule<Iterator> modification;
+  ExpressionRule<Iterator> expression;
+  qi::rule<Iterator, Skipper<Iterator>, Assign()> assign_statement;
+  qi::rule<Iterator, Skipper<Iterator>, CallSt()> call_statement;
+  qi::rule<Iterator, Skipper<Iterator>, ForSt()> for_statement;
+  qi::rule<Iterator, Skipper<Iterator>, WhenSt()> when_statement;
+  qi::rule<Iterator, Skipper<Iterator>, WhileSt()> while_statement;
+  qi::rule<Iterator, Skipper<Iterator>, IfSt()> if_statement;
+  qi::rule<Iterator, Skipper<Iterator>, StatementList()> statement_list;
+  qi::rule<Iterator, Skipper<Iterator>, StatementSection()> algorithm_section;
 
-      // Rules
-      qi::rule<Iterator,Skipper<Iterator>,Statement()> statement;
-      ModificationRule<Iterator> modification;
-      ExpressionRule<Iterator> expression;
-      qi::rule<Iterator, Skipper<Iterator>, Assign() > assign_statement;
-      qi::rule<Iterator, Skipper<Iterator>, CallSt() > call_statement;
-      qi::rule<Iterator, Skipper<Iterator>, ForSt() > for_statement;
-      qi::rule<Iterator, Skipper<Iterator>, WhenSt() > when_statement;
-      qi::rule<Iterator, Skipper<Iterator>, WhileSt() > while_statement;
-      qi::rule<Iterator, Skipper<Iterator>, IfSt() > if_statement;
-      qi::rule<Iterator, Skipper<Iterator>, StatementList() > statement_list;
-      qi::rule<Iterator, Skipper<Iterator>, StatementSection() > algorithm_section;
- 
+  /* Operators tokens */
+  qi::rule<Iterator> ASSIGN, CONNECT, OPAREN, COMA, CPAREN, WHEN, THEN, ELSEWHEN, END, SEMICOLON, IF, ELSEIF, ELSE, FOR, LOOP, ALGORITHM,
+      INITIAL, WHILE;
 
-      /* Operators tokens */
-      qi::rule<Iterator> ASSIGN, CONNECT, OPAREN, COMA, CPAREN, WHEN, THEN, ELSEWHEN, END, SEMICOLON, IF, ELSEIF, ELSE, FOR, LOOP, ALGORITHM, INITIAL, WHILE;
-
-      /* Keywords tokens */
-      Iterator &it;
-    };
-  }
-}
+  /* Keywords tokens */
+  Iterator &it;
+};
+}  // namespace Parser
+}  // namespace Modelica
 #endif

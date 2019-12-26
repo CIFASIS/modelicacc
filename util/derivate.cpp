@@ -23,11 +23,12 @@
 
 namespace Modelica {
 
-  Expression derivate(Expression e, VarSymbolTable varEnv) {
-    ConvertToGiNaC tog(varEnv,true);
-    GiNaC::symbol time  = tog.getTime();
-    GiNaC::ex ex = Apply(tog,e).diff(time).subs(var(GiNaC::wild(),time)==GiNaC::wild());
-    return ConvertToExp(ex);
-  }
-
+Expression derivate(Expression e, VarSymbolTable varEnv)
+{
+  ConvertToGiNaC tog(varEnv, true);
+  GiNaC::symbol time = tog.getTime();
+  GiNaC::ex ex = Apply(tog, e).diff(time).subs(var(GiNaC::wild(), time) == GiNaC::wild());
+  return ConvertToExp(ex);
 }
+
+}  // namespace Modelica

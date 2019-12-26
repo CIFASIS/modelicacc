@@ -17,14 +17,12 @@
 
 ******************************************************************************/
 
-
 #include <parser/expression.h>
 #include <parser/expression_def.h>
 
-namespace Modelica
-{
-  namespace Parser {
-    typedef std::string::const_iterator iterator_type;
-    template struct ExpressionRule<iterator_type>;
-  }
-}
+namespace Modelica {
+namespace Parser {
+typedef std::string::const_iterator iterator_type;
+template struct ExpressionRule<iterator_type>;
+}  // namespace Parser
+}  // namespace Modelica

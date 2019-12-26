@@ -17,57 +17,51 @@
 
 ******************************************************************************/
 
-
 #ifndef AST_ELEMENT
-#define AST_ELEMENT 
+#define AST_ELEMENT
 #include <ast/modification.h>
 
 namespace Modelica {
-  namespace AST {
-  
-  struct Extends {
-    member_(Name,name);
-    member_(Option<ClassModification>,modification);
-    member_(Option<Annotation>,annotation);
-    printable(Extends);
-  };
+namespace AST {
 
-  struct Import {
-    Import(){};
-    Import(Name, Name, Comment) {}
-    Import(Name, boost::optional<boost::optional<IdentList> >, Comment) {}
-    printable(Import);
-    
-  };
+struct Extends {
+  member_(Name, name);
+  member_(Option<ClassModification>, modification);
+  member_(Option<Annotation>, annotation);
+  printable(Extends);
+};
 
-  struct ClassType_;  // For recursion
-  struct ElemClass { 
-    ElemClass(){}
-    ElemClass(ClassType_);
-    member_(boost::recursive_wrapper<ClassType_>, class_element);
-    member_(bool, replaceable);
-    member_(bool, redeclare);
-    member_(bool, final);
-    member_(bool, inner);
-    member_(bool, outer);
-    member_(Option<Constrained>, constrained);
-    member_(Option<Comment>, constrained_comment);
-    printable(ElemClass);
-  };
-  typedef boost::variant<
-    Import,
-    Component,
-    Extends,
-    ElemClass
-  > Element;
-  
-  template<typename T> 
-  bool is(const Element & e) {
-    return e.type()==typeid(T);
-  }
-  typedef std::vector<Element> ElemList;
-  typedef std::vector<Extends> ExtendList;
-  typedef std::vector<Import> ImportList;
-  }
+struct Import {
+  Import(){};
+  Import(Name, Name, Comment) {}
+  Import(Name, boost::optional<boost::optional<IdentList>>, Comment) {}
+  printable(Import);
+};
+
+struct ClassType_;  // For recursion
+struct ElemClass {
+  ElemClass() {}
+  ElemClass(ClassType_);
+  member_(boost::recursive_wrapper<ClassType_>, class_element);
+  member_(bool, replaceable);
+  member_(bool, redeclare);
+  member_(bool, final);
+  member_(bool, inner);
+  member_(bool, outer);
+  member_(Option<Constrained>, constrained);
+  member_(Option<Comment>, constrained_comment);
+  printable(ElemClass);
+};
+typedef boost::variant<Import, Component, Extends, ElemClass> Element;
+
+template <typename T>
+bool is(const Element& e)
+{
+  return e.type() == typeid(T);
 }
+typedef std::vector<Element> ElemList;
+typedef std::vector<Extends> ExtendList;
+typedef std::vector<Import> ImportList;
+}  // namespace AST
+}  // namespace Modelica
 #endif

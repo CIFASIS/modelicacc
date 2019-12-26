@@ -26,21 +26,22 @@
 
 namespace Modelica {
 
-  using namespace Modelica::AST;
-  class ConvertToMicro: public boost::static_visitor<Equation> {
+using namespace Modelica::AST;
+class ConvertToMicro : public boost::static_visitor<Equation> {
   public:
-    ConvertToMicro(MMO_Class &cl);
-    void convert();
-    Equation operator() (Connect c) ;
-    Equation operator() (Equality c) ;
-    Equation operator() (CallEq c) ;
-    Equation operator() (WhenEq c) ;
-    Equation operator() (ForEq c) ;
-    Equation operator() (IfEq c) ;
+  ConvertToMicro(MMO_Class &cl);
+  void convert();
+  Equation operator()(Connect c);
+  Equation operator()(Equality c);
+  Equation operator()(CallEq c);
+  Equation operator()(WhenEq c);
+  Equation operator()(ForEq c);
+  Equation operator()(IfEq c);
+
   private:
-    unsigned int disc_count;
-    MMO_Class & mmo_class;
-    ConvertToMicroExpression tomicro_exp;
-  }; 
-}
-#endif 
+  unsigned int disc_count;
+  MMO_Class &mmo_class;
+  ConvertToMicroExpression tomicro_exp;
+};
+}  // namespace Modelica
+#endif

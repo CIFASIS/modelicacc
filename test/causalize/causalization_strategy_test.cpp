@@ -17,9 +17,9 @@
 using namespace boost::unit_test;
 using namespace Modelica::AST;
 
-void check_causality(MMO_Class &mmoClass, ExpList unknowns) {
-
-  const EquationList &causalEqs = mmoClass.equations_ref().equations_ref();
+void check_causality(MMO_Class& mmoClass, ExpList unknowns)
+{
+  const EquationList& causalEqs = mmoClass.equations_ref().equations_ref();
 
   /*
    * Here we collect the left side of each
@@ -27,8 +27,8 @@ void check_causality(MMO_Class &mmoClass, ExpList unknowns) {
    */
   ExpList knowns;
 
-  foreach_(Equation equation, causalEqs) {
-
+  foreach_(Equation equation, causalEqs)
+  {
     Equality eqEq = boost::get<Equality>(equation);
     Expression leftExpression = eqEq.left_ref();
 
@@ -36,43 +36,41 @@ void check_causality(MMO_Class &mmoClass, ExpList unknowns) {
       knowns.push_back(leftExpression);
     } else if (is<Call>(leftExpression)) {
       Call call = boost::get<Call>(leftExpression);
-      if (call.name()=="der")
-        knowns.push_back(leftExpression);
+      if (call.name() == "der") knowns.push_back(leftExpression);
     } else if (is<Output>(leftExpression)) {
       Output output = boost::get<Output>(leftExpression);
-      foreach_(OptExp oe, output.args()) {
-        if (oe)
-          knowns.push_back(oe.get());
+      foreach_(OptExp oe, output.args())
+      {
+        if (oe) knowns.push_back(oe.get());
       }
     } else {
       ERROR("Unexpected type for equation's left expression\n");
     }
 
-    foreach_(Expression unknown, unknowns) {
+    foreach_(Expression unknown, unknowns)
+    {
       Modelica::contains occurrs(unknown);
       if (Apply(occurrs, eqEq.right_ref())) {
         bool isKnown = false;
-        foreach_(Expression known, knowns) {
-          if(known == unknown) {
+        foreach_(Expression known, knowns)
+        {
+          if (known == unknown) {
             isKnown = true;
           }
         }
         BOOST_CHECK(isKnown);
       }
     }
-
   }
-
 }
 
-void rlc_test() {
-
+void rlc_test()
+{
   bool r;
 
-  StoredDef sd = parseFile("rlc.mo",r);
+  StoredDef sd = parseFile("rlc.mo", r);
 
-  if (!r)
-    ERROR("Can't parse file\n");
+  if (!r) ERROR("Can't parse file\n");
 
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
@@ -84,17 +82,15 @@ void rlc_test() {
   cStrategy.causalize("Anything");
 
   check_causality(mmo, unknowns);
-
 }
 
-void rlc_simple_test() {
-
+void rlc_simple_test()
+{
   bool r;
 
-  StoredDef sd = parseFile("rlc.mo",r);
+  StoredDef sd = parseFile("rlc.mo", r);
 
-  if (!r)
-    ERROR("Can't parse file\n");
+  if (!r) ERROR("Can't parse file\n");
 
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
@@ -106,17 +102,15 @@ void rlc_simple_test() {
   cStrategy.causalize_simple("Anything");
 
   check_causality(mmo, unknowns);
-
 }
 
-void rlc_loop_test() {
-
+void rlc_loop_test()
+{
   bool r;
 
-  StoredDef sd = parseFile("rlc_loop.mo",r);
+  StoredDef sd = parseFile("rlc_loop.mo", r);
 
-  if (!r)
-    ERROR("Can't parse file\n");
+  if (!r) ERROR("Can't parse file\n");
 
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
@@ -128,17 +122,15 @@ void rlc_loop_test() {
   cStrategy.causalize("Anything");
 
   check_causality(mmo, unknowns);
-
 }
 
-void rlc_loop_tarjan_test() {
-
+void rlc_loop_tarjan_test()
+{
   bool r;
 
-  StoredDef sd = parseFile("rlc_loop.mo",r);
+  StoredDef sd = parseFile("rlc_loop.mo", r);
 
-  if (!r)
-    ERROR("Can't parse file\n");
+  if (!r) ERROR("Can't parse file\n");
 
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
@@ -150,17 +142,15 @@ void rlc_loop_tarjan_test() {
   cStrategy.causalize_tarjan("Anything");
 
   check_causality(mmo, unknowns);
-
 }
 
-void OneDHeatTransferTI_FD_test() {
-
+void OneDHeatTransferTI_FD_test()
+{
   bool r;
 
-  StoredDef sd = parseFile("OneDHeatTransferTI_FD_100.mo",r);
+  StoredDef sd = parseFile("OneDHeatTransferTI_FD_100.mo", r);
 
-  if (!r)
-    ERROR("Can't parse file\n");
+  if (!r) ERROR("Can't parse file\n");
 
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
@@ -172,17 +162,15 @@ void OneDHeatTransferTI_FD_test() {
   cStrategy.causalize("Anything");
 
   check_causality(mmo, unknowns);
-
 }
 
-void OneDHeatTransferTI_FD_simple_test() {
-
+void OneDHeatTransferTI_FD_simple_test()
+{
   bool r;
 
-  StoredDef sd = parseFile("OneDHeatTransferTI_FD.mo",r);
+  StoredDef sd = parseFile("OneDHeatTransferTI_FD.mo", r);
 
-  if (!r)
-    ERROR("Can't parse file\n");
+  if (!r) ERROR("Can't parse file\n");
 
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
@@ -194,7 +182,6 @@ void OneDHeatTransferTI_FD_simple_test() {
   cStrategy.causalize_simple("Anything");
 
   check_causality(mmo, unknowns);
-
 }
 
 // TODO fix the check_causality method
@@ -220,20 +207,18 @@ void OneDHeatTransferTI_FD_simple_test() {
 
 // }
 
-test_suite*
-init_unit_test_suite( int, char* []) {
-
+test_suite* init_unit_test_suite(int, char*[])
+{
   debugInit("p");
-
 
   framework::master_test_suite().p_name.value = "Causalization Strategy Test";
 
-  framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_test) );
-  framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_simple_test) );
-  framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_loop_test) );
-  framework::master_test_suite().add( BOOST_TEST_CASE( &rlc_loop_tarjan_test) );
-  framework::master_test_suite().add( BOOST_TEST_CASE( &OneDHeatTransferTI_FD_test) );
-  framework::master_test_suite().add( BOOST_TEST_CASE( &OneDHeatTransferTI_FD_simple_test) );
+  framework::master_test_suite().add(BOOST_TEST_CASE(&rlc_test));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&rlc_simple_test));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&rlc_loop_test));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&rlc_loop_tarjan_test));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&OneDHeatTransferTI_FD_test));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&OneDHeatTransferTI_FD_simple_test));
   // TODO fix the check_causality method
   // framework::master_test_suite().add( BOOST_TEST_CASE( &OneDHeatTransferTI_FD_loop_test) );
 

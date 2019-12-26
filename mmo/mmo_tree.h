@@ -30,20 +30,18 @@ using namespace Modelica::AST;
 
 /*	Sirve para crear un arbol de MMO_Class a partir de una StoreDef
  *  Crea una clase _ROOT_ como raiz de todas
- * 
+ *
  */
 namespace Modelica {
 
 struct MMO_Tree {
-public:
-	MMO_Tree();
-	MMO_Class create(StoredDef);
+  public:
+  MMO_Tree();
+  MMO_Class create(StoredDef);
 
-private:
-
+  private:
 };
 
-}
-
+}  // namespace Modelica
 
 #endif

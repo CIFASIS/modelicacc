@@ -18,7 +18,6 @@
 
 ******************************************************************************/
 
-
 //#include <flatten/change_compref.h>
 #include <mmo/mmo_class.h>
 #include <ast/equation.h>
@@ -29,7 +28,7 @@
 #include <util/ast_visitors/dot_expression.h>
 
 #include <iostream>
-#include <sstream> 
+#include <sstream>
 
 #ifndef RMCOMP_H
 #define RMCOMP_H
@@ -39,15 +38,15 @@ using namespace Modelica;
 using namespace Modelica::AST;
 
 struct Remove_Composition {
-public:
-	typedef EquationVisitor<DotExpression> EqDotExpression;
-	typedef StatementVisitor<DotExpression> StDotExpression;
-	Remove_Composition();
-	void 		LevelUp(MMO_Class &up, MMO_Class &down, Name nUp , VarInfo viUp);
-private:
-	Equation 	createForEquation	(IdentList index,ExpList indexVar, EquationList el);
-	Statement 	createForStatement	(IdentList index,ExpList indexVar, StatementList el);
-};
+  public:
+  typedef EquationVisitor<DotExpression> EqDotExpression;
+  typedef StatementVisitor<DotExpression> StDotExpression;
+  Remove_Composition();
+  void LevelUp(MMO_Class &up, MMO_Class &down, Name nUp, VarInfo viUp);
 
+  private:
+  Equation createForEquation(IdentList index, ExpList indexVar, EquationList el);
+  Statement createForStatement(IdentList index, ExpList indexVar, StatementList el);
+};
 
 #endif

@@ -23,32 +23,29 @@
 
 using namespace Modelica::AST;
 
-VarInfo::VarInfo(TypePrefixes tp, Name n, Option<Comment> comm, Option<Modification> mod, Option<ExpList> ind, bool built):
-  prefixes_(tp), type_(n), comment_(comm), modification_(mod), indices_(ind), builtin_(built), state_(false) {};
-member_imp(VarInfo,Modelica::AST::TypePrefixes, prefixes);
-member_imp(VarInfo,Name, type);
-member_imp(VarInfo,Option<Modelica::AST::Comment>, comment);
-member_imp(VarInfo,Option<Modelica::AST::Modification>, modification);
-member_imp(VarInfo,Option<Modelica::AST::ExpList>, indices);
-member_imp(VarInfo,bool, builtin);
-member_imp(VarInfo,bool, state);
+VarInfo::VarInfo(TypePrefixes tp, Name n, Option<Comment> comm, Option<Modification> mod, Option<ExpList> ind, bool built)
+    : prefixes_(tp), type_(n), comment_(comm), modification_(mod), indices_(ind), builtin_(built), state_(false){};
+member_imp(VarInfo, Modelica::AST::TypePrefixes, prefixes);
+member_imp(VarInfo, Name, type);
+member_imp(VarInfo, Option<Modelica::AST::Comment>, comment);
+member_imp(VarInfo, Option<Modelica::AST::Modification>, modification);
+member_imp(VarInfo, Option<Modelica::AST::ExpList>, indices);
+member_imp(VarInfo, bool, builtin);
+member_imp(VarInfo, bool, state);
 bool VarInfo::isPrefix(TypePrefix p)
 {
-	foreach_(Option<TypePrefix> t, prefixes()) 
-		if (t && t.get() == p) return true;
-	return false;
+  foreach_(Option<TypePrefix> t, prefixes()) if (t && t.get() == p) return true;
+  return false;
 }
 
 void VarInfo::removePrefix(TypePrefix p)
 {
-	TypePrefixes::iterator it = std::find(prefixes_ref().begin(),prefixes_ref().end(),Option<TypePrefix>(p));
-	if (it != prefixes_ref().end()) prefixes_ref().erase(it);
+  TypePrefixes::iterator it = std::find(prefixes_ref().begin(), prefixes_ref().end(), Option<TypePrefix>(p));
+  if (it != prefixes_ref().end()) prefixes_ref().erase(it);
 }
 
-std::ostream& operator<<(std::ostream& out, const VarInfo &v) // output
+std::ostream& operator<<(std::ostream& out, const VarInfo& v)  // output
 {
   out << "type: " << v.type() << " state: " << v.state() << " builtin: " << v.builtin();
   return out;
 }
- 
-

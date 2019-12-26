@@ -17,7 +17,6 @@
 
 ******************************************************************************/
 
-
 #ifndef EQUATION_PARSER
 #define EQUATION_PARSER
 #include <boost/spirit/include/qi.hpp>
@@ -29,33 +28,32 @@
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;
 namespace Modelica {
-  namespace Parser {
+namespace Parser {
 
-    template <typename Iterator>
-    struct EquationRule: qi::grammar<Iterator,Skipper<Iterator>,Equation()>
-    {
-      EquationRule(Iterator &it);
+template <typename Iterator>
+struct EquationRule : qi::grammar<Iterator, Skipper<Iterator>, Equation()> {
+  EquationRule(Iterator &it);
 
+  // Rules
+  qi::rule<Iterator, Skipper<Iterator>, Equation()> equation;
+  qi::rule<Iterator, Skipper<Iterator>, Equality()> equality_equation;
+  qi::rule<Iterator, Skipper<Iterator>, Connect()> connect_equation;
+  qi::rule<Iterator, Skipper<Iterator>, IfEq()> if_equation;
+  qi::rule<Iterator, Skipper<Iterator>, ForEq()> for_equation;
+  qi::rule<Iterator, Skipper<Iterator>, CallEq()> call_equation;
+  qi::rule<Iterator, Skipper<Iterator>, WhenEq()> when_equation;
+  qi::rule<Iterator, Skipper<Iterator>, EquationList()> equation_list;
+  qi::rule<Iterator, Skipper<Iterator>, EquationSection()> equation_section;
+  ModificationRule<Iterator> modification;
+  ExpressionRule<Iterator> expression;
 
-      // Rules
-      qi::rule<Iterator,Skipper<Iterator>,Equation()> equation;
-      qi::rule<Iterator, Skipper<Iterator>, Equality()> equality_equation;
-      qi::rule<Iterator, Skipper<Iterator>, Connect()> connect_equation;
-      qi::rule<Iterator, Skipper<Iterator>, IfEq()> if_equation;
-      qi::rule<Iterator, Skipper<Iterator>, ForEq()> for_equation;
-      qi::rule<Iterator, Skipper<Iterator>, CallEq()> call_equation;
-      qi::rule<Iterator, Skipper<Iterator>, WhenEq()> when_equation;
-      qi::rule<Iterator, Skipper<Iterator>, EquationList() > equation_list;
-      qi::rule<Iterator, Skipper<Iterator>, EquationSection()> equation_section;
-      ModificationRule<Iterator> modification;
-      ExpressionRule<Iterator> expression;
+  /* Operators tokens */
+  qi::rule<Iterator> EQUAL, CONNECT, OPAREN, COMA, CPAREN, WHEN, THEN, ELSEWHEN, END, SEMICOLON, IF, ELSEIF, ELSE, FOR, LOOP, EQUATION,
+      INITIAL;
 
-      /* Operators tokens */
-      qi::rule<Iterator> EQUAL, CONNECT, OPAREN, COMA, CPAREN, WHEN, THEN, ELSEWHEN, END, SEMICOLON, IF, ELSEIF, ELSE, FOR, LOOP, EQUATION, INITIAL;
-
-      /* Keywords tokens */
-      Iterator &it;
-    };
-  }
-}
+  /* Keywords tokens */
+  Iterator &it;
+};
+}  // namespace Parser
+}  // namespace Modelica
 #endif

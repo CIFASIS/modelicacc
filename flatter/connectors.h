@@ -37,88 +37,82 @@
 using namespace Modelica;
 using namespace Modelica::AST;
 
-typedef boost::tuple<Expression,OptExp,OptExp> 	Vars;
-typedef std::vector<Vars>	 					VarsList;
-typedef boost::tuple<OptExp,VarsList,bool>	 	Solution;
-typedef std::vector<Solution> 					SolList;
-typedef std::set<Vertex>						VertexSet;
-typedef std::set<Edge>							EdgeSet;
-typedef std::set<EdgeSet>						EdgeSetSet;
+typedef boost::tuple<Expression, OptExp, OptExp> Vars;
+typedef std::vector<Vars> VarsList;
+typedef boost::tuple<OptExp, VarsList, bool> Solution;
+typedef std::vector<Solution> SolList;
+typedef std::set<Vertex> VertexSet;
+typedef std::set<Edge> EdgeSet;
+typedef std::set<EdgeSet> EdgeSetSet;
 
 class Connectors {
-public:
-	
-	Connectors(MMO_Class &c);
-	   
-	void 	createGraph(EquationList & eqs, Option<Name> i , OptExp range);
-	void 	createEdge(Vertex  , Vertex , OptExp);
-	Vertex 	createConnect(OptExp i);
-	Vertex 	createElements(Expression e,OptExp i);
-	void 	expandConnect(Vertex l, OptExp lIndex,Vertex r, OptExp rIndex, OptExp range);
-	
-	
-	Option<Vertex> 			findVertex(Expression e);
-	Pair<Expression,OptExp>	separate(Expression e);
-	
-	void		resolve(MMO_Class &c);
-	void 		Debug(char *);
-	void  		writeGraphViz(char *);
-private:
-	MMOGraph G;
-	MMOGraph G_Debug;
-	MMO_Class & class_;
-	
-	void 		print();
-	
-	Vertex 		getSink(Edge e,Vertex v);
-	Vertex 		getVertex(Edge e);
-	Vertex 		getConnect(Edge e);
-	OptExp 		getRange(Edge e);
-	OptExp 		getIndex(Edge e);
-	
-	Vertex 		getSinkVertex(Edge e);
-	Edge 		getSinkEdge(Edge e);
-	bool 		isEneUno(Edge e);
-	
-	
-	
-	SolList 	VisitarVertice(Vertex v,OptEdge e,OptExp iter,bool eneuno);
-	OptExp 		intersectionIntervals(OptExp a, OptExp b);
-	OptExp 		getIntervalo(Edge e);
-	
-	OptExp 		applyIntervalo(Expression inter,OptExp index);
-	OptExp 		proyInter(Expression inter,Edge e);
-	OptExp 		proyInterInv(Expression inter,Edge e);
-	
-	Expression 	applyIndex(Expression index,Expression e);
-	Expression 	applyIndexInv(Expression index,Expression e);
-	
-	SolList 	proySolutions(SolList sols, Edge e);
-	SolList 	proySolutionsInv(SolList sols, Edge e);
-	
-	void 		combine(std::vector<SolList> sols, Option<Solution> temp, SolList & _final);
-	OptExpList	cutRange(OptExp a,OptExp b);
-	void 		cutEdge(OptEdge oe, OptExp iter_);
-	void  		markUsed(Vertex c,OptExp iter_);
-	void 		markVisited(Vertex c);
-	void 		printSols(SolList sols);
-	SolList 	resolveConnect();	
-	
-	
-	void 		createEqualityEquation(OptExp iter,VarsList vars,Name e,bool);
-	void 		createFlowEquation(OptExp iter,VarsList vars,MMO_Class & conector,Name e,bool);
-	void 		createEquation(Solution sol);
-	void 		ceroEquations();
-	Expression 	putIndex(Vars v,Option<EvalExpression> eval);
-	Expression 	addIndex(Expression name, OptExp i ,Option<EvalExpression> eval);
-	bool 		isArray(Expression name);
-	Name 		getName(Expression name);
-	Expression 	addSufix(Expression name,Name var);
-	Expression 	removeUnary(Expression name);
-	
-	SolList 	c_sols; 
-	
-};
+  public:
+  Connectors(MMO_Class &c);
 
+  void createGraph(EquationList &eqs, Option<Name> i, OptExp range);
+  void createEdge(Vertex, Vertex, OptExp);
+  Vertex createConnect(OptExp i);
+  Vertex createElements(Expression e, OptExp i);
+  void expandConnect(Vertex l, OptExp lIndex, Vertex r, OptExp rIndex, OptExp range);
+
+  Option<Vertex> findVertex(Expression e);
+  Pair<Expression, OptExp> separate(Expression e);
+
+  void resolve(MMO_Class &c);
+  void Debug(char *);
+  void writeGraphViz(char *);
+
+  private:
+  MMOGraph G;
+  MMOGraph G_Debug;
+  MMO_Class &class_;
+
+  void print();
+
+  Vertex getSink(Edge e, Vertex v);
+  Vertex getVertex(Edge e);
+  Vertex getConnect(Edge e);
+  OptExp getRange(Edge e);
+  OptExp getIndex(Edge e);
+
+  Vertex getSinkVertex(Edge e);
+  Edge getSinkEdge(Edge e);
+  bool isEneUno(Edge e);
+
+  SolList VisitarVertice(Vertex v, OptEdge e, OptExp iter, bool eneuno);
+  OptExp intersectionIntervals(OptExp a, OptExp b);
+  OptExp getIntervalo(Edge e);
+
+  OptExp applyIntervalo(Expression inter, OptExp index);
+  OptExp proyInter(Expression inter, Edge e);
+  OptExp proyInterInv(Expression inter, Edge e);
+
+  Expression applyIndex(Expression index, Expression e);
+  Expression applyIndexInv(Expression index, Expression e);
+
+  SolList proySolutions(SolList sols, Edge e);
+  SolList proySolutionsInv(SolList sols, Edge e);
+
+  void combine(std::vector<SolList> sols, Option<Solution> temp, SolList &_final);
+  OptExpList cutRange(OptExp a, OptExp b);
+  void cutEdge(OptEdge oe, OptExp iter_);
+  void markUsed(Vertex c, OptExp iter_);
+  void markVisited(Vertex c);
+  void printSols(SolList sols);
+  SolList resolveConnect();
+
+  void createEqualityEquation(OptExp iter, VarsList vars, Name e, bool);
+  void createFlowEquation(OptExp iter, VarsList vars, MMO_Class &conector, Name e, bool);
+  void createEquation(Solution sol);
+  void ceroEquations();
+  Expression putIndex(Vars v, Option<EvalExpression> eval);
+  Expression addIndex(Expression name, OptExp i, Option<EvalExpression> eval);
+  bool isArray(Expression name);
+  Name getName(Expression name);
+  Expression addSufix(Expression name, Name var);
+  Expression removeUnary(Expression name);
+
+  SolList c_sols;
+};
 
 #endif

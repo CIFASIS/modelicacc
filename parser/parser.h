@@ -21,7 +21,8 @@
 #include <ast/class.h>
 
 namespace Modelica {
-  namespace Parser {
-  AST::StoredDef ParseFile(std::string name, bool &r);
-  AST::Expression ParseExpression(std::string exp, bool &r);
-} }
+namespace Parser {
+AST::StoredDef ParseFile(std::string name, bool &r);
+AST::Expression ParseExpression(std::string exp, bool &r);
+}  // namespace Parser
+}  // namespace Modelica

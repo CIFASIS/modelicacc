@@ -26,24 +26,21 @@
 #include <algorithm>
 #include <vector>
 
-
 namespace Modelica {
-    
-    SplitFor::SplitFor(MMO_Class &c): _c(c) {
-    }
-    
-    void SplitFor::splitFor() {
-        EquationList &el = _c.equations_ref().equations_ref();
-        SplitForVisitor efv;
-        EquationList el_new;
-        foreach_(Equation e1, el) {
-            EquationList eql = Apply(efv, e1);
-            foreach_(Equation e2, eql) {
-                el_new.push_back(e2);
-            }
-        }
-        el=el_new;
-    }
 
-};
+SplitFor::SplitFor(MMO_Class &c) : _c(c) {}
 
+void SplitFor::splitFor()
+{
+  EquationList &el = _c.equations_ref().equations_ref();
+  SplitForVisitor efv;
+  EquationList el_new;
+  foreach_(Equation e1, el)
+  {
+    EquationList eql = Apply(efv, e1);
+    foreach_(Equation e2, eql) { el_new.push_back(e2); }
+  }
+  el = el_new;
+}
+
+};  // namespace Modelica

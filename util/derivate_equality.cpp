@@ -19,9 +19,9 @@
 ******************************************************************************/
 /*
  * La idea es hacer una función que tome una igualdad y devuelva la misma pero con sus miembros derivados.
- * 
+ *
  */
- 
+
 #include <util/derivate_equality.h>
 #include <ast/equation.h>
 #include <ast/queries.h>
@@ -29,16 +29,16 @@
 #include <boost/variant/get.hpp>
 #include <util/ast_visitors/part_evalexp.h>
 
-
 namespace Modelica {
-    Equality derivate_equality(Equality eq, VarSymbolTable syms) {
-    PartEvalExp eval(syms, true);
-    Expression left= Apply(eval,eq.left_ref());    
-    Expression right= Apply(eval,eq.right_ref());
-    eq.left_ref()=derivate(left,syms);
-    eq.right_ref()=derivate(right,syms);
-// aplicar evaluador al resultado... 
-    return eq;
-  }
-
+Equality derivate_equality(Equality eq, VarSymbolTable syms)
+{
+  PartEvalExp eval(syms, true);
+  Expression left = Apply(eval, eq.left_ref());
+  Expression right = Apply(eval, eq.right_ref());
+  eq.left_ref() = derivate(left, syms);
+  eq.right_ref() = derivate(right, syms);
+  // aplicar evaluador al resultado...
+  return eq;
 }
+
+}  // namespace Modelica

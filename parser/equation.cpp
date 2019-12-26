@@ -17,14 +17,12 @@
 
 ******************************************************************************/
 
-
 #include <parser/equation.h>
 #include <parser/equation_def.h>
 
-namespace Modelica
-{
-  namespace Parser {
-    typedef std::string::const_iterator iterator_type;
-    template struct EquationRule<iterator_type>;
-  }
-}
+namespace Modelica {
+namespace Parser {
+typedef std::string::const_iterator iterator_type;
+template struct EquationRule<iterator_type>;
+}  // namespace Parser
+}  // namespace Modelica

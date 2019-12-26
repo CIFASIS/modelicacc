@@ -29,17 +29,16 @@ MMO_Tree::MMO_Tree() {}
 
 MMO_Class MMO_Tree::create(StoredDef sd)
 {
-	MMO_Class * mmo_root = new MMO_Class();
-	mmo_root->set_name("_ROOT_");
-		
-	foreach_(ClassType cl, sd.classes()) {
-		MMO_Class * mmo_aux = new MMO_Class(get<Class>(cl));
-		mmo_aux->set_father(mmo_root);
-		Type::Class tt = Type::Class(mmo_aux->name(),mmo_aux);
-	   	mmo_root->tyTable_ref().insert(mmo_aux->name(),tt);
-	   	mmo_root->types_ref().push_back(mmo_aux->name());
-	}
-	return *mmo_root;
+  MMO_Class* mmo_root = new MMO_Class();
+  mmo_root->set_name("_ROOT_");
+
+  foreach_(ClassType cl, sd.classes())
+  {
+    MMO_Class* mmo_aux = new MMO_Class(get<Class>(cl));
+    mmo_aux->set_father(mmo_root);
+    Type::Class tt = Type::Class(mmo_aux->name(), mmo_aux);
+    mmo_root->tyTable_ref().insert(mmo_aux->name(), tt);
+    mmo_root->types_ref().push_back(mmo_aux->name());
+  }
+  return *mmo_root;
 }
-
-

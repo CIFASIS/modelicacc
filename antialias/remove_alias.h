@@ -25,10 +25,11 @@ namespace Modelica {
 class RemoveAlias {
   MMO_Class &_c;
   void alias(Reference a, Expression b);
-public:
+
+  public:
   RemoveAlias(MMO_Class &c);
   void removeAliasEquations();
 };
-}
+}  // namespace Modelica
 
 #endif

@@ -25,19 +25,19 @@
 
 namespace Modelica {
 
-  using namespace Modelica::AST;
-  class ReplaceEquation: public boost::static_visitor<Equation> {
+using namespace Modelica::AST;
+class ReplaceEquation : public boost::static_visitor<Equation> {
   public:
-    ReplaceEquation(Expression, Expression);
-    Equation operator()(Connect) const;
-    Equation operator()(Equality) const;
-    Equation operator()(CallEq) const;
-    Equation operator()(ForEq) const;
-    Equation operator()(IfEq) const;
-    Equation operator()(WhenEq) const;
- 
-    Expression look,rep;
-    ReplaceExpression replace_exp;
-  }; 
-}
-#endif 
+  ReplaceEquation(Expression, Expression);
+  Equation operator()(Connect) const;
+  Equation operator()(Equality) const;
+  Equation operator()(CallEq) const;
+  Equation operator()(ForEq) const;
+  Equation operator()(IfEq) const;
+  Equation operator()(WhenEq) const;
+
+  Expression look, rep;
+  ReplaceExpression replace_exp;
+};
+}  // namespace Modelica
+#endif

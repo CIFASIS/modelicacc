@@ -34,9 +34,9 @@ using namespace Modelica;
 using namespace Modelica::AST;
 
 class StateVariablesFinder : public boost::static_visitor<void> {
-public:
-	StateVariablesFinder(Modelica::MMO_Class &c);
-	void findStateVariables();
+  public:
+  StateVariablesFinder(Modelica::MMO_Class &c);
+  void findStateVariables();
   void operator()(Modelica::AST::Integer v) const;
   void operator()(Boolean v) const;
   void operator()(String v) const;
@@ -57,7 +57,6 @@ public:
   void operator()(Reference) const;
   void operator()(Range) const;
 
-private:
-	Modelica::MMO_Class &_c;
+  private:
+  Modelica::MMO_Class &_c;
 };
-

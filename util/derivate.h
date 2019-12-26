@@ -25,9 +25,9 @@
 #include <util/table.h>
 
 namespace Modelica {
-  using namespace Modelica::AST;
-  Expression derivate(Expression, VarSymbolTable);
+using namespace Modelica::AST;
+Expression derivate(Expression, VarSymbolTable);
 
-}
+}  // namespace Modelica
 
 #endif

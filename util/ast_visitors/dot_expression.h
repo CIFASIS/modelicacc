@@ -28,34 +28,34 @@
 
 namespace Modelica {
 
-  using namespace Modelica::AST;
-  class DotExpression: public boost::static_visitor<Expression> {
+using namespace Modelica::AST;
+class DotExpression : public boost::static_visitor<Expression> {
   public:
-    DotExpression(Option<MMO_Class &> c, Name n, ExpList xs);
-    Expression operator()(Integer v) const;
-    Expression operator()(Boolean v) const;
-    Expression operator()(String v) const;
-    Expression operator()(Name v) const;
-    Expression operator()(Real v) const;
-    Expression operator()(SubEnd v) const;
-    Expression operator()(SubAll v) const;
-    Expression operator()(BinOp) const;
-    Expression operator()(UnaryOp) const;
-    Expression operator()(Brace) const;
-    Expression operator()(Bracket) const;
-    Expression operator()(Call) const;
-    Expression operator()(FunctionExp) const;
-    Expression operator()(ForExp) const;
-    Expression operator()(IfExp) const;
-    Expression operator()(Named) const;
-    Expression operator()(Output) const;
-    Expression operator()(Reference) const;
-    Expression operator()(Range) const;
-	OptExp findConst(Reference v) const;
-	Option<VarSymbolTable &> syms;
-	Option<MMO_Class &> _class;
-    Name prefix;
-    ExpList index;
-  }; 
-}
-#endif 
+  DotExpression(Option<MMO_Class &> c, Name n, ExpList xs);
+  Expression operator()(Integer v) const;
+  Expression operator()(Boolean v) const;
+  Expression operator()(String v) const;
+  Expression operator()(Name v) const;
+  Expression operator()(Real v) const;
+  Expression operator()(SubEnd v) const;
+  Expression operator()(SubAll v) const;
+  Expression operator()(BinOp) const;
+  Expression operator()(UnaryOp) const;
+  Expression operator()(Brace) const;
+  Expression operator()(Bracket) const;
+  Expression operator()(Call) const;
+  Expression operator()(FunctionExp) const;
+  Expression operator()(ForExp) const;
+  Expression operator()(IfExp) const;
+  Expression operator()(Named) const;
+  Expression operator()(Output) const;
+  Expression operator()(Reference) const;
+  Expression operator()(Range) const;
+  OptExp findConst(Reference v) const;
+  Option<VarSymbolTable &> syms;
+  Option<MMO_Class &> _class;
+  Name prefix;
+  ExpList index;
+};
+}  // namespace Modelica
+#endif

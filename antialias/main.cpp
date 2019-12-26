@@ -25,8 +25,7 @@
 #include <boost/variant/get.hpp>
 #include <antialias/remove_alias.h>
 
-
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
   using namespace std;
   using namespace Modelica::AST;
@@ -37,23 +36,22 @@ int main(int argc, char ** argv)
   StoredDef sd;
   while ((opt = getopt(argc, argv, "d:q")) != -1) {
     switch (opt) {
-     case 'd':
-       if (optarg != NULL && isDebugParam(optarg)) {
-         debugInit(optarg);
-       } else {
-         ERROR("command-line option d has no arguments\n");
-       }
-       break;
+    case 'd':
+      if (optarg != NULL && isDebugParam(optarg)) {
+        debugInit(optarg);
+      } else {
+        ERROR("command-line option d has no arguments\n");
+      }
+      break;
     }
   }
- 
-  if (argv[optind]!=NULL) 
-    sd=Parser::ParseFile(argv[optind],ret);
+
+  if (argv[optind] != NULL)
+    sd = Parser::ParseFile(argv[optind], ret);
   else
-    sd=Parser::ParseFile("",ret);
- 
-  if (!ret)
-    return -1;
+    sd = Parser::ParseFile("", ret);
+
+  if (!ret) return -1;
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
   RemoveAlias ra(mmo);

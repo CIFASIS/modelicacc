@@ -20,41 +20,31 @@
 #include <util/ast_visitors/splitfor_visitor.h>
 #include <util/debug.h>
 
-
 namespace Modelica {
 
-    EquationList SplitForVisitor::operator()(Connect eq) const {
-        return EquationList(1, eq);
-    };
+EquationList SplitForVisitor::operator()(Connect eq) const { return EquationList(1, eq); };
 
-    EquationList SplitForVisitor::operator()(Equality eq) const {
-        return EquationList(1, eq);
-    };
+EquationList SplitForVisitor::operator()(Equality eq) const { return EquationList(1, eq); };
 
-    EquationList SplitForVisitor::operator()(CallEq eq) const {
-        return EquationList(1, eq);
-    };
+EquationList SplitForVisitor::operator()(CallEq eq) const { return EquationList(1, eq); };
 
-    EquationList SplitForVisitor::operator()(IfEq eq) const {
-        return EquationList(1, eq);
-    };
+EquationList SplitForVisitor::operator()(IfEq eq) const { return EquationList(1, eq); };
 
-    EquationList SplitForVisitor::operator()(WhenEq eq) const {
-        return EquationList(1, eq);
-    };
+EquationList SplitForVisitor::operator()(WhenEq eq) const { return EquationList(1, eq); };
 
-    EquationList SplitForVisitor::operator()(ForEq eq) const {
-        EquationList eql;
-        foreach_(Equation e, eq.els) {
-            if (is<ForEq>(e)) {
-                ERROR("Nested 'for' is not supported");
-            }
-            else {
-                ForEq foreq = ForEq(eq.r, EquationList(1, e));
-                eql.push_back(foreq);
-            }
-        }
-        return eql;
-    };
-    
-}
+EquationList SplitForVisitor::operator()(ForEq eq) const
+{
+  EquationList eql;
+  foreach_(Equation e, eq.els)
+  {
+    if (is<ForEq>(e)) {
+      ERROR("Nested 'for' is not supported");
+    } else {
+      ForEq foreq = ForEq(eq.r, EquationList(1, e));
+      eql.push_back(foreq);
+    }
+  }
+  return eql;
+};
+
+}  // namespace Modelica

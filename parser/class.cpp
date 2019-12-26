@@ -20,10 +20,9 @@
 #include <parser/class.h>
 #include <parser/class_def.h>
 
-namespace Modelica
-{
-  namespace Parser {
-    typedef std::string::const_iterator iterator_type;
-    template struct ClassRule<iterator_type>;
-  }
-}
+namespace Modelica {
+namespace Parser {
+typedef std::string::const_iterator iterator_type;
+template struct ClassRule<iterator_type>;
+}  // namespace Parser
+}  // namespace Modelica

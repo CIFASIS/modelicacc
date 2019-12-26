@@ -25,20 +25,18 @@
 
 namespace Modelica {
 
-    using namespace Modelica::AST;
+using namespace Modelica::AST;
 
-    class SplitForVisitor: public boost::static_visitor<EquationList> {
-    public:
+class SplitForVisitor : public boost::static_visitor<EquationList> {
+  public:
+  EquationList operator()(Connect eq) const;
+  EquationList operator()(Equality eq) const;
+  EquationList operator()(CallEq eq) const;
+  EquationList operator()(IfEq eq) const;
+  EquationList operator()(WhenEq eq) const;
+  EquationList operator()(ForEq eq) const;
+};
 
-        EquationList operator()(Connect eq) const;
-        EquationList operator()(Equality eq) const;
-        EquationList operator()(CallEq eq) const;
-        EquationList operator()(IfEq eq) const;
-        EquationList operator()(WhenEq eq) const;
-        EquationList operator()(ForEq eq) const;
-
-    };
-	
-}
+}  // namespace Modelica
 
 #endif

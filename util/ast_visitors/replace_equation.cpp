@@ -22,41 +22,44 @@
 
 namespace Modelica {
 
-    ReplaceEquation::ReplaceEquation(Expression l, Expression r): look(l), rep(r), replace_exp(look,rep) {
-      replace_exp.ignoreIndexes();
-    };
-    Equation ReplaceEquation::operator()(Connect v) const {
-      ERROR("Replace in connect equation not implemented\n");
-      return v;
-    };
-    Equation ReplaceEquation::operator()(Equality v) const {
-      v.left_ref()=Apply(replace_exp, v.left_ref());
-      v.right_ref()=Apply(replace_exp, v.right_ref());
-      return v;
-    };
-    Equation ReplaceEquation::operator()(IfEq v) const {
-      ERROR("Replace in if equation not implemented\n");
-      return v;
-    }
-    Equation ReplaceEquation::operator()(CallEq v) const {
-      ERROR("Replace in call equation not implemented\n");
-      return v;
-    };
-    Equation ReplaceEquation::operator()(ForEq v) const {
-      foreach_(Index &i, v.range_ref().indexes_ref()) {
-        if (i.exp()) {
-          i.exp_ref()=Apply(replace_exp, i.exp_ref().get());
-        }
-      }
-      foreach_(Equation &e, v.elements_ref()) {
-        e = ApplyThis(e);
-      }
-      //ERROR("Replace in for equation not implemented\n");
-      return v;
-    };
-    Equation ReplaceEquation::operator()(WhenEq v) const {
-      ERROR("Replace in when equation not implemented\n");
-      return v;
-    }
- 
+ReplaceEquation::ReplaceEquation(Expression l, Expression r) : look(l), rep(r), replace_exp(look, rep) { replace_exp.ignoreIndexes(); };
+Equation ReplaceEquation::operator()(Connect v) const
+{
+  ERROR("Replace in connect equation not implemented\n");
+  return v;
+};
+Equation ReplaceEquation::operator()(Equality v) const
+{
+  v.left_ref() = Apply(replace_exp, v.left_ref());
+  v.right_ref() = Apply(replace_exp, v.right_ref());
+  return v;
+};
+Equation ReplaceEquation::operator()(IfEq v) const
+{
+  ERROR("Replace in if equation not implemented\n");
+  return v;
 }
+Equation ReplaceEquation::operator()(CallEq v) const
+{
+  ERROR("Replace in call equation not implemented\n");
+  return v;
+};
+Equation ReplaceEquation::operator()(ForEq v) const
+{
+  foreach_(Index & i, v.range_ref().indexes_ref())
+  {
+    if (i.exp()) {
+      i.exp_ref() = Apply(replace_exp, i.exp_ref().get());
+    }
+  }
+  foreach_(Equation & e, v.elements_ref()) { e = ApplyThis(e); }
+  // ERROR("Replace in for equation not implemented\n");
+  return v;
+};
+Equation ReplaceEquation::operator()(WhenEq v) const
+{
+  ERROR("Replace in when equation not implemented\n");
+  return v;
+}
+
+}  // namespace Modelica

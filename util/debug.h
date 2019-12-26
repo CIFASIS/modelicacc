@@ -17,11 +17,9 @@
 
 ******************************************************************************/
 
-
 // This debugging routines allow the user to turn on selected
 // debugging messages, controllable from the command line arguments
 // passed to modelicacc after de -d option.
-
 
 /**
  * Initialize so that only DEBUG messages with a flag in flagList
@@ -31,12 +29,12 @@
  *
  * "flagList" is a string of characters for whose DEBUG messages are to be enabled.
  */
-void debugInit(const char* flags);
+void debugInit(const char *flags);
 
 /**
  * Print an INFO debug message, if flag is enabled.
  **/
-void DEBUG (char flag, const char* format, ...);
+void DEBUG(char flag, const char *format, ...);
 
 bool isDebugParam(char *param);
 bool debugIsEnabled(char);
@@ -53,7 +51,7 @@ void ERROR(const char *format, ...);
 void ERROR_UNLESS(bool condition, const char *format, ...);
 
 /*
- * Print an Warning message. 
+ * Print an Warning message.
  */
 void WARNING(const char *format, ...);
 

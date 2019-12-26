@@ -22,12 +22,13 @@
 #include <mmo/mmo_class.h>
 
 namespace Modelica {
-    class SplitFor {
-      MMO_Class &_c;
-    public:
-      SplitFor(MMO_Class &c);
-      void splitFor();
-    };
-}
+class SplitFor {
+  MMO_Class &_c;
+
+  public:
+  SplitFor(MMO_Class &c);
+  void splitFor();
+};
+}  // namespace Modelica
 
 #endif

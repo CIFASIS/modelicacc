@@ -27,15 +27,15 @@
 #include <causalize/graph/graph_definition.h>
 #include <mmo/mmo_class.h>
 
-
 namespace Causalize {
 class CausalizationStrategy {
-public:
+  public:
   CausalizationStrategy(Modelica::MMO_Class &mmo_class);
   void Causalize();
   void CausalizeSimple();
   void CausalizeTarjan();
-private:
+
+  private:
   void SimpleCausalizationStrategy();
   Edge GetUniqueEdge(Vertex v);
   void CollectDegree1Verts(Vertex v, std::list<Vertex> &degree1Verts);
@@ -53,4 +53,4 @@ private:
   Modelica::AST::ExpList _all_unknowns;
   std::list<std::string> c_code;
 };
-}
+}  // namespace Causalize

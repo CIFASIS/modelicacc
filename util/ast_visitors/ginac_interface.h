@@ -34,11 +34,11 @@ DECLARE_FUNCTION_1P(der)
 DECLARE_FUNCTION_1P(pre)
 
 namespace Modelica {
-  using namespace Modelica::AST;
-  Expression ConvertToExp(GiNaC::ex e); 
-  class ConvertToGiNaC: public boost::static_visitor<GiNaC::ex> {
+using namespace Modelica::AST;
+Expression ConvertToExp(GiNaC::ex e);
+class ConvertToGiNaC : public boost::static_visitor<GiNaC::ex> {
   public:
-  ConvertToGiNaC(VarSymbolTable  &varEnv,bool forDerivation=false);
+  ConvertToGiNaC(VarSymbolTable& varEnv, bool forDerivation = false);
   ::GiNaC::ex operator()(Integer v) const;
   ::GiNaC::ex operator()(Boolean v) const;
   ::GiNaC::ex operator()(String v) const;
@@ -62,10 +62,11 @@ namespace Modelica {
   ::GiNaC::symbol& getSymbol(Modelica::AST::Name) const;
   ::GiNaC::symbol& getSymbol(Modelica::AST::Call);
   ::GiNaC::symbol& getTime() const;
+
   private:
-    mutable std::map<std::string, ::GiNaC::symbol> directory;
-    VarSymbolTable  &varEnv;
-    bool _forDerivation;
-  };
-}
+  mutable std::map<std::string, ::GiNaC::symbol> directory;
+  VarSymbolTable& varEnv;
+  bool _forDerivation;
+};
+}  // namespace Modelica
 #endif

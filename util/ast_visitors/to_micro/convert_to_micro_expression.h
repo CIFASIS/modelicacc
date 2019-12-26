@@ -25,39 +25,39 @@
 
 namespace Modelica {
 
-  using namespace Modelica::AST;
-  class ConvertToMicroExpression: public boost::static_visitor<Expression> {
+using namespace Modelica::AST;
+class ConvertToMicroExpression : public boost::static_visitor<Expression> {
   public:
-    ConvertToMicroExpression(MMO_Class &cl, unsigned int &discont, bool for_when=false, bool in_algorithm=false);
-    Expression operator()(Integer v) const;
-    Expression operator()(Boolean v) const;
-    Expression operator()(String v) const;
-    Expression operator()(Name v) const;
-    Expression operator()(Real v) const;
-    Expression operator()(SubEnd v) const;
-    Expression operator()(SubAll v) const;
-    Expression operator()(BinOp) const;
-    Expression operator()(UnaryOp) const;
-    Expression operator()(Brace) const;
-    Expression operator()(Bracket) const;
-    Expression operator()(Call) const;
-    Expression operator()(FunctionExp) const;
-    Expression operator()(ForExp) const;
-    Expression operator()(IfExp) const;
-    Expression operator()(Named) const;
-    Expression operator()(Output) const;
-    Expression operator()(Reference) const;
-    Expression operator()(Range) const;
- 
+  ConvertToMicroExpression(MMO_Class &cl, unsigned int &discont, bool for_when = false, bool in_algorithm = false);
+  Expression operator()(Integer v) const;
+  Expression operator()(Boolean v) const;
+  Expression operator()(String v) const;
+  Expression operator()(Name v) const;
+  Expression operator()(Real v) const;
+  Expression operator()(SubEnd v) const;
+  Expression operator()(SubAll v) const;
+  Expression operator()(BinOp) const;
+  Expression operator()(UnaryOp) const;
+  Expression operator()(Brace) const;
+  Expression operator()(Bracket) const;
+  Expression operator()(Call) const;
+  Expression operator()(FunctionExp) const;
+  Expression operator()(ForExp) const;
+  Expression operator()(IfExp) const;
+  Expression operator()(Named) const;
+  Expression operator()(Output) const;
+  Expression operator()(Reference) const;
+  Expression operator()(Range) const;
+
   private:
-    Expression newDiscrete(Option<Expression> s=Option<Expression>()) const;
-    Expression negate(BinOp v) const;
-    MMO_Class & mmo_class;
-    unsigned int &disc_count;
-    bool when;
-    bool in_algorithm;
-    mutable ExpList rels;
-    mutable ExpList disc;
-  }; 
-}
-#endif 
+  Expression newDiscrete(Option<Expression> s = Option<Expression>()) const;
+  Expression negate(BinOp v) const;
+  MMO_Class &mmo_class;
+  unsigned int &disc_count;
+  bool when;
+  bool in_algorithm;
+  mutable ExpList rels;
+  mutable ExpList disc;
+};
+}  // namespace Modelica
+#endif

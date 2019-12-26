@@ -24,33 +24,33 @@
 
 namespace Modelica {
 
-  using namespace Modelica::AST;
-  class ReplaceExpression: public boost::static_visitor<Expression> {
+using namespace Modelica::AST;
+class ReplaceExpression : public boost::static_visitor<Expression> {
   public:
-    ReplaceExpression(Expression, Expression);
-    Expression operator()(Integer v) const;
-    Expression operator()(Boolean v) const;
-    Expression operator()(String v) const;
-    Expression operator()(Name v) const;
-    Expression operator()(Real v) const;
-    Expression operator()(SubEnd v) const;
-    Expression operator()(SubAll v) const;
-    Expression operator()(BinOp) const;
-    Expression operator()(UnaryOp) const;
-    Expression operator()(Brace) const;
-    Expression operator()(Bracket) const;
-    Expression operator()(Call) const;
-    Expression operator()(FunctionExp) const;
-    Expression operator()(ForExp) const;
-    Expression operator()(IfExp) const;
-    Expression operator()(Named) const;
-    Expression operator()(Output) const;
-    Expression operator()(Reference) const;
-    Expression operator()(Range) const;
- 
-    Expression look,rep;
-    void ignoreIndexes() { check_indexes=false; }
-    bool check_indexes;
-  }; 
-}
-#endif 
+  ReplaceExpression(Expression, Expression);
+  Expression operator()(Integer v) const;
+  Expression operator()(Boolean v) const;
+  Expression operator()(String v) const;
+  Expression operator()(Name v) const;
+  Expression operator()(Real v) const;
+  Expression operator()(SubEnd v) const;
+  Expression operator()(SubAll v) const;
+  Expression operator()(BinOp) const;
+  Expression operator()(UnaryOp) const;
+  Expression operator()(Brace) const;
+  Expression operator()(Bracket) const;
+  Expression operator()(Call) const;
+  Expression operator()(FunctionExp) const;
+  Expression operator()(ForExp) const;
+  Expression operator()(IfExp) const;
+  Expression operator()(Named) const;
+  Expression operator()(Output) const;
+  Expression operator()(Reference) const;
+  Expression operator()(Range) const;
+
+  Expression look, rep;
+  void ignoreIndexes() { check_indexes = false; }
+  bool check_indexes;
+};
+}  // namespace Modelica
+#endif

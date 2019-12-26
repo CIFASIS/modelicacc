@@ -27,8 +27,10 @@
 
 using namespace Modelica::AST;
 class EquationSolver {
-public:
-  static EquationList Solve(EquationList eqs, ExpList crs, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &cl, const std::string path);
-  static Equation Solve(Equation eq, Expression exp, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &cl, const std::string path);
+  public:
+  static EquationList Solve(EquationList eqs, ExpList crs, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &cl,
+                            const std::string path);
+  static Equation Solve(Equation eq, Expression exp, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &cl,
+                        const std::string path);
 };
 #endif

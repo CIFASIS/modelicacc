@@ -26,9 +26,9 @@
 #include <util/derivate.h>
 
 namespace Modelica {
-  using namespace Modelica::AST;
-  Equality derivate_equality(Equality, VarSymbolTable);
+using namespace Modelica::AST;
+Equality derivate_equality(Equality, VarSymbolTable);
 
-}
+}  // namespace Modelica
 
 #endif

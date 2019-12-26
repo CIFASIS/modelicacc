@@ -34,14 +34,13 @@
 #include <boost/variant/get.hpp>
 
 class Flatter {
-public:
-	typedef EquationVisitor<DotExpression> EqDotExpression;
-	typedef StatementVisitor<DotExpression> StDotExpression;
+  public:
+  typedef EquationVisitor<DotExpression> EqDotExpression;
+  typedef StatementVisitor<DotExpression> StDotExpression;
 
-	Flatter();
-	void 			Flat(MMO_Class &c,bool flatConnector,bool initial);
-	void			removeConnectorVar(MMO_Class &c);
+  Flatter();
+  void Flat(MMO_Class &c, bool flatConnector, bool initial);
+  void removeConnectorVar(MMO_Class &c);
 };
-
 
 #endif

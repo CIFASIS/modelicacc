@@ -25,21 +25,21 @@
 
 namespace Modelica {
 
-  using namespace Modelica::AST;
-  class ReplaceStatement: public boost::static_visitor<Statement> {
+using namespace Modelica::AST;
+class ReplaceStatement : public boost::static_visitor<Statement> {
   public:
-    ReplaceStatement(Expression, Expression);
-    Statement operator()(Assign) const;
-    Statement operator()(Break) const;
-    Statement operator()(Return) const;
-    Statement operator()(CallSt) const;
-    Statement operator()(IfSt) const;
-    Statement operator()(WhenSt) const;
-    Statement operator()(WhileSt) const;
-    Statement operator()(ForSt) const;
- 
-    Expression look,rep;
-    ReplaceExpression replace_exp;
-  }; 
-}
-#endif 
+  ReplaceStatement(Expression, Expression);
+  Statement operator()(Assign) const;
+  Statement operator()(Break) const;
+  Statement operator()(Return) const;
+  Statement operator()(CallSt) const;
+  Statement operator()(IfSt) const;
+  Statement operator()(WhenSt) const;
+  Statement operator()(WhileSt) const;
+  Statement operator()(ForSt) const;
+
+  Expression look, rep;
+  ReplaceExpression replace_exp;
+};
+}  // namespace Modelica
+#endif

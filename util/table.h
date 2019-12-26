@@ -26,33 +26,37 @@
 #include <ast/class.h>
 #include <util/type.h>
 
-template<typename Key,typename Value>
-struct SymbolTable: public std::map<Key,Value> {
-  void insert(Key k, Value v) {
-	std::map<Key,Value>::erase(k);
-    std::map<Key,Value>::insert(std::pair<Key,Value>(k,v));
+template <typename Key, typename Value>
+struct SymbolTable : public std::map<Key, Value> {
+  void insert(Key k, Value v)
+  {
+    std::map<Key, Value>::erase(k);
+    std::map<Key, Value>::insert(std::pair<Key, Value>(k, v));
   }
-  Option<Value> operator[](Key k) const {
-    if (std::map<Key,Value>::find(k)==std::map<Key,Value>::end())
-      return Option<Value>();
-    return std::map<Key,Value>::at(k); 
+  Option<Value> operator[](Key k) const
+  {
+    if (std::map<Key, Value>::find(k) == std::map<Key, Value>::end()) return Option<Value>();
+    return std::map<Key, Value>::at(k);
   }
-  void remove(Key k) {
-    std::map<Key,Value>::erase(k);
-  }
-  void dump() {
-    typename std::map<Key,Value>::iterator it;
-    for(it=std::map<Key,Value>::begin();it!=std::map<Key,Value>::end();it++) {
-      std::cerr << it->first << ":" /*<< it->second */<< "\n";
-    } 
+  void remove(Key k) { std::map<Key, Value>::erase(k); }
+  void dump()
+  {
+    typename std::map<Key, Value>::iterator it;
+    for (it = std::map<Key, Value>::begin(); it != std::map<Key, Value>::end(); it++) {
+      std::cerr << it->first << ":" /*<< it->second */ << "\n";
+    }
   }
 };
 
-
 using namespace Modelica::AST;
 struct VarInfo {
-  VarInfo() { builtin_ = false; state_=false;};
-  VarInfo(TypePrefixes tp, Name n, Option<Comment> comm = Option<Comment>(), Option<Modification> mod = Option<Modification>(), Option<ExpList> ind = Option<ExpList>(), bool built = false);
+  VarInfo()
+  {
+    builtin_ = false;
+    state_ = false;
+  };
+  VarInfo(TypePrefixes tp, Name n, Option<Comment> comm = Option<Comment>(), Option<Modification> mod = Option<Modification>(),
+          Option<ExpList> ind = Option<ExpList>(), bool built = false);
   member_(TypePrefixes, prefixes);
   member_(Name, type);
   member_(Option<Comment>, comment);
@@ -65,24 +69,24 @@ struct VarInfo {
   void removePrefix(TypePrefix);
 };
 
-struct VarSymbolTable: public SymbolTable<Name, VarInfo>
-{
-  typedef std::map<Name,VarInfo> table_type;
-  VarSymbolTable() {
-    VarInfo v(TypePrefixes(),"Real");
-    v.builtin_ref()=true;
-    insert("time",v);
+struct VarSymbolTable : public SymbolTable<Name, VarInfo> {
+  typedef std::map<Name, VarInfo> table_type;
+  VarSymbolTable()
+  {
+    VarInfo v(TypePrefixes(), "Real");
+    v.builtin_ref() = true;
+    insert("time", v);
   }
 };
 
-struct TypeSymbolTable: public SymbolTable<Name, Type::Type>
-{
-	TypeSymbolTable() {
-		insert("String",Type::String());
-		insert("Integer",Type::Integer());
-		insert("Real",Type::Real());
-		insert("Boolean",Type::Boolean());
-	}
+struct TypeSymbolTable : public SymbolTable<Name, Type::Type> {
+  TypeSymbolTable()
+  {
+    insert("String", Type::String());
+    insert("Integer", Type::Integer());
+    insert("Real", Type::Real());
+    insert("Boolean", Type::Boolean());
+  }
 };
 
 #endif

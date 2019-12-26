@@ -17,7 +17,6 @@
 
 ******************************************************************************/
 
-
 #ifndef IDENT_PARSER
 #define IDENT_PARSER
 #include <boost/spirit/include/qi.hpp>
@@ -25,15 +24,13 @@
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;
 namespace Modelica {
-  namespace Parser {
-    template <typename Iterator>
-    struct IdentRule: qi::grammar<Iterator,Name()>
-    {
-      IdentRule(Iterator &it);
-      qi::rule<Iterator,Name()> ident, keyword_ident;
-    };
-  }
-}
-  
- 
+namespace Parser {
+template <typename Iterator>
+struct IdentRule : qi::grammar<Iterator, Name()> {
+  IdentRule(Iterator &it);
+  qi::rule<Iterator, Name()> ident, keyword_ident;
+};
+}  // namespace Parser
+}  // namespace Modelica
+
 #endif

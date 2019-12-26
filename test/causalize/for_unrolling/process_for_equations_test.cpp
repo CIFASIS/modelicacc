@@ -12,7 +12,6 @@
 #include <boost/variant/variant.hpp>
 #include <boost/variant/get.hpp>
 
-
 using namespace boost::unit_test;
 using namespace boost;
 using namespace std;
@@ -26,20 +25,19 @@ using namespace Modelica::AST;
 void unrolling_test_1()
 {
   bool r;
-  StoredDef sd=parseFile("for_example_1.mo",r);
- 
+  StoredDef sd = parseFile("for_example_1.mo", r);
+
   if (!r) {
     cout << "Couldn't open for_example.mo file" << endl;
     return;
   }
 
   Class ast_c = boost::get<Class>(sd.classes().front());
- 
-  //TypeSymbolTable tyEnv = newTypeSymbolTable();
+
+  // TypeSymbolTable tyEnv = newTypeSymbolTable();
   MMO_Class c(ast_c);
 
-
- int equationsBefore = c.equations().equations().size();
+  int equationsBefore = c.equations().equations().size();
 
   if (DEBUG) {
     cout << "Numero de ecuaciones antes: " << equationsBefore << endl;
@@ -56,8 +54,9 @@ void unrolling_test_1()
   }
 
   BOOST_CHECK(equationsAfter == 10);
-  int i=1;
-  foreach_(Equation eq, c.equations().equations()) {
+  int i = 1;
+  foreach_(Equation eq, c.equations().equations())
+  {
     BOOST_CHECK(is<Equality>(eq));
     Equality eqEq = get<Equality>(eq);
     Expression expLeft = eqEq.left();
@@ -227,21 +226,17 @@ void unrolling_test_3()
 
 //____________________________________________________________________________//
 
+test_suite* init_unit_test_suite(int, char*[])
+{
+  framework::master_test_suite().p_name.value = "For unrolling";
 
-test_suite*
-init_unit_test_suite( int, char* [] ) {
-    framework::master_test_suite().p_name.value = "For unrolling";
+  framework::master_test_suite().add(BOOST_TEST_CASE(&unrolling_test_1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&unrolling_test_2));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&unrolling_test_3));
 
-    framework::master_test_suite().add( BOOST_TEST_CASE( &unrolling_test_1 ));
-    framework::master_test_suite().add( BOOST_TEST_CASE( &unrolling_test_2 ));
-    framework::master_test_suite().add( BOOST_TEST_CASE( &unrolling_test_3 ));
-
-    return 0;
+  return 0;
 }
 
 //____________________________________________________________________________//
 
 // EOF
-
-
-

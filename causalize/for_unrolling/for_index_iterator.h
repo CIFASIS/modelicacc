@@ -23,21 +23,21 @@
 
 namespace Causalize {
 class ForIndexIterator {
-public:
+  public:
   virtual bool hasNext() = 0;
   virtual Real next() = 0;
-  virtual ~ForIndexIterator() {};
+  virtual ~ForIndexIterator(){};
 };
 
-
 class RangeIterator : public ForIndexIterator {
-public:
+  public:
   RangeIterator(Range range, VarSymbolTable symbolTable);
   bool hasNext();
   Real next();
-  Real begin(){return _rangeBegin;};
-  Real end(){return _rangeEnd;}
-private:
+  Real begin() { return _rangeBegin; };
+  Real end() { return _rangeEnd; }
+
+  private:
   Real eval(Expression exp, VarSymbolTable symbolTable);
   ExpList _rangeElements;
   Real _rangeBegin;
@@ -47,13 +47,14 @@ private:
 };
 
 class BraceIterator : public ForIndexIterator {
-public:
+  public:
   BraceIterator(Brace braceExp, VarSymbolTable &);
   bool hasNext();
   Real next();
-private:
+
+  private:
   ExpList _braceExpElements;
   ExpList::iterator _braceExpElementsIter;
   VarSymbolTable &vtable;
 };
-}
+}  // namespace Causalize

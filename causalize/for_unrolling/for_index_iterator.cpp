@@ -25,42 +25,40 @@
 
 namespace Causalize {
 
-RangeIterator::RangeIterator(Range range, VarSymbolTable symbolTable) {
+RangeIterator::RangeIterator(Range range, VarSymbolTable symbolTable)
+{
   _rangeBegin = eval(range.start(), symbolTable);
-  _rangeEnd = eval(range.end(),symbolTable);
-  if (!range.step()) 
-   _rangeStep = 1.0;
-  else 
-   _rangeStep = eval(range.step().get(),symbolTable);
+  _rangeEnd = eval(range.end(), symbolTable);
+  if (!range.step())
+    _rangeStep = 1.0;
+  else
+    _rangeStep = eval(range.step().get(), symbolTable);
   _current = _rangeBegin;
 }
 
-Real RangeIterator::eval(Expression exp, VarSymbolTable symbolTable) {
-  return Apply(Modelica::EvalExpression(symbolTable),exp);
-}
+Real RangeIterator::eval(Expression exp, VarSymbolTable symbolTable) { return Apply(Modelica::EvalExpression(symbolTable), exp); }
 
-bool RangeIterator::hasNext() {
-  return _current <= _rangeEnd;
-}
+bool RangeIterator::hasNext() { return _current <= _rangeEnd; }
 
-Real RangeIterator::next() {
+Real RangeIterator::next()
+{
   Real value = _current;
   _current += _rangeStep;
   return value;
 }
 
-BraceIterator::BraceIterator(Brace braceExp, VarSymbolTable &v):vtable(v) {
+BraceIterator::BraceIterator(Brace braceExp, VarSymbolTable &v) : vtable(v)
+{
   _braceExpElements = braceExp.args();
   _braceExpElementsIter = _braceExpElements.begin();
 }
 
-bool BraceIterator::hasNext() {
-  return _braceExpElementsIter == _braceExpElements.end();
-}
+bool BraceIterator::hasNext() { return _braceExpElementsIter == _braceExpElements.end(); }
 
-Real BraceIterator::next() {
+Real BraceIterator::next()
+{
   Expression exp = *_braceExpElementsIter;
   _braceExpElementsIter++;
-  return Apply(Modelica::EvalExpression(vtable),exp);
+  return Apply(Modelica::EvalExpression(vtable), exp);
 }
-}
+}  // namespace Causalize

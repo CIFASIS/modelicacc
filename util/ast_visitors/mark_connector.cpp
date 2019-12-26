@@ -25,80 +25,78 @@ using namespace Modelica::AST;
 
 MarkConnector::MarkConnector(){};
 
-Expression MarkConnector::mark(Expression exp) const{
-	if (is<UnaryOp>(exp)) return exp;
-	else if (is<Reference>(exp)) {
-		Reference reference = boost::get<Reference>(exp);
-		Ref refs = reference.ref();
-		if (refs.size() > 1 ) return UnaryOp(exp,Plus);
-		else return UnaryOp(exp,Minus);
-	} else {
-		std::cout << "Error marcando Connect. No deberia llegar [" << exp << "]" << std::endl; 
-		return exp;
-	}
+Expression MarkConnector::mark(Expression exp) const
+{
+  if (is<UnaryOp>(exp))
+    return exp;
+  else if (is<Reference>(exp)) {
+    Reference reference = boost::get<Reference>(exp);
+    Ref refs = reference.ref();
+    if (refs.size() > 1)
+      return UnaryOp(exp, Plus);
+    else
+      return UnaryOp(exp, Minus);
+  } else {
+    std::cout << "Error marcando Connect. No deberia llegar [" << exp << "]" << std::endl;
+    return exp;
+  }
 }
 
-Equation MarkConnector::operator()(Connect eq) const {
-	Expression left=eq.left();
-	Expression right=eq.right();
-	return Connect(mark(left),mark(right));
-};    
-
-Equation MarkConnector::operator()(Equality eq) const {
-	return eq;
-};
-    
-Equation MarkConnector::operator()(CallEq eq) const {
-	return eq;
+Equation MarkConnector::operator()(Connect eq) const
+{
+  Expression left = eq.left();
+  Expression right = eq.right();
+  return Connect(mark(left), mark(right));
 };
 
-Equation MarkConnector::operator()(ForEq eq) const {
-	EquationList eqs;
-	IndexList index;
-	foreach_(Equation e,eq.elements())
-		eqs.push_back(ApplyThis(e));	
-	return ForEq(eq.range(),eqs);
+Equation MarkConnector::operator()(Equality eq) const { return eq; };
+
+Equation MarkConnector::operator()(CallEq eq) const { return eq; };
+
+Equation MarkConnector::operator()(ForEq eq) const
+{
+  EquationList eqs;
+  IndexList index;
+  foreach_(Equation e, eq.elements()) eqs.push_back(ApplyThis(e));
+  return ForEq(eq.range(), eqs);
 };
 
-Equation MarkConnector::operator()(IfEq eq) const {
-	typedef tuple<Expression,std::vector<Equation> >  Else;
-    typedef std::vector<Else> ElseList;
-	Expression cond = eq.cond();
-	EquationList elements,elses;
-	ElseList elseIf;
-		
-	foreach_(Equation e, eq.elements() )
-		elements.push_back(ApplyThis(e));
-			
-	foreach_(Equation e, eq.ifnot() )
-		elses.push_back(ApplyThis(e));	
-			
-	foreach_(Else el, eq.elseif()) {
-		EquationList list;
-		foreach_(Equation e, get<1>(el))
-			list.push_back(ApplyThis(e));
-		elseIf.push_back(Else(get<0>(el),list));		
-	}			
-	return IfEq(cond, elements, elseIf,elses);
+Equation MarkConnector::operator()(IfEq eq) const
+{
+  typedef tuple<Expression, std::vector<Equation>> Else;
+  typedef std::vector<Else> ElseList;
+  Expression cond = eq.cond();
+  EquationList elements, elses;
+  ElseList elseIf;
+
+  foreach_(Equation e, eq.elements()) elements.push_back(ApplyThis(e));
+
+  foreach_(Equation e, eq.ifnot()) elses.push_back(ApplyThis(e));
+
+  foreach_(Else el, eq.elseif())
+  {
+    EquationList list;
+    foreach_(Equation e, get<1>(el)) list.push_back(ApplyThis(e));
+    elseIf.push_back(Else(get<0>(el), list));
+  }
+  return IfEq(cond, elements, elseIf, elses);
 };
 
-Equation MarkConnector::operator()(WhenEq eq) const {
-	typedef tuple<Expression,std::vector<Equation> >  Else;
-    typedef std::vector<Else> ElseList;
-	Expression cond = eq.cond();
-	EquationList elements;
-	ElseList elsewhen;
-		
-	foreach_(Equation e, eq.elements() )
-		elements.push_back(ApplyThis(e));
-			
-	foreach_(Else el, eq.elsewhen()) {
-		EquationList list;
-		foreach_(Equation e, get<1>(el))
-			list.push_back(ApplyThis(e));
-		elsewhen.push_back(Else(get<0>(el),list));		
-	}			
-	return WhenEq(cond, elements, elsewhen);
-};
+Equation MarkConnector::operator()(WhenEq eq) const
+{
+  typedef tuple<Expression, std::vector<Equation>> Else;
+  typedef std::vector<Else> ElseList;
+  Expression cond = eq.cond();
+  EquationList elements;
+  ElseList elsewhen;
 
- 
+  foreach_(Equation e, eq.elements()) elements.push_back(ApplyThis(e));
+
+  foreach_(Else el, eq.elsewhen())
+  {
+    EquationList list;
+    foreach_(Equation e, get<1>(el)) list.push_back(ApplyThis(e));
+    elsewhen.push_back(Else(get<0>(el), list));
+  }
+  return WhenEq(cond, elements, elsewhen);
+};

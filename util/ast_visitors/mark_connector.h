@@ -24,17 +24,17 @@
 #include <ast/expression.h>
 
 namespace Modelica {
-  using namespace Modelica::AST;
-  class MarkConnector: public boost::static_visitor<Equation> {
+using namespace Modelica::AST;
+class MarkConnector : public boost::static_visitor<Equation> {
   public:
-    MarkConnector();
-    Equation operator()(Connect eq) const ;
-    Equation operator()(Equality eq) const ;
-    Equation operator()(CallEq eq) const ;
-    Equation operator()(ForEq eq) const ;
-    Equation operator()(IfEq eq) const ;
-    Equation operator()(WhenEq eq) const;
-    Expression mark(Expression exp) const;
-  }; 
-}
-#endif 
+  MarkConnector();
+  Equation operator()(Connect eq) const;
+  Equation operator()(Equality eq) const;
+  Equation operator()(CallEq eq) const;
+  Equation operator()(ForEq eq) const;
+  Equation operator()(IfEq eq) const;
+  Equation operator()(WhenEq eq) const;
+  Expression mark(Expression exp) const;
+};
+}  // namespace Modelica
+#endif

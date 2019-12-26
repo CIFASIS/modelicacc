@@ -33,28 +33,26 @@
 using namespace Modelica;
 using namespace Modelica::AST;
 
-typedef Pair<Type::Type , MMO_Class &> typeContexTuple;
-typedef boost::tuple<TypePrefixes,Type::Type , ExpList > typeDefinition;
+typedef Pair<Type::Type, MMO_Class &> typeContexTuple;
+typedef boost::tuple<TypePrefixes, Type::Type, ExpList> typeDefinition;
 typedef Option<typeDefinition> OptTypeDefinition;
 
 struct ClassFinder {
-public:
-	ClassFinder();
-	void expand(MMO_Class &up,MMO_Class &down);	
-	void ExpandAll(MMO_Class &up);	
-	
-	Option<typeContexTuple> findTypeByName(MMO_Class &c,Name n) ;
-	OptTypeDefinition getFinalClass(MMO_Class &c, Type::Type t) ;
-	OptTypeDefinition resolveDependencies(MMO_Class &c,Name n);
-	OptTypeDefinition resolveType(MMO_Class &c,Name t);
-    
-    void applyModification(MMO_Class &,MMO_Class &, Modification );
-    void applyArgument(MMO_Class &,MMO_Class &, Argument );
-    void applyClassModification(MMO_Class &,MMO_Class &, ClassModification );
-    
-private:
+  public:
+  ClassFinder();
+  void expand(MMO_Class &up, MMO_Class &down);
+  void ExpandAll(MMO_Class &up);
 
+  Option<typeContexTuple> findTypeByName(MMO_Class &c, Name n);
+  OptTypeDefinition getFinalClass(MMO_Class &c, Type::Type t);
+  OptTypeDefinition resolveDependencies(MMO_Class &c, Name n);
+  OptTypeDefinition resolveType(MMO_Class &c, Name t);
+
+  void applyModification(MMO_Class &, MMO_Class &, Modification);
+  void applyArgument(MMO_Class &, MMO_Class &, Argument);
+  void applyClassModification(MMO_Class &, MMO_Class &, ClassModification);
+
+  private:
 };
-
 
 #endif

@@ -27,14 +27,14 @@
 #include <boost/variant/get.hpp>
 #include <util/debug.h>
 
-
 namespace Causalize {
 
-Unknown::Unknown(Modelica::AST::Expression exp): expression(exp) {}
+Unknown::Unknown(Modelica::AST::Expression exp) : expression(exp) {}
 
-Unknown::Unknown(VarInfo varInfo, Modelica::AST::Reference var) {
+Unknown::Unknown(VarInfo varInfo, Modelica::AST::Reference var)
+{
   if (varInfo.state()) {
-    expression = Modelica::AST::Call("der",Modelica::AST::Reference(var));
+    expression = Modelica::AST::Call("der", Modelica::AST::Reference(var));
   } else {
     expression = Modelica::AST::Reference(var);
   }
@@ -45,20 +45,20 @@ Unknown::Unknown(VarInfo varInfo, Modelica::AST::Reference var) {
   }
 }
 
-void Unknown::SetIndex(Modelica::AST::Expression index) {
-  if (dimension!=0) {
+void Unknown::SetIndex(Modelica::AST::Expression index)
+{
+  if (dimension != 0) {
     if (Modelica::AST::is<Modelica::AST::Call>(expression)) {
-      get<Modelica::AST::Reference>(get<Modelica::AST::Call>(expression).args_.front()).ref_.front().get<1>()=Modelica::AST::ExpList(1,index);
+      get<Modelica::AST::Reference>(get<Modelica::AST::Call>(expression).args_.front()).ref_.front().get<1>() =
+          Modelica::AST::ExpList(1, index);
     } else if (Modelica::AST::is<Modelica::AST::Reference>(expression)) {
-      get<Modelica::AST::Reference>(expression).ref_.front().get<1>()=Modelica::AST::ExpList(1,index);
+      get<Modelica::AST::Reference>(expression).ref_.front().get<1>() = Modelica::AST::ExpList(1, index);
     } else {
       ERROR("Wrong unknown expression type");
     }
   }
 }
 
-Expression Unknown::operator() () const {
-  return expression;
-}
+Expression Unknown::operator()() const { return expression; }
 
-}
+}  // namespace Causalize

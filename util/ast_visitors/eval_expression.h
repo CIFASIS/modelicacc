@@ -25,33 +25,33 @@
 
 namespace Modelica {
 
-  using namespace Modelica::AST;
-  class EvalExpression: public boost::static_visitor<Real> {
+using namespace Modelica::AST;
+class EvalExpression : public boost::static_visitor<Real> {
   public:
-    EvalExpression(const VarSymbolTable &);
-    EvalExpression(const VarSymbolTable &,Name,Real);
-    Real operator()(Integer v) const;
-    Real operator()(Boolean v) const;
-    Real operator()(String v) const;
-    Real operator()(Name v) const;
-    Real operator()(Real v) const;
-    Real operator()(SubEnd v) const;
-    Real operator()(SubAll v) const;
-    Real operator()(BinOp) const;
-    Real operator()(UnaryOp) const;
-    Real operator()(Brace) const;
-    Real operator()(Bracket) const;
-    Real operator()(Call) const;
-    Real operator()(FunctionExp) const;
-    Real operator()(ForExp) const;
-    Real operator()(IfExp) const;
-    Real operator()(Named) const;
-    Real operator()(Output) const;
-    Real operator()(Reference) const;
-    Real operator()(Range) const;
-    const VarSymbolTable &vtable; 
-    Option<Name> name;
-    Option<Real> val;
-  }; 
-}
-#endif 
+  EvalExpression(const VarSymbolTable &);
+  EvalExpression(const VarSymbolTable &, Name, Real);
+  Real operator()(Integer v) const;
+  Real operator()(Boolean v) const;
+  Real operator()(String v) const;
+  Real operator()(Name v) const;
+  Real operator()(Real v) const;
+  Real operator()(SubEnd v) const;
+  Real operator()(SubAll v) const;
+  Real operator()(BinOp) const;
+  Real operator()(UnaryOp) const;
+  Real operator()(Brace) const;
+  Real operator()(Bracket) const;
+  Real operator()(Call) const;
+  Real operator()(FunctionExp) const;
+  Real operator()(ForExp) const;
+  Real operator()(IfExp) const;
+  Real operator()(Named) const;
+  Real operator()(Output) const;
+  Real operator()(Reference) const;
+  Real operator()(Range) const;
+  const VarSymbolTable &vtable;
+  Option<Name> name;
+  Option<Real> val;
+};
+}  // namespace Modelica
+#endif

@@ -25,24 +25,25 @@
 
 namespace Modelica {
 
-  using namespace Modelica::AST;
-  class ConvertToMicroStatement: public boost::static_visitor<Statement> {
+using namespace Modelica::AST;
+class ConvertToMicroStatement : public boost::static_visitor<Statement> {
   public:
-    ConvertToMicroStatement(MMO_Class &cl, unsigned int &discont);
-    Statement operator()(Assign v) const ;
-    Statement operator()(Break v) const ;
-    Statement operator()(Return v) const ;
-    Statement operator()(CallSt v) const ;
-    Statement operator()(IfSt v) const ;
-    Statement operator()(ForSt v) const ;
-    Statement operator()(WhenSt v) const ;
-    Statement operator()(WhileSt v) const ;
-    StatementList statements() const ;
+  ConvertToMicroStatement(MMO_Class &cl, unsigned int &discont);
+  Statement operator()(Assign v) const;
+  Statement operator()(Break v) const;
+  Statement operator()(Return v) const;
+  Statement operator()(CallSt v) const;
+  Statement operator()(IfSt v) const;
+  Statement operator()(ForSt v) const;
+  Statement operator()(WhenSt v) const;
+  Statement operator()(WhileSt v) const;
+  StatementList statements() const;
+
   private:
-    StatementList statements_;
-    Expression newDiscrete(Option<Expression> s=Option<Expression>()) const;
-    MMO_Class & mmo_class;
-    unsigned int &disc_count;
-  }; 
-}
-#endif 
+  StatementList statements_;
+  Expression newDiscrete(Option<Expression> s = Option<Expression>()) const;
+  MMO_Class &mmo_class;
+  unsigned int &disc_count;
+};
+}  // namespace Modelica
+#endif

@@ -26,8 +26,7 @@
 #include <util/ast_visitors/to_micro/convert_to_micro.h>
 #include <cstdlib>
 
-
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
   using namespace std;
   using namespace Modelica::AST;
@@ -40,31 +39,29 @@ int main(int argc, char ** argv)
 
   while ((opt = getopt(argc, argv, "d")) != -1) {
     switch (opt) {
-     case 'd':
-       if (optarg != NULL && isDebugParam(optarg)) {
-         debugInit(optarg);
-       } else {
-         ERROR("command-line option d has no arguments\n");
-       }
-       break;
+    case 'd':
+      if (optarg != NULL && isDebugParam(optarg)) {
+        debugInit(optarg);
+      } else {
+        ERROR("command-line option d has no arguments\n");
+      }
+      break;
     }
   }
 
-
-  if (argv[optind]!=NULL) 
-    sd=ParseFile(argv[optind],ret);
+  if (argv[optind] != NULL)
+    sd = ParseFile(argv[optind], ret);
   else
-    sd=ParseFile("",ret);
- 
-  if (!ret) 
-    return -1;
+    sd = ParseFile("", ret);
 
+  if (!ret) return -1;
 
   if (ret) {
-	  MMO_Class mmo(get<Class>(sd.classes().front()));
+    MMO_Class mmo(get<Class>(sd.classes().front()));
     ConvertToMicro tm(mmo);
     tm.convert();
-	  std::cout << mmo << std::endl;
-  } else std::cout << "Error parser" <<  std::endl;
+    std::cout << mmo << std::endl;
+  } else
+    std::cout << "Error parser" << std::endl;
   return 0;
 }

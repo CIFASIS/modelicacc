@@ -33,43 +33,40 @@
 #include <boost/variant/get.hpp>
 #include <causalize/vector/splitfor.h>
 
-
 using namespace std;
 using namespace Modelica;
 using namespace Modelica::AST;
 using namespace Causalize;
-//using namespace Modelica::ExpandFor;
+// using namespace Modelica::ExpandFor;
 
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
-
   bool r;
   int opt;
   bool vectorial = false;
 
   while ((opt = getopt(argc, argv, "d:v")) != -1) {
     switch (opt) {
-     case 'd':
-       if (optarg != NULL && isDebugParam(optarg)) {
-         debugInit(optarg);
-       } else {
-         ERROR("command-line option d has no arguments\n");
-       }
-       break;
-     case 'v':
-       vectorial = true;
-       break;
+    case 'd':
+      if (optarg != NULL && isDebugParam(optarg)) {
+        debugInit(optarg);
+      } else {
+        ERROR("command-line option d has no arguments\n");
+      }
+      break;
+    case 'v':
+      vectorial = true;
+      break;
     }
   }
 
   StoredDef sd;
-  if (argv[optind]!=NULL) 
-    sd=Parser::ParseFile(argv[optind],r);
+  if (argv[optind] != NULL)
+    sd = Parser::ParseFile(argv[optind], r);
   else
-    sd=Parser::ParseFile("",r);
- 
-  if (!r) 
-    return -1;
+    sd = Parser::ParseFile("", r);
+
+  if (!r) return -1;
 
   Class ast_c = boost::get<Class>(sd.classes().front());
   MMO_Class mmo(ast_c);
@@ -78,9 +75,9 @@ int main(int argc, char ** argv)
     sf.splitFor();
     ReducedGraphBuilder gb(mmo);
     VectorCausalizationGraph g = gb.makeGraph();
-    CausalizationStrategyVector cs(g,mmo);
-    if(cs.Causalize()){ // Try vectorial causalization first
-      if(debugIsEnabled('c')){
+    CausalizationStrategyVector cs(g, mmo);
+    if (cs.Causalize()) {  // Try vectorial causalization first
+      if (debugIsEnabled('c')) {
         cs.PrintCausalizationResult();
       }
       cout << mmo << endl;
@@ -91,9 +88,9 @@ int main(int argc, char ** argv)
   CausalizationStrategy cStrategy(mmo);
   cStrategy.Causalize();
   DEBUG('c', "Causalized Equations:\n");
-  foreach_(const Equation &e, mmo.equations_ref().equations_ref()) {
-    if (debugIsEnabled('c'))
-      cerr << e << std::endl;
+  foreach_(const Equation &e, mmo.equations_ref().equations_ref())
+  {
+    if (debugIsEnabled('c')) cerr << e << std::endl;
   }
   cout << mmo << endl;
   return 0;

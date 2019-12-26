@@ -25,32 +25,32 @@
 
 namespace Modelica {
 
-  using namespace Modelica::AST;
-  class PartialEvalExpression: public boost::static_visitor<Expression> {
+using namespace Modelica::AST;
+class PartialEvalExpression : public boost::static_visitor<Expression> {
   public:
-    PartialEvalExpression(const VarSymbolTable &, bool eval=false);
-    Expression operator()(Integer v) const;
-    Expression operator()(Real v) const;
-    Expression operator()(Boolean v) const;
-    Expression operator()(String v) const;
-    Expression operator()(Name v) const;
-    Expression operator()(Expression v) const;
-    Expression operator()(SubEnd v) const;
-    Expression operator()(SubAll v) const;
-    Expression operator()(BinOp) const;
-    Expression operator()(UnaryOp) const;
-    Expression operator()(Brace) const;
-    Expression operator()(Bracket) const;
-    Expression operator()(Call) const;
-    Expression operator()(FunctionExp) const;
-    Expression operator()(ForExp) const;
-    Expression operator()(IfExp) const;
-    Expression operator()(Named) const;
-    Expression operator()(Output) const;
-    Expression operator()(Reference) const;
-    Expression operator()(Range) const;
-    const VarSymbolTable &vtable; 
-    bool eval_parameters;
-  }; 
-}
-#endif 
+  PartialEvalExpression(const VarSymbolTable &, bool eval = false);
+  Expression operator()(Integer v) const;
+  Expression operator()(Real v) const;
+  Expression operator()(Boolean v) const;
+  Expression operator()(String v) const;
+  Expression operator()(Name v) const;
+  Expression operator()(Expression v) const;
+  Expression operator()(SubEnd v) const;
+  Expression operator()(SubAll v) const;
+  Expression operator()(BinOp) const;
+  Expression operator()(UnaryOp) const;
+  Expression operator()(Brace) const;
+  Expression operator()(Bracket) const;
+  Expression operator()(Call) const;
+  Expression operator()(FunctionExp) const;
+  Expression operator()(ForExp) const;
+  Expression operator()(IfExp) const;
+  Expression operator()(Named) const;
+  Expression operator()(Output) const;
+  Expression operator()(Reference) const;
+  Expression operator()(Range) const;
+  const VarSymbolTable &vtable;
+  bool eval_parameters;
+};
+}  // namespace Modelica
+#endif

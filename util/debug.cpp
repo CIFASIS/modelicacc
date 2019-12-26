@@ -24,21 +24,20 @@
 #include <string.h>
 #include <stdarg.h>
 
-static const char *enableFlags = NULL; // controls which DEBUG messages are printed
+static const char *enableFlags = NULL;  // controls which DEBUG messages are printed
 
-void debugInit(const char *flagList) {
-    enableFlags = flagList;
+void debugInit(const char *flagList) { enableFlags = flagList; }
+
+bool debugIsEnabled(char flag)
+{
+  if (enableFlags != NULL)
+    return (strchr(enableFlags, flag) != 0) || (strchr(enableFlags, '+') != 0);
+  else
+    return false;
 }
 
-bool debugIsEnabled(char flag) {
-    if (enableFlags != NULL)
-       return (strchr(enableFlags, flag) != 0)
-    || (strchr(enableFlags, '+') != 0);
-    else
-      return false;
-}
-
-void DEBUG(char flag, const char *format, ...) {
+void DEBUG(char flag, const char *format, ...)
+{
   if (debugIsEnabled(flag)) {
     va_list ap;
     va_start(ap, format);
@@ -48,7 +47,8 @@ void DEBUG(char flag, const char *format, ...) {
   }
 }
 
-bool isDebugParam(char *param) {
+bool isDebugParam(char *param)
+{
   if (strcmp(param, "c") == 0) {
     return true;
   }
@@ -59,28 +59,30 @@ bool isDebugParam(char *param) {
     return true;
   }
   if (strcmp(param, "g") == 0) {
-	return true;
+    return true;
   }
   return false;
 }
 
-void ERROR(const char *format, ...) {
+void ERROR(const char *format, ...)
+{
   va_list ap;
   va_start(ap, format);
   const char *error_string = "Error: ";
-  char *new_format = new char [sizeof(char) * strlen(error_string) + strlen(format) + 1];
+  char *new_format = new char[sizeof(char) * strlen(error_string) + strlen(format) + 1];
   strcpy(new_format, error_string);
   strcat(new_format, format);
   vfprintf(stderr, new_format, ap);
-  fprintf(stderr,"\n");
+  fprintf(stderr, "\n");
   fflush(stderr);
   va_end(ap);
-  delete []new_format;
+  delete[] new_format;
   exit(EXIT_FAILURE);
 }
 
-void ERROR_UNLESS(bool condition, const char *format, ...) {
-  if(!condition) {
+void ERROR_UNLESS(bool condition, const char *format, ...)
+{
+  if (!condition) {
     va_list ap;
     va_start(ap, format);
     ERROR(format, ap);
@@ -88,27 +90,27 @@ void ERROR_UNLESS(bool condition, const char *format, ...) {
   }
 }
 
-void WARNING(const char *format, ...) {
+void WARNING(const char *format, ...)
+{
   va_list ap;
   va_start(ap, format);
   const char *error_string = "Warning: ";
-  char *new_format = new char [sizeof(char) * strlen(error_string) + strlen(format) + 1];
+  char *new_format = new char[sizeof(char) * strlen(error_string) + strlen(format) + 1];
   strcpy(new_format, error_string);
   strcat(new_format, format);
   vfprintf(stderr, new_format, ap);
-  fprintf(stderr,"\n");
+  fprintf(stderr, "\n");
   fflush(stderr);
-  delete []new_format;
+  delete[] new_format;
   va_end(ap);
 }
 
-void WARNING_UNLESS(bool condition, const char *format, ...) {
-  if(!condition) {
+void WARNING_UNLESS(bool condition, const char *format, ...)
+{
+  if (!condition) {
     va_list ap;
     va_start(ap, format);
     WARNING(format, ap);
     va_end(ap);
   }
 }
-
-
