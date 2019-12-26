@@ -1,0 +1,267 @@
+[
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o ast/expression.o /home/joaquin/work/modelicacc/ast/expression.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/ast/expression.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o ast/class.o /home/joaquin/work/modelicacc/ast/class.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/ast/class.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o ast/equation.o /home/joaquin/work/modelicacc/ast/equation.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/ast/equation.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o ast/statement.o /home/joaquin/work/modelicacc/ast/statement.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/ast/statement.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o ast/modification.o /home/joaquin/work/modelicacc/ast/modification.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/ast/modification.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o ast/element.o /home/joaquin/work/modelicacc/ast/element.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/ast/element.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o parser/ident.o /home/joaquin/work/modelicacc/parser/ident.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/parser/ident.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o parser/expression.o /home/joaquin/work/modelicacc/parser/expression.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/parser/expression.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o parser/modification.o /home/joaquin/work/modelicacc/parser/modification.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/parser/modification.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o parser/equation.o /home/joaquin/work/modelicacc/parser/equation.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/parser/equation.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o parser/statement.o /home/joaquin/work/modelicacc/parser/statement.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/parser/statement.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o parser/class.o /home/joaquin/work/modelicacc/parser/class.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/parser/class.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o parser/parser.o /home/joaquin/work/modelicacc/parser/parser.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/parser/parser.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o antialias/main.o /home/joaquin/work/modelicacc/antialias/main.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/antialias/main.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o mmo/mmo_class.o /home/joaquin/work/modelicacc/mmo/mmo_class.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/mmo/mmo_class.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/table.o /home/joaquin/work/modelicacc/util/table.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/table.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/type.o /home/joaquin/work/modelicacc/util/type.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/type.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/debug.o /home/joaquin/work/modelicacc/util/debug.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/debug.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/eval_expression.o /home/joaquin/work/modelicacc/util/ast_visitors/eval_expression.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/eval_expression.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/partial_eval_expression.o /home/joaquin/work/modelicacc/util/ast_visitors/partial_eval_expression.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/partial_eval_expression.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/replace_expression.o /home/joaquin/work/modelicacc/util/ast_visitors/replace_expression.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/replace_expression.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/replace_equation.o /home/joaquin/work/modelicacc/util/ast_visitors/replace_equation.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/replace_equation.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/replace_statement.o /home/joaquin/work/modelicacc/util/ast_visitors/replace_statement.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/replace_statement.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o causalize/state_variables_finder.o /home/joaquin/work/modelicacc/causalize/state_variables_finder.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/causalize/state_variables_finder.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o antialias/remove_alias.o /home/joaquin/work/modelicacc/antialias/remove_alias.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/antialias/remove_alias.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o mmo/main.o /home/joaquin/work/modelicacc/mmo/main.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/mmo/main.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/to_micro/convert_to_micro.o /home/joaquin/work/modelicacc/util/ast_visitors/to_micro/convert_to_micro.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/to_micro/convert_to_micro.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/to_micro/convert_to_micro_statement.o /home/joaquin/work/modelicacc/util/ast_visitors/to_micro/convert_to_micro_statement.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/to_micro/convert_to_micro_statement.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/to_micro/convert_to_micro_expression.o /home/joaquin/work/modelicacc/util/ast_visitors/to_micro/convert_to_micro_expression.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/to_micro/convert_to_micro_expression.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o flatter/main.o /home/joaquin/work/modelicacc/flatter/main.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/flatter/main.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o flatter/class_finder.o /home/joaquin/work/modelicacc/flatter/class_finder.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/flatter/class_finder.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o flatter/remove_composition.o /home/joaquin/work/modelicacc/flatter/remove_composition.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/flatter/remove_composition.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/dot_expression.o /home/joaquin/work/modelicacc/util/ast_visitors/dot_expression.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/dot_expression.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/mark_connector.o /home/joaquin/work/modelicacc/util/ast_visitors/mark_connector.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/mark_connector.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/constant_expression.o /home/joaquin/work/modelicacc/util/ast_visitors/constant_expression.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/constant_expression.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o flatter/flatter.o /home/joaquin/work/modelicacc/flatter/flatter.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/flatter/flatter.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o flatter/connectors.o /home/joaquin/work/modelicacc/flatter/connectors.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/flatter/connectors.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o mmo/mmo_tree.o /home/joaquin/work/modelicacc/mmo/mmo_tree.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/mmo/mmo_tree.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o causalize/main.o /home/joaquin/work/modelicacc/causalize/main.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/causalize/main.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/solve/solve.o /home/joaquin/work/modelicacc/util/solve/solve.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/solve/solve.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/ginac_interface.o /home/joaquin/work/modelicacc/util/ast_visitors/ginac_interface.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/ginac_interface.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/contains_expression.o /home/joaquin/work/modelicacc/util/ast_visitors/contains_expression.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/contains_expression.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o util/ast_visitors/splitfor_visitor.o /home/joaquin/work/modelicacc/util/ast_visitors/splitfor_visitor.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/util/ast_visitors/splitfor_visitor.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o causalize/for_unrolling/for_index_iterator.o /home/joaquin/work/modelicacc/causalize/for_unrolling/for_index_iterator.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/causalize/for_unrolling/for_index_iterator.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o causalize/apply_tarjan.o /home/joaquin/work/modelicacc/causalize/apply_tarjan.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/causalize/apply_tarjan.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o causalize/for_unrolling/process_for_equations.o /home/joaquin/work/modelicacc/causalize/for_unrolling/process_for_equations.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/causalize/for_unrolling/process_for_equations.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o causalize/unknowns_collector.o /home/joaquin/work/modelicacc/causalize/unknowns_collector.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/causalize/unknowns_collector.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o causalize/causalization_strategy.o /home/joaquin/work/modelicacc/causalize/causalization_strategy.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/causalize/causalization_strategy.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o causalize/vector/contains_vector.o /home/joaquin/work/modelicacc/causalize/vector/contains_vector.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/causalize/vector/contains_vector.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o causalize/vector/graph_builder.o /home/joaquin/work/modelicacc/causalize/vector/graph_builder.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/causalize/vector/graph_builder.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o causalize/vector/causalization_algorithm.o /home/joaquin/work/modelicacc/causalize/vector/causalization_algorithm.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/causalize/vector/causalization_algorithm.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o causalize/vector/splitfor.o /home/joaquin/work/modelicacc/causalize/vector/splitfor.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/causalize/vector/splitfor.cpp"
+    },
+    {
+        "command": "c++ -c -I/home/joaquin/work/modelicacc -Wall -Werror -Wno-reorder -O3 -std=c++14 -o causalize/graph/graph_definition.o /home/joaquin/work/modelicacc/causalize/graph/graph_definition.cpp",
+        "directory": "/home/joaquin/work/modelicacc",
+        "file": "/home/joaquin/work/modelicacc/causalize/graph/graph_definition.cpp"
+    }
+]
