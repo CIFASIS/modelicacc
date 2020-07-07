@@ -34,6 +34,7 @@ class DotExpression : public boost::static_visitor<Expression> {
   DotExpression(Option<MMO_Class &> c, Name n, ExpList xs);
   Expression operator()(Integer v) const;
   Expression operator()(Boolean v) const;
+  Expression operator()(AddAll v) const;
   Expression operator()(String v) const;
   Expression operator()(Name v) const;
   Expression operator()(Real v) const;

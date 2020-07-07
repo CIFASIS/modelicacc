@@ -21,6 +21,7 @@
 #define MODIFICATION_PARSER
 #include <boost/spirit/include/qi.hpp>
 
+#include <ast/expression.h>
 #include <ast/modification.h>
 #include <parser/skipper.h>
 #include <parser/expression.h>

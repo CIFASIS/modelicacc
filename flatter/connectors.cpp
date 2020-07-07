@@ -1,1224 +1,1086 @@
-
 /*****************************************************************************
-
     This file is part of Modelica C Compiler.
-
     Modelica C Compiler is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
     Modelica C Compiler is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
     You should have received a copy of the GNU General Public License
     along with Modelica C Compiler.  If not, see <http://www.gnu.org/licenses/>.
-
 ******************************************************************************/
 
-#include <flatter/connectors.h>
 #include <iostream>
+#include <string>
+
+#include <flatter/connectors.h>
+
+#include <util/ast_visitors/contains_expression.h>
+
 using namespace std;
 using namespace Modelica;
 using namespace Modelica::AST;
+
 #define NameToRef(X) Reference(Reference(), X, Option<ExpList>())
 #define RefIndex(X, Y) Reference(Reference(), X, Option<ExpList>(Y))
 #define PrintOpt(N) (N ? N.get() : "{}")
-std::vector<std::string> NameVec;
 
-Connectors::Connectors(MMO_Class &c) : class_(c) {}
-
-void Connectors::resolve(MMO_Class &c)
-{
-  class_ = c;
-  createGraph(c.equations_ref().equations_ref(), Option<Name>(), OptExp());
-  G_Debug = G;
-
-  c_sols = resolveConnect();
-
-  foreach_(Solution sol, c_sols) createEquation(sol);
-  ceroEquations();
+Connectors::Connectors(MMO_Class &c) 
+ : mmoclass_(c), eCount2_(0){
+  SBGraph g;
+  G = g;
 }
 
-/*
- * Funciones de Debug y otros
- *
- */
+member_imp(Connectors, vector<int>, vCount);
+member_imp(Connectors, vector<int>, eCount1);
+member_imp(Connectors, int, eCount2);
+member_imp(Connectors, MMO_Class, mmoclass);
+member_imp(Connectors, VertexNameTable, vnmtable);
+member_imp(Connectors, NameVertexTable, nmvtable);
 
-void Connectors::Debug(char *filename)
-{
-  if (filename) writeGraphViz(filename);
+/*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
+/*-----------------------------------------------------------------------------------------------*/
+// Debugging functions --------------------------------------------------------------------------//
+/*-----------------------------------------------------------------------------------------------*/
+/*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
 
-  cerr << "Generated Connect Graph: " << endl;
-  print();
-  cerr << "-----------------------------------------" << endl;
-
-  cerr << "Solutions: " << endl;
-  printSols(c_sols);
-  cerr << "-----------------------------------------" << endl;
-}
-
-Expression removePlus(Expression e)
-{
-  if (is<UnaryOp>(e)) {
-    UnaryOp b = boost::get<UnaryOp>(e);
-    if (b.op() == Plus) return b.exp();
+void Connectors::debug(std::string filename){
+  VertexIt vi, vi_end;
+  boost::tie(vi, vi_end) = boost::vertices(G);
+  for(; vi != vi_end; ++vi){
+    Name n = G[*vi].name;
+    Set vs = G[*vi].vs_();
+    cout << n << ": " << vs << "\n";
   }
+
+  EdgeIt ei, ei_end;
+  boost::tie(ei, ei_end) = boost::edges(G);
+  for(; ei != ei_end; ++ei){
+    Name n = G[*ei].name;
+    PWLMap es1 = G[*ei].es1_();
+    PWLMap es2 = G[*ei].es2_();
+    cout << n << ": " << es1 << ", " << es2 << "\n";
+  }
+
+  GraphPrinter gp(G, -1);
+
+  gp.printGraph(filename);
+  cout << "Generated Connect Graph written to " << filename << endl;
+}
+
+/*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
+/*-----------------------------------------------------------------------------------------------*/
+// Create graph  --------------------------------------------------------------------------------//
+/*-----------------------------------------------------------------------------------------------*/
+/*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
+
+void Connectors::solve(){
+  int maxdim = 1;
+  foreach_(Name n, mmoclass_.variables()){
+    Option<VarInfo> ovi = mmoclass_.getVar(n);
+    if(ovi){
+      VarInfo vi = *ovi;
+      Option<ExpList> oinds = vi.indices();
+      if(oinds){
+        ExpList inds = *oinds;
+        NI1 aux = inds.size();
+        maxdim = max(maxdim, aux);
+      }
+    }
+  }  
+
+  vector<NI1> aux(maxdim, 1);
+  set_vCount(aux);
+  set_eCount1(aux);
+
+  createGraph(mmoclass_.equations_ref().equations_ref());
+
+  debug("prueba.dot");
+
+  PWLMap res = connectedComponents(G);
+  cout << "\n" << res << "\n";
+  generateCode(res);
+
+  foreach_(Name nm, mmoclass_.variables()){
+    Option<VarInfo> ovi = mmoclass_.getVar(nm);
+    if(ovi){
+      VarInfo vi = *ovi;
+      Name ty = vi.type();
+      if(ty != "Real" && ty != "Integer")
+        mmoclass_.rmVar(nm);
+    }
+  }
+
+  cout << mmoclass_ << "\n";
+}
+
+void Connectors::createGraph(EquationList &eqs){
+  foreach_(Equation &eq, eqs){
+    if(is<Connect>(eq))
+      connect(get<Connect>(eq));
+
+    else if(is<ForEq>(eq)){
+      vector<Name> auxvars;
+      vector<Name>::iterator itvars = auxvars.begin();
+      ForEq feq = boost::get<ForEq>(eq);
+      foreach_(Index ind, feq.range().indexes()){
+        Name n = ind.name();
+        OptExp e = ind.exp();
+        if(e){
+          TypePrefixes tp;
+          Option<Comment> aux1;
+          Expression aux2 = *e;
+          ModAssign aux3(aux2);
+          Modification aux4(aux3);
+          Option<Modification> mod(aux4);
+          ExpOptList aux5;
+          VarInfo vi(tp, n, aux1, mod, aux5, false);
+          mmoclass_.addVar(n, vi);
+          itvars = auxvars.insert(itvars, n);
+          ++itvars;
+        }
+        else 
+          cerr << "Should be defined\n";
+      }
+
+      EquationList el = feq.elements();
+      createGraph(el);
+
+      foreach_(Name auxnm, auxvars){
+        mmoclass_.rmVar(auxnm);
+      }
+    }
+  }
+}
+
+void Connectors::connect(Connect co){
+  Expression eleft = co.left(), eright = co.right();
+  
+  Pair<Name, ExpOptList> left = separate(eleft);
+  Pair<Name, ExpOptList> right = separate(eright);
+
+  Name v1 = get<0>(left);
+  Name v2 = get<0>(right);
+
+  OrdCT<Interval> miv1 = createVertex(v1).inters_();
+  OrdCT<Interval>::iterator itmiv1 = miv1.begin(); 
+  OrdCT<Interval> miv2 = createVertex(v2).inters_();
+  OrdCT<Interval>::iterator itmiv2 = miv2.begin();
+
+  ExpOptList range1 = get<1>(left);
+  ExpOptList range2 = get<1>(right);
+
+  if(checkRanges(range1, range2)){
+    OrdCT<Interval> mi11;
+    OrdCT<Interval>::iterator itmi11 = mi11.begin();
+    int dim = 0;
+    const VarSymbolTable aux = mmoclass_.syms();
+    EvalExpFlatter evexp(aux);
+    if(range1){
+      foreach_(Expression e1, range1.get()){
+        if(is<SubAll>(e1)){
+          Option<VarInfo> ovi = mmoclass_.getVar(v1);
+          if(ovi){
+            VarInfo vi = *ovi;
+            ExpOptList oinds = vi.indices();
+            if(oinds){
+              ExpList inds = *oinds;
+              ExpList::iterator itinds = inds.begin();
+
+              for(int i = 0; i < dim; ++i)
+                ++itinds;
+
+              e1 = *itinds;
+            }
+          }
+        }
+
+        Interval ll = Apply(evexp, e1);
+        NI1 auxlo = (*itmiv1).lo_() - 1;
+        Interval l(auxlo + ll.lo_(), ll.step_(), auxlo + ll.hi_());
+        ++itmiv1;
+      
+        if(!l.empty_()){
+          itmi11 = mi11.insert(itmi11, l);
+          ++itmi11;
+          ++dim;
+        }
+
+        else{
+          OrdCT<Interval> aux;
+          mi11 = aux;
+          break;
+        }
+      }
+    }
+
+    else{
+      itmi11 = mi11.begin();
+      foreach_(Interval i1, miv1){
+        NI1 auxlo = i1.lo_();
+        Interval l(auxlo, 1, auxlo);
+        itmi11 = mi11.insert(itmi11, l);
+        ++itmi11;
+      }
+    }
+
+    MultiInterval mi1(mi11);
+
+    OrdCT<Interval> mi22;
+    OrdCT<Interval>::iterator itmi22 = mi22.begin();
+    dim = 0;
+    if(range2){
+      foreach_(Expression e2, range2.get()){
+        if(is<SubAll>(e2)){
+          Option<VarInfo> ovi = mmoclass_.getVar(v2);
+          if(ovi){
+            VarInfo vi = *ovi;
+            ExpOptList oinds = vi.indices();
+            if(oinds){
+              ExpList inds = *oinds;
+              ExpList::iterator itinds = inds.begin();
+
+              for(int i = 0; i < dim; ++i)
+                ++itinds;
+
+              e2 = *itinds;
+            }
+          }
+        }
+
+        Interval rr = Apply(evexp, e2);
+        NI1 auxlo = (*itmiv2).lo_() - 1;
+        Interval r(auxlo + rr.lo_(), rr.step_(), auxlo + rr.hi_());
+        ++itmiv2;
+
+        if(!r.empty_()){
+          itmi22 = mi22.insert(itmi22, r);
+          ++itmi22;
+          ++dim;
+        }
+
+        else{
+          OrdCT<Interval> aux;
+          mi22 = aux;
+          break;
+        }
+      }
+    }
+
+    else{
+      itmi22 = mi22.begin();
+      foreach_(Interval i2, miv2){
+        NI1 auxlo = i2.lo_();
+        Interval r(auxlo, 1, auxlo);
+        itmi22 = mi22.insert(itmi22, r);
+        ++itmi22;
+      }
+    }
+
+    MultiInterval mi2(mi22);
+
+    VertexIt vi1, vi2, vi_end1, vi_end2;
+    boost::tie(vi1, vi_end1) = boost::vertices(G);
+    SetVertexDesc d1 = *vi1, d2 = *vi2;
+
+    for(; vi1 != vi_end1; ++vi1){
+      boost::tie(vi2, vi_end2) = boost::vertices(G);
+      Name aux1 = G[*vi1].name;
+
+      for(; vi2 != vi_end2; ++vi2){
+        Name aux2 = G[*vi2].name;
+        if(aux1 == v1 && aux2 == v2){
+          d1 = *vi1;
+          d2 = *vi2;
+          updateGraph(d1, d2, mi1, mi2);
+        }
+      }
+    }
+  }
+}
+
+// Get expression and range
+Pair<Name, ExpOptList> Connectors::separate(Expression e){
+  Reference reference;
+
+  if(is<UnaryOp>(e)){
+    UnaryOp u = boost::get<UnaryOp>(e);
+    if(is<Reference>(u.exp()))
+      reference = boost::get<Reference>(u.exp());
+    else
+      std::cerr << "ERROR: Deberia llegar una Reference" << std::endl;
+  } 
+ 
+  else if (is<Reference>(e))
+    reference = boost::get<Reference>(e);
+
+  Ref refs = reference.ref();
+  if(refs.size() > 1) 
+    std::cerr << "ERROR: No deberia haber llamadas a miembros en connectors" << std::endl;
+  RefTuple rf = refs.front();
+  ExpOptList opti;
+  if(get<1>(rf).size() > 0) 
+    opti = Option<ExpList>(get<1>(rf));
+  Name r = get<0>(rf);
+  return Pair<Name, ExpOptList>(r, opti);
+}
+
+MultiInterval Connectors::createVertex(Name n){
+  MultiInterval mires; 
+
+  VertexIt vi, vi_end;
+  boost::tie(vi, vi_end) = boost::vertices(G);
+  bool exists = false;
+  for(; vi != vi_end; ++vi){
+    Name aux = G[*vi].name;
+    if(aux == n){
+      exists = true;
+      AtomSet auxas = *(G[*vi].vs_().asets_().begin()); 
+      mires = auxas.aset_(); 
+    }
+  }
+  
+  if(!exists){
+    Option<VarInfo> ovi = mmoclass_.getVar(n);
+    if(ovi){
+      VarInfo vi = *ovi;
+      ExpOptList oinds = vi.indices();
+      // Multi dimensional variable
+      if(oinds){
+        ExpList inds = *oinds;
+  
+        OrdCT<Interval> mi1;
+        OrdCT<Interval>::iterator itmi1 = mi1.begin();
+        int dim = 0;
+        vector<NI1>::iterator itvc = vCount_.begin();
+        vector<NI1> newvc;
+        vector<NI1>::iterator itnew = newvc.begin();
+   
+        const VarSymbolTable auxt = mmoclass_.syms();
+        EvalExpression evexp(auxt);
+  
+        foreach_(Expression e, inds){
+          if(is<SubAll>(e) || is<Range>(e))
+            ERROR("Ill-defined array");
+   
+          Real res = Apply(evexp, e);
+          Interval i(*itvc, 1, *itvc + res - 1);
+          if(!i.empty_()){
+            itmi1 = mi1.insert(itmi1, i);
+            ++itmi1;
+            itnew = newvc.insert(itnew, *itvc + res);
+            ++itnew;
+
+            ++dim;
+            ++itvc;
+          }
+          else{
+            OrdCT<Interval> aux;
+            mi1 = aux;
+            break;
+          }
+        }
+  
+        MultiInterval mi(mi1);
+
+        if(!mi1.empty())
+          set_vCount(newvc);
+
+        AtomSet as(mi);
+        Set s;
+        s.addAtomSet(as);
+  
+        SetVertex V(n, s);
+        SetVertexDesc v = boost::add_vertex(G);
+  
+        G[v] = V;
+        mires = mi;
+      }
+  
+      // Uni dimensional variable
+      else{
+        vector<NI1>::iterator itvc = vCount_.begin();
+        NI1 auxvc = *itvc;
+        Interval i(auxvc, 1, auxvc);
+        vector<NI1> newvc;
+        vector<NI1>::iterator itnew = newvc.begin();        
+        itnew = newvc.insert(itnew, auxvc + 1);
+        ++itnew;
+        ++itvc;
+
+        while(itvc != vCount_.end()){
+          itnew = newvc.insert(itnew, *itvc);
+          ++itnew;
+
+          ++itvc;
+        }
+        set_vCount(newvc);
+
+        MultiInterval mi;
+        mi.addInter(i);
+        AtomSet as(mi);
+        Set s;
+        s.addAtomSet(as);
+  
+        SetVertex V(n, s);
+        SetVertexDesc v = boost::add_vertex(G);
+ 
+        G[v] = V;
+        mires = mi;
+      }
+    }
+  }
+
+  vnmtable_.insert(mires, n);
+  nmvtable_.insert(n, mires);
+  return mires;
+}
+
+// Check if only one variable is used at each subscript
+bool Connectors::checkRanges(ExpOptList range1, ExpOptList range2){
+  std::vector<Name> vars = mmoclass_.variables();
+
+  if(range1 && range2){
+    ExpList r1 = range1.get();
+    ExpList r2 = range2.get();
+ 
+    if(r1.size() == 0 || r2.size() == 0)
+      return true;
+
+    else if(r1.size() != r2.size()){
+      cerr << "Unmatched dimensions in equation connect" << endl;
+      return false;
+    }
+
+    else{
+      ExpList::iterator it1 = r1.begin(), it2 = r2.begin();
+
+      while(it1 != r1.end()){
+        foreach_(Name n1, vars){
+          Expression e1(n1);
+          ContainsExpression co1(e1);
+ 
+          bool cn11 = Apply(co1, *it1);
+          bool cn21 = Apply(co1, *it2);
+
+          // This loop checks that there is only one variable at each subscript
+          foreach_(Name n2, vars){
+            Expression e2(n2);
+            ContainsExpression co2(e2);
+
+            bool cn12 = Apply(co2, *it1);
+            bool cn22 = Apply(co2, *it2);
+
+            if(((cn11 && cn12) || (cn21 && cn22)) && (n1 != n2)){
+              cerr << "Only one variable permitted at subscript";
+              return false;
+            }
+          }
+        }
+
+        ++it1;
+        ++it2;
+      }
+    }
+  }
+
+  return true;
+}
+
+Option<SetEdgeDesc> Connectors::existsEdge(SetVertexDesc d1, SetVertexDesc d2){
+  EdgeIt ei, ei_end;
+  boost::tie(ei, ei_end) = boost::edges(G);
+
+  for(; ei != ei_end; ++ei){
+    SetVertexDesc v1 = boost::source(*ei, G);
+    SetVertexDesc v2 = boost::target(*ei, G);
+    Option<SetEdgeDesc> e(*ei);
+
+    if(v1 == d1 && v2 == d2)
+      return e;
+
+    if(v1 == d2 && v2 == d1)
+      return e;
+  }
+
+  Option<SetEdgeDesc> e;
   return e;
 }
 
-void Connectors::writeGraphViz(char *filename)
-{
-  cerr << "Writing GraphViz file " << endl;
-  std::ofstream dotfile(filename);
-  dotfile << "graph G {" << endl;
+void Connectors::updateGraph(SetVertexDesc d1, SetVertexDesc d2, 
+                             MultiInterval mi1, MultiInterval mi2){
+  cout << mi1 << "; " << mi2 << "\n";
+  OrdCT<Interval> ints1 = mi1.inters_();
+  OrdCT<Interval>::iterator itints1 = ints1.begin();
+  OrdCT<Interval> ints2 = mi2.inters_();
+  OrdCT<Interval>::iterator itints2 = ints2.begin();
 
-  dotfile << "\tsubgraph cluster_0 {" << endl;
-  MMOGraphVertexIteretor vi, vi_end;
-  for (tie(vi, vi_end) = vertices(G_Debug); vi != vi_end; ++vi)
-    if (G_Debug[*vi].name) dotfile << "\t\tnode" << *vi << " [label=\"" << removePlus(G_Debug[*vi].name.get()) << "\"];" << endl;
+  if(mi1.ndim_() == mi2.ndim_()){
+    OrdCT<NI2> g1;
+    OrdCT<NI2>::iterator itg1 = g1.begin();
+    OrdCT<NI2> o1;
+    OrdCT<NI2>::iterator ito1 = o1.begin();
+    OrdCT<NI2> g2;
+    OrdCT<NI2>::iterator itg2 = g2.begin();
+    OrdCT<NI2> o2;
+    OrdCT<NI2>::iterator ito2 = o2.begin();
+    OrdCT<Interval> mi;
+    OrdCT<Interval>::iterator itmi = mi.begin(); 
 
-  dotfile << "\tedge[style=invis];" << endl;
-  for (tie(vi, vi_end) = vertices(G_Debug); vi != vi_end; ++vi)
-    if (G_Debug[*vi].name) dotfile << "node" << *vi << (vi + 1 != vi_end ? " -- " : ";");
+    vector<NI1>::iterator itec = eCount1_.begin(); 
+    vector<NI1> newec;
+    vector<NI1>::iterator itnew = newec.begin();
 
-  dotfile << endl << "\t}" << endl;
+    while(itints1 != ints1.end()){
+      NI1 sz1 = (*itints1).size();
+      NI1 sz2 = (*itints2).size();
 
-  dotfile << "\tsubgraph cluster_1 {" << endl;
-  for (tie(vi, vi_end) = vertices(G_Debug); vi != vi_end; ++vi)
-    if (!G_Debug[*vi].name) dotfile << "\t\tnode" << *vi << " [label=\"" << PrintOpt((G_Debug[*vi].range)) << "\"];" << endl;
+      if(sz1 == sz2 || sz1 == 1 || sz2 == 1){
+        NI1 count = max(sz1, sz2);
+        NI1 auxec = *itec;
+        Interval i(auxec, 1, auxec + count - 1);
+        itmi = mi.insert(itmi, i);
+        ++itmi;
 
-  dotfile << "\tedge[style=invis];" << endl;
-  for (tie(vi, vi_end) = vertices(G_Debug); vi != vi_end; ++vi)
-    if (!G_Debug[*vi].name) dotfile << "node" << *vi << (vi + 1 != vi_end ? " -- " : ";");
+        NI2 g1i = (*itints1).step_();
+        NI2 o1i = (-g1i) * auxec + (*itints1).lo_();
 
-  dotfile << endl << "\t}" << endl;
+        NI2 g2i = (*itints2).step_();
+        NI2 o2i = (-g2i) * auxec + (*itints2).lo_();
 
-  MMOGraphEdgeIteretor i, end;
-  for (tie(i, end) = edges(G_Debug); i != end; ++i) {
-    dotfile << "\tnode" << source(*i, G_Debug) << " -- "
-            << "node" << target(*i, G_Debug) << " [label=\"" << PrintOpt(G_Debug[*i].index) << "\"]; " << endl;
-  }
+        if(sz1 == 1){
+          itg1 = g1.insert(itg1, 0);
+          ito1 = o1.insert(ito1, (*itints1).lo_());
+        }
 
-  dotfile << "}" << endl;
-  dotfile.close();
-}
+        else{
+          itg1 = g1.insert(itg1, g1i);
+          ito1 = o1.insert(ito1, o1i);
+        }
 
-void Connectors::printSols(SolList sols)
-{
-  // Just for debuging
-  foreach_(Solution s, sols)
-  {
-    std::cerr << "{" << (get<0>(s) ? get<0>(s).get() : " {} ") << "," << get<2>(s) << ", {";
-    foreach_(Vars v, get<1>(s))
-    {
-      std::cerr << "(" << get<0>(v) << ", " << (get<1>(v) ? get<1>(v).get() : "{}") << ", " << (get<2>(v) ? get<2>(v).get() : "{}") << ")";
-    }
-    std::cerr << "}} \n";
-  }
-}
+        if(sz2 == 1){
+          itg2 = g2.insert(itg2, 0);
+          ito2 = o2.insert(ito2, (*itints2).lo_());
+        }
 
-void Connectors::print()
-{
-  // Just for debuging
-  MMOGraphVertexIteretor vi, vi_end;
-  for (tie(vi, vi_end) = vertices(G_Debug); vi != vi_end; ++vi)
-    if (G_Debug[*vi].name)
-      cerr << *vi << ": " << G_Debug[*vi].name.get() << "(" << G_Debug[*vi].hasIndex << ")" << endl;
-    else
-      cerr << *vi << ": C -> " << (G_Debug[*vi].range ? G_Debug[*vi].range.get() : "{}") << endl;
-  MMOGraphEdgeIteretor i, end;
-  for (tie(i, end) = edges(G_Debug); i != end; ++i) {
-    cerr << source(*i, G_Debug) << " -> " << target(*i, G_Debug) << " Index: " << PrintOpt(G_Debug[*i].index) << endl;
-  }
+        else{
+          itg2 = g2.insert(itg2, g2i);
+          ito2 = o2.insert(ito2, o2i);
+        }
+ 
+        itnew = newec.insert(itnew, auxec + count);
+        ++itnew;
 
-  for (tie(vi, vi_end) = vertices(G); vi != vi_end; ++vi)
-    if (G[*vi].name) {
-      cerr << *vi << ": " << G[*vi].name.get() << " Free: ";
-      foreach_(OptExp e, G[*vi].free) cerr << PrintOpt(e) << ",";
-      cerr << endl;
-    }
-}
-
-/**
- ***********************************************************************
- *
- * 		FUNCIONES PARA EL CREAR EL GRAFO
- *
- ***********************************************************************
- **
- */
-
-void Connectors::createGraph(EquationList &eqs, Option<Name> name, OptExp range)
-{
-  EquationList to_delete;
-  foreach_(Equation & eq, eqs)
-  {
-    if (is<Connect>(eq)) {
-      to_delete.push_back(eq);
-      Connect co = boost::get<Connect>(eq);
-      Expression eleft = co.left(), eright = co.right();
-      if (name) {
-        Modelica::ReplaceExpression r = Modelica::ReplaceExpression(NameToRef(name.get()), NameToRef("i"));
-        eleft = Apply(r, eleft);
-        eright = Apply(r, eright);
+        ++itg1;
+        ++ito1;
+        ++itg2;
+        ++ito2;
+        ++itec;
+      }
+ 
+      else{ 
+        cerr << "Incompatible connect\n"; 
+        newec = eCount1_;
+        break;
       }
 
-      Pair<Expression, OptExp> left = separate(eleft);
-      Pair<Expression, OptExp> right = separate(eright);
-
-      Vertex l = createElements(get<0>(left), get<1>(left));
-      Vertex r = createElements(get<0>(right), get<1>(right));
-      Vertex c = createConnect(range);
-
-      if (l == r)
-        expandConnect(l, get<1>(left), r, get<1>(right), range);
-      else if (range && is<Range>(range.get()) && boost::get<Range>(range.get()).step())
-        expandConnect(l, get<1>(left), r, get<1>(right), range);
-      else {
-        createEdge(l, c, get<1>(left));
-        createEdge(r, c, get<1>(right));
-      }
-
-    } else if (is<ForEq>(eq)) {
-      ForEq feq = boost::get<ForEq>(eq);
-      Index ind = feq.range().indexes().front();
-      Option<Name> n = Option<Name>(ind.name());
-      createGraph(feq.elements_ref(), n, ind.exp());
-      eq = feq;
-      if (feq.elements_ref().size() == 0) to_delete.push_back(eq);
-    }
-  }
-  foreach_(Equation eq, to_delete)
-  {
-    EquationList::iterator it = std::find(eqs.begin(), eqs.end(), eq);
-    if (it != eqs.end()) eqs.erase(it);
-  }
-}
-
-void Connectors::expandConnect(Vertex l, OptExp lIndex, Vertex r, OptExp rIndex, OptExp range)
-{
-  if (range && is<Range>(range.get())) {
-    Range rge = boost::get<Range>(range.get());
-    EvalExpression evalIndex = EvalExpression(class_.syms_ref());
-    Real step = 1;
-    if (rge.step()) step = Apply(evalIndex, rge.step().get());
-    for (Real i = Apply(evalIndex, rge.start_ref()); i <= Apply(evalIndex, rge.end_ref()); i = i + step) {
-      EvalExpression eval = EvalExpression(class_.syms_ref(), "i", i);
-      OptExp opl, opr;
-      if (lIndex) opl = OptExp(Apply(eval, lIndex.get()));
-      if (rIndex) opr = OptExp(Apply(eval, rIndex.get()));
-      Vertex c = createConnect(range);
-      createEdge(l, c, opl);
-      createEdge(r, c, opr);
+      ++itints1;
+      ++itints2;
     }
 
-  } else
-    std::cerr << "Error: For without range expression or other type" << std::endl;
-}
+    set_eCount1(newec);
 
-void Connectors::createEdge(Vertex s, Vertex c, OptExp i)
-{
-  Expression uno = 1;
-  EdgeProperty *ep = new EdgeProperty;
-  ep->index = (i ? i : OptExp(uno));
-  ep->visited = false;
-  boost::add_edge(s, c, *ep, G);
-}
+    AtomSet as(mi);
+    Set s;
+    s.addAtomSet(as); 
 
-Vertex Connectors::createConnect(OptExp i)
-{
-  VertexProperty *vp = new VertexProperty;
-  vp->name = OptExp();
-  vp->hasIndex = false;
-  vp->range = i;
-  return boost::add_vertex(*vp, G);
-}
+    LMap lm1(g1, o1);
+    LMap lm2(g2, o2);
+ 
+    OrdCT<Set> cts1;
+    cts1.insert(cts1.end(), s);
+    OrdCT<LMap> ctlm1;
+    ctlm1.insert(ctlm1.end(), lm1); 
+    PWLMap e1(cts1, ctlm1);
 
-Vertex Connectors::createElements(Expression e, OptExp i)
-{
-  Option<Vertex> v = findVertex(e);
-  if (v) return v.get();
+    OrdCT<Set> cts2;
+    cts2.insert(cts2.end(), s);
+    OrdCT<LMap> ctlm2;
+    ctlm2.insert(ctlm2.end(), lm2); 
+    PWLMap e2(cts2, ctlm2);
 
-  OptExp r;
-  Name n = getName(e);
-  Option<VarInfo> vi = class_.syms_ref()[n];
-  if (vi) {
-    VarInfo v = vi.get();
-    if (v.indices()) {
-      Expression rr = Range(1, v.indices().get().front());
-      r = rr;
-    }
-  }
-
-  VertexProperty *vp = new VertexProperty;
-  vp->name = e;
-  vp->hasIndex = i ? true : false;
-  vp->range = OptExp();
-  vp->free = OptExpList(1, r);
-  return boost::add_vertex(*vp, G);
-}
-
-Option<Vertex> Connectors::findVertex(Expression e)
-{
-  MMOGraphVertexIteretor vi, vi_end;
-  for (tie(vi, vi_end) = vertices(G); vi != vi_end; ++vi)
-    if (G[*vi].name && G[*vi].name.get() == e) return Option<Vertex>(*vi);
-  return Option<Vertex>();
-}
-
-Pair<Expression, OptExp> Connectors::separate(Expression e)
-{
-  Reference reference;
-  UnaryOpType op = Plus;
-  bool isU = false;
-  if (is<UnaryOp>(e)) {
-    UnaryOp u = boost::get<UnaryOp>(e);
-    if (is<Reference>(u.exp())) {
-      isU = true;
-      reference = boost::get<Reference>(u.exp());
-      op = u.op();
-    } else
-      std::cerr << "ERROR: Deberia llegar una Reference" << std::endl;
-  } else if (is<Reference>(e)) {
-    reference = boost::get<Reference>(e);
-  }
-  Ref refs = reference.ref();
-  if (refs.size() > 1) std::cerr << "ERROR: No deberia haber llamadas a miembros en connectors" << std::endl;
-  RefTuple rf = refs.front();
-  OptExp opti;
-  if (get<1>(rf).size() > 0) opti = get<1>(rf).front();
-  Expression r = Reference(Reference(), get<0>(rf), Option<ExpList>());
-  if (isU) r = UnaryOp(r, op);
-  return Pair<Expression, OptExp>(r, opti);
-}
-
-/**
- ***********************************************************************
- *
- * 		FUNCIONES PARA EL ARGOTIRMO
- *
- ***********************************************************************
- **
- */
-
-Vertex Connectors::getSink(Edge e, Vertex v)
-{
-  if (source(e, G) == v) return target(e, G);
-  return source(e, G);
-}
-
-Vertex Connectors::getVertex(Edge e)
-{
-  if (G[source(e, G)].name) return source(e, G);
-  return target(e, G);
-}
-
-Vertex Connectors::getConnect(Edge e)
-{
-  if (!G[source(e, G)].name) return source(e, G);
-  return target(e, G);
-}
-
-OptExp Connectors::getRange(Edge e) { return G[getConnect(e)].range; }
-
-OptExp Connectors::getIndex(Edge e) { return G[e].index; }
-
-//**********************************************************************
-
-Vertex Connectors::getSinkVertex(Edge e)
-{
-  Vertex c = getConnect(e);
-  MMOGraphOutputEdgeIteretor i, end;
-  for (tie(i, end) = out_edges(c, G); i != end; ++i)
-    if (*i != e) return getVertex(*i);
-  std::cerr << "Error buscando vertice destino para " << e << endl;
-  exit(-1);
-}
-
-Edge Connectors::getSinkEdge(Edge e)
-{
-  Vertex c = getConnect(e);
-  MMOGraphOutputEdgeIteretor i, end;
-  for (tie(i, end) = out_edges(c, G); i != end; ++i)
-    if (*i != e) return *i;
-  std::cerr << "Error buscando edge destino para " << e << endl;
-  exit(-1);
-}
-
-bool Connectors::isEneUno(Edge e)
-{
-  ConstantExpression ce = ConstantExpression();
-  Expression i1 = getIndex(e).get();
-  Expression i2 = getIndex(getSinkEdge(e)).get();
-  return (Apply(ce, i1) ^ Apply(ce, i2)) && getRange(e);
-}
-
-/*OptEdge Connectors::getEdge(Vertex v1,Vertex v2)
-{
-    MMOGraphEdgeIteretor i,end;
-    for (tie(i, end) = edges(G); i != end; ++i)
-        if ( (source(*i,G) == v1 && target(*i,G) == v2) || (source(*i,G) == v2 && target(*i,G) == v1) ) return OptEdge(*i);
-    return OptEdge();
-}*/
-
-/* Aplica el rango del for sobre el indice de la variable para calcular el intervalo
- *  Subindice: i + 1
- *  For i in 1:10
- *  Return 2:11
- */
-OptExp Connectors::getIntervalo(Edge e)
-{
-  OptExp index = getIndex(e);
-  OptExp range = getRange(e);
-  if (G[e].visited) return OptExp();
-  if (index && range) {
-    Range r = boost::get<Range>(range.get());
-    EvalExpression val = EvalExpression(class_.syms_ref());
-    EvalExpression sval = EvalExpression(class_.syms_ref(), "i", Apply(val, r.start_ref()));
-    EvalExpression eval = EvalExpression(class_.syms_ref(), "i", Apply(val, r.end_ref()));
-
-    Expression start = Apply(sval, index.get());
-    Expression end = Apply(eval, index.get());
-
-    Range result = Range(start, end);
-    return OptExp(result);
-  }
-  return index;
-}
-
-/* Interseccion de dos intervalos
- * [2:10]  /\ [5:7] == [5:7]
- * [2:10]  /\ [5:20] == [5:10]
- */
-
-OptExp Connectors::intersectionIntervals(OptExp a, OptExp b)
-{
-  if (!a) return a;
-  if (!b) return b;
-  EvalExpression eval = EvalExpression(class_.syms_ref());
-  Real start1, start2, end1, end2;
-
-  if (!is<Range>(a.get())) {
-    start1 = end1 = Apply(eval, a.get());
-  } else {
-    Range ae = boost::get<Range>(a.get());
-    start1 = Apply(eval, ae.start_ref());
-    end1 = Apply(eval, ae.end_ref());
-  }
-
-  if (!is<Range>(b.get())) {
-    start2 = end2 = Apply(eval, b.get());
-  } else {
-    Range be = boost::get<Range>(b.get());
-    start2 = Apply(eval, be.start_ref());
-    end2 = Apply(eval, be.end_ref());
-  }
-  if (start1 == end1 && start2 == end2 && start1 == end1) return OptExp(start1);
-  if (start1 == end1 && start2 == end2 && start1 != end1) return OptExp();
-  Real start = start1 < start2 ? start2 : start1;
-  Real end = end1 > end2 ? end2 : end1;
-  if (start > end) return OptExp();
-  Expression s = start;
-  Expression e = end;
-  if (start == end) return OptExp(s);
-  Range r = Range(s, e);
-  return OptExp(r);
-}
-
-/* Proyecta un intervalo dado sobre el subindice del Vertice
- * Subindice i + 1  |  i
- * Intervalo [2:3]  |  5
- * Return [3:4]     |  5
- * */
-OptExp Connectors::proyInter(Expression inter, Edge e)
-{
-  if (isEneUno(e)) {
-    // ConstantExpression ce = ConstantExpression();
-    Expression i1 = getIndex(e).get();
-    /*if (Apply(ce,i1)) */ return applyIntervalo(getIntervalo(e).get(), getIndex(e));
-  }
-  return applyIntervalo(inter, getIndex(e));
-}
-
-/* Proyecta un intervalo dado sobre el subindice del Vertice
- * Subindice i + 1  |  i
- * Intervalo [2:3]  |  5
- * Return [1:2]     |  5
- * */
-
-OptExp Connectors::proyInterInv(Expression inter, Edge e)
-{
-  OptExp index = getIndex(e);
-  if (index)
-    if (is<BinOp>(index.get())) {
-      BinOp b = boost::get<BinOp>(index.get());
-      if (b.op() == Add)
-        b.op_ref() = Sub;
-      else
-        b.op_ref() = Add;
-      Expression ex = b;
-      index = ex;
-    }
-  return applyIntervalo(inter, index);
-}
-
-OptExp Connectors::applyIntervalo(Expression inter, OptExp index)
-{
-  if (index && is<Range>(inter)) {
-    Range r = boost::get<Range>(inter);
-    EvalExpression val = EvalExpression(class_.syms_ref());
-    EvalExpression sval = EvalExpression(class_.syms_ref(), "i", Apply(val, r.start_ref()));
-    EvalExpression eval = EvalExpression(class_.syms_ref(), "i", Apply(val, r.end_ref()));
-    Expression start = Apply(sval, index.get());
-    Expression end = Apply(eval, index.get());
-    if (start == end) return OptExp(start);
-    Range result = Range(start, end);
-    return OptExp(result);
-  } else if (index) {
-    EvalExpression val = EvalExpression(class_.syms_ref());
-    EvalExpression sval = EvalExpression(class_.syms_ref(), "i", Apply(val, inter));
-    Expression start = Apply(sval, index.get());
-    return OptExp(start);
-  }
-  return index;
-}
-
-/* reemplaza una variable indice por una expression
- * Indice 		i + 1
- * Expression  	i + 5
- * Return 		(i + 5) + 1
- */
-
-Expression Connectors::applyIndex(Expression index, Expression e)
-{
-  Modelica::ReplaceExpression r = Modelica::ReplaceExpression(NameToRef("i"), index);
-  return Apply(r, e);
-}
-
-/* reemplaza una variable indice por una expression. Antes invierte el indice
- * Indice 		i + 1
- * Expression  	i + 5
- * Return 		(i + 5) -1
- */
-Expression Connectors::applyIndexInv(Expression index, Expression e)
-{
-  if (is<BinOp>(index)) {
-    BinOp b = boost::get<BinOp>(index);
-    if (b.op() == Add)
-      b.op_ref() = Sub;
-    else
-      b.op_ref() = Add;
-    index = b;
-  }
-  Modelica::ReplaceExpression r = Modelica::ReplaceExpression(NameToRef("i"), index);
-  return Apply(r, e);
-}
-
-/* Proyecta una solucion. Aplica proyecciondes de intervalos e indices
- *  segun la artista proporcionada
- */
-SolList Connectors::proySolutions(SolList sols, Edge e)
-{
-  SolList solutions;
-  OptExp index = getIndex(e);
-  foreach_(Solution s, sols)
-  {
-    if (!get<2>(s)) {
-      OptExp iter;
-      if (get<0>(s)) iter = proyInter(get<0>(s).get(), e);
-      VarsList vls;
-      foreach_(Vars var, get<1>(s))
-      {
-        OptExp i = get<1>(var);
-        if (i && index) i = applyIndexInv(index.get(), i.get());
-        vls.push_back(Vars(get<0>(var), i, get<2>(var)));
-      }
-      solutions.push_back(Solution(iter, vls, get<2>(s)));
-    } else
-      solutions.push_back(s);
-  }
-  return solutions;
-}
-
-/* Proyecta una solucion INVERTIDA. Aplica proyecciondes de intervalos e indices
- *  segun la artista proporcionada
- */
-SolList Connectors::proySolutionsInv(SolList sols, Edge e)
-{
-  SolList solutions;
-  OptExp index = getIndex(e);
-  foreach_(Solution s, sols)
-  {
-    if (!get<2>(s)) {
-      OptExp iter;
-      if (get<0>(s)) iter = proyInterInv(get<0>(s).get(), e);
-      VarsList vls;
-      foreach_(Vars var, get<1>(s))
-      {
-        OptExp i = get<1>(var);
-        if (i && index) i = applyIndex(index.get(), i.get());
-        vls.push_back(Vars(get<0>(var), i, get<2>(var)));
-      }
-      solutions.push_back(Solution(iter, vls, get<2>(s)));
-    } else
-      solutions.push_back(s);
-  }
-  return solutions;
-}
+  //  Option<SetEdgeDesc> oedge = existsEdge(d1, d2);    
 
 /*
- *  Diferencia de intervalos: a -b
- *
- */
+    if(oedge){
+      SetEdgeDesc e = *oedge;
+      SetEdge aux = G[e];
 
-OptExpList Connectors::cutRange(OptExp a, OptExp b)
-{
-  if (!a) return OptExpList();
-  if (is<Range>(a.get())) {
-    Range r = boost::get<Range>(a.get());
-    EvalExpression val = EvalExpression(class_.syms_ref());
-    Real start = Apply(val, r.start_ref());
-    Real end = Apply(val, r.end_ref());
-    if (is<Range>(b.get())) {
-      Range r2 = boost::get<Range>(b.get());
-      Real i_start = Apply(val, r2.start_ref());
-      Real i_end = Apply(val, r2.end_ref());
-      if (start == i_start && i_end == end) {
-        return OptExpList();
-      } else if (start >= i_start && end > i_end) {
-        Expression fstart = i_end + 1;
-        Expression fend = end;
-        Expression aux = Range(fstart, fend);
-        return OptExpList(1, OptExp(aux));
-        ;
-      } else if (start < i_start && end <= i_end) {
-        Expression fstart = start;
-        Expression fend = i_start - 1;
-        Expression aux = Range(fstart, fend);
-        return OptExpList(1, OptExp(aux));
-        ;
-      } else if (start < i_start && end > i_end) {
-        OptExpList res;
-        Expression fstart = start;
-        Expression fend = i_start - 1;
-        Expression a = Range(fstart, fend);
-        res.push_back(a);
-        fstart = i_end + 1;
-        fend = end;
-        a = Range(fstart, fend);
-        res.push_back(a);
-        return res;
-      } else
-        return OptExpList(1, a);
-    } else {
-      Real num = Apply(val, b.get());
-      if (start == num && num == end) {
-        return OptExpList();
-      } else if (start == num) {
-        Expression fstart = start + 1;
-        Expression fend = end;
-        Expression aux = Range(fstart, fend);
-        return OptExpList(1, OptExp(aux));
-      } else if (end == num) {
-        Expression fstart = start;
-        Expression fend = end - 1;
-        Expression aux = Range(fstart, fend);
-        return OptExpList(1, OptExp(aux));
-      } else if (start < num && num < end) {
-        OptExpList res;
-        Expression fstart = start;
-        Expression fend = num - 1;
-        Expression a = Range(fstart, fend);
-        res.push_back(a);
-        fstart = num + 1;
-        fend = end;
-        a = Range(fstart, fend);
-        res.push_back(a);
-        return res;
-      } else
-        return OptExpList(1, a);
+      PWLMap pwaux1 = aux.es1_();
+      pwaux1.addLMSet(lm1, s);
+      PWLMap pwaux2 = aux.es2_();
+      pwaux2.addLMSet(lm2, s);
+
+      cout << aux.name << ": " << pwaux1 << ", " << pwaux2 << "\n";
+
+      SetEdge E(aux.name, pwaux1, pwaux2);
+      G[e] = E;
     }
+
+    else{
+*/
+      string enm = "E" + to_string(eCount2_);
+      SetEdge E(enm, e1, e2);
+      SetEdgeDesc e;
+      bool b;
+      boost::tie(e, b) = boost::add_edge(d1, d2, G);
+      G[e] = E;
+      ++eCount2_;
+//    }
   }
-  return OptExpList();
+
+  else
+    cerr << "Incompatible connect\n";
 }
 
-/* Corta una arista
- *
- */
+void Connectors::generateCode(PWLMap pw){
+  EquationList res;
+  EquationList::iterator itres = res.begin();
 
-void Connectors::cutEdge(OptEdge oe, OptExp iter_)
-{
-  markUsed(getConnect(oe.get()), iter_);
-  if (!iter_ && oe) {
-    markVisited(getConnect(oe.get()));
-  } else if (iter_) {
-    OptExp i = getRange(oe.get());
-    OptExpList r = cutRange(i, iter_);
-    if (r.size() == 1)
-      G[getConnect(oe.get())].range = r.front();
-    else if (r.size() > 1) {
-      markVisited(getConnect(oe.get()));
-      foreach_(OptExp rr, r)
-      {
-        Edge e = oe.get();
-        Vertex s = getVertex(e);
-        Vertex t = getSinkVertex(e);
-        Vertex c = createConnect(rr);
-        createEdge(s, c, getIndex(e));
-        createEdge(t, c, getIndex(getSinkEdge(e)));
+  Set vcdom = pw.wholeDom();
+  Set vcim = pw.image(vcdom);
+
+  ExpList nms;
+  ExpList::iterator itnms = nms.begin();
+  int ascii = 0;
+  for(unsigned int i = 0; i < vCount_.size(); ++i){
+    string s(1, 105 + ascii);
+    Expression nm(s);
+    itnms = nms.insert(itnms, nm);
+    ++itnms;
+    ++ascii;
+  }
+
+  foreach_(AtomSet as, vcim.asets_()){
+    Set auxs;
+    auxs.addAtomSet(as);
+    Set vcdomi = pw.preImage(auxs);
+    Set vcdomiaux = vcdomi.diff(auxs);
+
+    // Variables of equality in the ForEq
+    Pair<vector<Name>, vector<Name>> p = separateVars();
+
+    foreach_(AtomSet auxi, vcdomiaux.asets_()){
+      MultiInterval mi = auxi.aset_();
+
+      IndexList ran1;
+      IndexList::iterator itran1 = ran1.begin(); 
+      OrdCT<NI1> off1 = getOff(mi);
+      MultiInterval mirange1 = applyOff(mi, off1);
+      itnms = nms.begin();
+      // Range of ForEq
+      foreach_(Interval i, mirange1.inters_()){
+        Expression elo(i.lo_());
+        Expression est(i.step_());
+        Expression ehi(i.hi_());
+        Range auxr(elo, est, ehi);
+        Expression auxer(auxr);
+        Option<Expression> r(auxer); 
+
+        Name s = get<Name>(*itnms);
+        Index ind(s, r);
+        itran1 = ran1.insert(itran1, ind);
+        ++itran1;
+        ++itnms;
       }
-    } else {
-      markVisited(getConnect(oe.get()));
-    }
-  }
-}
-/* Marca un nodo conect como finalizado, es decir las dos aristas
- */
-void Connectors::markVisited(Vertex c)
-{
-  MMOGraphOutputEdgeIteretor i, end;
-  for (tie(i, end) = out_edges(c, G); i != end; ++i) G[*i].visited = true;
-  G[c].range = OptExp();
-}
+      Indexes range1(ran1);
 
-/* Marca un nodo conect como finalizado, es decir las dos aristas
- */
-void Connectors::markUsed(Vertex c, OptExp iter_)
-{
-  MMOGraphOutputEdgeIteretor i, end;
-  for (tie(i, end) = out_edges(c, G); i != end; ++i) {
-    Vertex v = getVertex(*i);
-    OptExp in = proyInter(iter_.get(), *i);
-    OptExpList temp;
-    foreach_(OptExp f, G[v].free) temp += cutRange(f, in);
-    G[v].free = temp;
-  }
-}
+      Set sauxi;
+      sauxi.addAtomSet(auxi);
+      vector<Name> effvars = get<0>(p);
+      vector<Pair<Name, Name>> vars1 = getVars(effvars, sauxi);
+      vector<Pair<Name, Name>>::iterator itv1 = vars1.begin();
 
-/* Funcion principal para resolver el problema
- *
- */
+      vector<Pair<Name, Name>> vars2 = getVars(effvars, auxs);
+      vector<Pair<Name, Name>>::iterator itv2 = vars2.begin();
 
-SolList Connectors::VisitarVertice(Vertex v, OptEdge oe, OptExp iter_, bool eneuno)
-{
-  SolList sfinal;
-  Vars varsV = Vars(G[v].name.get(), OptExp(NameToRef("i")), iter_);  // Solucion basica
+      itnms = nms.begin();
+      OrdCT<NI1> off2 = getOff(as.aset_());
+      MultiInterval auxmi1 = applyOff(as.aset_(), off2);
+      Pair<ExpList, bool> tm1 = transMulti(mirange1, auxmi1, nms, false);
+      ExpList inds1 = get<0>(tm1);
 
-  /* Proyecto el intervalo segun la arista entrante */
-  OptExp iter = iter_ ? proyInter(iter_.get(), oe.get()) : OptExp();
-  OptExpList aux_inter = OptExpList(1, iter);
+      for(; itv1 != vars1.end(); ++itv1){
+        for(; itv2 != vars2.end(); ++itv2){
+          if(get<1>(*itv1) == get<1>(*itv2)){
+            ExpList auxnms1;
 
-  // cerr << "Visito el nodo " << G[v].name.get() << " con " << PrintOpt(iter_) << " proy " << PrintOpt(iter)  << endl ;
+            const Name nm1 = get<0>(*itv1);
+            Option<MultiInterval> omivar1 = nmvtable_[nm1];
+            MultiInterval mivar1;
+            if(omivar1)
+              mivar1 = *omivar1;
 
-  if (oe) {
-    if (isEneUno(oe.get()))
-      cutEdge(oe, iter);
-    else
-      cutEdge(oe, iter_);
-  }
-  OptExp I;
-  EdgeSet U;
-  do {
-    // Interseccion de todos los intervalos.
-    // cerr << "por acaestoy girando" << endl;
-    MMOGraphOutputEdgeIteretor i, end;
-    bool eneaux = eneuno;
-    U.clear();
-    I = (aux_inter.size() > 0 ? aux_inter.front() : OptExp());
-    for (tie(i, end) = out_edges(v, G); i != end; ++i) {
-      if (!I) I = !oe ? getIntervalo(*i) : OptExp();
-      OptExp aux = intersectionIntervals(I, getIntervalo(*i));
-      if (aux) {
-        eneaux |= isEneUno(*i);
-        U.insert(*i);
-        I = aux;
+            else
+              ERROR("Should be a vertex");
+
+            if(mivar1.size() != 1)
+              auxnms1 = nms;
+
+            Reference ref1(get<0>(*itv1) + "_" + get<1>(*itv1), auxnms1); // Left of equality
+            Expression l(ref1);
+
+            ExpList auxnms2;
+
+            const Name nm2 = get<0>(*itv2);
+            Option<MultiInterval> omivar2 = nmvtable_[nm2];
+            MultiInterval mivar2;
+            if(omivar2)
+              mivar2 = *omivar2;
+
+            else
+              ERROR("Should be a vertex");
+
+            if(mivar2.size() != 1)
+              auxnms2 = inds1;
+
+            Reference ref2(get<0>(*itv2) + "_" + get<1>(*itv2), auxnms2);
+            Expression r(ref2);
+
+            Equality eq1(l, r);
+
+            EquationList auxeqlist1;
+            auxeqlist1.insert(auxeqlist1.begin(), eq1);
+
+            ForEq feq1(range1, auxeqlist1);
+
+            itres = res.insert(itres, feq1);
+            ++itres;
+          }
+        }
       }
     }
-    /* Si hay interseccion */
-    if (I && U.size() > 0) {
-      std::vector<SolList> sols;
-      /* Calculo soluciones: Tengo que cambiar proyecciones y demás */
-      foreach_(Edge e1, U)
-      {
-        Vertex t = getSinkVertex(e1);
-        SolList ss = VisitarVertice(t, OptEdge(getSinkEdge(e1)), proyInterInv(I.get(), e1), eneaux);
-        sols.push_back(proySolutions(ss, e1));  // Proyectar segun e1 en intervalo e indices
-      }
+  
+    IndexList ran2; 
+    IndexList::iterator itran2 = ran2.begin();
+    itnms = nms.begin();
+    OrdCT<NI1> off3 = getOff(as.aset_());
+    MultiInterval mirange2 = applyOff(as.aset_(), off3); 
+    //Range of ForEq of flow vars
+    foreach_(Interval i, mirange2.inters_()){
+      Expression elo(i.lo_());
+      Expression est(i.step_());
+      Expression ehi(i.hi_());
+      Range auxr(elo, est, ehi);
+      Expression auxer(auxr);
+      Option<Expression> r(auxer); 
 
-      SolList _final_f;
-      combine(sols, Option<Solution>(), _final_f);  // Combino las soluciones de diferentes nodos.
+      string auxvar = boost::get<Name>(*itnms);
+      Index ind(auxvar, r);
+      itran2 = ran2.insert(itran2, ind);
+      ++itran2;
+      ++itnms;
+    }
+    Indexes range2(ran2);
 
-      // Agrego (v,i) como solucion
-      SolList _final;
-      foreach_(Solution s, _final_f)
-      {
-        VarsList vv = get<1>(s);
-        if (is<Range>(I.get()))
-          vv.push_back(Vars(G[v].name.get(), OptExp(NameToRef("i")), I));
+    vector<Name> flowvars = get<1>(p);
+
+    ExpList exps;
+    ExpList::iterator itexps = exps.begin();
+
+    foreach_(AtomSet auxi, vcdomi.asets_()){
+      //OrdCT<NI1> off3 = getOff(as.aset_());
+      //MultiInterval mirange2 = applyOff(as.aset_(), off3); 
+
+      OrdCT<NI1> off4 = getOff(auxi.aset_());
+      MultiInterval auxmi2 = applyOff(auxi.aset_(), off4); 
+      Pair<ExpList, bool> tm2 = transMulti(mirange2, auxmi2, nms, true);
+      ExpList inds2 = get<0>(tm2);
+
+      Set sauxi;
+      sauxi.addAtomSet(auxi);
+      vector<Pair<Name, Name>> vars3 = getVars(flowvars, sauxi);
+      vector<Pair<Name, Name>>::iterator itv3 = vars3.begin();
+
+      for(; itv3 != vars3.end(); ++itv3){
+        Expression auxexp;
+
+        ExpList auxnms3;
+
+        const Name nm3 = get<0>(*itv3);
+        Option<MultiInterval> omivar3 = nmvtable_[nm3];
+        MultiInterval mivar3;
+        if(omivar3)
+          mivar3 = *omivar3;
+
         else
-          vv.push_back(Vars(G[v].name.get(), I, I));
-        _final.push_back(Solution(get<0>(s), vv, eneaux || get<2>(s)));
+          ERROR("Should be a vertex");
+
+        if(mivar3.size() != 1)
+           auxnms3 = inds2;
+
+        if(get<1>(tm2)){
+          RefTuple rt(get<0>(*itv3) + "_" + get<1>(*itv3), auxnms3);
+          AddAll aa(rt);
+          Expression eaa(aa);
+          auxexp = eaa; 
+        }
+
+        else{
+          Reference ref3(get<0>(*itv3) + "_" + get<1>(*itv3), auxnms3); 
+          Expression eref3(ref3);
+          auxexp = eref3;
+        }
+
+        itexps = exps.insert(itexps, auxexp); 
+        ++itexps;
       }
-
-      // Si vengo desde una arista proyecto todo
-      if (oe) _final = proySolutionsInv(_final, oe.get());
-      sfinal += _final;
-
-      /* Corto los intervalos */
-      OptExpList temp;
-      if (oe) I = proyInterInv(I.get(), oe.get());
-      foreach_(OptExp i, aux_inter) temp += cutRange(i, I);
-      aux_inter = temp;
     }
-  } while (I && U.size() > 0);
 
-  // Si queda parte del intervalo genero una solucion con el nodo solo
-  if (aux_inter.size() > 0 && oe) {
-    foreach_(OptExp au, aux_inter)
-    {
-      VarsList vv = VarsList(1, Vars(G[v].name.get(), OptExp(NameToRef("i")), au));
-      SolList _stemp;
-      _stemp.push_back(Solution(au, vv, eneuno));
-      if (oe) _stemp = proySolutionsInv(_stemp, oe.get());
-      sfinal += _stemp;
+    itexps = exps.begin();
+    Expression flowexp(*itexps);
+    ++itexps;
+    // Add all flow vars
+    for(; itexps != exps.end(); ++itexps){
+      BinOp bop(flowexp, Add, *itexps);
+      Expression ebop(bop);
+      flowexp = ebop;
+    }
+
+    Expression zero(0);
+
+    Equality eq2(flowexp, zero);
+
+    EquationList auxeqlist2;
+    auxeqlist2.insert(auxeqlist2.begin(), eq2);
+
+    ForEq feq2(range2, auxeqlist2);
+
+    itres = res.insert(itres, feq2);
+    ++itres;
+  }    
+
+  EquationSection eqres(false, res);
+  mmoclass_.set_equations(eqres);
+}
+
+OrdCT<NI1> Connectors::getOff(MultiInterval mi){
+  OrdCT<NI1> res;
+  typename std::map<Name, MultiInterval>::iterator it;
+
+  for(it = nmvtable_.begin(); it != nmvtable_.end(); ++it){
+    MultiInterval aux = mi.cap(it->second);
+    if(!aux.empty())
+      res = (it->second).minElem();
+  }
+
+  return res;
+}
+
+Pair<vector<Name>, vector<Name>> Connectors::separateVars(){
+  vector<Name> vars1;
+  vector<Name>::iterator itvars1 = vars1.begin();
+  vector<Name> vars2;
+  vector<Name>::iterator itvars2 = vars2.begin();
+
+  foreach_(Name n, mmoclass_.variables()){
+    if(!isFlowVar(n)){
+      itvars1 = vars1.insert(itvars1, n);
+      ++itvars1;
+    }
+ 
+    else{
+      itvars2 = vars2.insert(itvars2, n);
+      ++itvars2;
     }
   }
 
-  return sfinal;
-}
+  Pair<vector<Name>, vector<Name>> p(vars1, vars2);
+  return p;
+} 
 
-void Connectors::combine(std::vector<SolList> sols, Option<Solution> temp, SolList &_final)
-{
-  if (sols.empty()) {
-    _final.push_back(temp.get());
-  } else {
-    SolList sol = sols.front();
-    sols.erase(sols.begin());
-    foreach_(Solution s, sol)
-    {
-      Option<Solution> stemp = s;
-      if (temp) {
-        Solution t = temp.get();
-        OptExp iter = intersectionIntervals(get<0>(s), get<0>(t));
-        VarsList vars = get<1>(s) + get<1>(t);
-        stemp = Solution(iter, vars, get<2>(s) || get<2>(t));
+bool Connectors::isFlowVar(Name n){
+  Option<VarInfo> ovi = mmoclass_.syms_ref()[n];
+  if(ovi){
+    VarInfo vi = *ovi;
+    TypePrefixes::iterator ittp = vi.prefixes_ref().begin(); 
+    for(; ittp != vi.prefixes_ref().end(); ++ittp){
+      Option<TypePrefix> otp = *ittp;
+      if(otp){
+        TypePrefix tp = *otp;
+        if(tp == flow)
+          return true;
       }
-      combine(sols, stemp, _final);
     }
   }
-  return;
-}
 
-SolList Connectors::resolveConnect()
-{
-  SolList solutions;
-  MMOGraphVertexIteretor vi, vi_end;
-  for (tie(vi, vi_end) = vertices(G); vi != vi_end; ++vi)
-    if (G[*vi].name) solutions += VisitarVertice(*vi, OptEdge(), OptExp(), false);
-
-  // printSols(solutions);
-  return solutions;
-}
-
-/**
- ***********************************************************************
- *
- * 		FUNCIONES PARA EXPANDIR LAS SOLUCIONES
- *
- ***********************************************************************
- **
- */
-
-Name Connectors::getName(Expression name)
-{
-  if (is<UnaryOp>(name)) name = boost::get<UnaryOp>(name).exp();
-  return get<0>(boost::get<Reference>(name).ref().front());
-}
-
-bool Connectors::isArray(Expression name)
-{
-  if (is<UnaryOp>(name)) name = boost::get<UnaryOp>(name).exp();
-  Name n = get<0>(boost::get<Reference>(name).ref().front());
-  Option<VarInfo> vi = class_.syms_ref()[n];
-  if (vi) {
-    VarInfo v = vi.get();
-    if (v.indices()) return true;
-  }
   return false;
 }
 
-Expression Connectors::removeUnary(Expression name)
-{
-  if (is<UnaryOp>(name)) return boost::get<UnaryOp>(name).exp();
-  return name;
-}
+vector<Pair<Name, Name>> Connectors::getVars(vector<Name> vs, Set sauxi){
+  VertexIt vi, vi_end;
+  boost::tie(vi, vi_end) = boost::vertices(G);
+  vector<Pair<Name, Name>> vars;
+  vector<Pair<Name, Name>>::iterator itvars = vars.begin();
 
-Expression Connectors::addSufix(Expression name, Name var)
-{
-  if (var.empty()) return name;
-  UnaryOpType op = Plus;
-  bool isU = false;
-  if (is<UnaryOp>(name)) {
-    op = boost::get<UnaryOp>(name).op();
-    name = boost::get<UnaryOp>(name).exp();
-    isU = true;
-  }
-  Name n = get<0>(boost::get<Reference>(name).ref().front());
-  ExpList index = get<1>(boost::get<Reference>(name).ref().front());
-  n = n + "_" + var;
-  Expression e = RefIndex(n, index);
-  if (isU) e = UnaryOp(e, op);
-  return e;
-}
+  for(; vi != vi_end; ++vi){
+    Set v = (G[*vi]).vs_();
+    Name nm = (G[*vi]).name;
 
-Expression Connectors::putIndex(Vars v, Option<EvalExpression> eval)
-{
-  Expression name = get<0>(v);
-  OptExp i = get<1>(v);
-  return addIndex(name, i, eval);
-}
-
-Expression Connectors::addIndex(Expression name, OptExp i, Option<EvalExpression> eval)
-{
-  UnaryOpType op = Plus;
-  bool isU = false;
-  if (is<UnaryOp>(name)) {
-    op = boost::get<UnaryOp>(name).op();
-    name = boost::get<UnaryOp>(name).exp();
-    isU = true;
-  }
-  Name n = get<0>(boost::get<Reference>(name).ref().front());
-  Expression ii = i.get();
-  ExpList l;
-  l.push_back(ii);
-  Expression e = RefIndex(n, l);
-  if (eval) {
-    ExpList l;
-    l.push_back(Apply(eval.get(), ii));
-    e = RefIndex(n, l);
-  }
-  if (isU) e = UnaryOp(e, op);
-  return e;
-}
-
-Equation makeForEq(Range r, EquationList eqs)
-{
-  Index i = Index("i", OptExp(r));
-  IndexList is;
-  is.push_back(i);
-  return ForEq(Indexes(is), eqs);
-}
-
-/* esta funcion crea la igualdad a cero de los conectores sin uso
- */
-
-void Connectors::ceroEquations()
-{
-  ClassFinder re = ClassFinder();
-  foreach_(Name e, class_.variables())
-  {
-    VarInfo v = class_.syms_ref()[e].get();
-    OptTypeDefinition m = re.resolveType(class_, v.type());
-    if (m) {
-      typeDefinition td = m.get();
-      Type::Type t_final = get<1>(td);
-      if (is<Type::Class>(t_final)) {
-        MMO_Class conector = *(boost::get<Type::Class>(t_final).clase());
-
-        OptExpList list;
-        OptVertex v1 = findVertex(UnaryOp(NameToRef(e), Plus));
-        if (v1) list += G[v1.get()].free;
-        OptVertex v2 = findVertex(UnaryOp(NameToRef(e), Minus));
-        if (v2) list += G[v2.get()].free;
-
-        if (!v1 && !v2) {  // Si no estan en el grafo no se usaron en ningun connect
-          OptExp temp;
-          if (v.indices()) {
-            Expression temp1 = Range(1, v.indices().get().front());
-            temp = temp1;
-          }
-          list.push_back(temp);
-        }
-
-        foreach_(Name n, conector.variables())
-        {
-          VarInfo i = conector.syms_ref()[n].get();
-          if (i.isPrefix(flow)) {
-            foreach_(OptExp r, list)
-            {
-              ExpList indices;
-
-              if (r) indices = ExpList(1, NameToRef("i"));
-              Expression t = RefIndex(e + "_" + n, indices);
-
-              if (r && is<Range>(r.get())) {
-                Range rr = get<Range>(r.get());
-                EquationList eqs;
-                Expression cero = 0;
-                eqs.push_back(Equality(t, cero));
-                class_.addEquation(makeForEq(rr, eqs));
-              } else {
-                Expression cero = 0;
-                class_.addEquation(Equality(t, cero));
-              }
-            }
+    if(!(v.cap(sauxi)).empty()){
+      foreach_(Name n, vs){
+        if(n.length() > nm.length()){
+          if(n.substr(0, nm.length()) == nm && n.substr(nm.length(), 1) == "_"){
+            Name suffix = n.substr(nm.length() + 1);
+            Pair<Name, Name> p(nm, suffix);
+            itvars = vars.insert(itvars, p);
+            ++itvars;
           }
         }
       }
     }
   }
+
+  return vars;
 }
 
-void Connectors::createEquation(Solution sol)
-{
-  // static int i = 0;
-  ClassFinder re = ClassFinder();
-  OptExp iter = get<0>(sol);
-  VarsList vars = get<1>(sol);
-  bool multiNode = get<2>(sol);
+Pair<ExpList, bool> Connectors::transMulti(MultiInterval mi1, MultiInterval mi2, 
+                                           ExpList nms, bool forFlow){
+  ExpList res;
+  ExpList::iterator itres = res.begin();
+  bool bres = false;
 
-  Expression name = get<0>(vars.front());
-  if (is<UnaryOp>(name)) name = boost::get<UnaryOp>(name).exp();
+  ExpList::iterator itnms = nms.begin();
+  OrdCT<Interval> mi22 = mi2.inters_();
+  OrdCT<Interval>::iterator itmi2 = mi22.begin(); 
 
-  Name n = get<0>(boost::get<Reference>(name).ref().front());
-  Option<VarInfo> vi = class_.syms_ref()[n];
-  if (vi) {
-    VarInfo v = vi.get();
-    OptTypeDefinition m = re.resolveType(class_, v.type());
-    if (m) {
-      typeDefinition td = m.get();
-      Type::Type t_final = get<1>(td);
-      if (is<Type::Class>(t_final)) {
-        /* Obtengo el tipo del conector */
-        MMO_Class conector = *(boost::get<Type::Class>(t_final).clase());
-        foreach_(Name e, conector.variables())
-        {
-          VarInfo i = conector.syms_ref()[e].get();
-          if (i.isPrefix(flow))
-            createFlowEquation(iter, vars, conector, e, multiNode);
-          else
-            createEqualityEquation(iter, vars, e, multiNode);
-        }
-      } else {
-        createEqualityEquation(iter, vars, "", multiNode);
+  if(mi1.ndim_() == mi2.ndim_()){
+    foreach_(Interval i1, mi1.inters_()){
+      NI1 m3;
+      NI1 h3;
+
+      Expression x;
+      if(is<Name>(*itnms))
+        x = *itnms;
+
+      else{
+        ERROR("Should be a name");
+        ExpList auxres;
+        Pair<ExpList, bool> pres(auxres, false);
+        return pres;
       }
+
+      if(i1.size() == (*itmi2).size()){
+        m3 = (*itmi2).step_() / i1.step_();
+        h3 = (-m3) * i1.lo_() + (*itmi2).lo_();
+
+        BinOp multaux(m3, Mult, x);
+        Expression mult(multaux);
+        Expression h(h3);
+        BinOp linearaux(mult, Add, h);
+        Expression linear(linearaux);
+
+        itres = res.insert(itres, linear);
+        ++itres;
+      }
+
+      else if((*itmi2).size() == 1 && !forFlow){
+        m3 = 0;
+        h3 = (*itmi2).lo_();
+
+        Expression linear(h3);
+
+        itres = res.insert(itres, linear);
+        ++itres;
+      }
+
+      else if(i1.size() == 1 && forFlow){
+        Expression lo((*itmi2).lo_());
+        Expression st((*itmi2).step_());
+        Expression hi((*itmi2).hi_());
+        Range r(lo, st, hi);
+        Expression er(r);
+
+        itres = res.insert(itres, er);
+        ++itres;
+
+        bres = true;
+      }
+
+      else{
+        ERROR("Operation not allowed");
+        ExpList auxres;
+        Pair<ExpList, bool> pres(auxres, false);
+        return pres;
+      }
+
+      ++itmi2; 
     }
   }
+
+  Pair<ExpList, bool> pres(res, bres);
+  return pres;
 }
 
-void Connectors::createFlowEquation(OptExp iter, VarsList vars, MMO_Class &conector, Name e, bool multiNode)
-{
-  //	if (!iter) return;
-  if (!multiNode) {
-    Vars v = vars.front();
-    vars.erase(vars.begin());
-    if (is<Range>(iter.get())) {
-      EquationList eqs;
-      Range r = boost::get<Range>(iter.get());
-      Expression eq1 = get<0>(v);
-      if (isArray(get<0>(v))) eq1 = putIndex(v, Option<EvalExpression>());
-      eq1 = addSufix(eq1, e);
-      foreach_(Vars ve, vars)
-      {
-        Expression eq2 = get<0>(ve);
-        if (isArray(get<0>(ve))) eq2 = putIndex(ve, Option<EvalExpression>());
-        eq2 = addSufix(eq2, e);
-        eq1 = BinOp(eq1, Add, eq2);
-      }
-      Expression cero = 0;
-      eqs.push_back(Equality(eq1, cero));
-      class_.addEquation(makeForEq(r, eqs));
-    } else {
-      EvalExpression eval = EvalExpression(class_.syms_ref());
-      Real i = Apply(eval, iter.get());
-      EvalExpression ieval = EvalExpression(class_.syms_ref(), "i", i);
+MultiInterval Connectors::applyOff(MultiInterval mi, OrdCT<NI1> off){
+  OrdCT<Interval> res;
+  OrdCT<Interval>::iterator itres = res.begin();
 
-      EquationList eqs;
-      Expression eq1 = get<0>(v);
-      if (isArray(get<0>(v))) eq1 = putIndex(v, ieval);
-      eq1 = addSufix(eq1, e);
-      foreach_(Vars ve, vars)
-      {
-        Expression eq2 = get<0>(ve);
-        if (isArray(get<0>(ve))) eq2 = putIndex(ve, ieval);
-        eq2 = addSufix(eq2, e);
-        eq1 = BinOp(eq1, Add, eq2);
-      }
-      Expression cero = 0;
-      class_.addEquation(Equality(eq1, cero));
-    }
-  } else {
-    OptExp eq1;
-    foreach_(Vars v, vars)
-    {
-      if (is<Range>(get<2>(v).get())) {
-        Range range = boost::get<Range>(get<2>(v).get());
-        Expression t = get<0>(v);
-        t = addIndex(t, get<2>(v), Option<EvalExpression>());
-        t = Call("sum", addSufix(t, e));
-        if (!eq1)
-          eq1 = t;
-        else {
-          Expression temp = BinOp(eq1.get(), Add, t);
-          eq1 = temp;
-        }
+  OrdCT<NI1>::iterator itoff = off.begin();
 
-        // EvalExpression eval = EvalExpression(class_.syms_ref());
-        // Real start = Apply(eval,range.start_ref());
-        // Real end = Apply(eval,range.end_ref());
-        // for (Real i = start; i <= end;i++) {
-        //	EvalExpression ieval = EvalExpression(class_.syms_ref(),"i",i);
-        //	Expression t = get<0>(v);
-        //	if (isArray(get<0>(v)))
-        //		t = putIndex(v,ieval);
-        //	t = addSufix(removeUnary(t),e);
-        //	if (!eq1) eq1 = t;
-        //	else {
-        //		Expression temp = BinOp(eq1.get(),Add,t);
-        //		eq1 = temp;
-        //	}
+  if(mi.ndim_() == (int) off.size()){
+    foreach_(Interval i, mi.inters_()){
+      Interval iaux(i.lo_() - (*itoff) + 1, i.step_(), i.hi_() - (*itoff) + 1);
 
-        //}
-      } else {
-        EvalExpression eval = EvalExpression(class_.syms_ref());
-        Real i = Apply(eval, get<2>(v).get());
-        EvalExpression ieval = EvalExpression(class_.syms_ref(), "i", i);
-        Expression t = get<0>(v);
-        if (isArray(get<0>(v))) t = putIndex(v, ieval);
-        t = addSufix(removeUnary(t), e);
-        if (!eq1)
-          eq1 = t;
-        else {
-          Expression temp = BinOp(eq1.get(), Add, t);
-          eq1 = temp;
-        }
-      }
-    }
-    Expression cero = 0;
-    class_.addEquation(Equality(eq1.get(), cero));
-  }
-}
-
-void Connectors::createEqualityEquation(OptExp iter, VarsList vars, Name e, bool multiNode)
-{
-  //	if (!iter) return;
-  if (!multiNode) {
-    Vars v = vars.front();
-    vars.erase(vars.begin());
-    if (is<Range>(iter.get())) {
-      EquationList eqs;
-      Range r = boost::get<Range>(iter.get());
-      Expression eq1 = get<0>(v);
-      if (isArray(get<0>(v))) eq1 = putIndex(v, Option<EvalExpression>());
-      eq1 = addSufix(removeUnary(eq1), e);
-      foreach_(Vars ve, vars)
-      {
-        Expression eq2 = get<0>(ve);
-        if (isArray(get<0>(ve))) eq2 = putIndex(ve, Option<EvalExpression>());
-        eq2 = addSufix(removeUnary(eq2), e);
-        eqs.push_back(Equality(eq1, eq2));
-      }
-      class_.addEquation(makeForEq(r, eqs));
-    } else {
-      EvalExpression eval = EvalExpression(class_.syms_ref());
-      Real i = Apply(eval, iter.get());
-      EvalExpression ieval = EvalExpression(class_.syms_ref(), "i", i);
-      EquationList eqs;
-      Expression eq1 = get<0>(v);
-      if (isArray(get<0>(v))) eq1 = putIndex(v, ieval);
-      eq1 = addSufix(removeUnary(eq1), e);
-      foreach_(Vars ve, vars)
-      {
-        Expression eq2 = get<0>(ve);
-        if (isArray(get<0>(ve))) eq2 = putIndex(ve, ieval);
-        eq2 = addSufix(removeUnary(eq2), e);
-        class_.addEquation(Equality(eq1, eq2));
-      }
-    }
-  } else {
-    OptExp eq1;
-    foreach_(Vars v, vars)
-    {
-      if (is<Range>(get<2>(v).get())) {
-        Range range = boost::get<Range>(get<2>(v).get());
-        EvalExpression eval = EvalExpression(class_.syms_ref());
-        Real start = Apply(eval, range.start_ref());
-        Real end = Apply(eval, range.end_ref());
-        Expression istart = start + 1;
-        Expression iend = end;
-        EvalExpression ieval = EvalExpression(class_.syms_ref(), "i", start);
-        if (!eq1) {
-          EquationList eqs;
-          Range r2 = Range(istart, iend);
-          eq1 = get<0>(v);
-          if (isArray(get<0>(v))) eq1 = putIndex(v, ieval);
-          eq1 = addSufix(removeUnary(eq1.get()), e);
-
-          Expression eq2 = get<0>(v);
-          if (isArray(get<0>(v))) eq2 = putIndex(v, Option<EvalExpression>());
-          eq2 = addSufix(removeUnary(eq2), e);
-          eqs.push_back(Equality(eq1.get(), eq2));
-          class_.addEquation(makeForEq(r2, eqs));
-        } else {
-          EquationList eqs;
-          Expression eq2 = get<0>(v);
-          if (isArray(get<0>(v))) eq2 = putIndex(v, Option<EvalExpression>());
-          eq2 = addSufix(removeUnary(eq2), e);
-          eqs.push_back(Equality(eq1.get(), eq2));
-          class_.addEquation(makeForEq(range, eqs));
-        }
-        /*for (Real i = start; i <= end;i++) {
-            EvalExpression ieval = EvalExpression(class_.syms_ref(),"i",i);
-            Expression t = get<0>(v);
-            if (isArray(get<0>(v)))
-                t = putIndex(v,ieval);
-            t = addSufix(removeUnary(t),e);
-            if (!eq1) eq1 = t;
-            else
-                class_.addEquation(Equality(eq1.get(),t));
-        }*/
-      } else {
-        EvalExpression eval = EvalExpression(class_.syms_ref());
-        Real i = Apply(eval, get<2>(v).get());
-        EvalExpression ieval = EvalExpression(class_.syms_ref(), "i", i);
-        Expression t = get<0>(v);
-        if (isArray(get<0>(v))) t = putIndex(v, ieval);
-        t = addSufix(removeUnary(t), e);
-        if (!eq1)
-          eq1 = t;
-        else
-          class_.addEquation(Equality(eq1.get(), t));
-      }
+      itres = res.insert(itres, iaux);
+      ++itres;
+ 
+      ++itoff;
     }
   }
+
+  MultiInterval mires(res);
+  return mires;
 }
 
 /*
-template<typename Set> std::set<Set> powerset(const Set& s, size_t n)
-{
-    typedef typename Set::const_iterator SetCIt;
-    typedef typename std::set<Set>::const_iterator PowerSetCIt;
-    std::set<Set> res;
-    if(n > 0) {
-        std::set<Set> ps = powerset(s, n-1);
-        for(PowerSetCIt ss = ps.begin(); ss != ps.end(); ss++)
-            for(SetCIt el = s.begin(); el != s.end(); el++) {
-                Set subset(*ss);
-                subset.insert(*el);
-                res.insert(subset);
-            }
-        res.insert(ps.begin(), ps.end());
-    } else
-        res.insert(Set());
-    return res;
-}
-template<typename Set> std::set<Set> powerset(const Set& s)
-{
-    return powerset(s, s.size());
-}
+ExpList Connectors::lmToExpList(LMap lm, ExpList nms){
+  ExpList res;
+  ExpList::iterator itres = res.begin();
 
-bool setSort (EdgeSet i,EdgeSet j) { return (i.size() > j.size()); }
-*/
+  OrdCT<NI2> o = lm.off_();
+  OrdCT<NI2>::iterator ito = o.begin(); 
+
+  ExpList::iterator itnms = nms.begin();
+
+  foreach_(NI2 gi, lm.gain_()){
+    Expression m(gi);
+
+    Expression x;
+    if(is<Name>(*itnms)) 
+      x = *itnms;
+
+    else{
+      ERROR("Should be a name");
+      ExpList auxres;
+      return res;
+    }
+
+    BinOp multaux(m, Mult, x);
+    Expression mult(multaux);
+    Expression h(*ito);
+    BinOp linearaux(mult, Add, h);
+    Expression linear(linearaux);
+
+    itres = res.insert(itres, linear);
+    ++itres;
+
+    ++ito;
+    ++itnms;
+  }
+
+  return res;
+}*/
+

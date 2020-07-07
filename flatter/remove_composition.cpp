@@ -77,7 +77,7 @@ void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp, VarIn
       }
 
       VarInfo v = VarInfo(viDown.get().prefixes(), tDown, viDown.get().comment(), opt_mod, ind, false);
-      v.removePrefix(flow);
+      //v.removePrefix(flow);
       v.removePrefix(output);
       v.removePrefix(input);
       up.syms_ref().insert(newName, v);

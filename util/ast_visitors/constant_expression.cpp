@@ -26,6 +26,8 @@ bool ConstantExpression::operator()(Integer v) const { return true; }
 
 bool ConstantExpression::operator()(Boolean v) const { return true; }
 
+bool ConstantExpression::operator()(AddAll v) const {return false;}
+
 bool ConstantExpression::operator()(String v) const { return true; }
 
 bool ConstantExpression::operator()(Name v) const { return true; }

@@ -77,6 +77,8 @@ struct VarSymbolTable : public SymbolTable<Name, VarInfo> {
     v.builtin_ref() = true;
     insert("time", v);
   }
+
+  friend std::ostream &operator<<(std::ostream &out, const VarSymbolTable &);
 };
 
 struct TypeSymbolTable : public SymbolTable<Name, Type::Type> {

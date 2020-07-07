@@ -57,6 +57,17 @@ Argument add_each_final_rep(bool each, bool final, boost::variant<ElRepl, ElMod>
   return e;
 }
 
+Enum retEnum(Name nm, Comment co){
+  Enum e;
+  e.set_name(nm);
+  e.set_comment(co);
+  return e;
+}
+
+Option<EnumSpec> retEnumSpec(EnumList lst){
+ return Option<EnumSpec>(lst);
+}
+
 template <typename T>
 T add_comment(T d, Comment c)
 {
@@ -179,11 +190,13 @@ ModificationRule<Iterator>::ModificationRule(Iterator &it)
   class_prefixes = (-PARTIAL) >> (CLASS | MODEL | ((-OPERATOR) >> RECORD) | BLOCK | ((-EXPANDABLE) >> CONNECTOR) | TYPE | PACKAGE |
                                   (-(PURE | IMPURE)) >> (-OPERATOR) >> FUNCTION | OPERATOR);
 
-  enum_list = enumeration_literal % COMA;
+  enum_list = (enumeration_literal [_val = bind(&consume_one<Enum>, _1)] >>  
+               ((COMA > enum_list) [_val = bind(&append_list<Enum>, _1, _val)])) |
+              enumeration_literal [_val = bind(&consume_one<Enum>, _1)];
 
-  enum_spec = enum_list | COLON;
+  enum_spec = enum_list[_val = construct<EnumSpec>(_1)] | COLON;
 
-  enumeration_literal = expression.ident > comment;
+  enumeration_literal = (expression.ident > comment) [_val = bind(&retEnum, _1, _2)];
 
   class_modification = OPAREN > (-(argument % COMA)) > CPAREN;
 

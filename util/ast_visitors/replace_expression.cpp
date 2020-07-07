@@ -33,6 +33,12 @@ Expression ReplaceExpression::operator()(Boolean v) const
   if (look == Expression(v)) return rep;
   return v;
 }
+Expression ReplaceExpression::operator()(AddAll v) const
+{
+  // TODO
+  if (look == Expression(v)) return rep;
+  return v;
+}
 Expression ReplaceExpression::operator()(String v) const
 {
   if (look == Expression(v)) return rep;

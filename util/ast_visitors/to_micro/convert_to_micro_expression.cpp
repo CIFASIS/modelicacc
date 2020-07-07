@@ -33,6 +33,9 @@ Expression ConvertToMicroExpression::operator()(Boolean v) const
   if (v == TRUE) return 1.0;
   return 0.0;
 }
+Expression ConvertToMicroExpression::operator()(AddAll v) const{
+  return v;
+}
 Expression ConvertToMicroExpression::operator()(String v) const
 {
   WARNING("uModelica does not supports strings\n");

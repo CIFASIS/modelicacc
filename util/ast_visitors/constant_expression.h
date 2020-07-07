@@ -31,6 +31,7 @@ class ConstantExpression : public boost::static_visitor<bool> {
   ConstantExpression();
   bool operator()(Integer v) const;
   bool operator()(Boolean v) const;
+  bool operator()(AddAll v) const;
   bool operator()(String v) const;
   bool operator()(Name v) const;
   bool operator()(Real v) const;

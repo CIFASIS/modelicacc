@@ -29,6 +29,25 @@ namespace AST {
 const char* BinOpTypeName[] = {" or ", " and ", "<", "<=", ">", ">=", "<>", "==", "+", ".+", "-", ".-", "/", "./", "*", ".*", "^", ".^"};
 const char* UnaryOpTypeName[] = {" not ", "-", "+"};
 
+AddAll::AddAll(RefTuple a) : arr_(a){}
+
+member_imp(AddAll, RefTuple, arr);
+
+bool AddAll::operator==(const AddAll &other) const {return (other.arr() == arr());}
+std::ostream& operator<<(std::ostream& out, const AddAll &aa){
+  RefTuple rt = aa.arr();
+  ExpList inds = get<1>(rt);
+
+  out << "sum(" << get<0>(rt) << "[";
+
+  ExpList::iterator iti = inds.begin();
+  for(; std::next(iti) != inds.end(); ++iti)
+    out << *iti << ", ";
+
+  out << *iti << "])";
+  return out;
+}
+
 // String
 String::String(std::string s) : val_(s) {}
 String::String() : val_("") {}
@@ -168,7 +187,8 @@ std::ostream& operator<<(std::ostream& out, const UnaryOp& n)  // output
   return out;
 }
 bool UnaryOp::operator==(const UnaryOp& other) const { return other.exp() == exp() && other.op() == op(); }
-member_imp(UnaryOp, Expression, exp) member_imp(UnaryOp, UnaryOpType, op)
+member_imp(UnaryOp, Expression, exp); 
+member_imp(UnaryOp, UnaryOpType, op);
 
     ForExp::ForExp(Expression e, Indexes ind)
     : indices_(ind), exp_(e){};

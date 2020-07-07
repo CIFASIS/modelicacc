@@ -6,12 +6,14 @@ SRC_FLATTER := flatter/main.cpp \
 	util/debug.cpp  \
 	flatter/class_finder.cpp \
 	flatter/remove_composition.cpp \
-	util/ast_visitors/dot_expression.cpp \
-	util/ast_visitors/mark_connector.cpp \
-	util/ast_visitors/eval_expression.cpp \
-	util/ast_visitors/partial_eval_expression.cpp \
 	util/ast_visitors/constant_expression.cpp \
+    util/ast_visitors/contains_expression.cpp \
+	util/ast_visitors/dot_expression.cpp \
+	util/ast_visitors/eval_expression.cpp \
+	util/ast_visitors/mark_connector.cpp \
+	util/ast_visitors/partial_eval_expression.cpp \
 	util/ast_visitors/replace_expression.cpp \
+    util/graph/graph_definition.cpp \
 	flatter/flatter.cpp \
 	flatter/connectors.cpp \
 	mmo/mmo_tree.cpp

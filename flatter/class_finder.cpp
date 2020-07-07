@@ -63,6 +63,7 @@ void ClassFinder::expand(MMO_Class &up, MMO_Class &down)
         if (v.indices()) indexes += v.indices().get();
         if (indexes.size() > 0) v.set_indices(indexes);
         v.set_prefixes(v.prefixes() + get<0>(td));
+        //cout << "v2: " << v << "\n";
 
         if (is<Type::String>(t_final)) v.set_type("String");
         if (is<Type::Integer>(t_final)) v.set_type("Integer");
@@ -364,6 +365,7 @@ void ClassFinder::applyArgument(MMO_Class &contex, MMO_Class &target, Argument m
       v.set_indices(OptIndices);
       v.set_prefixes(preType);
       v.set_type(comp.type());
+      //cout << "v1: " << v << "\n";
       target.syms_ref().insert(comp.declaration().name(), v);
 
     } else

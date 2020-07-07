@@ -1,4 +1,4 @@
-CXXFLAGS = -std=c++14 -I. -Wall -Werror -Wno-reorder -O3 
+CXXFLAGS = -std=c++14 -I. -Wall -Werror -Wno-reorder -O3 -ggdb 
 DEPDIR := .
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 LIBMODELICA = lib/libmodelica.a
@@ -19,15 +19,18 @@ SRC_COMMON := \
 		parser/equation.cpp \
 		parser/statement.cpp \
 		parser/class.cpp \
-		parser/parser.cpp
+		parser/parser.cpp \
 
 all: $(LIBMODELICA) doc
 
-include antialias/Makefile.include
+#include causalize/Makefile.include
+include test/util/Makefile.include
+include parser/Makefile.include
+include test/parse/Makefile.include
 include mmo/Makefile.include
 include flatter/Makefile.include
-include causalize/Makefile.include
-include test/causalize/Makefile.include
+#include antialias/Makefile.include
+#include test/causalize/Makefile.include
 
 OBJS_COMMON = $(SRC_COMMON:.cpp=.o)
 
@@ -47,4 +50,6 @@ doc: Doxyfile
 	doxygen
 
 clean:
-	$(RM) -rf $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(LIBMODELICA) doc
+	$(RM) -rf $(OBJS_COMMON) $(OBJS_PARSER) $(OBJS_ANTIALIAS) \
+    $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(LIBMODELICA) doc; \
+    find . -name "*.d" -delete
