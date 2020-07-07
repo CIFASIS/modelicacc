@@ -71,6 +71,7 @@ class Connectors{
   vector<Pair<Name, Name>> getVars(vector<Name> vs, Set sauxi);
   Pair<ExpList, bool> transMulti(MultiInterval mi1, MultiInterval mi2, ExpList nms, bool forFlow);
   MultiInterval applyOff(MultiInterval mi, OrdCT<NI1> off);
+  EquationList simplifyCode(EquationList &eql);
   //ExpList lmToExpList(LMap lm, ExpList vs);
 
   private:
@@ -81,6 +82,9 @@ class Connectors{
   member_(MMO_Class, mmoclass);
   member_(VertexNameTable, vnmtable);
   member_(NameVertexTable, nmvtable);
+  //member_(EquationList, oldeqs);
+  static EquationList oldeqs;
+  static EquationList::iterator itold;
 };
 
 #endif
