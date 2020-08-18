@@ -239,7 +239,6 @@ ostream &operator<<(ostream &out, PWLMap &pw){
 
 PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2){
   OrdCT<NI2> g1 = lm1.gain_();
-  OrdCT<NI2>::iterator itg1 = g1.begin();
   OrdCT<NI2> o1 = lm1.off_();
   OrdCT<NI2>::iterator ito1 = o1.begin();
   OrdCT<NI2> g2 = lm2.gain_();
@@ -252,9 +251,7 @@ PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2){
   AtomSet asAux = dom;
   LMap lmAux = lm1;
   OrdCT<NI2> resg = g1;
-  OrdCT<NI2>::iterator itresg = resg.begin();
   OrdCT<NI2> reso = o1;
-  OrdCT<NI2>::iterator itreso = reso.begin();
   int count = 1;
 
   OrdCT<Set> domRes;
@@ -426,7 +423,6 @@ PWLMap minMap(PWLMap &pw1, PWLMap &pw2){
   OrdCT<LMap> lm1 = pw1.lmap_();
   OrdCT<LMap>::iterator itl1 = lm1.begin();
   OrdCT<LMap> lm2 = pw2.lmap_();
-  OrdCT<LMap>::iterator itl2 = lm2.begin();
 
   if(!pw1.empty() && !pw2.empty()){
     BOOST_FOREACH(Set s1i, pw1.dom_()){
