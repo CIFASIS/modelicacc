@@ -109,7 +109,7 @@ void ClassFinder::ExpandAll(MMO_Class &up)
 }
 
 #define newMMO(NEW, OLD)              \
-  MMO_Class *(NEW) = new MMO_Class(); \
+  MMO_Class *NEW = new MMO_Class(); \
   *(NEW) = (OLD);
 
 Option<typeContexTuple> ClassFinder::findTypeByName(MMO_Class &c, Name n)
