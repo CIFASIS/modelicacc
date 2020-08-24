@@ -1,0 +1,66 @@
+Installation
+------------
+
+These are generic installation instructions.
+
+Dependences
+-----------
+
+In order to be able to install and compile ModelicaCC, 
+the following  dependencies must be installed: 
+
+    * autoconf
+    * g++
+    * libginac-dev 
+    * boost (>= 1.67)
+    * doxygen
+    * make     
+
+Basic Installation
+------------------
+
+The simplest way to compile this package is:
+
+  1. `cd' to the directory containing the package's source code and type
+     `autoconf' to generate the configuration scripts.
+  
+  2. Type `./configure' to run the configuration script.
+  
+  3. Type `make' to compile all the binaries. The different tools are located 
+     in the bin folder. 
+
+  4. You can remove the program binaries and object files from the
+     source code directory by typing `make clean'.  
+Installation
+------------
+
+These are generic installation instructions.
+
+Dependences
+-----------
+
+In order to be able to install and compile ModelicaCC, 
+the following  dependencies must be installed: 
+
+    * autoconf
+    * g++
+    * libginac-dev 
+    * boost (>= 1.67)
+    * doxygen
+    * make     
+
+Basic Installation
+------------------
+
+The simplest way to compile this package is:
+
+  1. `cd' to the directory containing the package's source code and type
+     `autoconf' to generate the configuration scripts.
+  
+  2. Type `./configure' to run the configuration script.
+  
+  3. Type `make' to compile all the binaries. The different tools are located 
+     in the bin folder. 
+
+  4. You can remove the program binaries and object files from the
+     source code directory by typing `make clean'.  
