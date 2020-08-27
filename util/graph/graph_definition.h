@@ -253,90 +253,6 @@ size_t hash_value(IntervalImp1<CT> inter){
   return inter.hash();
 }
 
-template<template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT,
-         typename IntervalImp, typename NumImp>
-struct IntervalAbs{
-  IntervalAbs(){}; 
-  IntervalAbs(IntervalImp inter){
-    i = inter;
-  }
-  IntervalAbs(NumImp lo, NumImp step, NumImp hi){
-    i = IntervalImp(lo, step, hi);
-  }
-  IntervalAbs(bool emp){
-    i = IntervalImp(emp);
-  }
-  
-  NumImp lo_(){
-    return i.lo_();
-  }
-
-  NumImp step_(){
-    return i.step_();
-  }
- 
-  NumImp hi_(){
-    return i.hi_();
-  }
-
-  bool empty_(){
-    return i.empty_();
-  }
-
-  bool isIn(NumImp x){
-    return i.isIn(x);
-  }
-
-  IntervalAbs cap(IntervalAbs i2){
-    return IntervalAbs(i.cap(i2.i));
-  }
-
-  CT<IntervalAbs> diff(IntervalAbs i2){
-    CT<IntervalAbs> res;
-    CT<IntervalImp> diffres = i.diff(i2.i);
-
-    for(IntervalImp inter : diffres){
-      IntervalAbs aux(inter);
-      res.insert(aux);
-    }
-
-    return res;
-  }
-
-  NumImp minElem(){
-    return i.minElem();
-  }
-
-  NumImp size(){
-    return i.size();
-  }
-
-  bool operator==(const IntervalAbs &other) const{
-    return i == other.i;
-  }
-  
-  bool operator!=(const IntervalAbs &other) const{
-    return i != other.i;
-  }
-
-  size_t hash(){
-    return i.lo_(); 
-  }
- 
-  private:
-  IntervalImp i; 
-};
-
-template<template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT,
-         typename IntervalImp, typename NumImp>
-inline size_t hash_value(IntervalAbs<CT, IntervalImp, NumImp> inter){
-  return inter.hash();
-}
-
 // MultiIntervals ---------------------------------------------------------------------------------
 
 template<template<typename T, typename = allocator<T>> class CT1,
@@ -618,106 +534,6 @@ size_t hash_value(MultiInterImp1<CT1, CT2, IntervalImp, NumImp> mi){
   return mi.hash();
 }
 
-template<template<typename T, typename = allocator<T>> class CT1,
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-          typename MultiInterImp, typename IntervalImp, typename NumImp>
-struct MultiInterAbs{
-  MultiInterAbs(){
-    CT1<IntervalImp> aux;
-    multiInterImp = aux;
-  }
-  MultiInterAbs(MultiInterImp mi){
-    multiInterImp = mi;
-  }
-  MultiInterAbs(CT1<IntervalImp> ints){
-    multiInterImp = MultiInterImp(ints);
-  }
-
-  CT1<IntervalImp> inters_(){
-    return multiInterImp.inters_();
-  }
-
-  int ndim_(){
-    return multiInterImp.ndim_();
-  }
-
-  bool empty(){
-    return multiInterImp.empty();
-  }
-
-  bool isIn(CT1<NumImp> elem){
-    return multiInterImp.isIn(elem);
-  }
-
-  void addInter(IntervalImp i){
-    multiInterImp.addInter(i);
-  }
-
-  MultiInterAbs cap(MultiInterAbs &mi2){
-    return MultiInterAbs(multiInterImp.cap(mi2.multiInterImp));
-  }
-
-  CT2<MultiInterAbs> diff(MultiInterAbs &mi2){
-    CT2<MultiInterImp> diffRes = multiInterImp.diff(mi2.multiInterImp);
-
-    CT2<MultiInterAbs> res;
-
-    BOOST_FOREACH(MultiInterImp mi, diffRes){
-      MultiInterAbs aux(mi);
-      res.insert(aux);
-    }
-
-    return res;
-  }
-
-  MultiInterAbs crossProd(MultiInterAbs &mi2){
-    return MultiInterAbs(multiInterImp.crossProd(mi2.multiInterImp));
-  }
-
-  CT1<NumImp> minElem(){
-    return multiInterImp.minElem();
-  }
-
-  MultiInterAbs replace(IntervalImp &i, int dim){
-    return MultiInterAbs(multiInterImp.replace(i, dim));
-  }
-
-  int size(){
-    return multiInterImp.size();
-  }
-
-  bool operator<(const MultiInterAbs &other) const{
-    return multiInterImp < other.multiInterImp;
-  }
-
-  bool operator==(const MultiInterAbs &other) const{
-    return multiInterImp == other.multiInterImp;
-  }
-
-  bool operator!=(const MultiInterAbs &other) const{
-    return multiInterImp != other.multiInterImp;
-  }
-
-  size_t hash(){
-    return multiInterImp.hash();
-  }
-
-  private:
-  MultiInterImp multiInterImp;
-  int ndim;
-};
-
-template<template<typename T, typename = allocator<T>> class CT1,
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-         typename MultiInterImp, typename IntervalImp, typename NumImp>
-size_t hash_value(MultiInterAbs<CT1, CT2, MultiInterImp, IntervalImp, NumImp> mi){
-  return mi.hash();
-}
-
 // Atomic sets ------------------------------------------------------------------------------------
 
 template<template<typename T, typename = allocator<T>> class CT1, 
@@ -812,97 +628,6 @@ template<template<typename T, typename = allocator<T>> class CT1,
                   typename Alloc = std::allocator<Value>> class CT2,
          typename MultiInterImp, typename IntervalImp, typename NumImp>
 size_t hash_value(AtomSetImp1<CT1, CT2, MultiInterImp, IntervalImp, NumImp> as){
-  return as.hash();
-}
-
-template<template<typename T, typename = allocator<T>> class CT1,
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-          typename ASetImp, typename MultiInterImp, typename IntervalImp, typename NumImp>
-struct AtomSetAbs{
-  AtomSetAbs(){
-    ASetImp aux;
-    as = aux;
-  };
-  AtomSetAbs(ASetImp ass){
-    as = ass;
-  }
-  AtomSetAbs(MultiInterImp mi){
-    ASetImp aux(mi);
-    as = aux;
-  }
-
-  MultiInterImp aset_(){
-    return as.aset_();
-  }
-
-  int ndim_(){
-    return as.ndim_();
-  }
-
-  bool empty(){
-    return as.empty();  
-  }
-
-  bool isIn(CT1<NumImp> elem){
-    return as.isIn(elem);
-  }
-
-  AtomSetAbs cap(AtomSetAbs &aset2){
-    AtomSetAbs aux(as.cap(aset2.as));
-    return aux;
-  }
-
-  CT2<AtomSetAbs> diff(AtomSetAbs &aset2){
-    CT2<ASetImp> diffRes = as.diff(aset2.as);
-
-    CT2<AtomSetAbs> res;
-    typename CT2<AtomSetAbs>::iterator itRes = res.begin();
-
-    BOOST_FOREACH(ASetImp as, diffRes){
-      itRes = res.insert(itRes, AtomSetAbs(as));
-      ++itRes;
-    }
-
-    return res;
-  }
-
-  AtomSetAbs crossProd(AtomSetAbs &aset2){
-    return AtomSetAbs(as.crossProd(aset2.as));
-  }
- 
-  CT1<NumImp> minElem(){
-    return as.minElem();
-  }
-
-  AtomSetAbs replace(IntervalImp &i, int dim){
-    return AtomSetAbs(as.replace(i, dim));
-  }
-
-  bool operator==(const AtomSetAbs &other) const{
-    return as == other.as;
-  }
-
-  bool operator!=(const AtomSetAbs &other) const{
-    return as != other.as;
-  }
-
-  size_t hash(){
-    return as.hash();
-  }
-
-  private:
-  ASetImp as;
-  int ndim;
-};
-
-template<template<typename T, typename = allocator<T>> class CT1,
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-         typename ASetImp, typename MultiInterImp, typename IntervalImp, typename NumImp>
-size_t hash_value(AtomSetAbs<CT1, CT2, ASetImp, MultiInterImp, IntervalImp, NumImp> as){
   return as.hash();
 }
 
@@ -1086,45 +811,20 @@ struct SetImp1{
   }
 
   CT1<NumImp> minElem(){
-    CT2<CT1<NumImp>> mins;
-    typename CT2<CT1<NumImp>>::iterator itmins = mins.begin();
-
-    // Get each min element of each atomic set
-    BOOST_FOREACH(ASetImp as1, asets){
-      itmins = mins.insert(itmins, as1.minElem());
-      ++itmins;
-    }
-
-    bool hasValue = false;
     CT1<NumImp> res;
-  
-    itmins = mins.begin();
-    BOOST_FOREACH(CT1<NumImp> n2, mins){
-      // Set initial minimum
-      if(!hasValue && !n2.empty()){
-        res = n2;
-        hasValue = true;
-      }
+ 
+    if(empty())
+      return res;
 
-      // Check if there is another element lower than our current min
-      if(hasValue && !n2.empty()){
-        typename CT1<NumImp>::iterator it2 = n2.begin();
+    ASetImp min = *(asets.begin()); 
 
-        // Find the first component in which they differ. It determines
-        // which one is lower.
-        BOOST_FOREACH(NumImp n1, res){
-          if(*it2 < n1)
-            res = n2;
-
-          else if(n1 < *it2)
-            break;
-
-          ++it2;
-        }
-      }      
+    BOOST_FOREACH(ASetImp as1, asets){
+      //CT1<NumImp> min1 = as1.aset_().minElem();
+      if(as1.aset_().minElem() < min.minElem())  
+        min = as1; 
     }
 
-    return res;
+    return min.minElem();
   }
 
   bool operator==(const SetImp1 &other) const{
@@ -1146,94 +846,6 @@ template<template<typename T, typename = allocator<T>> class CT1,
                   typename Alloc = std::allocator<Value>> class CT2,
          typename ASetImp, typename NumImp>
 size_t hash_value(SetImp1<CT1, CT2, ASetImp, NumImp> s){
-  return s.hash();
-}
-
-template<template<typename T, typename = allocator<T>> class CT1,
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-          typename SetImp, typename ASetImp, typename NumImp>
-struct SetAbs{
-  SetAbs(){
-    SetImp aux;
-    set = aux;
-  }
-  SetAbs(SetImp ss){
-    set = ss;
-  }
-  SetAbs(CT2<ASetImp> ass){
-    SetImp aux(ass);
-    set = aux;
-  }
-
-  bool empty(){
-    return set.empty(); 
-  }
- 
-  bool isIn(CT1<NumImp> elem){
-    return set.isIn(elem);
-  }
-
-  CT2<ASetImp> asets_(){
-    return set.asets_();
-  }
-
-  int ndim_(){
-    return set.ndim_();
-  }
-
-  void addAtomSet(ASetImp &aset2){
-    set.addAtomSet(aset2); 
-  }
-
-  void addAtomSets(CT2<ASetImp> &sets2){
-    set.addAtomSets(sets2);
-  }
-
-  SetAbs cap(SetAbs &set2){
-    return SetAbs(set.cap(set2.set));
-  }
-
-  SetAbs diff(SetAbs &set2){
-    return SetAbs(set.diff(set2.set)); 
-  }
-
-  SetAbs cup(SetAbs &set2){
-    return SetAbs(set.cup(set2.set));
-  }
-
-  SetAbs crossProd(SetAbs &set2){
-    return SetAbs(set.crossProd(set2.set));
-  }
-
-  CT1<NumImp> minElem(){
-    return set.minElem();
-  }
-
-  bool operator==(const SetAbs &other) const{
-    return set == other.set;
-  }
-
-  bool operator!=(const SetAbs &other) const{
-    return set != other.set;
-  }
-
-  size_t hash(){
-    return set.hash();
-  }
-
-  private:
-  SetImp set;
-  int ndim;
-};
-
-template<template<typename T, typename = allocator<T>> class CT1,
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-          typename SetImp, typename ASetImp, typename NumImp>
-size_t hash_value(SetAbs<CT1, CT2, SetImp, ASetImp, NumImp> s){
   return s.hash();
 }
 
@@ -1410,63 +1022,6 @@ struct LMapImp1{
   }
 };
 
-template<template<typename T, typename = std::allocator<T>> class CT,
-         typename LMapImp, typename NumImp>
-struct LMapAbs{
-  typedef CT<NumImp> CTNum;
-  typedef typename CTNum::iterator CTNumIt;
-
-  LMapAbs(){
-    LMapImp aux;
-    lm = aux;
-  }
-  LMapAbs(LMapImp lmap){
-    lm = lmap;
-  }
-  LMapAbs(CTNum g, CTNum o){
-    lm = LMapImp(g, o);
-  }
-  LMapAbs(int dim){
-    lm = LMapImp(dim); 
-  }
-  
-  CTNum gain_(){
-    return lm.gain_();
-  }
-
-  CTNum off_(){
-    return lm.off_();
-  }
-
-  int ndim_(){
-    return lm.ndim_();
-  }
-
-  bool empty(){
-    return lm.empty();
-  }
-
-  void addGO(NumImp g, NumImp o){
-    lm.addGO(g, o);
-  }
-
-  LMapAbs compose(LMapAbs &lm2){
-    return LMapAbs(lm.compose(lm2.lm));
-  }
-
-  LMapAbs invLMap(){
-    return LMapAbs(lm.invLMap());
-  } 
-
-  bool operator==(const LMapAbs &other) const{
-    return lm == other.lm;
-  }
-
-  private:
-  LMapImp lm;
-  int ndim;
-};
-
 // Piecewise atomic linear maps -----------------------------------------------------------------
 
 template<template<typename T, typename = allocator<T>> class CT,
@@ -1620,49 +1175,6 @@ struct PWAtomLMapImp1{
   bool operator==(const PWAtomLMapImp1 &other) const{
     return dom == other.dom && lmap == other.lmap;
   }
-};
-
-template<typename PWAtomLMapImp, typename LMapImp, typename ASetImp>
-struct PWAtomLMapAbs{
-  PWAtomLMapAbs(){}
-  PWAtomLMapAbs(ASetImp d, LMapImp l){
-    pw = PWAtomLMapImp(d, l);
-  }
-  PWAtomLMapAbs(PWAtomLMapImp &pwatom){
-    pw = pwatom;
-  }
-
-  ASetImp dom_(){
-    return pw.dom_();
-  }
-
-  LMapImp lmap_(){
-    return pw.lmap_();
-  }
-
-  bool empty(){
-    return pw.empty();
-  }
-
-  ASetImp image(ASetImp &s){
-   return pw.image(s);
-  }
-
-  ASetImp preImage(ASetImp &s){
-    return pw.preImage(s);
-  }
-
-  PWAtomLMapAbs minAtomPW(PWAtomLMapAbs &pw2){
-    PWAtomLMapImp aux = pw.minAtomPW(pw2.pw);
-    return PWAtomLMapAbs(aux);
-  }
-
-  bool operator==(const PWAtomLMapAbs &other){
-    return pw == other.pw;
-  }
-
-  private:
-  PWAtomLMapImp pw; 
 };
 
 // Piecewise linear maps ------------------------------------------------------------------------
@@ -1992,86 +1504,7 @@ struct PWLMapImp1{
   }
 };
 
-template<template<typename T, class = allocator<T>> class CT,
-         typename PWLMapImp, typename LMapImp, typename SetImp>
-struct PWLMapAbs{
-  typedef CT<SetImp> CTSet;
-  typedef CT<LMapImp> CTLMap;
-
-  PWLMapAbs(){}
-  PWLMapAbs(CTSet d, CTLMap l){
-    pw = PWLMapImp(d, l);
-  }
-  PWLMapAbs(SetImp &s){
-    pw = PWLMapImp(s);
-  }
-  PWLMapAbs(PWLMapImp &pwimp){
-    pw = pwimp;
-  }
-
-  CTSet dom_(){
-    return pw.dom_();
-  }
-
-  CTLMap lmap_(){
-    return pw.lmap_();
-  }
-
-  int ndim_(){
-    return pw.ndim_();
-  }
-
-  bool empty(){
-    return pw.empty();
-  }
-
-  void addSetLM(SetImp s, LMapImp lm){
-    pw.addSetLM(s, lm);
-  }
-
-  void addLMSet(LMapImp lm, SetImp s){
-    pw.addLMSet(lm, s);
-  }
-
-  SetImp image(SetImp &s){
-    return pw.image(s);
-  }
-
-  SetImp preImage(SetImp &s){
-    return pw.preImage(s);
-  }
-
-  PWLMapAbs compPW(PWLMapAbs &pw2){
-    PWLMapImp aux = pw.compPW(pw2.pw);
-    return PWLMapAbs(aux);
-  }
-
-  PWLMapAbs minInvCompact(){
-    PWLMapImp aux = pw.minInvCompact();
-    return PWLMapAbs(aux);
-  }
-
-  SetImp wholeDom(){
-    return pw.wholeDom();
-  }
-
-  PWLMapAbs combine(PWLMapAbs &pw2){
-    PWLMapImp aux = pw.combine(pw2.pw);
-    return PWLMapAbs(aux);
-  }
- 
-  PWLMapAbs atomize(){
-    PWLMapImp aux = pw.atomize();
-    return PWLMapAbs(aux);
-  }
-
-  bool operator==(const PWLMapAbs &other) const{
-    return pw == other.pw;
-  }
-
-  private:
-  PWLMapImp pw;
-};
+// Type definitions --------------------------------------------------------------------------------
 
 typedef int NI1;
 typedef float NI2;
@@ -2084,42 +1517,51 @@ template<typename Value, typename Hash = boost::hash<Value>,
          typename Alloc = std::allocator<Value>>
 using UnordCT = boost::unordered_set<Value>;
 
-typedef IntervalImp1<UnordCT> IntervalImp;
-typedef IntervalAbs<UnordCT, IntervalImp, NI1> Interval;
+typedef OrdCT<NI1> contNI1;
+typedef OrdCT<NI2> contNI2;
+
+typedef IntervalImp1<UnordCT> Interval;
+
+typedef UnordCT<Interval> contInt1;
+typedef OrdCT<Interval> contInt2;
 
 ostream &operator<<(ostream &out, Interval &i);
 
-typedef MultiInterImp1<OrdCT, UnordCT, Interval, NI1> MultiInterImp;
-typedef MultiInterAbs<OrdCT, UnordCT, MultiInterImp, Interval, NI1> MultiInterval;
+typedef MultiInterImp1<OrdCT, UnordCT, Interval, NI1> MultiInterval;
+
+typedef UnordCT<MultiInterval> contMulti;
 
 ostream &operator<<(ostream &out, MultiInterval &mi);
 
-typedef AtomSetImp1<OrdCT, UnordCT, MultiInterval, Interval, NI1> AtomSetImp;
-typedef AtomSetAbs<OrdCT, UnordCT, AtomSetImp, MultiInterval, Interval, NI1> AtomSet;
+typedef AtomSetImp1<OrdCT, UnordCT, MultiInterval, Interval, NI1> AtomSet;
+
+typedef UnordCT<AtomSet> contAS;
 
 ostream &operator<<(ostream &out, AtomSet &as);
 
-typedef SetImp1<OrdCT, UnordCT, AtomSet, NI1> SetImp;
-typedef SetAbs<OrdCT, UnordCT, SetImp, AtomSet, NI1> Set;
+typedef SetImp1<OrdCT, UnordCT, AtomSet, NI1> Set;
+
+typedef OrdCT<Set> contSet1;
 
 ostream &operator<<(ostream &out, Set &s);
 
-typedef LMapImp1<OrdCT, NI2> LMapImp;
-typedef LMapAbs<OrdCT, LMapImp, NI2> LMap;
+typedef LMapImp1<OrdCT, NI2> LMap;
+
+typedef OrdCT<LMap> contLM1;
 
 ostream &operator<<(ostream &out, LMap &lm);
 
-typedef PWAtomLMapImp1<OrdCT, LMap, AtomSet, MultiInterval, Interval, NI1, NI2> PWAtomLMapImp;
-typedef PWAtomLMapAbs<PWAtomLMapImp, LMap, AtomSet> PWAtomLMap;
+typedef PWAtomLMapImp1<OrdCT, LMap, AtomSet, MultiInterval, Interval, NI1, NI2> PWAtomLMap;
 
 ostream &operator<<(ostream &out, PWAtomLMap &pwatom);
 
-typedef PWLMapImp1<OrdCT, UnordCT, PWAtomLMap, LMap, Set, AtomSet, NI1, NI2> PWLMapImp;
-typedef PWLMapAbs<OrdCT, PWLMapImp, LMap, Set> PWLMap;
+typedef PWLMapImp1<OrdCT, UnordCT, PWAtomLMap, LMap, Set, AtomSet, NI1, NI2> PWLMap;
 
 ostream &auxSetLMap(ostream &out, Set &s, LMap &lm);
 
 ostream &operator<<(ostream &out, PWLMap &pw);
+
+// Function declarations ---------------------------------------------------------------------------
 
 PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2);
 PWLMap minPW(Set &dom, LMap &lm1, LMap &lm2);

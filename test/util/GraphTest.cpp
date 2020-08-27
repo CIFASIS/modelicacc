@@ -30,16 +30,16 @@ using namespace boost::unit_test;
 
 /// @brief If sb-graphs containers implementation changes (uses vector, for example)
 /// this typedef should also change.
-typedef UnordCT<Interval> contInt1;
-typedef OrdCT<Interval> contInt2;
-typedef UnordCT<MultiInterval> contMulti;
-typedef UnordCT<AtomSet> contAS;
-
-typedef OrdCT<NI1> contNI1;
-typedef OrdCT<NI2> contNI2;
-
-typedef OrdCT<Set> contSet1;
-typedef OrdCT<LMap> contLM1;
+//typedef UnordCT<Interval> contInt1;
+//typedef OrdCT<Interval> contInt2;
+//typedef UnordCT<MultiInterval> contMulti;
+//typedef UnordCT<AtomSet> contAS;
+//
+//typedef OrdCT<NI1> contNI1;
+//typedef OrdCT<NI2> contNI2;
+//
+//typedef OrdCT<Set> contSet1;
+//typedef OrdCT<LMap> contLM1;
 
 //____________________________________________________________________________//
 
@@ -576,7 +576,6 @@ void TestMultiDiff2(){
   mi2.addInter(i6);
 
   contMulti res1 = mi1.diff(mi2);
-  contMulti::iterator it1 = res1.begin();
 
   Interval i7(0, 2, 6);
  
@@ -613,7 +612,7 @@ void TestMultiDiff2(){
   mi7.addInter(i11);
   mi7.addInter(i12);
   mi7.addInter(i3);
-
+  
   contMulti res2;
   res2.insert(mi3);
   res2.insert(mi4);

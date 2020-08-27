@@ -102,12 +102,12 @@ void Connectors::solve(){
 
   EquationList eql;
 
-  cout << "mmo:\n" << mmoclass_ << "\n\n";
+  //cout << "mmo:\n" << mmoclass_ << "\n\n";
   createGraph(mmoclass_.equations_ref().equations_ref());
-  debug("prueba.dot");
+  //debug("prueba.dot");
 
   PWLMap res = connectedComponents(G);
-  cout << "\n" << res << "\n";
+  cout << res << "\n\n";
 
   foreach_(Name nm, mmoclass_.variables()){
     Option<VarInfo> ovi = mmoclass_.getVar(nm);
