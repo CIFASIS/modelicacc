@@ -499,7 +499,6 @@ void TestMultiDiff1(){
   mi2.addInter(i6);
 
   contMulti res1 = mi1.diff(mi2);
-  contMulti::iterator it1 = res1.begin();
 
   Interval i7(0, 2, 6);
  

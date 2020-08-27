@@ -444,7 +444,6 @@ struct MultiInterImp1{
       ++itres;
     }
 
-    IntImpIt it2 = mi2.inters.begin();
     BOOST_FOREACH(IntervalImp i, mi2.inters){
       itres = res.insert(itres, i);
       ++itres;
@@ -760,7 +759,6 @@ struct SetImp1{
     SetType capres = cap(set2).asets; 
 
     if(!capres.empty()){
-      SetIt it1 = asets.begin();
 
       BOOST_FOREACH(ASetImp as1, asets){
         SetType aux;
@@ -991,7 +989,6 @@ struct LMapImp1{
     CTNum reso;
     CTNumIt itreso = reso.begin();
 
-    CTNumIt itg1 = gain.begin();
     CTNumIt ito1 = offset.begin();
 
     BOOST_FOREACH(NumImp g1i, gain){
@@ -1052,7 +1049,6 @@ struct PWAtomLMapImp1{
       bool incompatible = false;
 
       CT<IntervalImp> auxdom;
-      typename CT<IntervalImp>::iterator itd = auxdom.begin();
 
       BOOST_FOREACH(IntervalImp i, ints){
         NumImp2 auxLo = i.lo_() * (*itg) + (*ito); 
@@ -1193,7 +1189,7 @@ struct PWLMapImp1{
 
   CT1<SetImp> dom; 
   CT1<LMapImp> lmap;  
-  int ndim;
+  int ndim = 0;
 
   PWLMapImp1(){}
   PWLMapImp1(CTSet d, CTLMap l){
