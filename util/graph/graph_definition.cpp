@@ -475,6 +475,7 @@ PWLMap reduceMapN(PWLMap pw, int dim){
       ++count1;
     }
 
+
     if(*itg == 1 && *ito < 0){
       NI2 off = -(*ito);
 
@@ -638,6 +639,194 @@ PWLMap reduceMapN(PWLMap pw, int dim){
   return res;
 }
 
+// A PWAtomLMap is returned, but it is not representing
+// a multidimensional piecewise atomic linear map. 
+// It is just a convenient data structure to store the result.
+PWAtomLMap reduceInter(Interval i, NI2 g, NI2 o){
+  OrdCT<Interval> ints;
+  OrdCT<Interval>::iterator itints = ints.begin();
+
+  contNI2 gres;
+  contNI2::iterator itgres = gres.begin();
+  contNI2 ores;
+  contNI2::iterator itores = ores.begin();
+
+  // Note that o must be integer
+  if(g == 1 && o != 0){
+    if(i.step_() == 1){
+      if(i.hi_() - i.lo_() > o * o){
+        for(int j = 0; j < abs(o); j++){
+          Interval aux(i.lo_() + j - 1, abs(o), i.hi_());
+          itints = ints.insert(itints, aux);
+          ++itints;
+
+          itgres = gres.insert(itgres, 0);
+          ++itgres;
+          if(o < 0)
+            itores = ores.insert(itores, i.lo_() + j + o - 1);
+          else
+            itores = ores.insert(itores, i.hi_() + j + 1);
+          ++itores;
+        }
+      }
+    }
+
+    else{
+      NI2 m = o / i.step_();
+     
+      // If the condition is not satisfied, one iteration will be enough
+      // to go out of domain 
+      if(m == (int) m){
+        itints = ints.insert(itints, i);
+        ++itints;
+
+        itgres = gres.insert(itgres, 0);
+        ++itgres;
+        if(o > 0)
+          itores = ores.insert(itores, i.hi_() + o);
+        else
+          itores = ores.insert(itores, i.lo_() - o);
+        ++itores;
+      }
+    }  
+  }
+
+  // In this case we replace domain and expression in order to need
+  // only one iteration to go out of domain. To do so the fixed
+  // point should be out of domain.
+  else{
+    if(g == 1 && o == 0){
+      PWAtomLMap res;
+      return res;
+    }
+
+    NI2 fp = o / (1 - g);// Fixed point
+
+    if(fp < i.lo_()){
+      NI2 aux = o / (g - 1);
+      NI1 miniters = ceil(log((i.hi_() + aux) / (i.lo_() + aux)) / log(g));
+
+      if(g > 1){
+        for(int j = 1; j <= miniters; j++){
+          NI2 newg = pow(g, j);
+          NI2 newo = newg * aux - aux;
+
+          NI1 out = (i.hi_()+ aux) / newg - aux;
+          Interval auxout(out, 1, i.hi_());
+          Interval iout = i.cap(auxout);
+          itints = ints.insert(itints, iout);
+          ++itints;
+
+          itgres = gres.insert(itgres, newg);
+          ++itgres;
+          itores = ores.insert(itores, newo);
+          ++itores;
+        }
+      }
+
+      if(g > 0 && g < 1){
+        miniters = ceil(log((i.lo_() + aux) / (i.hi_() + aux)) / log(g));
+        
+        for(int j = 1; j <= miniters; j++){
+          NI2 newg = pow(g, j);
+          NI2 newo = newg * aux - aux;
+
+          NI1 out = (i.lo_()+ aux) / newg - aux;
+          Interval auxout(i.lo_(), 1, out);
+          Interval iout = i.cap(auxout);
+          itints = ints.insert(itints, iout);
+          ++itints;
+
+          itgres = gres.insert(itgres, newg);
+          ++itgres;
+          itores = ores.insert(itores, newo);
+          ++itores;
+        }
+      }
+    }
+ 
+    //if(fp > i.hi_()){
+    // TODO
+    //}
+  }
+
+  MultiInterval mires(ints);
+  AtomSet asres(mires);
+
+  LMap lres(gres, ores);
+  
+  PWAtomLMap res(asres, lres);
+
+  return res;
+}
+
+PWLMap reduceN(PWLMap pw, int dim){
+  OrdCT<Set> dompw = pw.dom_();
+  OrdCT<Set>::iterator itdompw = dompw.begin();
+  OrdCT<LMap> lmappw = pw.lmap_();
+  OrdCT<LMap>::iterator itlmappw = lmappw.begin(); 
+
+  // Traverse all maps and domains
+  while(itdompw != dompw.end()){
+    UnordCT<AtomSet> doms = (*itdompw).asets_(); 
+    UnordCT<AtomSet>::iterator itdoms = doms.begin();
+
+    contNI2 g = (*itlmappw).gain_();
+    contNI2::iterator itg = g.begin();
+    contNI2 o = (*itlmappw).off_();
+    contNI2::iterator ito = o.begin();
+
+    contNI2 partg;
+    contNI2::iterator itpg = partg.begin();
+    contNI2 parto;
+    contNI2::iterator itpo = parto.begin();
+
+    // Firsts dim-1 gains and offsets remain the same
+    for(int i = 0; i < dim - 1; i++){
+      itpg = partg.insert(itpg, *itg);
+      ++itpg;
+      ++itg;
+      itpo = parto.insert(itpo, *ito);
+      ++itpo;
+      ++ito;
+    }
+
+    // Traverse each atomic set
+    while(itdoms != doms.end()){
+      AtomSet domas = *itdoms;
+      OrdCT<Interval> dommi = domas.aset_().inters_();
+      OrdCT<Interval>::iterator itdommi = dommi.begin();
+
+      OrdCT<Interval> parti;
+      OrdCT<Interval>::iterator itpi = parti.begin();
+
+      // Firsts dim-1 intervals remain the same
+      for(int i = 0; i < dim - 1; i++){
+        itpi = parti.insert(itpi, *itdommi);
+        ++itpi;
+        ++itdommi;
+      }
+
+      PWAtomLMap pwatom = reduceInter(*itdommi, *itg, *ito);
+
+      // The resulting gain and offset will be the same
+      // for all the new domains
+      if(*itg == 1 && *ito != 0){
+      }
+      
+      // pwatom can shield more than "result"
+
+      ++itdoms;
+    }
+
+    ++itdompw;
+    ++itlmappw;
+  }
+
+  PWLMap res;
+  return res;
+}
+
 PWLMap mapInf(PWLMap pw){
   PWLMap res;
   if(!pw.empty()){
@@ -670,6 +859,7 @@ PWLMap mapInf(PWLMap pw){
 
         OrdCT<NI2> g = lm.gain_();
         OrdCT<NI2>::iterator itg = g.begin();
+        // For intervals in which size <= off ^ 2 (check reduceMapN, this intervals are not "reduced")
         for(int dim = 0; dim < res.ndim_(); ++dim){
           if(*itg == 1 && *ito < 0){
             BOOST_FOREACH(AtomSet asi, (*itdoms).asets_()){
@@ -690,22 +880,6 @@ PWLMap mapInf(PWLMap pw){
           ++itg;
         }
 
-        /*
-        BOOST_FOREACH(AtomSet as, (*itdoms).asets_()){
-          MultiInterval mi = as.aset_();
-          OrdCT<Interval> inters = mi.inters_();
-          OrdCT<Interval>::iterator itints = inters.begin();
-
-          BOOST_FOREACH(NI2 gi, lm.gain_()){
-            if(*ito < 0 && gi == 1){
-              its = max(its, ceil(((*itints).hi_() - (*itints).lo_()) / abs(*ito)));
-            }
-
-            ++itints;
-          }
-
-          ++ito;
-        }*/
 
         maxit += its;
       }
