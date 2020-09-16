@@ -91,15 +91,15 @@ ostream &operator<<(ostream &out, Set &s){
   }
 
   aux = *it;
-  out << aux;
+  out << "{" << aux;
   ++it;
   while(next(it, 1) != as.end()){
     aux = *it;
-    out << "U" << aux;
+    out << ", " << aux;
     ++it;
   }
   aux = *it;
-  out << "U" << aux;
+  out << ", " << aux << "}";
 
   return out;
 }
@@ -112,13 +112,22 @@ ostream &operator<<(ostream &out, LMap &lm){
 
   if(g.size() == 0)
     return out;
-  
-  while(itg != g.end()){
-    out << *itg << " * x + " << *ito << "\n";
+
+  if(g.size() == 1){
+    out << "[" << *itg << " * x + " << *ito << "]";
+    return out;
+  }
+ 
+  out << "[" << *itg << " * x + " << *ito;  
+  ++itg;
+  ++ito;
+  while(next(itg, 1) != g.end()){
+    out << ", " << *itg << " * x + " << *ito;
 
     ++itg;
     ++ito;
   }
+  out << ", " << *itg << " * x + " << *ito << "]";
 
   return out;
 }
@@ -127,71 +136,7 @@ ostream &operator<<(ostream &out, PWAtomLMap &pwatom){
   AtomSet d = pwatom.dom_();
   LMap lm = pwatom.lmap_();
  
-  OrdCT<NI2> g = lm.gain_();
-  OrdCT<NI2>::iterator itg = g.begin();
-  OrdCT<NI2> o = lm.off_();
-  OrdCT<NI2>::iterator ito = o.begin();
-
-  OrdCT<Interval> ints = d.aset_().inters_();
-  OrdCT<Interval>::iterator itints = ints.begin();
-
-  if(ints.size() == 0)
-    return out;
-
-  if(ints.size() == 1){
-    out << "(" << *(itints) << ", " << *itg << " * x + " << *ito << ")";
-    return out;
-  }
-
-  out << "(" << *(itints) << ", " << *itg << " * x + " << *ito << ")";
-  out << "x";
-  ++itints;
-  ++itg;
-  ++ito;
-  while(next(itints, 1) != ints.end()){
-    out << "(" << *itints << ", " << *itg << " * x + " << *ito << ")";
-    out << "x";
-
-    ++itints;
-    ++itg;
-    ++ito;
-  }
-  out << "(" << *itints << ", " << *itg << " * x + " << *ito << ")";
-
-
-  return out; 
-}
-
-ostream &auxSetLMap(ostream &out, Set &s, LMap &lm){
-  UnordCT<AtomSet> as = s.asets_();
-  UnordCT<AtomSet>::iterator itas = as.begin();
-
-  if(as.size() == 0)
-    out << "{}";
-
-  else if(as.size() == 1){
-    PWAtomLMap auxMap(*itas, lm);  
-    out << "{" << auxMap << "}";
-    return out;
-  }
-
-  AtomSet auxAS = *itas;
-
-  PWAtomLMap aux(auxAS, lm);
-
-  out << "{" << aux << "}";
-  ++itas;
-  while(next(itas, 1) != as.end()){
-    auxAS = *itas;
-    aux = PWAtomLMap(auxAS, lm);
-    out << "U" << "{" << aux << "}";
-
-    ++itas;
-  }
-  auxAS = *itas;
-  aux = PWAtomLMap(auxAS, lm);
-  out << "U" << "{" << aux << "}";
-
+  out << "(" << d << ", " << lm << ")";
   return out;
 }
 
@@ -207,26 +152,20 @@ ostream &operator<<(ostream &out, PWLMap &pw){
   }
 
   if(d.size() == 1){
-    out << "[";
-    auxSetLMap(out, *itd, *itl) << "]";
+    out << "[(" <<  *itd << ", " << *itl << ")]";
     return out;
   }
 
-
-  out << "[";
-  auxSetLMap(out, *itd, *itl);
+  out << "[(" << *itd << ", " << *itl << ") ";
   ++itd;
   ++itl;
   while(next(itd, 1) != d.end()){
-    out << ",";
-    auxSetLMap(out, *itd, *itl);
+    out << ", (" << *itd << ", " << *itl << ")";
 
     ++itd;
     ++itl;
   }
-  out << ",";
-  auxSetLMap(out, *itd, *itl);
-  out << "]";
+  out << ", (" << *itd << ", " << *itl << ")]";
 
   return out;
 }
@@ -651,8 +590,14 @@ PWAtomLMap reduceInter(Interval i, NI2 g, NI2 o){
   contNI2 ores;
   contNI2::iterator itores = ores.begin();
 
+  if(g == 0){
+    ints.insert(itints, i);
+    gres.insert(itgres, g);  
+    ores.insert(itores, o);
+  }
+
   // Note that o must be integer
-  if(g == 1 && o != 0){
+  else if(g == 1 && o != 0){
     if(i.step_() == 1){
       if(i.hi_() - i.lo_() > o * o){
         for(int j = 0; j < abs(o); j++){
@@ -668,6 +613,12 @@ PWAtomLMap reduceInter(Interval i, NI2 g, NI2 o){
             itores = ores.insert(itores, i.hi_() + j + 1);
           ++itores;
         }
+      }
+
+      else{
+        ints.insert(itints, i);
+        gres.insert(itgres, g);  
+        ores.insert(itores, o);
       }
     }
 
@@ -691,28 +642,32 @@ PWAtomLMap reduceInter(Interval i, NI2 g, NI2 o){
     }  
   }
 
+  else if(g == 1 && o == 0){
+    ints.insert(itints, i);
+    gres.insert(itgres, g);  
+    ores.insert(itores, o);
+  }
+
   // In this case we replace domain and expression in order to need
   // only one iteration to go out of domain. To do so the fixed
   // point should be out of domain.
   else{
-    if(g == 1 && o == 0){
-      PWAtomLMap res;
-      return res;
-    }
-
     NI2 fp = o / (1 - g);// Fixed point
 
     if(fp < i.lo_()){
       NI2 aux = o / (g - 1);
       NI1 miniters = ceil(log((i.hi_() + aux) / (i.lo_() + aux)) / log(g));
 
+      NI2 newhi = i.hi_();
       if(g > 1){
         for(int j = 1; j <= miniters; j++){
           NI2 newg = pow(g, j);
           NI2 newo = newg * aux - aux;
 
-          NI1 out = (i.hi_()+ aux) / newg - aux;
-          Interval auxout(out, 1, i.hi_());
+          NI1 out = (i.hi_() - newo) / newg;
+          out = max(out, 1);
+          Interval auxout(out, 1, newhi);
+          newhi = out - 1;
           Interval iout = i.cap(auxout);
           itints = ints.insert(itints, iout);
           ++itints;
@@ -726,13 +681,16 @@ PWAtomLMap reduceInter(Interval i, NI2 g, NI2 o){
 
       if(g > 0 && g < 1){
         miniters = ceil(log((i.lo_() + aux) / (i.hi_() + aux)) / log(g));
-        
+       
+        NI2 newlo = i.lo_(); 
         for(int j = 1; j <= miniters; j++){
           NI2 newg = pow(g, j);
           NI2 newo = newg * aux - aux;
 
-          NI1 out = (i.lo_()+ aux) / newg - aux;
-          Interval auxout(i.lo_(), 1, out);
+          NI1 out = (i.lo_() - newo) / newg;
+          out = max(out, 1);
+          Interval auxout(newlo, 1, out);
+          newlo = out + 1;
           Interval iout = i.cap(auxout);
           itints = ints.insert(itints, iout);
           ++itints;
@@ -745,9 +703,54 @@ PWAtomLMap reduceInter(Interval i, NI2 g, NI2 o){
       }
     }
  
-    //if(fp > i.hi_()){
-    // TODO
-    //}
+    else if(fp > i.hi_()){
+      NI2 aux = o / (g - 1);
+      NI1 miniters = ceil(log((i.lo_() + aux) / (i.hi_() + aux)) / log(g));
+
+      NI2 newlo = i.lo_();
+      if(g > 1){
+        for(int j = 1; j <= miniters; j++){
+          NI2 newg = pow(g, j);
+          NI2 newo = newg * aux - aux;
+
+          NI1 out = (i.lo_() - newo) / newg;
+          out = max(out, 1);
+          Interval auxout(newlo, 1, out);
+          newlo = out + 1;
+          Interval iout = i.cap(auxout);
+          itints = ints.insert(itints, iout);
+          ++itints;
+
+          itgres = gres.insert(itgres, newg);
+          ++itgres;
+          itores = ores.insert(itores, newo);
+          ++itores;
+        }
+      }
+
+      if(g > 0 && g < 1){
+        miniters = ceil(log((i.hi_() + aux) / (i.lo_() + aux)) / log(g));
+        
+        NI2 newhi = i.hi_();
+        for(int j = 1; j <= miniters; j++){
+          NI2 newg = pow(g, j);
+          NI2 newo = newg * aux - aux;
+
+          NI1 out = (i.hi_() - newo) / newg;
+          out = max(out, 1);
+          Interval auxout(out, 1, newhi);
+          newhi = out - 1;
+          Interval iout = i.cap(auxout);
+          itints = ints.insert(itints, iout);
+          ++itints;
+
+          itgres = gres.insert(itgres, newg);
+          ++itgres;
+          itores = ores.insert(itores, newo);
+          ++itores;
+        }
+      }
+    }
   }
 
   MultiInterval mires(ints);
@@ -761,6 +764,11 @@ PWAtomLMap reduceInter(Interval i, NI2 g, NI2 o){
 }
 
 PWLMap reduceN(PWLMap pw, int dim){
+  OrdCT<Set> sres;
+  OrdCT<Set>::iterator itsres = sres.begin();
+  OrdCT<LMap> lmres;
+  OrdCT<LMap>::iterator itlmres = lmres.begin();
+
   OrdCT<Set> dompw = pw.dom_();
   OrdCT<Set>::iterator itdompw = dompw.begin();
   OrdCT<LMap> lmappw = pw.lmap_();
@@ -776,65 +784,239 @@ PWLMap reduceN(PWLMap pw, int dim){
     contNI2 o = (*itlmappw).off_();
     contNI2::iterator ito = o.begin();
 
-    contNI2 partg;
-    contNI2::iterator itpg = partg.begin();
-    contNI2 parto;
-    contNI2::iterator itpo = parto.begin();
 
-    // Firsts dim-1 gains and offsets remain the same
-    for(int i = 0; i < dim - 1; i++){
-      itpg = partg.insert(itpg, *itg);
+    // The resulting map is constant, thus, for all
+    // domains the map will be the same
+    contNI2::iterator auxg = next(itg, dim - 1);
+    contNI2::iterator auxo = next(ito, dim - 1);
+    bool cond = false;
+    if(*auxg == 1 || *auxg == 0)
+      cond = true;   
+
+    if(cond){
+      UnordCT<AtomSet> parts;
+
+      // Traverse each atomic set
+      while(itdoms != doms.end()){
+        AtomSet domas = *itdoms;
+        OrdCT<Interval> dommi = domas.aset_().inters_();
+        OrdCT<Interval>::iterator itdommi = dommi.begin();
+
+        OrdCT<Interval>::iterator auxdommi = next(itdommi, dim - 1);
+        PWAtomLMap pwatom = reduceInter(*auxdommi, *auxg, *auxo);
+
+        OrdCT<Interval> redi = pwatom.dom_().aset_().inters_();
+        OrdCT<Interval>::iterator itredi = redi.begin();
+
+        //Domains
+        while(itredi != redi.end()){
+          itdommi = dommi.begin();
+          OrdCT<Interval> parti;
+          OrdCT<Interval>::iterator itpi = parti.begin();
+
+          // Firsts dim-1 intervals remain the same
+          for(int i = 0; i < dim - 1; i++){
+            itpi = parti.insert(itpi, *itdommi);
+            ++itpi;
+            ++itdommi;
+          }
+
+          itpi = parti.insert(itpi, *itredi);
+          ++itpi;            
+          ++itdommi;
+ 
+          // dim+1 to end remain the same
+          while(itdommi != dommi.end()){
+            itpi = parti.insert(itpi, *itdommi);
+            ++itpi;        
+
+            ++itdommi;
+          }
+
+          MultiInterval partmi(parti);
+          AtomSet partas(partmi);
+          parts.insert(partas);
+
+          ++itredi;
+        }
+ 
+        ++itdoms;
+      }
+
+      Set auxs(parts);
+      itsres = sres.insert(itsres, auxs);
+      ++itsres;
+
+      // Linear map
+      contNI2 partg;
+      contNI2::iterator itpg = partg.begin();
+      contNI2 parto;
+      contNI2::iterator itpo = parto.begin();
+
+      // Firsts dim-1 gains and offsets remain the same
+      for(int i = 0; i < dim - 1; i++){
+        itpg = partg.insert(itpg, *itg);
+        ++itpg;
+        ++itg;
+        itpo = parto.insert(itpo, *ito);
+        ++itpo;
+        ++ito;
+      }
+
+      // For dim the map will be the same for the
+      // different domains
+      AtomSet fstas = *(doms.begin());
+      Interval initinter = *(fstas.aset_().inters_().begin());
+      PWAtomLMap pwatom = reduceInter(initinter, *auxg, *auxo);
+      NI2 gi = *(pwatom.lmap_().gain_().begin());
+      NI2 oi = *(pwatom.lmap_().off_().begin());
+
+      itpg = partg.insert(itpg, gi);
       ++itpg;
       ++itg;
-      itpo = parto.insert(itpo, *ito);
+      itpo = parto.insert(itpo, oi);
       ++itpo;
       ++ito;
+
+      // dim+1 to end remain the same
+      while(itg != g.end()){
+        itpg = partg.insert(itpg, *itg);
+        ++itpg;
+        ++itg;
+        itpo = parto.insert(itpo, *ito);
+        ++itpo;
+        ++ito; 
+      }
+
+
+      LMap auxlm(partg, parto);
+      itlmres = lmres.insert(itlmres, auxlm);
+      ++itlmres;
     }
 
-    // Traverse each atomic set
-    while(itdoms != doms.end()){
-      AtomSet domas = *itdoms;
-      OrdCT<Interval> dommi = domas.aset_().inters_();
-      OrdCT<Interval>::iterator itdommi = dommi.begin();
+    else{
+      // Traverse each atomic set
+      while(itdoms != doms.end()){
+        AtomSet domas = *itdoms;
+        OrdCT<Interval> dommi = domas.aset_().inters_();
+        OrdCT<Interval>::iterator itdommi = dommi.begin();
 
-      OrdCT<Interval> parti;
-      OrdCT<Interval>::iterator itpi = parti.begin();
+        OrdCT<Interval>::iterator auxdommi = next(itdommi, dim - 1);
+        PWAtomLMap pwatom = reduceInter(*auxdommi, *auxg, *auxo);
 
-      // Firsts dim-1 intervals remain the same
-      for(int i = 0; i < dim - 1; i++){
-        itpi = parti.insert(itpi, *itdommi);
-        ++itpi;
-        ++itdommi;
-      }
+        OrdCT<Interval> redi = pwatom.dom_().aset_().inters_();
+        OrdCT<Interval>::iterator itredi = redi.begin();
 
-      PWAtomLMap pwatom = reduceInter(*itdommi, *itg, *ito);
+        contNI2 redg = pwatom.lmap_().gain_();
+        contNI2::iterator itredg = redg.begin();
+        contNI2 redo = pwatom.lmap_().off_();
+        contNI2::iterator itredo = redo.begin();
 
-      // The resulting gain and offset will be the same
-      // for all the new domains
-      if(*itg == 1 && *ito != 0){
-      }
+        while(itredi != redi.end()){
+          // Domains
+          itdommi = dommi.begin();
+          OrdCT<Interval> parti;
+          OrdCT<Interval>::iterator itpi = parti.begin();
+
+          // Firsts dim-1 intervals remain the same
+          for(int i = 0; i < dim - 1; i++){
+            itpi = parti.insert(itpi, *itdommi);
+            ++itpi;
+            ++itdommi;
+          }
+
+          // dim
+          itpi = parti.insert(itpi, *itredi);
+          ++itpi;            
+          ++itdommi;
+ 
+          // dim+1 to end remain the same
+          while(itdommi != dommi.end()){
+            itpi = parti.insert(itpi, *itdommi);
+            ++itpi;        
+
+            ++itdommi;
+          }
+
+          MultiInterval partmi(parti);
+          AtomSet partas(partmi);
+          Set auxs;
+          auxs.addAtomSet(partas);
+
+          itsres = sres.insert(itsres, auxs);
+          ++itsres;
+
+          // Linear maps
+          itg = g.begin();
+          ito = o.begin();
+
+          contNI2 partg;
+          contNI2::iterator itpg = partg.begin();
+          contNI2 parto;
+          contNI2::iterator itpo = parto.begin();
+
+          // Firsts dim-1 gains and offsets remain the same
+          for(int i = 0; i < dim - 1; i++){
+            itpg = partg.insert(itpg, *itg);
+            ++itpg;
+            ++itg;
+            itpo = parto.insert(itpo, *ito);
+            ++itpo;
+            ++ito;
+          }
+
+          // dim
+          itpg = partg.insert(itpg, *itredg);
+          ++itpg;
+          ++itredg;
+          ++itg;
+          itpo = parto.insert(itpo, *itredo);
+          ++itpo;
+          ++itredo;
+          ++ito;
+
+          // dim+1 to end remain the same
+          while(itg != g.end()){
+            itpg = partg.insert(itpg, *itg);
+            ++itpg;
+            ++itg;
+            itpo = parto.insert(itpo, *ito);
+            ++itpo;
+            ++ito; 
+          }
+
+          LMap auxlm(partg, parto);
+          itlmres = lmres.insert(itlmres, auxlm);
+          ++itlmres;
+
+          ++itredi;
+        }
       
-      // pwatom can shield more than "result"
-
-      ++itdoms;
+        ++itdoms;
+      }
     }
 
     ++itdompw;
     ++itlmappw;
   }
 
-  PWLMap res;
+  //BOOST_FOREACH(Set s, sres)
+  //  cout << s << "\n";
+  //BOOST_FOREACH(LMap l, lmres)
+  //  cout << l << "\n";
+
+  PWLMap res(sres, lmres);
   return res;
 }
 
 PWLMap mapInf(PWLMap pw){
   PWLMap res;
   if(!pw.empty()){
-    res = reduceMapN(pw, 1);
+    res = reduceN(pw, 1);
 
     for(int i = 2; i <= res.ndim_(); ++i)
-      res = reduceMapN(res, i); 
-
+      res = reduceN(res, i); 
+ 
     int maxit = 0;
 
     OrdCT<Set> doms = res.dom_();
@@ -861,25 +1043,25 @@ PWLMap mapInf(PWLMap pw){
         OrdCT<NI2>::iterator itg = g.begin();
         // For intervals in which size <= off ^ 2 (check reduceMapN, this intervals are not "reduced")
         for(int dim = 0; dim < res.ndim_(); ++dim){
-          if(*itg == 1 && *ito < 0){
+          if(*itg == 1 && *ito != 0){
             BOOST_FOREACH(AtomSet asi, (*itdoms).asets_()){
               MultiInterval mii = asi.aset_(); 
               OrdCT<Interval> ii = mii.inters_();
               OrdCT<Interval>::iterator itii = ii.begin();
-              ito = o.begin();
  
-              for(int count = 0; count < dim; ++count){
+              for(int count = 0; count < dim; ++count)
                 ++itii;
-                ++ito;
-              }
 
               its = max(its, ceil(((*itii).hi_() - (*itii).lo_()) / abs(*ito)));
             }
           }
+
+          else
+            ++maxit;
  
           ++itg;
+          ++ito;
         }
-
 
         maxit += its;
       }
@@ -890,8 +1072,13 @@ PWLMap mapInf(PWLMap pw){
       ++itdoms;
     }
 
-    maxit = floor(log2(maxit)) + 1; 
+    if(maxit == 0)
+      return res;    
 
+    else
+      maxit = floor(log2(maxit)) + 1; 
+
+    cout << "iters: " << maxit << "\n";
     for(int j = 0; j < maxit; ++j)
       res = res.compPW(res);
   }

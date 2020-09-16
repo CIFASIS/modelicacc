@@ -3085,6 +3085,9 @@ void TestMapInf2(){
 
   PWLMap res2 = pw1;
 
+  cout << "mapInf2:\n" << pw1 << "\n";
+  cout << "mapInf2:\n" << res1 << "\n";
+
   BOOST_CHECK(res1 == res2);
 }
 
@@ -3142,7 +3145,102 @@ void TestMapInf3(){
   PWLMap res2;
   res2.addSetLM(s1, lm1);
 
+  cout << "mapInf3:\n" << pw1 << "\n";
+  cout << "mapInf3:\n" << res1 << "\n";
+
   BOOST_CHECK(res1 == res2);
+}
+
+void TestMapInf4(){
+  Interval i1(1, 1, 500);
+
+  MultiInterval mi1;
+  mi1.addInter(i1);
+ 
+  AtomSet as1(mi1);
+
+  Set s1;
+  s1.addAtomSet(as1);
+
+  LMap lm1;
+  lm1.addGO(2, 1000);  
+
+  Interval i2(501, 1, 1000);
+
+  MultiInterval mi2;
+  mi2.addInter(i2);
+
+  AtomSet as2(mi2);
+
+  Set s2;
+  s2.addAtomSet(as2);
+
+  LMap lm2;
+  lm2.addGO(2, -1);
+
+  Interval i3(1001, 1, 2000);
+
+  MultiInterval mi3;
+  mi3.addInter(i3);
+
+  AtomSet as3(mi3);
+ 
+  Set s3;
+  s3.addAtomSet(as3);
+
+  LMap lm3;
+  lm3.addGO(1, 0);
+
+  PWLMap pw1;
+  pw1.addSetLM(s1, lm1);
+  pw1.addSetLM(s2, lm2);
+  pw1.addSetLM(s3, lm3);
+
+  PWLMap res1 = mapInf(pw1);
+
+  cout << "mapInf4:\n" << pw1 << "\n";
+  cout << "mapInf4:\n" << res1 << "\n";
+  
+  BOOST_CHECK(true);
+}
+
+void TestMapInf5(){
+  Interval i1(500, 1, 5000);
+
+  MultiInterval mi1;
+  mi1.addInter(i1);
+ 
+  AtomSet as1(mi1);
+
+  Set s1;
+  s1.addAtomSet(as1);
+
+  LMap lm1;
+  lm1.addGO(2, 1);  
+
+  Interval i2(6000, 1, 16000);
+
+  MultiInterval mi2;
+  mi2.addInter(i2);
+
+  AtomSet as2(mi2);
+
+  Set s2;
+  s2.addAtomSet(as2);
+
+  LMap lm2;
+  lm2.addGO(1, 0);
+
+  PWLMap pw1;
+  pw1.addSetLM(s1, lm1);
+  pw1.addSetLM(s2, lm2);
+
+  PWLMap res1 = mapInf(pw1);
+
+  cout << "mapInf5:\n" << pw1 << "\n";
+  cout << "mapInf5:\n" << res1 << "\n";
+  
+  BOOST_CHECK(true);
 }
 
 void TestMinAdjComp1(){
@@ -3659,7 +3757,7 @@ void TestRC1(){
   float offSp = 0;
   float offSn = 1;
   float offGp = 2;
-  float offRp = 10000000;
+  float offRp = 1000;
   float offRn = 2 * offRp;
   float offCp = 3 * offRp;
   float offCn = 4 * offRp;
@@ -3848,7 +3946,7 @@ void TestRC1(){
   g[e5] = E5;
 
   PWLMap res1 = connectedComponents(g);
-  cout << res1 << "\n";
+  cout << "TestRC1: \n" << res1 << "\n";
 
   BOOST_CHECK(true);
 }
@@ -4066,7 +4164,7 @@ void TestGraph3c(){
   g[e6] = E6;
 
   PWLMap res1 = connectedComponents(g);
-  cout << "res1: " << res1 << "\n";
+  cout << "TestGraph3c: \n" << res1 << "\n";
 
   BOOST_CHECK(true); 
 }
@@ -4158,14 +4256,6 @@ void Test2D(){
   cd.addAtomSet(as7);
   SetVertex V7("V7", 7, cd, 0);
 
-  cout << "sp: " << sp << "\n";
-  cout << "sn: " << sn << "\n";
-  cout << "gp: " << gp << "\n";
-  cout << "cd: " << cd << "\n";
-  cout << "cl: " << cl << "\n";
-  cout << "cu: " << cu << "\n";
-  cout << "cr: " << cr << "\n";
-
   float offE11 = 0;
   float offE12 = 0;
   float offE21 = offE11 + offcl1;
@@ -4201,8 +4291,6 @@ void Test2D(){
   mapE1cr.addSetLM(domE1, lm2);
   SetEdge E1("E1", 1, mapE1cl, mapE1cr, 0);
 
-  cout << "cl, cr: " << mapE1cl << ", " << mapE1cr << "\n";
-
   Interval i17(1 + offE21, 1, offE31);
   Interval i18(1 + offE22, 1, offE32);
   MultiInterval mi9;
@@ -4222,8 +4310,6 @@ void Test2D(){
   PWLMap mapE2cd;
   mapE2cd.addSetLM(domE2, lm4); 
   SetEdge E2("E2", 2, mapE2cu, mapE2cd, 0);
-
-  cout << "cu, cd: " << mapE2cu << ", " << mapE2cd << "\n";
 
   Interval i19(1 + offE31, 1, offE41);
   Interval i20(1 + offE32, 1, offE42); 
@@ -4245,8 +4331,6 @@ void Test2D(){
   mapE3cr.addSetLM(domE3, lm6);
   SetEdge E3("E3", 3, mapE3cl, mapE3cr, 0);
 
-  cout << "cl, cr: " << mapE3cl << ", " << mapE3cr << "\n";
-
   Interval i21(1 + offE41, 1, offE51);
   Interval i22(1 + offE42, 1, offE52);
   MultiInterval mi11;
@@ -4266,8 +4350,6 @@ void Test2D(){
   PWLMap mapE4sp;
   mapE4sp.addSetLM(domE4, lm8);
   SetEdge E4("E4", 4, mapE4cu, mapE4sp, 0);
-
-  cout << "cu, sp: " << mapE4cu << ", " << mapE4sp << "\n";
 
   Interval i23(1 + offE51, 1, offE61);
   Interval i24(1 + offE52, 1, offE62);
@@ -4289,8 +4371,6 @@ void Test2D(){
   mapE5gp.addSetLM(domE5, lm10);
   SetEdge E5("E5", 5, mapE5cd, mapE5gp, 0);
 
-  cout << "cd, gp: " << mapE5cd << ", " << mapE5gp << "\n";
- 
   Interval i25(1 + offE61, 1, offE71);
   Interval i26(1 + offE62, 1, offE72);
   MultiInterval mi13;
@@ -4310,8 +4390,6 @@ void Test2D(){
   PWLMap mapE6gp;
   mapE6gp.addSetLM(domE6, lm12);
   SetEdge E6("E6", 6, mapE6sn, mapE6gp, 0); 
-
-  cout << "sn, gp: " << mapE6sn << ", " << mapE6gp << "\n";
 
   SBGraph g;
 
@@ -4358,7 +4436,7 @@ void Test2D(){
   g[e6] = E6;
 
   PWLMap res1 = connectedComponents(g);
-  cout << "res1: " << res1 << "\n";
+  cout << "Test2D: \n" << res1 << "\n";
 
   Graph::GraphPrinter gp3(g, -1);
   std::string fn3("graph3.dot");
@@ -4474,6 +4552,8 @@ test_suite *init_unit_test_suite(int, char *[]){
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMapInf1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMapInf2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMapInf3));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMapInf4));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMapInf5));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp3));
