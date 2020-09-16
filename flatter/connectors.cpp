@@ -104,7 +104,7 @@ void Connectors::solve(){
 
   //cout << "mmo:\n" << mmoclass_ << "\n\n";
   createGraph(mmoclass_.equations_ref().equations_ref());
-  //debug("prueba.dot");
+  debug("prueba.dot");
 
   PWLMap res = connectedComponents(G);
   cout << res << "\n\n";
@@ -696,6 +696,7 @@ void Connectors::generateCode(PWLMap pw){
     foreach_(AtomSet auxi, vcdomiaux.asets_()){
       MultiInterval mi = auxi.aset_();
 
+      // Effort vars
       IndexList ran1;
       IndexList::iterator itran1 = ran1.begin(); 
       OrdCT<NI1> off1 = getOff(mi);
@@ -784,6 +785,7 @@ void Connectors::generateCode(PWLMap pw){
       }
     }
  
+    // Flow vars
     IndexList ran2; 
     IndexList::iterator itran2 = ran2.begin();
     itnms = nms.begin();
@@ -812,9 +814,6 @@ void Connectors::generateCode(PWLMap pw){
     ExpList::iterator itexps = exps.begin();
 
     foreach_(AtomSet auxi, vcdomi.asets_()){
-      //OrdCT<NI1> off3 = getOff(as.aset_());
-      //MultiInterval mirange2 = applyOff(as.aset_(), off3); 
-
       OrdCT<NI1> off4 = getOff(auxi.aset_());
       MultiInterval auxmi2 = applyOff(auxi.aset_(), off4); 
       Pair<ExpList, bool> tm2 = transMulti(mirange2, auxmi2, nms, true);
@@ -887,7 +886,9 @@ void Connectors::generateCode(PWLMap pw){
     ++itres;
   }    
 
-  EquationList eql = simplifyCode(res);
+  EquationList eql = simplifyCode(res); // Remove repeated equations
+  // Add new equations of connects. Keep non-connect equations
+  // as they were
   foreach_(Equation eqi, eql){
     itold = oldeqs.insert(itold, eqi);
     ++itold;
@@ -995,8 +996,8 @@ Pair<ExpList, bool> Connectors::transMulti(MultiInterval mi1, MultiInterval mi2,
 
   if(mi1.ndim_() == mi2.ndim_()){
     foreach_(Interval i1, mi1.inters_()){
-      NI1 m3;
-      NI1 h3;
+      NI2 m3;
+      NI2 h3;
 
       Expression x;
       if(is<Name>(*itnms))
@@ -1010,7 +1011,7 @@ Pair<ExpList, bool> Connectors::transMulti(MultiInterval mi1, MultiInterval mi2,
       }
 
       if(i1.size() == (*itmi2).size()){
-        m3 = (*itmi2).step_() / i1.step_();
+        m3 = (NI2) (*itmi2).step_() / i1.step_();
         h3 = (-m3) * i1.lo_() + (*itmi2).lo_();
 
         BinOp multaux(m3, Mult, x);

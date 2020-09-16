@@ -22,6 +22,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <unistd.h>
 
 #include <flatter/class_finder.h>
@@ -40,10 +41,12 @@ int main(int argc, char** argv){
   using namespace boost;
 
   bool ret;
-  char *className = NULL, *filename = NULL;
+  char *className = NULL;
+  string filename;
   char opt;
   int debug = 0;
   std::ofstream outputFile;
+  cout << "Estoy\n";
 
   while ((opt = getopt(argc, argv, "i:c:g:d")) != -1) {
     switch (opt) {
@@ -57,6 +60,7 @@ int main(int argc, char** argv){
       break;
     }
   }
+
 
   StoredDef sd;
   if (argv[optind] != NULL)
@@ -103,24 +107,14 @@ int main(int argc, char** argv){
     co.solve();
     if(debug){
       std::cerr << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
+      if(filename.empty())
+        co.debug("prueba.dot");
+
       co.debug(filename);
       std::cerr << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
     }
 
     f.removeConnectorVar(mmo);
-    if (debug) 
-      std::cerr << "Final Result: " << endl;
-    /*
-    if(out){
-      if (debug) 
-        std::cout << mmo << std::endl;
-      outputFile << mmo << std::endl;
-      outputFile.close();
-    } 
-
-    else
-      std::cout << mmo << std::endl;
-    */
   } 
 
   else
