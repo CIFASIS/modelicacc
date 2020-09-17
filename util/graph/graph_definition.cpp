@@ -590,6 +590,12 @@ PWAtomLMap reduceInter(Interval i, NI2 g, NI2 o){
   contNI2 ores;
   contNI2::iterator itores = ores.begin();
 
+  if(g == -1){
+    ints.insert(itints, i);
+    gres.insert(itgres, 1);  
+    ores.insert(itores, 0);
+  }
+
   if(g == 0){
     ints.insert(itints, i);
     gres.insert(itgres, g);  
@@ -658,8 +664,19 @@ PWAtomLMap reduceInter(Interval i, NI2 g, NI2 o){
       NI2 aux = o / (g - 1);
       NI1 miniters = ceil(log((i.hi_() + aux) / (i.lo_() + aux)) / log(g));
 
-      NI2 newhi = i.hi_();
-      if(g > 1){
+      if(g > 1 || g < -1){
+        if(g < 0){
+          miniters = ceil(log((i.hi_() + aux) / (i.lo_() + aux)) / log(g * g));
+          miniters = 2 * miniters;
+        
+          NI2 g1 = pow(g, miniters - 1);
+          NI2 y1 = (i.lo_() + aux - g1 * aux) / g1; 
+
+          if(y1 < i.lo_())
+            miniters--;
+        }
+
+        NI2 newhi = i.hi_();
         for(int j = 1; j <= miniters; j++){
           NI2 newg = pow(g, j);
           NI2 newo = newg * aux - aux;
@@ -679,8 +696,19 @@ PWAtomLMap reduceInter(Interval i, NI2 g, NI2 o){
         }
       }
 
-      if(g > 0 && g < 1){
+      if((g > 0 && g < 1) || (g > -1 && g < 0)){
         miniters = ceil(log((i.lo_() + aux) / (i.hi_() + aux)) / log(g));
+
+        if(g < 0){
+          miniters = ceil(log((i.lo_() + aux) / (i.hi_() + aux)) / log(g * g));
+          miniters = 2 * miniters;
+        
+          NI2 g1 = pow(g, miniters - 1);
+          NI2 y1 = (i.hi_() + aux - g1 * aux) / g1; 
+
+          if(y1 > i.hi_())
+            miniters--;
+        }
        
         NI2 newlo = i.lo_(); 
         for(int j = 1; j <= miniters; j++){
@@ -708,7 +736,18 @@ PWAtomLMap reduceInter(Interval i, NI2 g, NI2 o){
       NI1 miniters = ceil(log((i.lo_() + aux) / (i.hi_() + aux)) / log(g));
 
       NI2 newlo = i.lo_();
-      if(g > 1){
+      if(g > 1 || g < -1){
+        if(g < 0){
+          miniters = ceil(log((i.lo_() + aux) / (i.hi_() + aux)) / log(g * g));
+          miniters = 2 * miniters;
+        
+          NI2 g1 = pow(g, miniters - 1);
+          NI2 y1 = (i.hi_() + aux - g1 * aux) / g1; 
+
+          if(y1 > i.hi_())
+            miniters--;
+        }           
+
         for(int j = 1; j <= miniters; j++){
           NI2 newg = pow(g, j);
           NI2 newo = newg * aux - aux;
@@ -728,8 +767,19 @@ PWAtomLMap reduceInter(Interval i, NI2 g, NI2 o){
         }
       }
 
-      if(g > 0 && g < 1){
+      if((g > 0 && g < 1) || (g > -1 && g < 0)){
         miniters = ceil(log((i.hi_() + aux) / (i.lo_() + aux)) / log(g));
+
+        if(g < 0){
+          miniters = ceil(log((i.hi_() + aux) / (i.lo_() + aux)) / log(g * g));
+          miniters = 2 * miniters;
+        
+          NI2 g1 = pow(g, miniters - 1);
+          NI2 y1 = (i.lo_() + aux - g1 * aux) / g1; 
+
+          if(y1 < i.lo_())
+            miniters--;
+        }           
         
         NI2 newhi = i.hi_();
         for(int j = 1; j <= miniters; j++){
@@ -1078,7 +1128,7 @@ PWLMap mapInf(PWLMap pw){
     else
       maxit = floor(log2(maxit)) + 1; 
 
-    cout << "iters: " << maxit << "\n";
+    //cout << "iters: " << maxit << "\n";
     for(int j = 0; j < maxit; ++j)
       res = res.compPW(res);
   }
