@@ -103,32 +103,48 @@ void Connectors::solve(){
   EquationList eql;
 
   //cout << "mmo:\n" << mmoclass_ << "\n\n";
-  createGraph(mmoclass_.equations_ref().equations_ref());
-  debug("prueba.dot");
+  bool ok = createGraph(mmoclass_.equations_ref().equations_ref());
+  if(ok){
+    debug("prueba.dot");
 
-  PWLMap res = connectedComponents(G);
-  cout << res << "\n\n";
+    PWLMap res = connectedComponents(G);
+    cout << res << "\n\n";
 
-  foreach_(Name nm, mmoclass_.variables()){
-    Option<VarInfo> ovi = mmoclass_.getVar(nm);
-    if(ovi){
-      VarInfo vi = *ovi;
-      Name ty = vi.type();
-      if(ty != "Real" && ty != "Integer"){
-        mmoclass_.rmVar(nm);
+    foreach_(Name nm, mmoclass_.variables()){
+      Option<VarInfo> ovi = mmoclass_.getVar(nm);
+      if(ovi){
+        VarInfo vi = *ovi;
+        Name ty = vi.type();
+        if(ty != "Real" && ty != "Integer"){
+          mmoclass_.rmVar(nm);
+        }
       }
     }
+
+    generateCode(res);
+
+    cout << mmoclass_ << "\n";
   }
 
-  generateCode(res);
+  else{
+    SBGraph g;
+    G = g;
 
-  cout << mmoclass_ << "\n";
+    MMO_Class auxmmo;
+    set_mmoclass(auxmmo);
+  }
 }
 
-void Connectors::createGraph(EquationList &eqs){
-  foreach_(Equation &eq, eqs){
-    if(is<Connect>(eq))
-      connect(get<Connect>(eq));
+bool Connectors::createGraph(EquationList &eqs){
+  bool ok = true;
+
+  BOOST_FOREACH(Equation eq, eqs){
+    if(is<Connect>(eq)){
+      ok = connect(get<Connect>(eq));
+
+      if(!ok)
+        break;
+    }
 
     else if(is<ForEq>(eq)){
       vector<Name> auxvars;
@@ -155,7 +171,10 @@ void Connectors::createGraph(EquationList &eqs){
       }
 
       EquationList el = feq.elements();
-      createGraph(el);
+      ok = createGraph(el);
+
+      if(!ok)
+        break;
 
       foreach_(Name auxnm, auxvars){
         mmoclass_.rmVar(auxnm);
@@ -167,9 +186,11 @@ void Connectors::createGraph(EquationList &eqs){
       ++itold;
     }
   }
+
+  return ok;
 }
 
-void Connectors::connect(Connect co){
+bool Connectors::connect(Connect co){
   Expression eleft = co.left(), eright = co.right();
   
   Pair<Name, ExpOptList> left = separate(eleft);
@@ -209,6 +230,9 @@ void Connectors::connect(Connect co){
               e1 = *itinds;
             }
           }
+
+          else
+            return false;
         }
 
         Interval ll = Apply(evexp, e1);
@@ -262,6 +286,9 @@ void Connectors::connect(Connect co){
               e2 = *itinds;
             }
           }
+
+          else
+            return false;
         }
 
         Interval rr = Apply(evexp, e2);
@@ -312,7 +339,11 @@ void Connectors::connect(Connect co){
         }
       }
     }
+
+    return true;
   }
+
+  return false;
 }
 
 // Get expression and range
@@ -459,7 +490,14 @@ MultiInterval Connectors::createVertex(Name n){
 
 // Check if only one variable is used at each subscript
 bool Connectors::checkRanges(ExpOptList range1, ExpOptList range2){
-  std::vector<Name> vars = mmoclass_.variables();
+  std::vector<Name> vars;
+  std::vector<Name>::iterator itvars = vars.begin();
+  std::pair<Name, VarInfo> aux;
+
+  BOOST_FOREACH(aux, mmoclass_.syms()){
+    itvars = vars.insert(itvars, get<0>(aux));
+    ++itvars;
+  }
 
   if(range1 && range2){
     ExpList r1 = range1.get();
@@ -478,49 +516,41 @@ bool Connectors::checkRanges(ExpOptList range1, ExpOptList range2){
 
       while(it1 != r1.end()){
         foreach_(Name n1, vars){
-          Expression e1(n1);
+          Reference r1(n1);
+          Expression e1(r1);
           ContainsExpression co1(e1);
  
           bool cn11 = Apply(co1, *it1);
+          bool cn21 = Apply(co1, *it2);
 
           // This loop checks that there is only one variable at each subscript
           foreach_(Name n2, vars){
-            Expression e2(n2);
+            //cout << n1 << "; " << n2 << "; " << *it1 << "; " << *it2 << "\n";
+            Reference r2(n2);
+            Expression e2(r2);
             ContainsExpression co2(e2);
 
             bool cn12 = Apply(co2, *it1);
+            bool cn22 = Apply(co2, *it2);
 
             if(((cn11 && cn12)) && (n1 != n2)){
-              cerr << "Only one variable permitted at subscript";
+              cerr << "Only one variable permitted at subscript\n";
+              return false;
+            }
+
+            if(((cn21 && cn22)) && (n1 != n2)){
+              cerr << "Only one variable permitted at subscript\n";
+              return false;
+            }
+
+            if((cn11 && cn22) && (n1 != n2)){
+              cerr << "Arrays should use the same counter for the i-th dimension\n";
               return false;
             }
           }
         }
 
         ++it1;
-      }
-
-      while(it2 != r2.end()){
-        foreach_(Name n1, vars){
-          Expression e1(n1);
-          ContainsExpression co1(e1);
- 
-          bool cn21 = Apply(co1, *it2);
-
-          // This loop checks that there is only one variable at each subscript
-          foreach_(Name n2, vars){
-            Expression e2(n2);
-            ContainsExpression co2(e2);
-
-            bool cn22 = Apply(co2, *it2);
-
-            if(((cn21 && cn22)) && (n1 != n2)){
-              cerr << "Only one variable permitted at subscript";
-              return false;
-            }
-          }
-        }
-
         ++it2;
       }
     }
@@ -1055,6 +1085,7 @@ Pair<ExpList, bool> Connectors::transMulti(MultiInterval mi1, MultiInterval mi2,
       }
 
       ++itmi2; 
+      ++itnms;
     }
   }
 

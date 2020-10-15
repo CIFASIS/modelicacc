@@ -8,7 +8,7 @@ model Test
     Electrical n, p;
   end Obj;
 
-  Real N = 1000;
+  Real N = 100000;
   Obj R[2*N];
   Obj C1[N];
   Obj C2[N];

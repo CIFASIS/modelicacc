@@ -56,6 +56,7 @@ class EvalExpression : public boost::static_visitor<Real>{
   Option<Real> val;
 };
 
+// Evaluates only linear expresions
 class EvalExpFlatter{
   public:
   EvalExpFlatter(const VarSymbolTable &);

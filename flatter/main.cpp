@@ -46,7 +46,6 @@ int main(int argc, char** argv){
   char opt;
   int debug = 0;
   std::ofstream outputFile;
-  cout << "Estoy\n";
 
   while ((opt = getopt(argc, argv, "i:c:g:d")) != -1) {
     switch (opt) {

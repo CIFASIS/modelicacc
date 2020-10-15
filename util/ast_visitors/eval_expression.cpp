@@ -508,28 +508,32 @@ Interval EvalExpFlatter::operator()(Reference v) const{
   }
 
   Modification m = vinfo.get().modification().get();
+ 
+  VarSymbolTable auxtable = vtable;
+  auxtable.remove(s); // To check that is linear, preventing i * i, for example
+  EvalExpFlatter evexp(auxtable);
 
   if (is<ModEq>(m)){
     Expression meq = boost::get<ModEq>(m).exp();
-    return ApplyThis(meq);
+    return Apply(evexp, meq);
   }
 
   if (is<ModAssign>(m)){
     Expression meq = boost::get<ModAssign>(m).exp();
-    return ApplyThis(meq);
+    return Apply(evexp, meq);
   }
 
   if (is<ModClass>(m)){
     OptExp oe = get<ModClass>(m).exp();
     if (oe) 
-      return ApplyThis(oe.get());
+      return Apply(evexp, oe.get());
 
     foreach_(Argument a, get<ModClass>(m).modification_ref()){
       if (is<ElMod>(a)){
         ElMod em = boost::get<ElMod>(a);
         if (em.name() == "start" && (em.modification()) && is<ModEq>(em.modification_ref().get())){
           Expression e = get<ModEq>(em.modification_ref().get()).exp();
-          return ApplyThis(e);
+          return Apply(evexp, e);
         }
       }
     }

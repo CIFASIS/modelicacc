@@ -57,8 +57,8 @@ class Connectors{
   void debug(std::string filename);
 
   void solve();
-  void createGraph(EquationList &eqs);
-  void connect(Connect co);
+  bool createGraph(EquationList &eqs);
+  bool connect(Connect co);
   Pair<Name, ExpOptList> separate(Expression e);
   MultiInterval createVertex(Name n);
   bool checkRanges(ExpOptList range1, ExpOptList range2);
