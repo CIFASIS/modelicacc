@@ -2,9 +2,9 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ modelica-dev ]
+    branches: [ modelicacc-dev ]
   pull_request:
-    branches: [ modelica-dev ]
+    branches: [ modelicacc-dev ]
 
 jobs:
   build:
@@ -21,7 +21,6 @@ jobs:
         sudo apt-get install doxygen
         sudo apt-get install g++
         sudo apt-get install make
-        sudo apt-get install qt5-default
           
     - name: Autoconf
       working-directory: .
