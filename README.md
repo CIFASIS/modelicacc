@@ -61,13 +61,18 @@ The simplest way to compile this package is:
   4. You can remove the program binaries and object files from the
      source code directory by typing `make clean`.  
 
+
+## Changelog
+
+## [1.0] - 2020-11-04
+### Added
+- Implemented first version of flattening algorithm
+- Implemented Tarjan algorithm
+- Implemented causalization algorithm
+
 ## Licensing
 
 Please see the file called LICENSE.
-
-## ChangeLog
-
-Please see the file called CHANGELOG.
 
 ## Bug Reporting
 
