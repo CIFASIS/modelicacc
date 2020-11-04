@@ -17,39 +17,42 @@
 
 ******************************************************************************/
 
-#ifndef AST_VISITOR_EVALEXP
-#define AST_VISITOR_EVALEXP
+#ifndef AST_VISITOR_EVALEXP_FLATTER
+#define AST_VISITOR_EVALEXP_FLATTER
 #include <boost/variant/static_visitor.hpp>
 #include <ast/expression.h>
 #include <util/table.h>
+#include <util/graph/graph_definition.h>
 
 namespace Modelica {
 
 using namespace Modelica::AST;
-class EvalExpression : public boost::static_visitor<Real>{
+
+// Evaluates only linear expresions
+class EvalExpFlatter{
   public:
-  EvalExpression(const VarSymbolTable &);
-  EvalExpression(const VarSymbolTable &, Name, Real);
-  Real operator()(Integer v) const;
-  Real operator()(Boolean v) const;
-  Real operator()(String v) const;
-  Real operator()(AddAll v) const;
-  Real operator()(Name v) const;
-  Real operator()(Real v) const;
-  Real operator()(SubEnd v) const;
-  Real operator()(SubAll v) const;
-  Real operator()(BinOp) const;
-  Real operator()(UnaryOp) const;
-  Real operator()(Brace) const;
-  Real operator()(Bracket) const;
-  Real operator()(Call) const;
-  Real operator()(FunctionExp) const;
-  Real operator()(ForExp) const;
-  Real operator()(IfExp) const;
-  Real operator()(Named) const;
-  Real operator()(Output) const;
-  Real operator()(Reference) const;
-  Real operator()(Range) const;
+  EvalExpFlatter(const VarSymbolTable &);
+  EvalExpFlatter(const VarSymbolTable &, Name, Real);
+  Interval operator()(Integer v) const;
+  Interval operator()(Boolean v) const;
+  Interval operator()(AddAll v) const;
+  Interval operator()(String v) const;
+  Interval operator()(Name v) const;
+  Interval operator()(Real v) const;
+  Interval operator()(SubEnd v) const;
+  Interval operator()(SubAll v) const;
+  Interval operator()(BinOp) const;
+  Interval operator()(UnaryOp) const;
+  Interval operator()(Brace) const;
+  Interval operator()(Bracket) const;
+  Interval operator()(Call) const;
+  Interval operator()(FunctionExp) const;
+  Interval operator()(ForExp) const;
+  Interval operator()(IfExp) const;
+  Interval operator()(Named) const;
+  Interval operator()(Output) const;
+  Interval operator()(Reference) const;
+  Interval operator()(Range) const;
   const VarSymbolTable &vtable;
   Option<Name> name;
   Option<Real> val;
