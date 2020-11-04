@@ -11,3 +11,6 @@ configure
 .project
 .settings
 *.Td
+
+# 3rd-party files.
+/3rd-party/gtest/usr/*
