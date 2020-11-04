@@ -1,5 +1,4 @@
-ModelicaCC
-----------
+## ModelicaCC
 
 ModelicaCC is a Modelica C Compiler implemented in C++, the main goal of this project is to provide an environment to develop and test novel algorithms involved in the different compilation stages of large scale Modelica models. The different stages of the compilation pipeline follows the usual order: 
 
@@ -19,52 +18,57 @@ The following tools are generated:
   * flatter
   * causalize
   * mmo
-  
-Installation
-------------
+
+## Related Publications
+
+[1] Federico Bergero, Mariano Botta, Esteban Campostrini, Ernesto Kofman.
+**Efficient Compilation of Large Scale Dynamical Systems**
+Proceedings of the 11th International Modelica Conference 2015
+
+[2] Pablo Zimmermann, Joaquin Fernandez, Ernesto Kofman.
+**Set-based graph methods for fast equation sorting in large DAE systems**
+ EOOLT '19: Proceedings of the 9th International Workshop on Equation-based Object-oriented Modeling Languages and Tools 2019
+
+## Installation
 
 These are generic installation instructions.
 
-Dependences
------------
+## Dependences
 
 In order to be able to install and compile ModelicaCC, 
 the following  dependencies must be installed: 
 
     * autoconf
+    * boost1.71
+    * cmake
+    * doxygen
     * g++
     * libginac-dev 
-    * boost (>= 1.67)
-    * doxygen
     * make     
 
-Basic Installation
-------------------
+## Basic Installation
 
 The simplest way to compile this package is:
 
-  1. `cd' to the directory containing the package's source code and type
-     `autoconf' to generate the configuration scripts.
+  1. `cd` to the directory containing the package's source code and type
+     `autoconf` to generate the configuration scripts.
   
-  2. Type `./configure' to run the configuration script.
+  2. Type `./configure` to run the configuration script.
   
-  3. Type `make' to compile all the binaries. The different tools are located 
+  3. Type `make` to compile all the binaries. The different tools are located 
      in the bin folder. 
 
   4. You can remove the program binaries and object files from the
-     source code directory by typing `make clean'.  
+     source code directory by typing `make clean`.  
 
-Licensing
----------
+## Licensing
 
 Please see the file called LICENSE.
 
-ChangeLog
-----------
+## ChangeLog
 
 Please see the file called CHANGELOG.
 
-Bug Reporting
--------------
+## Bug Reporting
 
 Report bugs to: fernandez@cifasis-conicet.gov.ar
