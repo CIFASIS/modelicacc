@@ -10,3 +10,6 @@ configure
 .cproject
 .project
 .settings
+
+# 3rd-party files.
+/3rd-party/gtest/usr/*
