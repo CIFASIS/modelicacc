@@ -37,7 +37,7 @@
 
 using namespace Modelica;
 using namespace Modelica::AST;
-using namespace Graph;
+using namespace SBG;
 
 typedef Option<ExpList> ExpOptList; 
 
