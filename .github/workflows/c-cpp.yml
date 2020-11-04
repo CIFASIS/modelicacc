@@ -17,6 +17,7 @@ jobs:
       run: | 
         sudo apt-get install autoconf
         sudo apt-get install boost1.71
+        sudo apt-get install cmake
         sudo apt-get install doxygen
         sudo apt-get install g++
         sudo apt-get install make
@@ -29,7 +30,10 @@ jobs:
       working-directory: .
       run: ./configure
 
-
     - name: Build
       working-directory: .
       run: make
+
+    - name: Doc
+      working-directory: .
+      run: make doc
