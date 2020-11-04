@@ -10,3 +10,4 @@ configure
 .cproject
 .project
 .settings
+*.Td
