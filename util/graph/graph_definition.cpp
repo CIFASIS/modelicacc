@@ -32,6 +32,8 @@
 #include <util/graph/graph_definition.h>
 #include <util/table.h>
 
+namespace SBG {
+
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 // Concrete classes
@@ -1358,4 +1360,6 @@ PWLMap connectedComponents(SBGraph g){
   }
 
   return res;
+}
+
 }
