@@ -28,7 +28,6 @@
 #include <flatter/class_finder.h>
 #include <mmo/mmo_class.h>
 
-#include <util/ast_visitors/eval_expression.h>
 #include <util/ast_visitors/replace_expression.h>
 #include <util/ast_visitors/constant_expression.h>
 #include <util/graph/graph_definition.h>

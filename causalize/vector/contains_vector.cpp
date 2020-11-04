@@ -51,6 +51,8 @@ ContainsVector::ContainsVector(VectorVertexProperty unk, VarSymbolTable &s, Inde
 
 bool ContainsVector::operator()(Modelica::AST::Integer v) const { return exp == Expression(v); }
 
+bool ContainsVector::operator()(AddAll v) const { return false; }
+
 bool ContainsVector::operator()(Boolean v) const { return exp == Expression(v); }
 
 bool ContainsVector::operator()(String v) const { return exp == Expression(v); }

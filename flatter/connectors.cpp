@@ -18,6 +18,8 @@
 #include <flatter/connectors.h>
 
 #include <util/ast_visitors/contains_expression.h>
+#include <util/ast_visitors/eval_expression.h>
+#include <util/ast_visitors/eval_expression_flatter.h>
 
 using namespace std;
 using namespace Modelica;

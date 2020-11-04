@@ -34,6 +34,7 @@ class ContainsVector : public boost::static_visitor<bool> {
   ContainsVector(Expression, VectorVertexProperty, const VarSymbolTable &);
   ContainsVector(VectorVertexProperty, VarSymbolTable &, IndexList);
   bool operator()(Modelica::AST::Integer v) const;
+  bool operator()(AddAll v) const;
   bool operator()(Boolean v) const;
   bool operator()(String v) const;
   bool operator()(Name v) const;
