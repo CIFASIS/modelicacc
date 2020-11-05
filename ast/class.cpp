@@ -159,7 +159,9 @@ std::ostream& operator<<(std::ostream& out, const EnumClass& c)
   if (c.final()) out << "final ";
   if (c.encapsulated()) out << "encapsulated ";
   out << c.name() << " =  enumeration (";
+  out << c.enum_spec();
   out << ")";
+  
   return out;
 }
 member_imp(DerClass, bool, final);

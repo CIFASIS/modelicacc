@@ -10,7 +10,7 @@ GTEST_CODE      := $(GTEST_DIR).tar.gz
 # Flags, Libraries and Includes
 CXXFLAGS = -std=c++14 -I. -Wall -Werror -Wno-reorder -O3 
 ifeq ($(MODE),Debug)
-CXXFLAGS 	+= -g  
+CXXFLAGS 	+= -ggdb  
 endif
 DEPDIR := .
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
@@ -32,15 +32,17 @@ SRC_COMMON := \
 		parser/equation.cpp \
 		parser/statement.cpp \
 		parser/class.cpp \
-		parser/parser.cpp
+		parser/parser.cpp \
 
 all: lib-gtest $(LIBMODELICA)
+
 
 include antialias/Makefile.include
 include mmo/Makefile.include
 include flatter/Makefile.include
 include causalize/Makefile.include
 include test/causalize/Makefile.include
+include test/util/Makefile.include
 
 OBJS_COMMON = $(SRC_COMMON:.cpp=.o)
 
@@ -73,7 +75,8 @@ create-dirs:
 	@mkdir -p $(ROOT)/lib
 
 clean:
-	$(RM) -rf $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(LIBMODELICA) doc
+	$(RM) -rf $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(LIBMODELICA) doc; \
+	find . -name "*.d" -delete
 
 help:
 	@echo "make MODE=<Debug|Release> "

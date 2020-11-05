@@ -30,6 +30,7 @@ class ReplaceExpression : public boost::static_visitor<Expression> {
   ReplaceExpression(Expression, Expression);
   Expression operator()(Integer v) const;
   Expression operator()(Boolean v) const;
+  Expression operator()(AddAll v) const;
   Expression operator()(String v) const;
   Expression operator()(Name v) const;
   Expression operator()(Real v) const;

@@ -29,6 +29,22 @@ DotExpression::DotExpression(Option<MMO_Class &> m, Name n, ExpList xs) : _class
 };
 Expression DotExpression::operator()(Integer v) const { return v; }
 Expression DotExpression::operator()(Boolean v) const { return v; }
+Expression DotExpression::operator()(AddAll v) const{
+  RefTuple rt = v.arr(); 
+  Name name;
+  ExpList indices;
+
+  if(syms) 
+    if(syms.get()[get<0>(rt)]) 
+      name = prefix + "_";
+
+  name += get<0>(rt);
+  indices += get<1>(rt);
+
+  RefTuple rtres(name, indices);
+  AddAll res(rtres);
+  return res;
+}
 Expression DotExpression::operator()(String v) const { return v; }
 Expression DotExpression::operator()(Name v) const { return v; }
 Expression DotExpression::operator()(Real v) const { return v; }

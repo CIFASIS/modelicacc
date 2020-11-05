@@ -26,13 +26,14 @@
 namespace Modelica {
 
 using namespace Modelica::AST;
-class EvalExpression : public boost::static_visitor<Real> {
+class EvalExpression : public boost::static_visitor<Real>{
   public:
   EvalExpression(const VarSymbolTable &);
   EvalExpression(const VarSymbolTable &, Name, Real);
   Real operator()(Integer v) const;
   Real operator()(Boolean v) const;
   Real operator()(String v) const;
+  Real operator()(AddAll v) const;
   Real operator()(Name v) const;
   Real operator()(Real v) const;
   Real operator()(SubEnd v) const;
@@ -53,5 +54,6 @@ class EvalExpression : public boost::static_visitor<Real> {
   Option<Name> name;
   Option<Real> val;
 };
+
 }  // namespace Modelica
 #endif

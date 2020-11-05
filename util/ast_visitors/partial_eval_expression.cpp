@@ -37,6 +37,10 @@ Expression PartialEvalExpression::operator()(Real v) const
   return v;
 }
 Expression PartialEvalExpression::operator()(Boolean v) const { return v; }
+Expression PartialEvalExpression::operator()(AddAll v) const {
+  WARNING("Not evaluating AddAll exp");
+  return v;
+}
 Expression PartialEvalExpression::operator()(String v) const { return v; }
 Expression PartialEvalExpression::operator()(Name v) const { return v; }
 Expression PartialEvalExpression::operator()(Expression v) const { return v; }

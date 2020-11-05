@@ -103,6 +103,7 @@ std::ostream& operator<<(std::ostream& out, const ElRedecl& e)  // output
     ElRepl elr = boost::get<ElRepl>(e.argument());
     out << elr;
   }
+
   return out;
 }
 
@@ -123,6 +124,9 @@ std::ostream& operator<<(std::ostream& out, const ShortClass& c)  // output
       out << c.modification().get();
     }
   }
+
+  if(c.enum_spec()) out << c.enum_spec().get();
+
   return out;
 }
 
@@ -218,7 +222,8 @@ ShortClass::ShortClass(ClassPrefixes cp, Name n, TypePrefixes tp, Name der, Opti
   }
   enum_spec_ = Option<EnumSpec>();
 };
-ShortClass::ShortClass(ClassPrefixes, Name, EnumSpec, Comment) { abort(); }
+ShortClass::ShortClass(ClassPrefixes cp, Name n, EnumSpec es, Comment comm) : 
+  prefixes_(cp), name_(n), enum_spec_(es), comment_(comm){}
 bool ShortClass::operator==(const ShortClass& other) const
 {
   // TODO
@@ -264,5 +269,26 @@ std::ostream& operator<<(std::ostream& out, const Comment& c)
   }
   return out;
 }
+
+member_imp(Enum, Name, name);
+member_imp(Enum, Comment, comment);
+std::ostream& operator<<(std::ostream &out, const Enum &e){
+  out << e.name() << " " << e.comment();
+  return out;
+}
+
+EnumSpec::EnumSpec(EnumList el) : list_(el){};
+member_imp(EnumSpec, EnumList, list);
+std::ostream& operator<<(std::ostream &out, const EnumSpec &es){
+  int i = 0, l = es.list().size();
+
+  foreach_(Enum e, es.list()){ 
+    out << e;
+    if (++i < l) out << ", ";
+  }
+
+  return out;
+}
+
 }  // namespace AST
 }  // namespace Modelica

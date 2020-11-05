@@ -1,0 +1,31 @@
+all: test/parse/parse 
+SRC_PARSER_TEST := test/parse/print_parse.cpp \
+    parser/statement.cpp \
+    util/debug.cpp \
+    parser/class.cpp \
+    parser/equation.cpp \
+    parser/expression.cpp \
+    parser/ident.cpp \
+    parser/modification.cpp \
+    parser/parser.cpp \
+    mmo/mmo_class.cpp \
+    mmo/mmo_tree.cpp \
+    util/table.cpp \
+    util/type.cpp \
+	util/ast_visitors/dot_expression.cpp \
+	util/ast_visitors/mark_connector.cpp \
+	util/ast_visitors/eval_expression.cpp \
+	util/ast_visitors/partial_eval_expression.cpp \
+	util/ast_visitors/constant_expression.cpp \
+	util/ast_visitors/replace_expression.cpp \
+    flatter/class_finder.cpp
+
+OBJS_PARSER_TEST= $(SRC_PARSER_TEST:.cpp=.o)
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_PARSER_TEST)))
+
+test/parse/parse: $(OBJS_PARSER_TEST) $(LIBMODELICA)
+	$(CXX) $(CXXFLAGS) -o test/parse/parse $(OBJS_PARSER_TEST) -L./lib -lmodelica -lboost_system -lboost_filesystem
+
+
+
+	

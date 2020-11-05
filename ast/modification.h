@@ -98,18 +98,20 @@ struct Comment {
 };
 
 struct Enum {
+  Enum(){};
   member_(Name, name);
   member_(Comment, comment);
+  printable(Enum);
   comparable(Enum);
 };
 typedef std::vector<Enum> EnumList;
 
 struct EnumSpec {
   EnumSpec(){};
-  EnumSpec(EnumList){};
+  EnumSpec(EnumList);
   member_(EnumList, list);
-  comparable(EnumSpec);
   printable(EnumSpec);
+  comparable(EnumSpec);
 };
 
 struct ShortClass {

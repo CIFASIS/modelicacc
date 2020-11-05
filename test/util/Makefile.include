@@ -1,17 +1,22 @@
-OBJS_TEST_UTIL := $(OBJS_COMMON) \
-            causalize/compref_occurrence.o \
-            util/type_check.o \
-            mmo/mmo_class.o \
-            util/ast_util.o \
-            util/symbol_table.o \
-            util/debug.o \
-            util/type.o \
-            test/util/EvalExpTest.o
+all: test/util/GraphTest test/util/PrintGraphs
 
-LIB_TEST = -lboost_unit_test_framework
+SRC_TEST_UTIL1 := test/util/GraphTest.cpp \
+    util/graph/graph_definition.cpp \
+    util/debug.cpp 
 
-test/util/EvalExpTest: $(OBJS_TEST_UTIL)
-	$(CXX) $(CXXFLAGS) -o test/util/EvalExpTest $(OBJS_TEST_UTIL) $(LIB_TEST)
+SRC_TEST_UTIL2 := test/util/PrintGraphs.cpp
+
+OBJS_TEST_UTIL1= $(SRC_TEST_UTIL1:.cpp=.o)
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_TEST_UTIL1)))
+
+OBJS_TEST_UTIL2= $(SRC_TEST_UTIL2:.cpp=.o)
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_TEST_UTIL2)))
+
+test/util/GraphTest: $(OBJS_TEST_UTIL1)
+	$(CXX) $(CXXFLAGS) -o test/util/GraphTest $(OBJS_TEST_UTIL1) $(LIB_TEST)
+
+test/util/PrintGraphs: $(OBJS_TEST_UTIL2)
+	$(CXX) $(CXXFLAGS) -o test/util/PrintGraphs $(OBJS_TEST_UTIL2) $(LIB_TEST)
 
 
 

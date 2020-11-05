@@ -38,6 +38,7 @@ class StateVariablesFinder : public boost::static_visitor<void> {
   StateVariablesFinder(Modelica::MMO_Class &c);
   void findStateVariables();
   void operator()(Modelica::AST::Integer v) const;
+  void operator()(AddAll v) const;
   void operator()(Boolean v) const;
   void operator()(String v) const;
   void operator()(Name v) const;

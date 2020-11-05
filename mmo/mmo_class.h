@@ -61,6 +61,7 @@ struct MMO_Class {
   member_(ImportList, imports);
   member_(MMO_Class *, father);
   void addVar(Name n, VarInfo var);
+  void rmVar(Name n);
   Option<VarInfo> getVar(Name n);
   bool isLocal(Name n);
 };

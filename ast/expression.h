@@ -60,6 +60,7 @@ typedef enum { Not, Minus, Plus } UnaryOpType;
 typedef enum { FALSE, TRUE } Bool;
 
 struct BinOp;
+struct AddAll;
 struct UnaryOp;
 struct Boolean;
 struct IfExp;
@@ -79,7 +80,7 @@ struct Named;
 typedef variant<Integer, String, Boolean, Name, Real, SubEnd, SubAll, recursive_wrapper<BinOp>, recursive_wrapper<UnaryOp>,
                 recursive_wrapper<Brace>, recursive_wrapper<Bracket>, recursive_wrapper<Call>, recursive_wrapper<FunctionExp>,
                 recursive_wrapper<ForExp>, recursive_wrapper<IfExp>, recursive_wrapper<Named>, recursive_wrapper<Output>,
-                recursive_wrapper<Reference>, recursive_wrapper<Range>>
+                recursive_wrapper<Reference>, recursive_wrapper<Range>, recursive_wrapper<AddAll>>
     Expression;
 
 typedef std::vector<Expression> ExpList;
@@ -99,6 +100,20 @@ struct SubEnd {
 struct SubAll {
   comparable(SubAll);
   printable(SubAll);
+};
+
+// WARNING: this structure is intended to be used
+// in flatter stage. Use in previous stages is not
+// recommended since its use will probably
+// not be handled.
+struct AddAll{
+  AddAll();
+  AddAll(RefTuple arr);
+
+  member_(RefTuple, arr);
+
+  printable(AddAll);
+  comparable(AddAll);
 };
 
 struct String {

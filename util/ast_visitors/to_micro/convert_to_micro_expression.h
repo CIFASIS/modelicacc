@@ -31,6 +31,7 @@ class ConvertToMicroExpression : public boost::static_visitor<Expression> {
   ConvertToMicroExpression(MMO_Class &cl, unsigned int &discont, bool for_when = false, bool in_algorithm = false);
   Expression operator()(Integer v) const;
   Expression operator()(Boolean v) const;
+  Expression operator()(AddAll v) const;
   Expression operator()(String v) const;
   Expression operator()(Name v) const;
   Expression operator()(Real v) const;
