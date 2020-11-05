@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+
+import subprocess
+
+def get_files():
+    return subprocess.check_output(['git', 'diff-index','--cached',
+                                    '--name-only', 'HEAD']).split()
+
+def apply_code_style():
+    files = filter(lambda x: x.find('tests/integration/gt_data') == -1, get_files())
+
+    files = filter(lambda x: x.endswith('.c') or
+                             x.endswith('.h') or
+                             x.endswith('.cpp'), files)
+    for f in files:
+      print("Apply code style to: " + f)
+      subprocess.check_output(['clang-format-7', '-i', f])
+      subprocess.check_output(['git', 'add', f])
+
+def main():
+    apply_code_style()
+
+if (__name__ == '__main__'):
+    main()
