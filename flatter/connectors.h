@@ -32,6 +32,7 @@
 #include <util/ast_visitors/replace_expression.h>
 #include <util/ast_visitors/constant_expression.h>
 #include <util/graph/graph_definition.h>
+#include <util/graph/graph_algorithms.h>
 #include <util/graph/graph_printer.h>
 #include <util/table.h>
 #include <util/type.h>

@@ -2,6 +2,7 @@ all: test/util/GraphTest test/util/PrintGraphs
 
 SRC_TEST_UTIL1 := test/util/GraphTest.cpp \
     util/graph/graph_definition.cpp \
+    util/graph/graph_algorithms.cpp \
     util/debug.cpp 
 
 SRC_TEST_UTIL2 := test/util/PrintGraphs.cpp

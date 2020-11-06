@@ -23,6 +23,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <time.h>
 #include <unistd.h>
 
 #include <flatter/class_finder.h>
@@ -103,13 +104,23 @@ int main(int argc, char** argv){
     }
 
     Connectors co(mmo);
+
+    clock_t start, end;
+    start = clock();
+
     co.solve();
+
+    end = clock();
+    double exect = double(end - start) / double(CLOCKS_PER_SEC);
+
     if(debug){
       std::cerr << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
       if(filename.empty())
         co.debug("prueba.dot");
 
       co.debug(filename);
+
+      std::cout << "Execution time: " << exect << "\n"; 
       std::cerr << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
     }
 

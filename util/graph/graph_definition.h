@@ -225,7 +225,8 @@ struct IntervalImp1{
   int minElem(){
     return lo;
   }
-  
+ 
+  // Cardinality of interval 
   int size(){
     int res = (hi - lo) / step + 1;
     return res;
@@ -490,9 +491,13 @@ struct MultiInterImp1{
 
   int size(){
     int res = 1;
+
     BOOST_FOREACH(IntervalImp i, inters){
       res *= i.size();
     }
+
+    if(inters.empty())
+      res = 0;
 
     return res; 
   }
@@ -608,6 +613,10 @@ struct AtomSetImp1{
     return AtomSetImp1(aset.replace(i, dim));
   }
 
+  int size(){
+    return aset.size();
+  }
+
   bool operator==(const AtomSetImp1 &other) const{
     return aset == other.aset;
   }
@@ -693,8 +702,14 @@ struct SetImp1{
   bool empty(){
     if(asets.empty())
       return true;
+
+    bool res = true;
+    BOOST_FOREACH(ASetImp as, asets){
+      if(!as.empty())
+        res = false;
+    }
   
-    return false;
+    return res;
   }
 
   bool isIn(CT1<NumImp> elem){
@@ -808,6 +823,25 @@ struct SetImp1{
     return SetImp1(res);
   }
 
+  bool subseteq(SetImp1 &s2){
+    SetImp1 sdiff = (*this).diff(s2);
+
+    if(sdiff.empty())
+      return true;
+
+    return false; 
+  }
+
+  bool subset(SetImp1 &s2){
+    SetImp1 sdiff1 = (*this).diff(s2);
+    SetImp1 sdiff2 = s2.diff(*this);
+ 
+    if(sdiff1.empty() && !sdiff2.empty())
+      return true;
+
+    return false;
+  }
+
   CT1<NumImp> minElem(){
     CT1<NumImp> res;
  
@@ -823,6 +857,16 @@ struct SetImp1{
     }
 
     return min.minElem();
+  }
+
+  int size(){
+    int res = 0;
+
+    BOOST_FOREACH(ASetImp as, asets){
+      res += as.size();
+    }
+
+    return res;
   }
 
   bool operator==(const SetImp1 &other) const{
@@ -1187,8 +1231,8 @@ struct PWLMapImp1{
   typedef CT1<LMapImp> CTLMap;
   typedef typename CT1<LMapImp>::iterator CTLMapIt;
 
-  CT1<SetImp> dom; 
-  CT1<LMapImp> lmap;  
+  CTSet dom; 
+  CTLMap lmap;  
   int ndim = 0;
 
   PWLMapImp1(){}
@@ -1199,8 +1243,12 @@ struct PWLMapImp1{
   
     if(d.size() == l.size()){
       BOOST_FOREACH(SetImp sd, d){
-        if(sd.ndim_() != auxndim || (*itl).ndim_() != auxndim)
-          different = true;
+        BOOST_FOREACH(ASetImp as, sd.asets_()){
+          PWAtomLMapImp pwatom(as, *itl);
+
+          if(pwatom.empty())
+            different = true;
+        }
 
         ++itl; 
       }
@@ -1371,49 +1419,68 @@ struct PWLMapImp1{
     return PWLMapImp1(ress, reslm);
   }
  
-  PWLMapImp1 minInvCompact(){
+  /*
+  PWLMapImp1 minInvCompact(SetImp s){
     // Only one component
     if(dom.size() == 1){
       SetImp auxDom = (*(dom.begin()));
-      SetImp domInv = image(auxDom);
+      //SetImp auxIm = image(auxDom);
+      //SetImp domInv = s.cap(auxIm);
       LMapImp auxMap = (*(lmap.begin()));
       LMapImp mapInv = auxMap.invLMap();
-      CT1<NumImp1> min = auxDom.minElem();
-      typename CT1<NumImp1>::iterator itmin = min.begin();
-
-      CT1<NumImp2> resg;
-      typename CT1<NumImp2>::iterator itresg = resg.begin();
-      CT1<NumImp2> reso;
-      typename CT1<NumImp2>::iterator itreso = reso.begin();
 
       CT1<NumImp2> g = mapInv.gain_();
       CT1<NumImp2> o = mapInv.off_(); 
       typename CT1<NumImp2>::iterator ito = o.begin();
-      BOOST_FOREACH(NumImp2 gi, g){
-        if(gi == Inf){
-          itresg = resg.insert(itresg, 0);
-          ++itresg;
-          itreso = reso.insert(itreso, *itmin);
-          ++itreso;
+
+      CTSet domRes;
+      CTSetIt itDomRes = domRes.begin();
+      CTLMap lmRes;
+      CTLMapIt itLmRes = lmRes.begin();
+      BOOST_FOREACH(ASetImp as, auxDom.asets_()){
+        PWAtomLMapImp auxpw(as, auxMap);
+        ASetImp im = auxpw.image(as);
+        SetImp sim;
+        sim.addAtomSet(im);
+        SetImp domi = sim.cap(s); 
+
+        itDomRes = domRes.insert(itDomRes, domi);
+        ++itDomRes;
+
+        CT1<NumImp2> resg;
+        typename CT1<NumImp2>::iterator itresg = resg.begin();
+        CT1<NumImp2> reso;
+        typename CT1<NumImp2>::iterator itreso = reso.begin();
+        ito = o.begin();
+
+        CT1<NumImp1> min = as.minElem();
+        typename CT1<NumImp1>::iterator itmin = min.begin();
+ 
+        BOOST_FOREACH(NumImp2 gi, g){
+          if(gi == Inf){
+            itresg = resg.insert(itresg, 0);
+            ++itresg;
+            itreso = reso.insert(itreso, *itmin);
+            ++itreso;
+          }
+
+          else{
+            itresg = resg.insert(itresg, gi);
+            ++itresg;
+            itreso = reso.insert(itreso, *ito);
+            ++itreso;
+          }
+
+          ++ito;
+          ++itmin;
         }
 
-        else{
-          itresg = resg.insert(itresg, gi);
-          ++itresg;
-          itreso = reso.insert(itreso, *ito);
-          ++itreso;
-        }
-
-        ++ito;
-        ++itmin;
+        LMapImp auxlm(resg, reso);
+        itLmRes = lmRes.insert(itLmRes, auxlm);
+        ++itLmRes;
       }
 
-      CTSet auxDomRes;
-      auxDomRes.insert(auxDomRes.begin(), domInv);
-      LMapImp auxLM(resg, reso);
-      CTLMap auxLMRes;
-      auxLMRes.insert(auxLMRes.begin(), auxLM);
-      return PWLMapImp1(auxDomRes, auxLMRes); 
+      return PWLMapImp1(domRes, lmRes); 
     }
 
     else{
@@ -1422,6 +1489,60 @@ struct PWLMapImp1{
       PWLMapImp1 aux;
       return aux;
     }
+  }
+  */
+
+  PWLMapImp1 minInvCompact(SetImp s){
+    CTSet domRes;
+    CTLMap lmRes;
+
+    if(dom.size() == 1){
+      SetImp wDom = wholeDom();
+      CT1<NumImp1> minElem = wDom.minElem(); 
+      typename CT1<NumImp1>::iterator itmin = minElem.begin();
+      SetImp im = image(wDom);
+      SetImp domInv = im.cap(s);
+
+      if(domInv.empty()){
+        PWLMapImp1 res;
+        return res;
+      }
+
+      domRes.insert(domRes.begin(), domInv);
+
+      LMapImp lm = *(lmap.begin());
+      LMapImp lmInv = lm.invLMap();
+      CT1<NumImp2> g = lmInv.gain_();
+      CT1<NumImp2> o = lmInv.off_(); 
+      typename CT1<NumImp2>::iterator ito = o.begin(); 
+      CT1<NumImp2> gres;
+      typename CT1<NumImp2>::iterator itgres = gres.begin();
+      CT1<NumImp2> ores;
+      typename CT1<NumImp2>::iterator itores = ores.begin();
+
+      BOOST_FOREACH(NumImp2 gi, g){
+        if(gi == Inf){
+          itgres = gres.insert(itgres, 0);
+          itores = ores.insert(itores, *itmin);
+        } 
+
+        else{
+          itgres = gres.insert(itgres, gi);
+          itores = ores.insert(itores, *ito);
+        }
+
+        ++ito;
+        ++itgres;
+        ++itores;
+        ++itmin;
+      }
+
+      LMapImp aux(gres, ores);
+      lmRes.insert(lmRes.begin(), aux);
+    }
+
+    PWLMapImp1 res(domRes, lmRes);
+    return res;
   }
 
   SetImp wholeDom(){
@@ -1494,6 +1615,50 @@ struct PWLMapImp1{
     PWLMapImp1 res(dres, lres);
     return res;
   }
+  
+  PWLMapImp1 concat(PWLMapImp1 &pw2){
+    CTSetIt itdom = dom.end(); 
+    CTLMapIt itlmap = lmap.end(); 
+
+    BOOST_FOREACH(SetImp s, pw2.dom_()){
+      itdom = dom.insert(itdom, s);
+      ++itdom;
+    }
+
+    BOOST_FOREACH(LMapImp lm, pw2.lmap_()){
+      itlmap = lmap.insert(itlmap, lm);
+      ++itlmap;
+    }
+
+    PWLMapImp1 res(dom, lmap);
+    return res;
+  } 
+
+  PWLMapImp1 restrictMap(SetImp newdom){
+    CTSet resdom;
+    CTSetIt itresdom = resdom.begin();
+    CTLMap reslm;
+    CTLMapIt itreslm = reslm.begin();
+
+    CTSetIt itdom = dom.begin();
+    CTLMapIt itlm = lmap.begin();
+
+    for(; itdom != dom.end(); ++itdom){
+      SetImp scap = newdom.cap(*itdom);
+
+      if(!scap.empty()){
+        itresdom = resdom.insert(itresdom, scap);
+        ++itresdom;
+        itreslm = reslm.insert(itreslm, *itlm);
+        ++itreslm;
+      }
+
+      ++itlm;
+    }
+
+    PWLMapImp1 res(resdom, reslm);
+    return res;
+  }
 
   bool operator==(const PWLMapImp1 &other) const{
     return dom == other.dom && lmap == other.lmap;
@@ -1562,6 +1727,7 @@ ostream &operator<<(ostream &out, PWLMap &pw);
 PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2);
 PWLMap minPW(Set &dom, LMap &lm1, LMap &lm2);
 PWLMap minMap(PWLMap &pw1, PWLMap &pw2);
+PWLMap minInv(PWLMap &pw, Set &s);
 
 PWLMap reduceMapN(PWLMap pw, int dim);
 
@@ -1602,6 +1768,14 @@ struct SetVertex{
     return vs;
   }
 
+  bool operator==(const SetVertex &other) const{
+    return id == other.id;
+  }
+
+  size_t hash(){
+    return id;
+  }
+
   // For pretty-printing
   string name;
 
@@ -1613,6 +1787,8 @@ struct SetVertex{
   // For debugging
   int index;
 };
+
+size_t hash_value(SetVertex v);
 
 struct SetEdge{
   SetEdge(){
@@ -1646,6 +1822,10 @@ struct SetEdge{
     return es2;
   }
 
+  int id_(){
+    return id;
+  }
+
   string name;
 
   private:
@@ -1661,7 +1841,6 @@ typedef SBGraph::vertex_descriptor SetVertexDesc;
 typedef boost::graph_traits<SBGraph>::vertex_iterator VertexIt;
 typedef SBGraph::edge_descriptor SetEdgeDesc;
 typedef boost::graph_traits<SBGraph>::edge_iterator EdgeIt;
-
-PWLMap connectedComponents(SBGraph g);
+typedef boost::graph_traits<SBGraph>::out_edge_iterator OutEdgeIt;
 
 #endif
