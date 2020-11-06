@@ -68,6 +68,7 @@ void StateVariablesFinder::findStateVariables()
   }
 }
 
+void StateVariablesFinder::operator()(AddAll v) const { return; }
 void StateVariablesFinder::operator()(Integer v) const { return; }
 void StateVariablesFinder::operator()(Boolean v) const { return; }
 void StateVariablesFinder::operator()(String v) const { return; }

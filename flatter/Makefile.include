@@ -10,6 +10,7 @@ SRC_FLATTER := flatter/main.cpp \
     util/ast_visitors/contains_expression.cpp \
 	util/ast_visitors/dot_expression.cpp \
 	util/ast_visitors/eval_expression.cpp \
+	util/ast_visitors/eval_expression_flatter.cpp \
 	util/ast_visitors/mark_connector.cpp \
 	util/ast_visitors/partial_eval_expression.cpp \
 	util/ast_visitors/replace_expression.cpp \

@@ -22,7 +22,6 @@
 #include <boost/variant/static_visitor.hpp>
 #include <ast/expression.h>
 #include <util/table.h>
-#include <util/graph/graph_definition.h>
 
 namespace Modelica {
 
@@ -56,34 +55,5 @@ class EvalExpression : public boost::static_visitor<Real>{
   Option<Real> val;
 };
 
-// Evaluates only linear expresions
-class EvalExpFlatter{
-  public:
-  EvalExpFlatter(const VarSymbolTable &);
-  EvalExpFlatter(const VarSymbolTable &, Name, Real);
-  Interval operator()(Integer v) const;
-  Interval operator()(Boolean v) const;
-  Interval operator()(AddAll v) const;
-  Interval operator()(String v) const;
-  Interval operator()(Name v) const;
-  Interval operator()(Real v) const;
-  Interval operator()(SubEnd v) const;
-  Interval operator()(SubAll v) const;
-  Interval operator()(BinOp) const;
-  Interval operator()(UnaryOp) const;
-  Interval operator()(Brace) const;
-  Interval operator()(Bracket) const;
-  Interval operator()(Call) const;
-  Interval operator()(FunctionExp) const;
-  Interval operator()(ForExp) const;
-  Interval operator()(IfExp) const;
-  Interval operator()(Named) const;
-  Interval operator()(Output) const;
-  Interval operator()(Reference) const;
-  Interval operator()(Range) const;
-  const VarSymbolTable &vtable;
-  Option<Name> name;
-  Option<Real> val;
-};
 }  // namespace Modelica
 #endif

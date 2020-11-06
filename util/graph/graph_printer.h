@@ -36,7 +36,7 @@ using namespace std;
 #define INSERT_TAB depth += TAB_SPACE;
 #define DELETE_TAB depth -= TAB_SPACE;
 
-namespace Graph{
+namespace SBG {
   class GraphPrinter{
     public:
     GraphPrinter(const SBGraph &g, const int mod) 
@@ -136,5 +136,6 @@ namespace Graph{
       return e.name;
     };
   };
-} // namespace Graph
+} // namespace SBG
+
 #endif

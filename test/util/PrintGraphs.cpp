@@ -26,6 +26,8 @@
 #include <util/graph/graph_definition.h>
 #include <util/graph/graph_printer.h>
 
+using namespace SBG;
+
 int main(){
   float offSp = 0;
   float offSn = 1;
@@ -218,7 +220,7 @@ int main(){
   g1[e4] = E4;
   g1[e5] = E5;
 
-  Graph::GraphPrinter gp1(g1, -1);
+  GraphPrinter gp1(g1, -1);
   std::string fn1("graph1.dot");
   gp1.printGraph(fn1);
 
@@ -435,7 +437,7 @@ int main(){
   g2[ee5] = EE5;
   g2[ee6] = EE6;
 
-  Graph::GraphPrinter gp2(g2, -1);
+  GraphPrinter gp2(g2, -1);
   std::string fn2("graph2.dot");
   gp2.printGraph(fn2);
 

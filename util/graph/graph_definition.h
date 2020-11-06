@@ -48,6 +48,8 @@
 #include <util/debug.h>
 #include <util/table.h>
 
+namespace SBG {
+
 using namespace std;
 
 #define Inf numeric_limits<int>::max()
@@ -1842,5 +1844,7 @@ typedef boost::graph_traits<SBGraph>::vertex_iterator VertexIt;
 typedef SBGraph::edge_descriptor SetEdgeDesc;
 typedef boost::graph_traits<SBGraph>::edge_iterator EdgeIt;
 typedef boost::graph_traits<SBGraph>::out_edge_iterator OutEdgeIt;
+
+} // SBG namespace
 
 #endif

@@ -32,9 +32,13 @@
 #include <util/graph/graph_definition.h>
 #include <util/table.h>
 
+<<<<<<< HEAD
 size_t hash_value(SetVertex v){
   return v.hash();
 }
+=======
+namespace SBG {
+>>>>>>> 8ad23294214d94512f90d4758a77dfed2ea41a60
 
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
@@ -883,4 +887,6 @@ SetEdge restrictEdge(SetEdge e, Set dom){
 
   SetEdge res(e.name, e.id_(), res1, res2, 0);
   return res;
+}
+
 }

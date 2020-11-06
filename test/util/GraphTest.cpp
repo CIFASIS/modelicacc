@@ -29,6 +29,8 @@
 
 using namespace boost::unit_test;
 
+using namespace SBG;
+
 /// @brief If sb-graphs containers implementation changes (uses vector, for example)
 /// this typedef should also change.
 //typedef UnordCT<Interval> contInt1;
@@ -4751,7 +4753,7 @@ void Test2D(){
   PWLMap res1 = connectedComponents(g);
   cout << "Test2D: \n" << res1 << "\n";
 
-  Graph::GraphPrinter gp3(g, -1);
+  GraphPrinter gp3(g, -1);
   std::string fn3("graph3.dot");
   gp3.printGraph(fn3);
   
