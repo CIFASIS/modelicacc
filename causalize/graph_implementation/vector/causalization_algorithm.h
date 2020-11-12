@@ -17,31 +17,32 @@
 
 ******************************************************************************/
 
-/*
- * This class provides the interface to build the causalization
- * graph which is then going to be processed by the causalization
- * algorithm. Since there may be more than one way of building it
- * we'll have a base abstract class and (maybe) several concrete
- * implementations.
- */
+#include <causalize/graph_implementation/vector/vector_graph_definition.h>
 #include <mmo/mmo_class.h>
-#include <causalize/vector/vector_graph_definition.h>
-#include <causalize/state_variables_finder.h>
 
 namespace Causalize {
-class ReducedGraphBuilder {
+class CausalizationStrategyVector {
   public:
-  ReducedGraphBuilder(MMO_Class &mmo_cl);
-  ~ReducedGraphBuilder(){};
-  virtual VectorCausalizationGraph makeGraph();
+  CausalizationStrategyVector(Causalize::VectorCausalizationGraph g, Modelica::MMO_Class &m);
+  bool Causalize();
+  void PrintCausalizationResult();
 
   private:
-  int getForRangeSize(Modelica::AST::ForEq);
-  list<Causalize::VectorEquationVertex> equationDescriptorList;
-  list<Causalize::VectorUnknownVertex> unknownDescriptorList;
-  StateVariablesFinder state_finder;
-  MMO_Class &mmo_class;
-  Causalize::VectorCausalizationGraph graph;
-};
+  void SolveEquations();
+  void Causalize1toN(const Unknown unknown, const Equation equation, const IndexPairSet ips);
+  void CausalizeNto1(const Unknown unknown, const Equation equation, const IndexPairSet ips);
+  Vertex GetEquation(Edge e);
+  Vertex GetUnknown(Edge e);
+  Option<std::pair<VectorEdge, IndexPairSet>> CanCausalizeEquation(VectorEquationVertex eq);
+  Option<std::pair<VectorEdge, IndexPairSet>> CanCausalizeUnknown(VectorUnknownVertex eq);
 
+  int step;
+  int equationNumber;
+  int unknownNumber;
+  Causalize::VectorCausalizationGraph graph;
+  std::list<Causalize::VectorVertex> equationDescriptors, unknownDescriptors;
+  std::vector<Causalize::CausalizedVar> equations1toN;
+  std::vector<Causalize::CausalizedVar> equationsNto1;
+  Modelica::MMO_Class &mmo;
+};
 }  // namespace Causalize

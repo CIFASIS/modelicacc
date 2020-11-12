@@ -24,15 +24,16 @@
  *      Author: Moya
  */
 
+#include <cassert>
 #include <iostream>
 #include <boost/variant/variant.hpp>
 #include <boost/variant/get.hpp>
 
-#include <causalize/state_variables_finder.h>
+#include <util/ast_visitors/state_variables_finder.h>
+
 #include <ast/expression.h>
-#include <util/table.h>
 #include <util/debug.h>
-#include <cassert>
+#include <util/table.h>
 
 StateVariablesFinder::StateVariablesFinder(MMO_Class &c) : _c(c) {}
 

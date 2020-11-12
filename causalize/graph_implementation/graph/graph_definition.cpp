@@ -22,7 +22,7 @@
  *      Author: Diego Hollmann
  */
 
-#include <causalize/graph/graph_definition.h>
+#include <causalize/graph_implementation/graph/graph_definition.h>
 #include <ast/expression.h>
 #include <boost/variant/get.hpp>
 #include <util/debug.h>

@@ -24,7 +24,7 @@
 #include <util/ast_visitors/partial_eval_expression.h>
 #include <util/ast_visitors/replace_equation.h>
 #include <util/ast_visitors/replace_statement.h>
-#include <causalize/state_variables_finder.h>
+#include <util/ast_visitors/state_variables_finder.h>
 #include <algorithm>
 #include <vector>
 

@@ -1,5 +1,5 @@
-#include <causalize/unknowns_collector.h>
-#include <causalize/causalization_strategy.h>
+#include <causalize/graph_implementation/unknowns_collector.h>
+#include <causalize/graph_implementation/causalization_strategy.h>
 
 #include <parser/parser.h>
 #include <ast/ast_types.h>

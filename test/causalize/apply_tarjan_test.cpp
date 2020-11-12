@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/included/unit_test.hpp>
 
-#include <causalize/apply_tarjan.h>
+#include <causalize/graph_implementation/apply_tarjan.h>
 
 #include <util/debug.h>
 

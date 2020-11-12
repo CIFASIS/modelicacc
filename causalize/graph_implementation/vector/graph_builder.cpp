@@ -17,9 +17,9 @@
 
 ******************************************************************************/
 
-#include <causalize/vector/graph_builder.h>
-#include <causalize/vector/vector_graph_definition.h>
-#include <causalize/vector/contains_vector.h>
+#include <causalize/graph_implementation/vector/graph_builder.h>
+#include <causalize/graph_implementation/vector/vector_graph_definition.h>
+#include <causalize/graph_implementation/vector/contains_vector.h>
 #include <util/ast_visitors/eval_expression.h>
 
 #include <boost/graph/adjacency_list.hpp>

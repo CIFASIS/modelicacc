@@ -8,7 +8,7 @@
 #include <ast/class.h>
 #include <mmo/mmo_class.h>
 #include <util/table.h>
-#include <causalize/for_unrolling/process_for_equations.h>
+#include <causalize/graph_implementation/for_unrolling/process_for_equations.h>
 #include <boost/variant/variant.hpp>
 #include <boost/variant/get.hpp>
 
