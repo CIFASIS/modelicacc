@@ -24,14 +24,14 @@
  *      Author: fede
  */
 
-#include <causalize/causalization_strategy.h>
-#include <causalize/graph/graph_definition.h>
-#include <causalize/graph/graph_printer.h>
+#include <causalize/graph_implementation/causalization_strategy.h>
+#include <causalize/graph_implementation/graph/graph_definition.h>
+#include <causalize/graph_implementation/graph/graph_printer.h>
 #include <ast/ast_types.h>
-#include <causalize/for_unrolling/process_for_equations.h>
+#include <causalize/graph_implementation/for_unrolling/process_for_equations.h>
 #include <util/debug.h>
-#include <causalize/unknowns_collector.h>
-#include <causalize/apply_tarjan.h>
+#include <causalize/graph_implementation/unknowns_collector.h>
+#include <causalize/graph_implementation/apply_tarjan.h>
 #include <boost/lambda/lambda.hpp>
 #include <ast/equation.h>
 #include <boost/variant/get.hpp>

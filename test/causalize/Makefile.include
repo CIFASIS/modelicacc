@@ -7,27 +7,27 @@ OBJS_TEST_CAUSALIZATION := $(OBJS_COMMON) \
                   util/ast_visitors/part_evalexp.o \
                   util/ast_visitors/ginac_interface.o \
                   util/ast_visitors/contains.o \
-                  causalize/for_unrolling/for_index_iterator.o \
-                  causalize/for_unrolling/process_for_equations.o \
-                  causalize/state_variables_finder.o \
-                  causalize/unknowns_collector.o \
-                  causalize/causalization_strategy.o \
-                  causalize/vector/contains_vector.o \
-                  causalize/vector/graph_builder.o \
-                  causalize/apply_tarjan.o \
+                  util/ast_visitors/state_variables_finder.o \
+                  causalize/graph_implementation/for_unrolling/for_index_iterator.o \
+                  causalize/graph_implementation/for_unrolling/process_for_equations.o \
+                  causalize/graph_implementation/unknowns_collector.o \
+                  causalize/graph_implementation/causalization_strategy.o \
+                  causalize/graph_implementation/vector/contains_vector.o \
+                  causalize/graph_implementation/vector/graph_builder.o \
+                  causalize/graph_implementation/apply_tarjan.o \
                   mmo/mmo_class.o
                                                       
 OBJS_TEST_TARJAN := util/debug.o \
-                    causalize/apply_tarjan.o \
+                    causalize/graph_implementation/apply_tarjan.o \
                     test/causalize/apply_tarjan_test.o
 
 TEST_LIBS = -lboost_unit_test_framework -L./lib -lmodelica -lginac
 
-test/causalize/causalization_strategy_test: $(OBJS_TEST_CAUSALIZATION) test/causalize/causalization_strategy_test.o
-	$(CXX) $(CXXFLAGS) -o test/causalize/causalization_strategy_test $(OBJS_TEST_CAUSALIZATION) test/causalize/causalization_strategy_test.o $(TEST_LIBS)
+test/causalize/causalization_strategy_test: $(OBJS_TEST_CAUSALIZATION) test/causalize/graph_implementation/causalization_strategy_test.o
+	$(CXX) $(CXXFLAGS) -o test/causalize/graph_implementation/causalization_strategy_test $(OBJS_TEST_CAUSALIZATION) test/causalize/graph_implementation/causalization_strategy_test.o $(TEST_LIBS)
       
 test/causalize/apply_tarjan_test: $(OBJS_TEST_TARJAN) lib/libmodelica.a
-	$(CXX) $(CXXFLAGS) -o test/causalize/apply_tarjan_test $(OBJS_TEST_TARJAN) $(TEST_LIBS)
+	$(CXX) $(CXXFLAGS) -o test/causalize/graph_implementation/apply_tarjan_test $(OBJS_TEST_TARJAN) $(TEST_LIBS)
 
-test/causalize/performance_test: $(OBJS_TEST_CAUSALIZATION) test/causalize/performance_test.o
-	$(CXX) $(CXXFLAGS) -o test/causalize/performance_test $(OBJS_TEST_CAUSALIZATION) test/causalize/performance_test.o $(TEST_LIBS)
+test/causalize/performance_test: $(OBJS_TEST_CAUSALIZATION) test/causalize/graph_implementation/performance_test.o
+	$(CXX) $(CXXFLAGS) -o test/causalize/graph_implementation/performance_test $(OBJS_TEST_CAUSALIZATION) test/causalize/graph_implementation/performance_test.o $(TEST_LIBS)

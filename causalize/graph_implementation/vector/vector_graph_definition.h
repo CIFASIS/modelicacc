@@ -28,7 +28,7 @@
 
 #include <ast/equation.h>
 #include <mmo/mmo_class.h>
-#include <causalize/graph/graph_definition.h>
+#include <causalize/graph_implementation/graph/graph_definition.h>
 
 namespace Causalize {
 /// @brief This is the property for a vertex in the incidence graph. Nodes can be of two types: Equation or Unknow.

@@ -9,7 +9,7 @@ SRC_ANTIALIAS := antialias/main.cpp \
 	util/ast_visitors/replace_expression.cpp \
 	util/ast_visitors/replace_equation.cpp \
 	util/ast_visitors/replace_statement.cpp \
-	causalize/state_variables_finder.cpp \
+	util/ast_visitors/state_variables_finder.cpp \
 	antialias/remove_alias.cpp
 
 LIBS=-L./lib -lginac -lmodelica 

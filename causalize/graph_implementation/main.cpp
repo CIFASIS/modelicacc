@@ -23,15 +23,15 @@
 #include <ast/equation.h>
 #include <mmo/mmo_class.h>
 #include <util/debug.h>
-#include <causalize/for_unrolling/process_for_equations.h>
-#include <causalize/causalization_strategy.h>
-#include <causalize/vector/causalization_algorithm.h>
-#include <causalize/vector/graph_builder.h>
+#include <causalize/graph_implementation/for_unrolling/process_for_equations.h>
+#include <causalize/graph_implementation/causalization_strategy.h>
+#include <causalize/graph_implementation/vector/causalization_algorithm.h>
+#include <causalize/graph_implementation/vector/graph_builder.h>
 #include <cstdlib>
 #include <stdio.h>
 #include <iostream>
 #include <boost/variant/get.hpp>
-#include <causalize/vector/splitfor.h>
+#include <causalize/graph_implementation/vector/splitfor.h>
 
 using namespace std;
 using namespace Modelica;

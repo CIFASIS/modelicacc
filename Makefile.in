@@ -40,7 +40,7 @@ all: lib-gtest $(LIBMODELICA)
 include antialias/Makefile.include
 include mmo/Makefile.include
 include flatter/Makefile.include
-include causalize/Makefile.include
+include causalize/graph_implementation/Makefile.include
 include test/causalize/Makefile.include
 include test/util/Makefile.include
 
