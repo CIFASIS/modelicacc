@@ -32,6 +32,8 @@
 #include <util/graph/graph_definition.h>
 #include <util/table.h>
 
+using namespace SBG;
+
 // Connected components --------------------------------------------------------------------------
 
 PWLMap connectedComponents(SBGraph g);
@@ -49,7 +51,7 @@ struct MatchingStruct{
 
   UnordCT<Set> split(Set ftilde);
 
-  SetPath waspf(Set ftilde, bool rec);
+  SetPath waspf(Set ftilde);
   SetPath waspu(Set utilde);
 
   SBGraph g;

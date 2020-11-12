@@ -186,7 +186,7 @@ MatchingStruct::MatchingStruct(SBGraph garg){
   Pmax = emptyPath;
 }
 
-SetPath MatchingStruct::waspf(Set ftilde, bool rec){
+SetPath MatchingStruct::waspf(Set ftilde){
   SetPath pmax;
 
   if(!ftilde.empty()){
@@ -201,27 +201,10 @@ SetPath MatchingStruct::waspf(Set ftilde, bool rec){
         wmax = sz;
 
         SetPath auxp;
-        PWLMap auxinv;
-        Set auxinvim;
 
-        if(rec){
-          Set mapUdom = mapU.wholeDom();
-          Set newdom = mapUdom.diff(eh);
-          PWLMap mapUaux = mapU.restrictMap(newdom);
-          auxinv = minInv(mapUaux, uhn);
-          Set wDom = mapU.wholeDom();
-          Set wIm = mapU.image(wDom);
-          auxinvim = auxinv.image(wIm);
-        }
-
-        else{
-          //auxinv = minInv(mapU, uhn);
-          //Set pre = mapU.preImage(uhn);
-          //auxinvim = pre.cap(eh);
-          auxinv = minInv(mapU, uhn);
-          auxinvim = auxinv.image(uhn);
-        }
-
+        PWLMap mapUaux = mapU.restrictMap(eh);
+        PWLMap auxinv = minInv(mapUaux, uhn);
+        Set auxinvim = auxinv.image(uhn);
 
         auxp.insert(auxp.begin(), auxinvim); 
         pmax = auxp;
@@ -247,16 +230,12 @@ SetPath MatchingStruct::waspf(Set ftilde, bool rec){
           if(!phat.empty()){
             Set p1 = *(phat.begin());
 
-            if(p1.size() >= wmax){
-              wmax = uhm.size(); // TODO
-              Set auxdom = mapU.image(p1);
-              Set mapUdom = mapU.wholeDom();
-              Set mapUdomu = mapUdom.diff(matchedE);
-              Set newdom = mapUdomu.diff(p1);
-              PWLMap mapUaux = mapU.restrictMap(newdom);
-              PWLMap auxinv = minInv(mapUaux, auxdom);
-              Set wDom = auxinv.wholeDom();
-              Set auxinvim = auxinv.image(wDom);
+            if(p1.size() > wmax){
+              wmax = uhm.size(); 
+              Set imp1 = mapU.image(p1);
+              PWLMap mapUaux = mapU.restrictMap(eh);
+              PWLMap auxinv = minInv(mapUaux, imp1);
+              Set auxinvim = auxinv.image(imp1);
 
               phat.insert(phat.begin(), auxinvim);
               pmax = phat;
@@ -291,24 +270,19 @@ SetPath MatchingStruct::waspu(Set utilde){
 
       if(notinpath){
         currentF.insert(auxFi);
-        SetPath phat = waspf(auxFi, true);
+        SetPath phat = waspf(auxFi);
         currentF.erase(auxFi);
 
         if(!phat.empty()){
           Set p1 = *(phat.begin());
           int sz = p1.size();
-          if(sz >= wmax){
+          if(sz > wmax){
             wmax = sz;
-            Set auxdom = mapF.image(p1);
-            Set mapFdom = mapF.wholeDom();
-            Set mapFdomm = mapFdom.cap(matchedE);
-            Set newdom = mapFdomm.diff(p1);
-            PWLMap mapFaux = mapF.restrictMap(newdom);
-            PWLMap auxinv = minInv(mapFaux, auxdom);
-            Set wDom = auxinv.wholeDom();
-            Set auxinvim = auxinv.image(wDom);
+            Set imp1 = mapF.image(p1);
+            Set predom = mapF.preImage(imp1);
+            Set matchedom = predom.cap(matchedE);
             
-            phat.insert(phat.begin(), auxinvim);
+            phat.insert(phat.begin(), matchedom);
             pmax = phat;
           }
         }
@@ -320,22 +294,16 @@ SetPath MatchingStruct::waspu(Set utilde){
 }
 
 Set MatchingStruct::SBGMatching(){
-  //TODO: caso vacio
+  VertexIt vi_start, vi_end;
+  boost::tie(vi_start, vi_end) = vertices(g);
 
-  SetPath P;
+  if(vi_start != vi_end){
+    SetPath P;
 
-  UnordCT<Set> F = auxF;
+    UnordCT<Set> F = auxF;
 
-  BOOST_FOREACH(Set f, F){
     do{
-      /*
-      Set ftilde;
-      BOOST_FOREACH(Set auxs1, auxF){
-        if(auxs1.size() > ftilde.size())
-          ftilde = auxs1;
-      }
-      */
-      Set ftilde = f.diff(matchedF);
+      Set ftilde = *(auxF.begin()); // TODO: hacer bien la heurística
 
       UnordCT<Set> emptyUnordSet;
       visitedU = emptyUnordSet;
@@ -345,14 +313,14 @@ Set MatchingStruct::SBGMatching(){
       emptyUnordSet.insert(ftilde);
       currentF = emptyUnordSet;
 
-      P = waspf(ftilde, false);
+      P = waspf(ftilde);
 
       if(!P.empty()){
         Set p1 = *(P.begin());
         Set newFm = mapF.image(p1);
         Set Fm = matchedF.cup(newFm);
         matchedF = Fm;
- 
+
         OrdCT<Set>::iterator Pend = P.end();
         Pend--;
         Set pn = *Pend;
@@ -370,11 +338,13 @@ Set MatchingStruct::SBGMatching(){
             UnordCT<Set> auxFaux = auxF;
             BOOST_FOREACH(Set auxFi, auxFaux){
               if(currentf.subset(auxFi)){
-                Set diffFi = auxFi.diff(currentf);
                 auxF.erase(auxFi);
-                auxF.insert(diffFi);
-                auxF.insert(currentf);
+                Set fiDiff = auxFi.diff(currentf);
+                auxF.insert(fiDiff);
               }
+
+              else 
+                auxF.erase(currentf);
             } 
           }
 
