@@ -71,9 +71,9 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     Expression l = Apply(peval, eq.left_ref());
     Expression r = Apply(peval, eq.right_ref());
     if (l == crs.front()) {
-      if (!Apply(Modelica::ContainsExpression(crs.front(), syms), eq.right_ref())) return eqs;
+      if (!Apply(Modelica::ContainsExpression(crs.front()), eq.right_ref())) return eqs;
     } else if (r == crs.front()) {
-      if (!Apply(Modelica::ContainsExpression(crs.front(), syms), eq.left_ref())) {
+      if (!Apply(Modelica::ContainsExpression(crs.front()), eq.left_ref())) {
         return EquationList(1, Equality(r, l));
       }
     }
