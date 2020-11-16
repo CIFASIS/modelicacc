@@ -17,13 +17,6 @@
 
 ******************************************************************************/
 
-/*
- * apply_tarjan.cpp
- *
- *  Created on: 21/12/2014
- *      Author: fede
- */
-
 #include <causalize/graph_implementation/apply_tarjan.h>
 #include <util/debug.h>
 

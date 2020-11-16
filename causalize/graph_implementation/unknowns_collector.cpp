@@ -17,13 +17,6 @@
 
 ******************************************************************************/
 
-/*
- * collect_unknowns.cpp
- *
- *  Created on: 29/04/2013
- *      Author: fede
- */
-
 #include <ast/queries.h>
 #include <causalize/graph_implementation/unknowns_collector.h>
 #include <util/ast_visitors/eval_expression.h>

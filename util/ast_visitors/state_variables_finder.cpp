@@ -17,13 +17,6 @@
 
 ******************************************************************************/
 
-/*
- * findstate.cpp
- *
- *  Created on: 28/04/2013
- *      Author: Moya
- */
-
 #include <cassert>
 #include <iostream>
 #include <boost/variant/variant.hpp>

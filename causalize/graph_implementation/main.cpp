@@ -23,7 +23,7 @@
 #include <ast/equation.h>
 #include <mmo/mmo_class.h>
 #include <util/debug.h>
-#include <causalize/graph_implementation/for_unrolling/process_for_equations.h>
+#include <causalize/common/for_unrolling/process_for_equations.h>
 #include <causalize/graph_implementation/causalization_strategy.h>
 #include <causalize/graph_implementation/vector/causalization_algorithm.h>
 #include <causalize/graph_implementation/vector/graph_builder.h>

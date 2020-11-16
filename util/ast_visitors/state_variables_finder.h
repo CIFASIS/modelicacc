@@ -17,13 +17,6 @@
 
 ******************************************************************************/
 
-/*
- * findstate.h
- *
- *  Created on: 28/04/2013
- *      Author: fede
- */
-
 #include <ast/expression.h>
 #include <mmo/mmo_class.h>
 #include <util/table.h>

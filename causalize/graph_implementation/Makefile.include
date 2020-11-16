@@ -1,7 +1,5 @@
 all: bin/grp_causalize 
-SRC_CAUSALIZE :=  causalize/graph_implementation/main.cpp \
-                  causalize/graph_implementation/for_unrolling/for_index_iterator.cpp \
-                  causalize/graph_implementation/for_unrolling/process_for_equations.cpp \
+SRC_GRP_CAUSALIZE :=  causalize/graph_implementation/main.cpp \
                   causalize/graph_implementation/apply_tarjan.cpp \
                   causalize/graph_implementation/unknowns_collector.cpp \
                   causalize/graph_implementation/causalization_strategy.cpp \
@@ -10,6 +8,8 @@ SRC_CAUSALIZE :=  causalize/graph_implementation/main.cpp \
                   causalize/graph_implementation/vector/causalization_algorithm.cpp \
                   causalize/graph_implementation/vector/splitfor.cpp \
                   causalize/graph_implementation/graph/graph_definition.cpp \
+                  causalize/common/for_unrolling/for_index_iterator.cpp \
+                  causalize/common/for_unrolling/process_for_equations.cpp \
                   util/debug.cpp \
                   util/table.cpp \
                   util/type.cpp \
@@ -23,9 +23,9 @@ SRC_CAUSALIZE :=  causalize/graph_implementation/main.cpp \
                   mmo/mmo_class.cpp
 
 
-OBJS_CAUSALIZE = $(SRC_CAUSALIZE:.cpp=.o)
+OBJS_GRP_CAUSALIZE = $(SRC_GRP_CAUSALIZE:.cpp=.o)
 -include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_CAUSALIZE)))
 LIB_CAUSALIZE = -L./lib -lmodelica -lginac
 
-bin/grp_causalize: $(OBJS_CAUSALIZE) lib/libmodelica.a
-	$(CXX) $(CXXFLAGS) -o bin/grp_causalize $(OBJS_CAUSALIZE) $(LIB_CAUSALIZE)
+bin/grp_causalize: $(OBJS_GRP_CAUSALIZE) lib/libmodelica.a
+	$(CXX) $(CXXFLAGS) -o bin/grp_causalize $(OBJS_GRP_CAUSALIZE) $(LIB_CAUSALIZE)

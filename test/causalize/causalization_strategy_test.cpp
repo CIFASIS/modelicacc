@@ -1,8 +1,14 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/included/unit_test.hpp>
 
+<<<<<<< HEAD
 #include <causalize/graph_implementation/unknowns_collector.h>
 #include <causalize/graph_implementation/causalization_strategy.h>
+=======
+#include <causalize/unknowns_collector.h>
+#include <causalize/causalization_strategy.h>
+#include <causalize/contains_unknown.h>
+>>>>>>> origin/experimental_multidim_intentional_causalization
 
 #include <parser/parser.h>
 #include <ast/ast_types.h>
@@ -10,23 +16,27 @@
 #include <mmo/mmo_class.h>
 #include <util/table.h>
 #include <util/debug.h>
-#include <util/ast_visitors/contains.h>
+#include <util/ast_visitors/contains_expression.h>
 
 #include <boost/variant/get.hpp>
 
 using namespace boost::unit_test;
 using namespace Modelica::AST;
+using namespace Causalize;
 
+<<<<<<< HEAD
 void check_causality(MMO_Class& mmoClass, ExpList unknowns)
 {
   const EquationList& causalEqs = mmoClass.equations_ref().equations_ref();
+=======
+void check_causality(MMO_Class &mmo_class, ExpList unknowns) {
 
-  /*
-   * Here we collect the left side of each
-   * equation.
-   */
-  ExpList knowns;
+  const EquationList &causalEqs = mmo_class.equations_ref().equations_ref();
+>>>>>>> origin/experimental_multidim_intentional_causalization
 
+    foreach_(Equation equation, causalEqs) {
+
+<<<<<<< HEAD
   foreach_(Equation equation, causalEqs)
   {
     Equality eqEq = boost::get<Equality>(equation);
@@ -42,11 +52,17 @@ void check_causality(MMO_Class& mmoClass, ExpList unknowns)
       foreach_(OptExp oe, output.args())
       {
         if (oe) knowns.push_back(oe.get());
+=======
+      ContainsUnknown occurrs(unknowns, mmo_class.syms());
+      ERROR_UNLESS(is<Equality>(equation),"Must be only equality equations here");
+      Equality eqEq = boost::get<Equality>(equation);
+      Apply(occurrs, eqEq.right_ref());
+      if (occurrs.getUsages().size()!=0) {
+        ERROR("Using no causalized unknown");
+>>>>>>> origin/experimental_multidim_intentional_causalization
       }
-    } else {
-      ERROR("Unexpected type for equation's left expression\n");
-    }
 
+<<<<<<< HEAD
     foreach_(Expression unknown, unknowns)
     {
       Modelica::contains occurrs(unknown);
@@ -59,16 +75,38 @@ void check_causality(MMO_Class& mmoClass, ExpList unknowns)
           }
         }
         BOOST_CHECK(isKnown);
+=======
+      ExpList::iterator known = std::find(unknowns.begin(), unknowns.end(), eqEq.left_ref());
+      if (known!=unknowns.end()) {
+        unknowns.erase(known);
+      } else {
+        ERROR("Causalizing unknown already causalized");
+>>>>>>> origin/experimental_multidim_intentional_causalization
       }
+
     }
+<<<<<<< HEAD
   }
+=======
+
+    if (unknowns.size()!=0) {
+      ERROR("Uncausalized unknowns");
+    } else {
+      std::cout << "Model causalized correctly\n";
+    }
+
+>>>>>>> origin/experimental_multidim_intentional_causalization
 }
 
 void rlc_test()
 {
   bool r;
 
+<<<<<<< HEAD
   StoredDef sd = parseFile("rlc.mo", r);
+=======
+  StoredDef sd = Parser::ParseFile("rlc.mo",r);
+>>>>>>> origin/experimental_multidim_intentional_causalization
 
   if (!r) ERROR("Can't parse file\n");
 
@@ -78,8 +116,8 @@ void rlc_test()
   UnknownsCollector collector(mmo);
   ExpList unknowns = collector.collectUnknowns();
 
-  CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize("Anything");
+  Causalize::CausalizationStrategy cStrategy(mmo);
+  cStrategy.Causalize();
 
   check_causality(mmo, unknowns);
 }
@@ -88,7 +126,11 @@ void rlc_simple_test()
 {
   bool r;
 
+<<<<<<< HEAD
   StoredDef sd = parseFile("rlc.mo", r);
+=======
+  StoredDef sd = Parser::ParseFile("rlc.mo",r);
+>>>>>>> origin/experimental_multidim_intentional_causalization
 
   if (!r) ERROR("Can't parse file\n");
 
@@ -98,8 +140,8 @@ void rlc_simple_test()
   UnknownsCollector collector(mmo);
   ExpList unknowns = collector.collectUnknowns();
 
-  CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize_simple("Anything");
+  Causalize::CausalizationStrategy cStrategy(mmo);
+  cStrategy.CausalizeSimple();
 
   check_causality(mmo, unknowns);
 }
@@ -108,7 +150,11 @@ void rlc_loop_test()
 {
   bool r;
 
+<<<<<<< HEAD
   StoredDef sd = parseFile("rlc_loop.mo", r);
+=======
+  StoredDef sd = Parser::ParseFile("rlc_loop.mo",r);
+>>>>>>> origin/experimental_multidim_intentional_causalization
 
   if (!r) ERROR("Can't parse file\n");
 
@@ -118,8 +164,8 @@ void rlc_loop_test()
   UnknownsCollector collector(mmo);
   ExpList unknowns = collector.collectUnknowns();
 
-  CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize("Anything");
+  Causalize::CausalizationStrategy cStrategy(mmo);
+  cStrategy.Causalize();
 
   check_causality(mmo, unknowns);
 }
@@ -128,7 +174,11 @@ void rlc_loop_tarjan_test()
 {
   bool r;
 
+<<<<<<< HEAD
   StoredDef sd = parseFile("rlc_loop.mo", r);
+=======
+  StoredDef sd = Parser::ParseFile("rlc_loop.mo",r);
+>>>>>>> origin/experimental_multidim_intentional_causalization
 
   if (!r) ERROR("Can't parse file\n");
 
@@ -138,8 +188,8 @@ void rlc_loop_tarjan_test()
   UnknownsCollector collector(mmo);
   ExpList unknowns = collector.collectUnknowns();
 
-  CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize_tarjan("Anything");
+  Causalize::CausalizationStrategy cStrategy(mmo);
+  cStrategy.CausalizeTarjan();
 
   check_causality(mmo, unknowns);
 }
@@ -148,7 +198,11 @@ void OneDHeatTransferTI_FD_test()
 {
   bool r;
 
+<<<<<<< HEAD
   StoredDef sd = parseFile("OneDHeatTransferTI_FD_100.mo", r);
+=======
+  StoredDef sd = Parser::ParseFile("OneDHeatTransferTI_FD_100.mo",r);
+>>>>>>> origin/experimental_multidim_intentional_causalization
 
   if (!r) ERROR("Can't parse file\n");
 
@@ -158,8 +212,8 @@ void OneDHeatTransferTI_FD_test()
   UnknownsCollector collector(mmo);
   ExpList unknowns = collector.collectUnknowns();
 
-  CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize("Anything");
+  Causalize::CausalizationStrategy cStrategy(mmo);
+  cStrategy.Causalize();
 
   check_causality(mmo, unknowns);
 }
@@ -168,7 +222,11 @@ void OneDHeatTransferTI_FD_simple_test()
 {
   bool r;
 
+<<<<<<< HEAD
   StoredDef sd = parseFile("OneDHeatTransferTI_FD.mo", r);
+=======
+  StoredDef sd = Parser::ParseFile("OneDHeatTransferTI_FD.mo",r);
+>>>>>>> origin/experimental_multidim_intentional_causalization
 
   if (!r) ERROR("Can't parse file\n");
 
@@ -178,8 +236,8 @@ void OneDHeatTransferTI_FD_simple_test()
   UnknownsCollector collector(mmo);
   ExpList unknowns = collector.collectUnknowns();
 
-  CausalizationStrategy cStrategy(mmo);
-  cStrategy.causalize_simple("Anything");
+  Causalize::CausalizationStrategy cStrategy(mmo);
+  cStrategy.CausalizeSimple();
 
   check_causality(mmo, unknowns);
 }

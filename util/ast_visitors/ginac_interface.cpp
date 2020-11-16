@@ -25,14 +25,32 @@
 #include <sstream>
 #include <ginac/ginac.h>
 #include <util/ast_visitors/ginac_interface.h>
+#include <util/ast_visitors/eval_expression.h>
 #include <boost/tuple/tuple.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/lexical_cast.hpp>
 #include <util/debug.h>
 #include <ast/queries.h>
 #include <parser/parser.h>
 
 using namespace GiNaC;
+using namespace std;
 REGISTER_FUNCTION(der, dummy())
 REGISTER_FUNCTION(pre, dummy())
+
+REGISTER_FUNCTION(user_fun1_1, dummy())
+REGISTER_FUNCTION(user_fun1_2, dummy())
+REGISTER_FUNCTION(user_fun1_3, dummy())
+
+REGISTER_FUNCTION(user_fun2_1, dummy())
+REGISTER_FUNCTION(user_fun2_2, dummy())
+REGISTER_FUNCTION(user_fun2_3, dummy())
+
+REGISTER_FUNCTION(user_fun3_1, dummy())
+REGISTER_FUNCTION(user_fun3_2, dummy())
+REGISTER_FUNCTION(user_fun3_3, dummy())
 
 static ex var_derivative(const ex &x, const ex &y, unsigned diff_param) { return der(x); }
 REGISTER_FUNCTION(var, derivative_func(var_derivative))
@@ -72,9 +90,12 @@ void my_print_add_dflt(const add & s, const print_dflt & c, unsigned level) {
 namespace Modelica {
 
 using namespace GiNaC;
+std::map<int, Name> ConvertToGiNaC::function3_directory;
+int ConvertToGiNaC::user_func1 = 0;
+int ConvertToGiNaC::user_func2 = 0;
+int ConvertToGiNaC::user_func3 = 0;
 ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable &var, bool forDerivation) : varEnv(var), _forDerivation(forDerivation) {}
 
-GiNaC::ex ConvertToGiNaC::operator()(AddAll v) const { return ex(0); }
 GiNaC::ex ConvertToGiNaC::operator()(Integer v) const { return ex(v); }
 GiNaC::ex ConvertToGiNaC::operator()(Boolean v) const
 {
@@ -165,22 +186,47 @@ GiNaC::ex ConvertToGiNaC::operator()(Call v) const
     Reference r = get<Reference>(arg);
     GiNaC::ex exp = ConvertToGiNaC::operator()(r);
     std::stringstream ss;
-    ss << "der(" << exp << ")";
+    ss << "der!" << exp;
     return getSymbol(ss.str());
   }
   if ("exp" == v.name()) {
     return exp(ApplyThis(v.args()[0]));
   }
   if ("sum" == v.name()) {
-    std::stringstream ss;
-    ss << v;
-    return getSymbol(ss.str());
+    // Expand sum over unidimensional arrays
+    ERROR_UNLESS(is<Reference>(v.args().front()), "Call to sum with no reference");
+    Reference ref = get<Reference>(v.args().front());
+    Option<VarInfo> opt_vinfo = varEnv[refName(ref)];
+    if (!opt_vinfo) ERROR("Variable %s not found", refName(ref));
+    ERROR_UNLESS(opt_vinfo.get().indices() && opt_vinfo.get().indices().get().size() == 1, "sum operator over matrix not supported");
+    Expression size_exp = opt_vinfo.get().indices().get().front();
+    Real size = Apply(EvalExpression(varEnv), size_exp);
+    GiNaC::ex exp = ConvertToGiNaC::operator()(Reference(refName(ref), 1));
+    for (int i = 2; i <= size; i++) {
+      exp = exp + ConvertToGiNaC::operator()(Reference(refName(ref), i));
+    }
+    return exp;
   }
   if ("log" == v.name()) {
-    return log(ApplyThis(v.args()[0]));
+    return GiNaC::log(ApplyThis(v.args()[0]));
   }
   if ("log10" == v.name()) {
-    return log(ApplyThis(v.args()[0])) / log(10);
+    return GiNaC::log(ApplyThis(v.args()[0])) / GiNaC::log(10);
+  }
+  if (user_func3 < 3 && v.args().size() == 3) {
+    Expression arg1 = v.args().front();
+    Expression arg2 = v.args().at(1);
+    Expression arg3 = v.args().at(2);
+    function3_directory.insert(make_pair(user_func3, v.name()));
+    // std::cerr << "Converting " << v.name() << " as user_fun3_" << user_func3+1 << "\n";
+    switch (user_func3++) {
+    case 0:
+      return user_fun3_1(ApplyThis(arg1), ApplyThis(arg2), ApplyThis(arg3));
+    case 1:
+      return user_fun3_2(ApplyThis(arg1), ApplyThis(arg2), ApplyThis(arg3));
+    case 2:
+      return user_fun3_3(ApplyThis(arg1), ApplyThis(arg2), ApplyThis(arg3));
+    }
   }
   WARNING("ConvertToGiNaC: conversion of function %s implemented. Returning 0.\n", v.name().c_str());
   return 0;
@@ -217,12 +263,25 @@ GiNaC::ex ConvertToGiNaC::operator()(Reference v) const
   Option<ExpList> oel = boost::get<1>(r[0]);
   std::string s = boost::get<0>(r[0]);
   if (!_forDerivation || isConstant(s, varEnv) || isParameter(s, varEnv) || isDiscrete(s, varEnv)) {
-    if (oel && oel.get().size() == 1) {
+    if (oel && oel.get().size()) {
       std::stringstream ss;
-      ss << s << "[" << oel.get().front() << "]";
+      ss << s;
+      for (Expression e : oel.get()) {
+        ERROR_UNLESS(is<Integer>(e) || is<Reference>(e) || is<BinOp>(e), "Not suppoted conversion");
+        if (!is<BinOp>(e))
+          ss << "!" << e;
+        else {
+          BinOp bop = get<BinOp>(e);
+          int offset = get<Integer>(bop.right());
+          if (bop.op() == Sub) offset *= -1;
+          ss << "!" << bop.left();
+          if (offset > 0)
+            ss << "@" << offset;
+          else
+            ss << "#" << -offset;
+        }
+      }
       return getSymbol(ss.str());
-    } else if (oel && oel.get().size() > 1) {
-      ERROR("Multidimensional array not supported");
     }
     return getSymbol(s);
   } else if (_forDerivation) {
@@ -249,18 +308,110 @@ GiNaC::symbol &ConvertToGiNaC::getTime() const
   return directory.insert(make_pair(s, symbol(s))).first->second;
 }
 
+class GiNaCtoModelica : public visitor,                   // this is required
+                        public add::visitor,              // visit add objects
+                        public GiNaC::function::visitor,  // visit add objects
+                        public mul::visitor,              // visit add objects
+                        public power::visitor,            // visit add objects
+                        public GiNaC::numeric::visitor,   // visit numeric objects
+                        public symbol::visitor,           // visit numeric objects
+                        public basic::visitor             // visit basic objects
+{
+  void visit(const power &x) { result_ = Output(BinOp(ConvertToExp(x.op(0)), Exp, ConvertToExp(x.op(1)))); }
+  void visit(const add &x)
+  {
+    result_ = Output(BinOp(ConvertToExp(x.op(0)), Add, ConvertToExp(x.op(1))));
+    for (unsigned int op = 2; op < x.nops(); op++) result_ = Output(BinOp(result_, Add, ConvertToExp(x.op(op))));
+  }
+  void visit(const GiNaC::function &x)
+  {
+    const std::string name = x.get_name();
+    if ("sin" == name) {
+      result_ = Call(name, ConvertToExp(x.op(0)));
+      return;
+    }
+    if ("user_fun3_1" == name) {
+      // std::cerr << ConvertToGiNaC::function3_directory[0];
+      result_ = Call(ConvertToGiNaC::function3_directory[0], {ConvertToExp(x.op(0)), ConvertToExp(x.op(1)), ConvertToExp(x.op(2))});
+      return;
+    }
+    if ("user_fun3_2" == name) {
+      std::cerr << ConvertToGiNaC::function3_directory[1];
+      result_ = Call(ConvertToGiNaC::function3_directory[1], {ConvertToExp(x.op(0)), ConvertToExp(x.op(1)), ConvertToExp(x.op(2))});
+      return;
+    }
+    if ("user_fun3_3" == name) {
+      std::cerr << ConvertToGiNaC::function3_directory[2];
+      result_ = Call(ConvertToGiNaC::function3_directory[2], {ConvertToExp(x.op(0)), ConvertToExp(x.op(1)), ConvertToExp(x.op(2))});
+      return;
+    }
+    ERROR("Function not supported in GiNaC conversion");
+  }
+  void visit(const mul &x)
+  {
+    result_ = Output(BinOp(ConvertToExp(x.op(0)), Mult, ConvertToExp(x.op(1))));
+    for (unsigned int op = 2; op < x.nops(); op++) result_ = Output(BinOp(result_, Mult, ConvertToExp(x.op(op))));
+  }
+  void visit(const GiNaC::numeric &x)
+  {
+    result_ = x.to_double();
+    if (x.to_double() < 0) result_ = Output(result_);
+  }
+  void visit(const GiNaC::symbol &x)
+  {
+    std::string name = x.get_name();
+    ;
+    std::vector<std::string> sp, bop;
+    bool is_der = false;
+    bool found_name = false;
+    boost::algorithm::split(sp, name, boost::is_any_of("!"));
+    ExpList el;
+    for (std::string s : sp) {
+      if ("der" == s) {
+        is_der = true;
+        continue;
+      }
+      if (!found_name) {
+        name = s;
+        found_name = true;
+        continue;
+      }
+      try {
+        el.push_back(boost::lexical_cast<int>(s));
+      } catch (boost::bad_lexical_cast) {  // Unprocess offset
+        if (boost::algorithm::find_first(s, "@")) {
+          boost::algorithm::split(bop, s, boost::is_any_of("@"));
+          el.push_back(BinOp(Reference(bop.front()), Add, boost::lexical_cast<int>(bop.at(1))));
+        } else if (boost::algorithm::find_first(s, "#")) {
+          boost::algorithm::split(bop, s, boost::is_any_of("#"));
+          el.push_back(BinOp(Reference(bop.front()), Sub, boost::lexical_cast<int>(bop.at(1))));
+        } else {
+          el.push_back(Reference(s));
+        }
+      }
+    }
+    if (!is_der)
+      result_ = Reference(name, el);
+    else
+      result_ = Call("der", Reference(name, el));
+  }
+  void visit(const basic &x)
+  {
+    std::cerr << x << std::endl;
+    ERROR("Could not convert GiNaC expression to Modelica");
+  }
+
+  Expression result_;
+
+  public:
+  Expression exp() { return result_; }
+};
+
 Expression ConvertToExp(GiNaC::ex e)
 {
-  bool r;
-  std::stringstream s(std::ios_base::out), der_s(std::ios_base::out);
-  // set_print_func<power,print_dflt>(my_print_power_dflt);
-  s << e;
-  Expression exp = Parser::ParseExpression(s.str(), r);
-  if (!r) {
-    WARNING("ConvertToGiNaC: conversion of output expression. Returning 0");
-    return 0;
-  }
-  return exp;
+  GiNaCtoModelica v;
+  e.accept(v);
+  return v.exp();
 }
 
 }  // namespace Modelica

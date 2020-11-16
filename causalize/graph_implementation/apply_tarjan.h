@@ -17,13 +17,6 @@
 
 ******************************************************************************/
 
-/*
- * apply_tarjan.h
- *
- *  Created on: 21/12/2014
- *      Author: fede
- */
-
 #ifndef APPLY_TARJAN_H_
 #define APPLY_TARJAN_H_
 

@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include <causalize/graph_implementation/for_unrolling/for_index_iterator.h>
+#include <causalize/common/for_unrolling/for_index_iterator.h>
 #include <ast/expression.h>
 #include <util/ast_visitors/eval_expression.h>
 #include <ast/modification.h>
