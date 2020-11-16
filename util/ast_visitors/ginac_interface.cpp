@@ -96,7 +96,6 @@ int ConvertToGiNaC::user_func2 = 0;
 int ConvertToGiNaC::user_func3 = 0;
 ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable &var, bool forDerivation) : varEnv(var), _forDerivation(forDerivation) {}
 
-GiNaC::ex ConvertToGiNaC::operator()(AddAll v) const { return ex(0); }
 GiNaC::ex ConvertToGiNaC::operator()(Integer v) const { return ex(v); }
 GiNaC::ex ConvertToGiNaC::operator()(Boolean v) const
 {
