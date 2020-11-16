@@ -32,6 +32,15 @@
 DECLARE_FUNCTION_2P(var)
 DECLARE_FUNCTION_1P(der)
 DECLARE_FUNCTION_1P(pre)
+DECLARE_FUNCTION_1P(user_fun1_1)
+DECLARE_FUNCTION_1P(user_fun1_2)
+DECLARE_FUNCTION_1P(user_fun1_3)
+DECLARE_FUNCTION_2P(user_fun2_1)
+DECLARE_FUNCTION_2P(user_fun2_2)
+DECLARE_FUNCTION_2P(user_fun2_3)
+DECLARE_FUNCTION_3P(user_fun3_1)
+DECLARE_FUNCTION_3P(user_fun3_2)
+DECLARE_FUNCTION_3P(user_fun3_3)
 
 namespace Modelica {
 using namespace Modelica::AST;
@@ -39,7 +48,6 @@ Expression ConvertToExp(GiNaC::ex e);
 class ConvertToGiNaC : public boost::static_visitor<GiNaC::ex> {
   public:
   ConvertToGiNaC(VarSymbolTable& varEnv, bool forDerivation = false);
-  ::GiNaC::ex operator()(AddAll v) const;
   ::GiNaC::ex operator()(Integer v) const;
   ::GiNaC::ex operator()(Boolean v) const;
   ::GiNaC::ex operator()(String v) const;
@@ -63,9 +71,13 @@ class ConvertToGiNaC : public boost::static_visitor<GiNaC::ex> {
   ::GiNaC::symbol& getSymbol(Modelica::AST::Name) const;
   ::GiNaC::symbol& getSymbol(Modelica::AST::Call);
   ::GiNaC::symbol& getTime() const;
+  static std::map<int, Name> function3_directory;
 
   private:
   mutable std::map<std::string, ::GiNaC::symbol> directory;
+  static int user_func1;
+  static int user_func2;
+  static int user_func3;
   VarSymbolTable& varEnv;
   bool _forDerivation;
 };
