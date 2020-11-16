@@ -379,7 +379,7 @@ class GiNaCtoModelica : public visitor,                   // this is required
       }
       try {
         el.push_back(boost::lexical_cast<int>(s));
-      } catch (boost::bad_lexical_cast) {  // Unprocess offset
+      } catch (boost::bad_lexical_cast &e) {  // Unprocess offset
         if (boost::algorithm::find_first(s, "@")) {
           boost::algorithm::split(bop, s, boost::is_any_of("@"));
           el.push_back(BinOp(Reference(bop.front()), Add, boost::lexical_cast<int>(bop.at(1))));
