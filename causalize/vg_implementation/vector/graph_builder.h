@@ -17,21 +17,31 @@
 
 ******************************************************************************/
 
-#ifndef APPLY_TARJAN_H_
-#define APPLY_TARJAN_H_
+/*
+* This class provides the interface to build the causalization
+* graph which is then going to be processed by the causalization
+* algorithm. Since there may be more than one way of building it
+* we'll have a base abstract class and (maybe) several concrete
+* implementations.
+*/
+#include <mmo/mmo_class.h>
+#include <causalize/vg_implementation/vector/vector_graph_definition.h>
+#include <util/ast_visitors/state_variables_finder.h>
 
-#include <causalize/graph_implementation/graph/graph_definition.h>
-#include <utility>
-#include <list>
-#include <map>
 
 namespace Causalize {
-struct Component {
-  std::list<Vertex> *uVertices;
-  std::list<Vertex> *eqVertices;
+class ReducedGraphBuilder {
+public:
+		ReducedGraphBuilder(MMO_Class &mmo_cl);
+		~ReducedGraphBuilder(){};
+		virtual VectorCausalizationGraph makeGraph();
+private:
+		int getForRangeSize(Modelica::AST::ForEq);
+		list<Causalize::VectorEquationVertex> equationDescriptorList;
+		list<Causalize::VectorUnknownVertex> unknownDescriptorList;
+		StateVariablesFinder state_finder;	
+		MMO_Class &mmo_class;
+		Causalize::VectorCausalizationGraph graph;
 };
-typedef Component *ComponentPtr;
-int apply_tarjan(CausalizationGraph &graph, std::map<int, ComponentPtr> &components);
-}  // namespace Causalize
 
-#endif /* APPLY_TARJAN_H_ */
+}

@@ -17,12 +17,7 @@
 
 ******************************************************************************/
 
-/*
- *  Created on: 2 Aug 2016
- *      Author: Diego Hollmann
- */
-
-#include <causalize/vector/vector_graph_definition.h>
+#include <causalize/vg_implementation/vector/vector_graph_definition.h>
 #include <ast/expression.h>
 #include <boost/variant/get.hpp>
 #include <util/debug.h>

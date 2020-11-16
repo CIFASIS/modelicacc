@@ -17,33 +17,24 @@
 
 ******************************************************************************/
 
-/*
- * contains_unknown.h
- *
- *  Created on: 17 oct. 2016
- *      Author: D.Hollmann
- */
-
-
-#ifndef AST_VISITOR_CONTAINS_UNKNOWN
-#define AST_VISITOR_CONTAINS_UNKNOWN
+#ifndef AST_VISITOR_CONTAINS_VECTOR
+#define AST_VISITOR_CONTAINS_VECTOR
 #include <boost/variant/static_visitor.hpp>
-#include <causalize/graph/graph_definition.h>
-#include <flatter/mmo_graph.h>
+#include <causalize/vg_implementation/vector/vector_graph_definition.h>
 #include <ast/expression.h>
-#include <util/table.h>
+#include <util/ast_visitors/contains_expression.h>
+#include <boost/icl/discrete_interval.hpp>
 #include <set>
-
 
 namespace Causalize {
 
-  using namespace Modelica;
   using namespace Modelica::AST;
-
-  class ContainsUnknown: public boost::static_visitor<bool> {
+  class ContainsVector: public boost::static_visitor<bool> {
   public:
-    ContainsUnknown(std::vector<Expression>, const VarSymbolTable&);
+    ContainsVector(Expression, VectorVertexProperty, const VarSymbolTable &);
+    ContainsVector(VectorVertexProperty, VarSymbolTable &, IndexList);
     bool operator()(Modelica::AST::Integer v) const;
+    bool operator()(AddAll v) const;
     bool operator()(Boolean v) const;
     bool operator()(String v) const;
     bool operator()(Name v) const;
@@ -62,14 +53,21 @@ namespace Causalize {
     bool operator()(Output) const;
     bool operator()(Reference) const;
     bool operator()(Range) const;
-
-    std::set<int> getUsages() const;
-    void clear();
+    IndexPairSet GetOccurrenceIndexes() { return labels; }
   private:
-    int IsUsed(Expression) const;
+    void BuildPairs(Reference unkRef) const;
+    //void BuildPairs(int counters[], Reference unkRef) const;
+    //void NestedLoopOperation(int counters[], int length[], int level, Reference unkRef) const;
+    //std::string PrintListOfList(std::list<std::list<int> > xss) const;
+
+    Expression exp;
+    IntervalList forIndexIntervalList;
+    //std::list<std::list<int> > BuildForIndexTuples(std::list<boost::icl::discrete_interval<int> > forIndexIntervalList) const;
+    mutable IndexPairSet labels;
+    VectorVertexProperty unk2find;
     mutable VarSymbolTable syms;
-    std::map<std::string,int> definedUnks;
-    mutable std::set<int> usedUnks;
-  };
+    bool foreq;
+    IndexList indexes;
+  }; 
 }
-#endif
+#endif 

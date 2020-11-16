@@ -17,21 +17,24 @@
 
 ******************************************************************************/
 
-#ifndef APPLY_TARJAN_H_
-#define APPLY_TARJAN_H_
-
-#include <causalize/graph_implementation/graph/graph_definition.h>
-#include <utility>
-#include <list>
-#include <map>
+#include <causalize/vg_implementation/graph/graph_definition.h>
 
 namespace Causalize {
-struct Component {
-  std::list<Vertex> *uVertices;
-  std::list<Vertex> *eqVertices;
-};
-typedef Component *ComponentPtr;
-int apply_tarjan(CausalizationGraph &graph, std::map<int, ComponentPtr> &components);
-}  // namespace Causalize
 
-#endif /* APPLY_TARJAN_H_ */
+Unknown::Unknown() {}
+
+Unknown::Unknown(Modelica::AST::Expression exp): expression(exp) {}
+
+Unknown::Unknown(VarInfo varInfo, Modelica::AST::Reference var) {
+  if (varInfo.state()) {
+    expression = Modelica::AST::Call("der",Modelica::AST::Reference(var));
+  } else {
+    expression = Modelica::AST::Reference(var);
+  }
+}
+
+Expression Unknown::operator() () const {
+  return expression;
+}
+
+}

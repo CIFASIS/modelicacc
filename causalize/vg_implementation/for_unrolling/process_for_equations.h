@@ -17,21 +17,17 @@
 
 ******************************************************************************/
 
-#ifndef APPLY_TARJAN_H_
-#define APPLY_TARJAN_H_
+#include <mmo/mmo_class.h>
 
-#include <causalize/graph_implementation/graph/graph_definition.h>
-#include <utility>
-#include <list>
-#include <map>
+/**
+ * Performs a loop unrolling over the for-equations
+ * decleared on the equation section of the class.
+ */
 
 namespace Causalize {
-struct Component {
-  std::list<Vertex> *uVertices;
-  std::list<Vertex> *eqVertices;
-};
-typedef Component *ComponentPtr;
-int apply_tarjan(CausalizationGraph &graph, std::map<int, ComponentPtr> &components);
-}  // namespace Causalize
-
-#endif /* APPLY_TARJAN_H_ */
+  void process_for_equations(Modelica::MMO_Class &mmo_class);
+  EquationList process_for_eq_1d(ForEq, VarSymbolTable &);
+  EquationList process_for_eq_2d(ForEq, VarSymbolTable &);
+  EquationList process_for_eq_3d(ForEq, VarSymbolTable &);
+  Equation instantiate_equation(Equation, std::list<Name>, std::list<int>, VarSymbolTable &);
+}

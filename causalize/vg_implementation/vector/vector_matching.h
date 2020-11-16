@@ -20,7 +20,7 @@
 #ifndef VECTOR_MATCHING_
 #define VECTOR_MATCHING_
 
-#include <causalize/vector/vector_graph_definition.h>
+#include <causalize/vg_implementation/vector/vector_graph_definition.h>
 
 namespace Causalize {
 

@@ -20,7 +20,7 @@
 #ifndef APPLY_TARJAN_H_
 #define APPLY_TARJAN_H_
 
-#include <causalize/graph_implementation/graph/graph_definition.h>
+#include <causalize/vg_implementation/graph/graph_definition.h>
 #include <utility>
 #include <list>
 #include <map>

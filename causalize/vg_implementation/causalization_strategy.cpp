@@ -17,24 +17,28 @@
 
 ******************************************************************************/
 
-#include <causalize/graph_implementation/causalization_strategy.h>
-#include <causalize/graph_implementation/graph/graph_definition.h>
-#include <causalize/graph_implementation/graph/graph_printer.h>
+#include <causalize/vg_implementation/causalization_strategy.h>
+#include <causalize/vg_implementation/graph/graph_definition.h>
+#include <causalize/vg_implementation/graph/graph_printer.h>
 #include <ast/ast_types.h>
-#include <causalize/common/for_unrolling/process_for_equations.h>
+#include <causalize/vg_implementation/for_unrolling/process_for_equations.h>
 #include <util/debug.h>
-#include <causalize/graph_implementation/unknowns_collector.h>
-#include <causalize/graph_implementation/apply_tarjan.h>
+#include <causalize/vg_implementation/unknowns_collector.h>
+#include <causalize/vg_implementation/apply_tarjan.h>
 #include <boost/lambda/lambda.hpp>
 #include <ast/equation.h>
 #include <boost/variant/get.hpp>
 #include <mmo/mmo_class.h>
 #include <util/ast_visitors/contains_expression.h>
+#include <util/ast_visitors/contains_unknown.h>
 #include <util/ast_visitors/partial_eval_expression.h>
 #include <util/solve/solve.h>
 #include <fstream>
 
+extern bool solve;
+using namespace Modelica;
 using namespace Modelica::AST;
+
 namespace Causalize {
 CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class) : _mmo_class(mmo_class)
 {
@@ -57,11 +61,12 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class) : _mmo_class(
   _all_unknowns = unknowns;
 
   std::list<Vertex> eqVerts;
-  std::list<Vertex> unknownVerts;
+  std::vector<Vertex> unknownVerts;
 
   DEBUG('c', "Building causalization graph...\n");
   DEBUG('c', "Equation indexes:\n");
 
+  // Create equation vertexes
   foreach_(Equation e, equations)
   {
     VertexProperty vp;
@@ -70,7 +75,7 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class) : _mmo_class(
     eq.left_ref() = Apply(eval, eq.left_ref());
     eq.right_ref() = Apply(eval, eq.right_ref());
     vp.equation = e;
-    vp.type = E;
+    vp.type = kVertexEquation;
     vp.index = index++;
     vp.visited = false;
     Vertex v = add_vertex(vp, _graph);
@@ -80,12 +85,13 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class) : _mmo_class(
 
   DEBUG('c', "Unknown indexes:\n");
 
+  // Create unknown vertexes
   index = 0;
   foreach_(Expression e, unknowns)
   {
     VertexProperty vp;
     vp.unknown = Unknown(e);
-    vp.type = U;
+    vp.type = kVertexUnknown;
     vp.index = index++;
     vp.visited = false;
     Vertex v = add_vertex(vp, _graph);
@@ -95,22 +101,26 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class) : _mmo_class(
 
   DEBUG('c', "Graph edges as (equation_index, uknown_index):\n");
 
-  list<Vertex>::iterator acausalEqsIter, unknownsIter;
-  foreach_(Vertex eqVertex, eqVerts)
+  // Create edges
+  std::vector<Expression> definedUnks;
+  for (Vertex v : unknownVerts) {
+    definedUnks.push_back(_graph[v].unknown());
+  }
+  ContainsUnknown occurrs(definedUnks, _mmo_class.syms());
+  foreach_(const Vertex &eqVertex, eqVerts)
   {
-    foreach_(Vertex unknownVertex, unknownVerts)
-    {
-      Modelica::ContainsExpression occurrs(_graph[unknownVertex].unknown());
-      Equation e = _graph[eqVertex].equation;
-      ERROR_UNLESS(is<Equality>(e), "Causalization of non-equality equation is not supported");
-      Equality eq = boost::get<Equality>(e);
-      const bool rl = Apply(occurrs, eq.left_ref());
-      const bool ll = Apply(occurrs, eq.right_ref());
-      if (rl || ll) {
-        add_edge(eqVertex, unknownVertex, _graph);
-        DEBUG('c', "(%d, %d) ", _graph[eqVertex].index, _graph[unknownVertex].index);
+    Equation &e = _graph[eqVertex].equation;
+    ERROR_UNLESS(is<Equality>(e), "Causalization of non-equality equation is not supported");
+    Equality &eq = boost::get<Equality>(e);
+    const bool rl = Apply(occurrs, eq.left_ref());
+    const bool ll = Apply(occurrs, eq.right_ref());
+    if (rl || ll) {
+      for (int u : occurrs.getUsages()) {
+        add_edge(eqVertex, unknownVerts[u], _graph);
+        DEBUG('c', "(%d, %d) ", _graph[eqVertex].index, _graph[unknownVerts[u]].index);
       }
     }
+    occurrs.clear();
   }
 
   DEBUG('c', "\n");
@@ -118,8 +128,8 @@ CausalizationStrategy::CausalizationStrategy(MMO_Class &mmo_class) : _mmo_class(
   _causalEqsEnd.resize(equations.size());
   _causalEqsEndIndex = equations.size() - 1;
 
-  GraphPrinter<VertexProperty, EdgeProperty> gp(_graph);
-  gp.printGraph("initial_graph.dot");
+  // GraphPrinter<VertexProperty,EdgeProperty> gp(_graph);
+  // gp.printGraph("initial_graph.dot");
 }
 
 void CausalizationStrategy::Causalize()
@@ -178,7 +188,6 @@ void CausalizationStrategy::CausalizeSimple()
     MMO_Class *mmo = new MMO_Class(c);
     _mmo_class.tyTable_ref().insert(c.name(), Type::Class(c.name(), mmo));
   }
-
   std::stringstream s;
   s << _mmo_class.name() << ".c";
   std::fstream fs(s.str().c_str(), std::fstream::out);
@@ -225,7 +234,7 @@ void CausalizationStrategy::SimpleCausalizationStrategy()
       Edge e = GetUniqueEdge(v);
       Vertex adjacent = target(e, _graph);
       _graph[adjacent].visited = true;
-      if (_graph[v].type == E) {
+      if (_graph[v].type == kVertexEquation) {
         eqDegree1Verts.push_back(v);
       } else {
         unknownDegree1Verts.push_back(v);
@@ -298,10 +307,12 @@ void CausalizationStrategy::MakeCausalBegining(Equation e, Expression unknown)
     cout << std::endl << e;
     cout << std::endl;
   }
-  std::stringstream s;
-  s << _mmo_class.name() << ".c";
-  Equation causalEq = EquationSolver::Solve(e, unknown, _mmo_class.syms_ref(), c_code, _cl, s.str());
-  _causalEqsBegining.push_back(causalEq);
+  if (solve) {
+    std::stringstream s;
+    s << _mmo_class.name() << ".c";
+    Equation causalEq = EquationSolver::Solve(e, unknown, _mmo_class.syms_ref(), c_code, _cl, s.str());
+    _causalEqsBegining.push_back(causalEq);
+  }
 }
 
 void CausalizationStrategy::MakeCausalEnd(Equation e, Expression unknown)
@@ -315,10 +326,13 @@ void CausalizationStrategy::MakeCausalEnd(Equation e, Expression unknown)
     cout << std::endl << e;
     cout << std::endl;
   }
-  std::stringstream s;
-  s << _mmo_class.name() << ".c";
-  Equation causalEq = EquationSolver::Solve(e, unknown, _mmo_class.syms_ref(), c_code, _cl, s.str());
-  _causalEqsEnd[_causalEqsEndIndex--] = causalEq;
+
+  if (solve) {
+    std::stringstream s;
+    s << _mmo_class.name() << ".c";
+    Equation causalEq = EquationSolver::Solve(e, unknown, _mmo_class.syms_ref(), c_code, _cl, s.str());
+    _causalEqsEnd[_causalEqsEndIndex--] = causalEq;
+  }
 }
 
 /**

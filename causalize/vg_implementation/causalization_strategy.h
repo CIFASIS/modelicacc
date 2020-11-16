@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include <causalize/graph_implementation/graph/graph_definition.h>
+#include <causalize/vg_implementation/graph/graph_definition.h>
 #include <mmo/mmo_class.h>
 
 namespace Causalize {

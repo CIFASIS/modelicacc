@@ -17,21 +17,33 @@
 
 ******************************************************************************/
 
-#ifndef APPLY_TARJAN_H_
-#define APPLY_TARJAN_H_
+#include <ast/equation.h>
+#include <ast/queries.h>
+#include <boost/variant/get.hpp>
+#include <util/ast_visitors/splitfor_visitor.h>
+#include <util/ast_visitors/state_variables_finder.h>
+#include <causalize/vg_implementation/vector/splitfor.h>
+#include <algorithm>
+#include <vector>
 
-#include <causalize/graph_implementation/graph/graph_definition.h>
-#include <utility>
-#include <list>
-#include <map>
 
-namespace Causalize {
-struct Component {
-  std::list<Vertex> *uVertices;
-  std::list<Vertex> *eqVertices;
+namespace Modelica {
+    
+    SplitFor::SplitFor(MMO_Class &c): _c(c) {
+    }
+    
+    void SplitFor::splitFor() {
+        EquationList &el = _c.equations_ref().equations_ref();
+        SplitForVisitor efv;
+        EquationList el_new;
+        foreach_(Equation e1, el) {
+            EquationList eql = Apply(efv, e1);
+            foreach_(Equation e2, eql) {
+                el_new.push_back(e2);
+            }
+        }
+        el=el_new;
+    }
+
 };
-typedef Component *ComponentPtr;
-int apply_tarjan(CausalizationGraph &graph, std::map<int, ComponentPtr> &components);
-}  // namespace Causalize
 
-#endif /* APPLY_TARJAN_H_ */

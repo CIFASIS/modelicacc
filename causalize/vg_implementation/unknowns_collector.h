@@ -17,21 +17,19 @@
 
 ******************************************************************************/
 
-#ifndef APPLY_TARJAN_H_
-#define APPLY_TARJAN_H_
+#include <mmo/mmo_class.h>
+#include <util/ast_visitors/state_variables_finder.h>
 
-#include <causalize/graph_implementation/graph/graph_definition.h>
-#include <utility>
-#include <list>
-#include <map>
+using namespace std;
+using namespace Modelica;
+using namespace Modelica::AST;
 
-namespace Causalize {
-struct Component {
-  std::list<Vertex> *uVertices;
-  std::list<Vertex> *eqVertices;
+class UnknownsCollector {
+	public:
+		UnknownsCollector(MMO_Class &c);
+		ExpList collectUnknowns();
+	private:
+		int getCompRefVal(Reference compRef, VarSymbolTable &symbolTable);
+		MMO_Class &_c;
+		StateVariablesFinder _finder;
 };
-typedef Component *ComponentPtr;
-int apply_tarjan(CausalizationGraph &graph, std::map<int, ComponentPtr> &components);
-}  // namespace Causalize
-
-#endif /* APPLY_TARJAN_H_ */

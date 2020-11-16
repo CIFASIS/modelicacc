@@ -1,14 +1,3 @@
-/***
- * 
- * 
- * TODO: Tema de MatchStruct, está todo comentado
- * 
- * 
- * 
- * 
- * ****************/
-
-
 /*****************************************************************************
 
     This file is part of Modelica C Compiler.
@@ -28,16 +17,11 @@
 
 ******************************************************************************/
 
-/*
- *  Created on: 7 May 2018
- *      Author: Pablo Zimmermann
- */
-
 #include <util/debug.h>
 #include <boost/graph/adjacency_list.hpp>
-#include <causalize/vector/vector_matching.h>
-#include <causalize/vector/vector_graph_definition.h>
-#include <causalize/vector/causalization_algorithm.h>
+#include <causalize/vg_implementation/vector/vector_matching.h>
+#include <causalize/vg_implementation/vector/vector_graph_definition.h>
+#include <causalize/vg_implementation/vector/causalization_algorithm.h>
 #include <map>
 #include <list>
 #include <vector>

@@ -20,8 +20,8 @@
 #ifndef VECTOR_TARJAN_
 #define VECTOR_TARJAN_
 
-#include <causalize/vector/vector_graph_definition.h>
-#include <causalize/vector/vector_matching.h>
+#include <causalize/vg_implementation/vector/vector_graph_definition.h>
+#include <causalize/vg_implementation/vector/vector_matching.h>
 #include <stack>
 
 namespace Causalize {

@@ -17,21 +17,17 @@
 
 ******************************************************************************/
 
-#ifndef APPLY_TARJAN_H_
-#define APPLY_TARJAN_H_
+#ifndef SPLIT_FOR_H
+#define SPLIT_FOR_H
+#include <mmo/mmo_class.h>
 
-#include <causalize/graph_implementation/graph/graph_definition.h>
-#include <utility>
-#include <list>
-#include <map>
+namespace Modelica {
+    class SplitFor {
+      MMO_Class &_c;
+    public:
+      SplitFor(MMO_Class &c);
+      void splitFor();
+    };
+}
 
-namespace Causalize {
-struct Component {
-  std::list<Vertex> *uVertices;
-  std::list<Vertex> *eqVertices;
-};
-typedef Component *ComponentPtr;
-int apply_tarjan(CausalizationGraph &graph, std::map<int, ComponentPtr> &components);
-}  // namespace Causalize
-
-#endif /* APPLY_TARJAN_H_ */
+#endif
