@@ -28,7 +28,7 @@
 #include <causalize/graph_implementation/graph/graph_definition.h>
 #include <causalize/graph_implementation/graph/graph_printer.h>
 #include <ast/ast_types.h>
-#include <causalize/graph_implementation/for_unrolling/process_for_equations.h>
+#include <causalize/common/for_unrolling/process_for_equations.h>
 #include <util/debug.h>
 #include <causalize/graph_implementation/unknowns_collector.h>
 #include <causalize/graph_implementation/apply_tarjan.h>

@@ -21,7 +21,7 @@
 #include <causalize/graph_implementation/vector/vector_graph_definition.h>
 #define HAS_COUNT
 #include <causalize/graph_implementation/graph/graph_printer.h>
-#include <causalize/graph_implementation/for_unrolling/process_for_equations.h>
+#include <causalize/common/for_unrolling/process_for_equations.h>
 #include <util/debug.h>
 #include <util/solve/solve.h>
 #include <boost/tuple/tuple.hpp>

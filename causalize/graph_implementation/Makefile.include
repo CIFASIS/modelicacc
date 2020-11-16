@@ -1,7 +1,5 @@
 all: bin/grp_causalize 
 SRC_CAUSALIZE :=  causalize/graph_implementation/main.cpp \
-                  causalize/graph_implementation/for_unrolling/for_index_iterator.cpp \
-                  causalize/graph_implementation/for_unrolling/process_for_equations.cpp \
                   causalize/graph_implementation/apply_tarjan.cpp \
                   causalize/graph_implementation/unknowns_collector.cpp \
                   causalize/graph_implementation/causalization_strategy.cpp \
@@ -10,6 +8,8 @@ SRC_CAUSALIZE :=  causalize/graph_implementation/main.cpp \
                   causalize/graph_implementation/vector/causalization_algorithm.cpp \
                   causalize/graph_implementation/vector/splitfor.cpp \
                   causalize/graph_implementation/graph/graph_definition.cpp \
+                  causalize/common/for_unrolling/for_index_iterator.cpp \
+                  causalize/common/for_unrolling/process_for_equations.cpp \
                   util/debug.cpp \
                   util/table.cpp \
                   util/type.cpp \
