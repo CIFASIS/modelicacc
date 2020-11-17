@@ -1,5 +1,6 @@
 all: bin/vg_causalize 
-SRC_VG_CAUSALIZE :=  causalize/vg_implementation/main.cpp \
+SRC_VG_CAUSALIZE := \
+                  causalize/vg_implementation/main.cpp \
                   causalize/vg_implementation/apply_tarjan.cpp \
                   causalize/vg_implementation/unknowns_collector.cpp \
                   causalize/vg_implementation/causalization_strategy.cpp \
@@ -11,25 +12,13 @@ SRC_VG_CAUSALIZE :=  causalize/vg_implementation/main.cpp \
                   causalize/vg_implementation/vector/vector_matching.cpp \
                   causalize/vg_implementation/graph/graph_definition.cpp \
                   causalize/vg_implementation/for_unrolling/process_for_equations.cpp \
-                  causalize/common/for_unrolling/for_index_iterator.cpp \
-                  util/debug.cpp \
-                  util/table.cpp \
-                  util/type.cpp \
-                  util/solve/solve.cpp \
                   util/ast_visitors/contains_unknown.cpp \
                   util/ast_visitors/contains_vector.cpp \
-                  util/ast_visitors/eval_expression.cpp \
-                  util/ast_visitors/partial_eval_expression.cpp \
-                  util/ast_visitors/ginac_interface.cpp \
-                  util/ast_visitors/contains_expression.cpp \
-                  util/ast_visitors/splitfor_visitor.cpp \
-                  util/ast_visitors/state_variables_finder.cpp \
-                  mmo/mmo_class.cpp
 
 
 OBJS_VG_CAUSALIZE = $(SRC_VG_CAUSALIZE:.cpp=.o)
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_CAUSALIZE)))
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_VG_CAUSALIZE)))
 LIB_CAUSALIZE = -L./lib -lmodelica -lginac
 
-bin/vg_causalize: $(OBJS_VG_CAUSALIZE) lib/libmodelica.a
-	$(CXX) $(CXXFLAGS) -o bin/vg_causalize $(OBJS_VG_CAUSALIZE) $(LIB_CAUSALIZE)
+bin/vg_causalize: $(OBJS_COMMON_CAUSALIZE) $(OBJS_VG_CAUSALIZE) lib/libmodelica.a
+	$(CXX) $(CXXFLAGS) -o bin/vg_causalize $(OBJS_COMMON_CAUSALIZE) $(OBJS_VG_CAUSALIZE) $(LIB_CAUSALIZE)

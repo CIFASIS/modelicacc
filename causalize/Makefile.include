@@ -1,2 +1,22 @@
+SRC_COMMON_CAUSALIZE :=  \
+                  causalize/common/for_unrolling/for_index_iterator.cpp \
+                  util/debug.cpp \
+                  util/table.cpp \
+                  util/type.cpp \
+                  util/solve/solve.cpp \
+                  util/ast_visitors/all_expressions.cpp \
+                  util/ast_visitors/replace_expression.cpp \
+                  util/ast_visitors/eval_expression.cpp \
+                  util/ast_visitors/partial_eval_expression.cpp \
+                  util/ast_visitors/ginac_interface.cpp \
+                  util/ast_visitors/contains_expression.cpp \
+                  util/ast_visitors/splitfor_visitor.cpp \
+                  util/ast_visitors/state_variables_finder.cpp \
+                  mmo/mmo_class.cpp
+
+
+OBJS_COMMON_CAUSALIZE = $(SRC_COMMON_CAUSALIZE:.cpp=.o)
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_COMMON_CAUSALIZE)))
+
 include causalize/graph_implementation/Makefile.include
 include causalize/vg_implementation/Makefile.include

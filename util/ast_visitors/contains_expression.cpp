@@ -23,21 +23,22 @@
 
 namespace Modelica {
 ContainsExpression::ContainsExpression(Expression e) : exp(e){};
+
 bool ContainsExpression::operator()(Integer v) const { return exp == Expression(v); }
 bool ContainsExpression::operator()(Boolean v) const { return exp == Expression(v); }
 bool ContainsExpression::operator()(String v) const { return exp == Expression(v); }
-bool ContainsExpression::operator()(AddAll v) const{
-  if(exp == Expression(v)) return true;
+bool ContainsExpression::operator()(AddAll v) const
+{
+  if (exp == Expression(v)) return true;
 
   RefTuple rt = v.arr();
   Name nm = get<0>(rt);
   ExpList exps = get<1>(rt);
   ExpList::iterator itexps = exps.begin();
 
-  for(; itexps != exps.end(); ++itexps){
+  for (; itexps != exps.end(); ++itexps) {
     bool ei = ApplyThis(*itexps);
-    if(ei)
-      return true;
+    if (ei) return true;
   }
 
   return false;

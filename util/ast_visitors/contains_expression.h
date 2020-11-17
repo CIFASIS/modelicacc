@@ -49,6 +49,7 @@ class ContainsExpression : public boost::static_visitor<bool> {
   bool operator()(Reference) const;
   bool operator()(Range) const;
 
+  private:
   Expression exp;
 };
 }  // namespace Modelica

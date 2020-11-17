@@ -48,6 +48,7 @@ Expression ConvertToExp(GiNaC::ex e);
 class ConvertToGiNaC : public boost::static_visitor<GiNaC::ex> {
   public:
   ConvertToGiNaC(VarSymbolTable& varEnv, bool forDerivation = false);
+  ::GiNaC::ex operator()(AddAll v) const;
   ::GiNaC::ex operator()(Integer v) const;
   ::GiNaC::ex operator()(Boolean v) const;
   ::GiNaC::ex operator()(String v) const;

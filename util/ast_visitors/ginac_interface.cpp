@@ -96,6 +96,7 @@ int ConvertToGiNaC::user_func2 = 0;
 int ConvertToGiNaC::user_func3 = 0;
 ConvertToGiNaC::ConvertToGiNaC(VarSymbolTable &var, bool forDerivation) : varEnv(var), _forDerivation(forDerivation) {}
 
+GiNaC::ex ConvertToGiNaC::operator()(AddAll v) const { return ex(0); }
 GiNaC::ex ConvertToGiNaC::operator()(Integer v) const { return ex(v); }
 GiNaC::ex ConvertToGiNaC::operator()(Boolean v) const
 {
@@ -378,7 +379,7 @@ class GiNaCtoModelica : public visitor,                   // this is required
       }
       try {
         el.push_back(boost::lexical_cast<int>(s));
-      } catch (boost::bad_lexical_cast) {  // Unprocess offset
+      } catch (boost::bad_lexical_cast &e) {  // Unprocess offset
         if (boost::algorithm::find_first(s, "@")) {
           boost::algorithm::split(bop, s, boost::is_any_of("@"));
           el.push_back(BinOp(Reference(bop.front()), Add, boost::lexical_cast<int>(bop.at(1))));

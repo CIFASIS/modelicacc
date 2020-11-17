@@ -24,34 +24,36 @@
 #include <util/table.h>
 
 namespace Modelica {
-  typedef std::list <Expression> Lexp;
-  using namespace Modelica::AST;
-  class AllExpressions: public boost::static_visitor<Lexp> {
+typedef std::list<Expression> Lexp;
+using namespace Modelica::AST;
+class AllExpressions : public boost::static_visitor<Lexp> {
   public:
-    AllExpressions(Expression);
-    AllExpressions(Expression, VarSymbolTable);
-    Lexp operator()(Integer v) const;
-    Lexp operator()(Boolean v) const;
-    Lexp operator()(String v) const;
-    Lexp operator()(Name v) const;
-    Lexp operator()(Real v) const;
-    Lexp operator()(SubEnd v) const;
-    Lexp operator()(SubAll v) const;
-    Lexp operator()(BinOp) const;
-    Lexp operator()(UnaryOp) const;
-    Lexp operator()(Brace) const;
-    Lexp operator()(Bracket) const;
-    Lexp operator()(Call) const;
-    Lexp operator()(FunctionExp) const;
-    Lexp operator()(ForExp) const;
-    Lexp operator()(IfExp) const;
-    Lexp operator()(Named) const;
-    Lexp operator()(Output) const;
-    Lexp operator()(Reference) const;
-    Lexp operator()(Range) const;
+  AllExpressions(Expression);
+  AllExpressions(Expression, VarSymbolTable);
+  Lexp operator()(AddAll v) const;
+  Lexp operator()(Integer v) const;
+  Lexp operator()(Boolean v) const;
+  Lexp operator()(String v) const;
+  Lexp operator()(Name v) const;
+  Lexp operator()(Real v) const;
+  Lexp operator()(SubEnd v) const;
+  Lexp operator()(SubAll v) const;
+  Lexp operator()(BinOp) const;
+  Lexp operator()(UnaryOp) const;
+  Lexp operator()(Brace) const;
+  Lexp operator()(Bracket) const;
+  Lexp operator()(Call) const;
+  Lexp operator()(FunctionExp) const;
+  Lexp operator()(ForExp) const;
+  Lexp operator()(IfExp) const;
+  Lexp operator()(Named) const;
+  Lexp operator()(Output) const;
+  Lexp operator()(Reference) const;
+  Lexp operator()(Range) const;
+
   private:
-    Expression exp;
-    mutable VarSymbolTable st;
-  }; 
-}
-#endif 
+  Expression exp;
+  mutable VarSymbolTable st;
+};
+}  // namespace Modelica
+#endif
