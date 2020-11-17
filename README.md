@@ -64,6 +64,12 @@ The simplest way to compile this package is:
 
 ## Changelog
 
+## [2.0] - 2020-11-17
+### Added
+- Implemented vector graph [**data structures**](https://github.com/CIFASIS/modelicacc/blob/modelicacc-dev/causalize/vg_implementation/vector/vector_graph_definition.h)
+- Implemented matching algorithm using vector graph data structures.
+- Implemented Tarjan algorithm using vector graph data structures.
+
 ## [1.0] - 2020-11-04
 ### Added
 - Implemented first version of flattening algorithm
