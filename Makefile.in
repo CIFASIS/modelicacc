@@ -34,8 +34,7 @@ SRC_COMMON := \
 		parser/class.cpp \
 		parser/parser.cpp \
 
-all: lib-gtest $(LIBMODELICA)
-
+all: $(LIBMODELICA)
 
 include antialias/Makefile.include
 include mmo/Makefile.include
@@ -73,6 +72,8 @@ endif
 
 create-dirs:
 	@mkdir -p $(ROOT)/lib
+
+test: lib-gtest $(FLATTER_TEST)
 
 clean:
 	$(RM) -rf $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(LIBMODELICA) doc; \
