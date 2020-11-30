@@ -1,5 +1,10 @@
-all: bin/flatter 
-SRC_FLATTER := flatter/main.cpp \
+FLATTER      := bin/flatter
+FLATTER_TEST := test-flatter
+
+all: $(FLATTER) 
+
+SRC_FLATTER := \
+	flatter/main.cpp \
 	mmo/mmo_class.cpp \
 	util/table.cpp \
 	util/type.cpp  \
@@ -19,13 +24,16 @@ SRC_FLATTER := flatter/main.cpp \
 	flatter/connectors.cpp \
 	mmo/mmo_tree.cpp
 
-
 OBJS_FLATTER= $(SRC_FLATTER:.cpp=.o)
 -include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_FLATTER)))
 
-bin/flatter: $(OBJS_FLATTER) $(LIBMODELICA)
+$(FLATTER): $(OBJS_FLATTER) $(LIBMODELICA)
 	$(CXX) $(CXXFLAGS) -o bin/flatter $(OBJS_FLATTER) -L./lib -lmodelica
 
-
-
-	
+$(FLATTER_TEST):
+	@echo BUILDING FLATTER TESTS
+	@cd flatter/test && $(MAKE) bin/test-flatter 
+	@echo Done
+	@echo RUNNING FLATTER TESTS
+	@cd flatter/test && $(MAKE) test-flatter 
+	@echo Done
