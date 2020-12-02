@@ -1,22 +1,32 @@
-all: bin/mmo 
-SRC_MMO := mmo/main.cpp \
-	mmo/mmo_class.cpp \
-	util/table.cpp \
-	util/debug.cpp \
-	util/ast_visitors/eval_expression.cpp \
-	util/ast_visitors/partial_eval_expression.cpp \
-	util/ast_visitors/to_micro/convert_to_micro.cpp \
-	util/ast_visitors/to_micro/convert_to_micro_statement.cpp \
-	util/ast_visitors/to_micro/convert_to_micro_expression.cpp \
-	util/type.cpp  
+# The Directories, Source, Includes, Objects, Binary 
+UTIL_DIR        := util
+MMO_DIR         := mmo
+MMO             := bin/mmo
 
+all: $(MMO) 
 
-OBJS_MMO = $(SRC_MMO:.cpp=.o)
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_MMO)))
+# Sources
 
-bin/mmo: $(OBJS_MMO) $(LIBMODELICA) 
-	$(CXX) $(CXXFLAGS) -o bin/mmo $(OBJS_MMO) -L./lib -lmodelica
+MMO_SRC := \
+	$(MMO_DIR)/main.cpp \
+	$(MMO_DIR)/mmo_class.cpp \
+	$(UTIL_DIR)/table.cpp \
+	$(UTIL_DIR)/debug.cpp \
+	$(UTIL_DIR)/ast_visitors/eval_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/partial_eval_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/to_micro/convert_to_micro.cpp \
+	$(UTIL_DIR)/ast_visitors/to_micro/convert_to_micro_statement.cpp \
+	$(UTIL_DIR)/ast_visitors/to_micro/convert_to_micro_expression.cpp \
+	$(UTIL_DIR)/type.cpp
 
+# Objects
+MMO_OBJ=$(addprefix $(BUILD_DIR)/, $(MMO_SRC:.cpp=.o))
 
+create-folders::
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/ast_visitors
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/ast_visitors/to_micro
+	@mkdir -p $(BUILD_DIR)/$(MMO_DIR)
 
-	
+$(MMO): $(MMO_OBJ) $(LIBMODELICA) 
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(MMO_OBJ) -o $(MMO) $(LIBS)
