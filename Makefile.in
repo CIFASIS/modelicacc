@@ -24,7 +24,7 @@ endif
 LIBMODELICA = lib/libmodelica.a
 LIBS     := -L./lib -lginac -lmodelica
 
-all: lib-gtest $(LIBMODELICA)
+all: $(LIBMODELICA)
 
 include antialias/Makefile.include
 include mmo/Makefile.include
