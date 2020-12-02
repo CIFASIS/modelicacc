@@ -1,19 +1,30 @@
-all: bin/grp_causalize 
-SRC_GRP_CAUSALIZE := \
-                  causalize/graph_implementation/main.cpp \
-                  causalize/graph_implementation/apply_tarjan.cpp \
-                  causalize/graph_implementation/unknowns_collector.cpp \
-                  causalize/graph_implementation/causalization_strategy.cpp \
-                  causalize/graph_implementation/vector/contains_vector.cpp \
-                  causalize/graph_implementation/vector/graph_builder.cpp \
-                  causalize/graph_implementation/vector/causalization_algorithm.cpp \
-                  causalize/graph_implementation/vector/splitfor.cpp \
-                  causalize/graph_implementation/graph/graph_definition.cpp \
-                  causalize/common/for_unrolling/process_for_equations.cpp \
+# The Directories, Source, Includes, Objects, Binary 
+CAUSALIZE_GRP_DIR := $(CAUSALIZE_DIR)/graph_implementation
+CAUSALIZE_GRP     := bin/grp_causalize
 
-OBJS_GRP_CAUSALIZE = $(SRC_GRP_CAUSALIZE:.cpp=.o)
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_GRP_CAUSALIZE)))
-LIB_CAUSALIZE = -L./lib -lmodelica -lginac
+all: $(CAUSALIZE_GRP)
 
-bin/grp_causalize: $(OBJS_GRP_CAUSALIZE) $(OBJS_COMMON_CAUSALIZE) lib/libmodelica.a
-	$(CXX) $(CXXFLAGS) -o bin/grp_causalize $(OBJS_COMMON_CAUSALIZE) $(OBJS_GRP_CAUSALIZE) $(LIB_CAUSALIZE)
+# Sources
+CAUSALIZE_GRP_SRC := \
+    $(CAUSALIZE_GRP_DIR)/main.cpp \
+    $(CAUSALIZE_GRP_DIR)/apply_tarjan.cpp \
+    $(CAUSALIZE_GRP_DIR)/unknowns_collector.cpp \
+    $(CAUSALIZE_GRP_DIR)/causalization_strategy.cpp \
+    $(CAUSALIZE_GRP_DIR)/vector/contains_vector.cpp \
+    $(CAUSALIZE_GRP_DIR)/vector/graph_builder.cpp \
+    $(CAUSALIZE_GRP_DIR)/vector/causalization_algorithm.cpp \
+    $(CAUSALIZE_GRP_DIR)/vector/splitfor.cpp \
+    $(CAUSALIZE_GRP_DIR)/graph/graph_definition.cpp \
+    $(CAUSALIZE_DIR)/common/for_unrolling/process_for_equations.cpp
+
+# Objects
+CAUSALIZE_GRP_OBJ=$(addprefix $(BUILD_DIR)/, $(CAUSALIZE_GRP_SRC:.cpp=.o))
+
+create-folders::
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/graph_implementation
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/graph_implementation/vector
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/graph_implementation/graph
+
+$(CAUSALIZE_GRP): $(CAUSALIZE_GRP_OBJ) $(CAUSALIZE_COMMON_OBJ) $(LIBMODELICA)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(CAUSALIZE_GRP) $(CAUSALIZE_COMMON_OBJ) $(CAUSALIZE_GRP_OBJ) $(LIBS)
+   

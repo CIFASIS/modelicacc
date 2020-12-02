@@ -1,24 +1,35 @@
-all: bin/antialias
-SRC_ANTIALIAS := antialias/main.cpp \
-	mmo/mmo_class.cpp \
-	util/table.cpp \
-	util/type.cpp \
-	util/debug.cpp \
-	util/ast_visitors/eval_expression.cpp \
-	util/ast_visitors/partial_eval_expression.cpp \
-	util/ast_visitors/replace_expression.cpp \
-	util/ast_visitors/replace_equation.cpp \
-	util/ast_visitors/replace_statement.cpp \
-	util/ast_visitors/state_variables_finder.cpp \
-	antialias/remove_alias.cpp
+# The Directories, Source, Includes, Objects, Binary 
+UTIL_DIR        := util
+MMO_DIR         := mmo
+ANTIALIAS_DIR   := antialias
+ANTIALIAS       := bin/antialias
 
-LIBS=-L./lib -lginac -lmodelica 
-OBJS_ANTIALIAS = $(SRC_ANTIALIAS:.cpp=.o)
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_ANTIALIAS)))
+all: $(ANTIALIAS) 
 
-bin/antialias: $(OBJS_ANTIALIAS) $(LIBMODELICA) 
-	$(CXX) $(CXXFLAGS) $(OBJS_ANTIALIAS) -o bin/antialias $(LIBS)
+# Sources
 
+ANTIALIAS_SRC := \
+	$(ANTIALIAS_DIR)/main.cpp \
+	$(ANTIALIAS_DIR)/remove_alias.cpp \
+	$(UTIL_DIR)/ast_visitors/eval_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/partial_eval_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/replace_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/replace_equation.cpp \
+	$(UTIL_DIR)/ast_visitors/replace_statement.cpp \
+	$(UTIL_DIR)/table.cpp \
+	$(UTIL_DIR)/type.cpp  \
+	$(UTIL_DIR)/debug.cpp  \
+	$(UTIL_DIR)/ast_visitors/state_variables_finder.cpp \
+	$(MMO_DIR)/mmo_class.cpp 
 
+# Objects
+ANTIALIAS_OBJ=$(addprefix $(BUILD_DIR)/, $(ANTIALIAS_SRC:.cpp=.o))
 
-	
+create-folders::
+	@mkdir -p $(BUILD_DIR)/$(ANTIALIAS_DIR)
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/ast_visitors
+	@mkdir -p $(BUILD_DIR)/$(MMO_DIR)
+
+$(ANTIALIAS): $(ANTIALIAS_OBJ) $(LIBMODELICA) 
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(ANTIALIAS_OBJ) -o $(ANTIALIAS) $(LIBS)
