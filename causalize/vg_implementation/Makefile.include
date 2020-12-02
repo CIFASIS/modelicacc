@@ -1,24 +1,34 @@
-all: bin/vg_causalize 
-SRC_VG_CAUSALIZE := \
-                  causalize/vg_implementation/main.cpp \
-                  causalize/vg_implementation/apply_tarjan.cpp \
-                  causalize/vg_implementation/unknowns_collector.cpp \
-                  causalize/vg_implementation/causalization_strategy.cpp \
-                  causalize/vg_implementation/vector/graph_builder.cpp \
-                  causalize/vg_implementation/vector/causalization_algorithm.cpp \
-                  causalize/vg_implementation/vector/splitfor.cpp \
-                  causalize/vg_implementation/vector/vector_graph_definition.cpp \
-                  causalize/vg_implementation/vector/vector_tarjan.cpp \
-                  causalize/vg_implementation/vector/vector_matching.cpp \
-                  causalize/vg_implementation/graph/graph_definition.cpp \
-                  causalize/vg_implementation/for_unrolling/process_for_equations.cpp \
-                  util/ast_visitors/contains_unknown.cpp \
-                  util/ast_visitors/contains_vector.cpp \
+# The Directories, Source, Includes, Objects, Binary 
+CAUSALIZE_VG_DIR := $(CAUSALIZE_DIR)/vg_implementation
+CAUSALIZE_VG     := bin/vg_causalize
 
+all: $(CAUSALIZE_VG)
 
-OBJS_VG_CAUSALIZE = $(SRC_VG_CAUSALIZE:.cpp=.o)
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_VG_CAUSALIZE)))
-LIB_CAUSALIZE = -L./lib -lmodelica -lginac
+# Sources
+CAUSALIZE_VG_SRC := \
+    $(CAUSALIZE_VG_DIR)/main.cpp \
+    $(CAUSALIZE_VG_DIR)/apply_tarjan.cpp \
+    $(CAUSALIZE_VG_DIR)/unknowns_collector.cpp \
+    $(CAUSALIZE_VG_DIR)/causalization_strategy.cpp \
+    $(CAUSALIZE_VG_DIR)/vector/graph_builder.cpp \
+    $(CAUSALIZE_VG_DIR)/vector/causalization_algorithm.cpp \
+    $(CAUSALIZE_VG_DIR)/vector/splitfor.cpp \
+    $(CAUSALIZE_VG_DIR)/vector/vector_graph_definition.cpp \
+    $(CAUSALIZE_VG_DIR)/vector/vector_tarjan.cpp \
+    $(CAUSALIZE_VG_DIR)/vector/vector_matching.cpp \
+    $(CAUSALIZE_VG_DIR)/graph/graph_definition.cpp \
+    $(CAUSALIZE_VG_DIR)/for_unrolling/process_for_equations.cpp \
+    $(UTIL_DIR)/ast_visitors/contains_unknown.cpp \
+    $(UTIL_DIR)/ast_visitors/contains_vector.cpp
 
-bin/vg_causalize: $(OBJS_COMMON_CAUSALIZE) $(OBJS_VG_CAUSALIZE) lib/libmodelica.a
-	$(CXX) $(CXXFLAGS) -o bin/vg_causalize $(OBJS_COMMON_CAUSALIZE) $(OBJS_VG_CAUSALIZE) $(LIB_CAUSALIZE)
+# Objects
+CAUSALIZE_VG_OBJ=$(addprefix $(BUILD_DIR)/, $(CAUSALIZE_VG_SRC:.cpp=.o))
+
+create-folders::
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/vg_implementation
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/vg_implementation/vector
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/vg_implementation/graph
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/vg_implementation/for_unrolling
+
+$(CAUSALIZE_VG): $(CAUSALIZE_VG_OBJ) $(CAUSALIZE_COMMON_OBJ) $(LIBMODELICA)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(CAUSALIZE_VG) $(CAUSALIZE_COMMON_OBJ) $(CAUSALIZE_VG_OBJ) $(LIBS)

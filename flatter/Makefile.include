@@ -1,34 +1,46 @@
-FLATTER      := bin/flatter
-FLATTER_TEST := test-flatter
+# The Directories, Source, Includes, Objects, Binary 
+UTIL_DIR        := util
+MMO_DIR         := mmo
+FLATTER_DIR     := flatter
+FLATTER         := bin/flatter
+FLATTER_TEST    := test-flatter
 
 all: $(FLATTER) 
 
-SRC_FLATTER := \
-	flatter/main.cpp \
-	mmo/mmo_class.cpp \
-	util/table.cpp \
-	util/type.cpp  \
-	util/debug.cpp  \
-	flatter/class_finder.cpp \
-	flatter/remove_composition.cpp \
-	util/ast_visitors/constant_expression.cpp \
-    util/ast_visitors/contains_expression.cpp \
-	util/ast_visitors/dot_expression.cpp \
-	util/ast_visitors/eval_expression.cpp \
-	util/ast_visitors/eval_expression_flatter.cpp \
-	util/ast_visitors/mark_connector.cpp \
-	util/ast_visitors/partial_eval_expression.cpp \
-	util/ast_visitors/replace_expression.cpp \
-    util/graph/graph_definition.cpp \
-	flatter/flatter.cpp \
-	flatter/connectors.cpp \
-	mmo/mmo_tree.cpp
+# Sources
+FLATTER_SRC := \
+	$(FLATTER_DIR)/main.cpp \
+	$(FLATTER_DIR)/class_finder.cpp \
+	$(FLATTER_DIR)/remove_composition.cpp \
+	$(FLATTER_DIR)/flatter.cpp \
+	$(FLATTER_DIR)/connectors.cpp \
+	$(UTIL_DIR)/table.cpp \
+	$(UTIL_DIR)/type.cpp  \
+	$(UTIL_DIR)/debug.cpp  \
+	$(UTIL_DIR)/ast_visitors/constant_expression.cpp \
+    $(UTIL_DIR)/ast_visitors/contains_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/dot_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/eval_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/eval_expression_flatter.cpp \
+	$(UTIL_DIR)/ast_visitors/mark_connector.cpp \
+	$(UTIL_DIR)/ast_visitors/partial_eval_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/replace_expression.cpp \
+    $(UTIL_DIR)/graph/graph_definition.cpp \
+	$(MMO_DIR)/mmo_class.cpp \
+	$(MMO_DIR)/mmo_tree.cpp
 
-OBJS_FLATTER= $(SRC_FLATTER:.cpp=.o)
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_FLATTER)))
+# Objects
+FLATTER_OBJ=$(addprefix $(BUILD_DIR)/, $(FLATTER_SRC:.cpp=.o))
 
-$(FLATTER): $(OBJS_FLATTER) $(LIBMODELICA)
-	$(CXX) $(CXXFLAGS) -o bin/flatter $(OBJS_FLATTER) -L./lib -lmodelica
+create-folders::
+	@mkdir -p $(BUILD_DIR)/$(FLATTER_DIR)
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/ast_visitors
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/graph
+	@mkdir -p $(BUILD_DIR)/$(MMO_DIR)
+
+$(FLATTER): $(FLATTER_OBJ) $(LIBMODELICA) 
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(FLATTER_OBJ) -o $(FLATTER) $(LIBS)
 
 $(FLATTER_TEST):
 	@echo BUILDING FLATTER TESTS

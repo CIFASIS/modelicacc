@@ -2,39 +2,29 @@
 MODE ?= Debug
 
 # The Directories, Source, Includes, Objects, Binary 
-ROOT   	        := ..
-3RD_PARTY_DIR   := ./3rd-party
+ROOT   	        := .
+3RD_PARTY_DIR   := $(ROOT)/3rd-party
 GTEST_DIR       := googletest-release-1.10.0
 GTEST_CODE      := $(GTEST_DIR).tar.gz
+BUILD_DIR       := 
+BUILD_DIR    	:= $(ROOT)/obj/release
+ifeq ($(MODE),Debug)
+BUILD_DIR    	:= $(ROOT)/obj/debug
+endif
+AST_DIR         := ast
+PARSER_DIR      := parser
+
 
 # Flags, Libraries and Includes
-CXXFLAGS = -std=c++14 -I. -Wall -Werror -Wno-reorder -O3 
+INCLUDES := -I.
+CXXFLAGS := -std=c++14 -Wall -Werror -Wno-reorder -O3 
 ifeq ($(MODE),Debug)
 CXXFLAGS 	+= -ggdb  
 endif
-DEPDIR := .
-DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 LIBMODELICA = lib/libmodelica.a
-COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
-POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
+LIBS     := -L./lib -lginac -lmodelica
 
-SRC_COMMON := \
-    ast/expression.cpp \
-		ast/class.cpp \
-		ast/equation.cpp \
-		ast/statement.cpp \
-		ast/modification.cpp \
-		ast/element.cpp \
-		ast/expression.cpp \
-		parser/ident.cpp \
-		parser/expression.cpp \
-		parser/modification.cpp \
-		parser/equation.cpp \
-		parser/statement.cpp \
-		parser/class.cpp \
-		parser/parser.cpp \
-
-all: $(LIBMODELICA)
+all: lib-gtest $(LIBMODELICA)
 
 include antialias/Makefile.include
 include mmo/Makefile.include
@@ -43,24 +33,39 @@ include causalize/Makefile.include
 include test/causalize/Makefile.include
 include test/util/Makefile.include
 
-OBJS_COMMON = $(SRC_COMMON:.cpp=.o)
+# Sources
+COMMON_SRC := \
+    	$(AST_DIR)/expression.cpp \
+		$(AST_DIR)/class.cpp \
+		$(AST_DIR)/equation.cpp \
+		$(AST_DIR)/statement.cpp \
+		$(AST_DIR)/modification.cpp \
+		$(AST_DIR)/element.cpp \
+		$(AST_DIR)/expression.cpp \
+		$(PARSER_DIR)/ident.cpp \
+		$(PARSER_DIR)/expression.cpp \
+		$(PARSER_DIR)/modification.cpp \
+		$(PARSER_DIR)/equation.cpp \
+		$(PARSER_DIR)/statement.cpp \
+		$(PARSER_DIR)/class.cpp \
+		$(PARSER_DIR)/parser.cpp
 
-%.o : %.cpp %.d
-	$(COMPILE.cc) $(OUTPUT_OPTION) $<
-	$(POSTCOMPILE)
+# Objects
+COMMON_OBJ=$(addprefix $(BUILD_DIR)/, $(COMMON_SRC:.cpp=.o))
 
-$(LIBMODELICA): $(OBJS_COMMON)
-	$(AR) rcs $(LIBMODELICA) $(OBJS_COMMON)
+$(BUILD_DIR)/%.o : %.cpp
+	$(CC) $(INCLUDES) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES) -c $< -o $@ $(CXXFLAGS)
 
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_COMMON)))
+$(COMMON_OBJ): | create-folders
 
-$(DEPDIR)/%.d: ;
-.PRECIOUS: $(DEPDIR)/%.d
+$(LIBMODELICA): $(COMMON_OBJ) | create-folders
+	$(AR) rcs $(LIBMODELICA) $(COMMON_OBJ)
 
 doc: Doxyfile
 	doxygen
 
-lib-gtest: | create-dirs 
+lib-gtest: | create-folders 
 ifeq ("$(wildcard $(3RD_PARTY_DIR)/gtest/usr/lib)","")
 	cd $(3RD_PARTY_DIR)/gtest; tar xvzf $(GTEST_CODE)
 	mkdir -p $(3RD_PARTY_DIR)/gtest/build
@@ -70,14 +75,16 @@ ifeq ("$(wildcard $(3RD_PARTY_DIR)/gtest/usr/lib)","")
 	rm -rf $(3RD_PARTY_DIR)/gtest/build
 endif
 
-create-dirs:
+create-folders::
 	@mkdir -p $(ROOT)/lib
+	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(BUILD_DIR)/$(AST_DIR)
+	@mkdir -p $(BUILD_DIR)/$(PARSER_DIR)
 
 test: lib-gtest $(FLATTER_TEST)
 
 clean:
-	$(RM) -rf $(OBJS_COMMON) $(OBJS_ANTIALIAS) $(OBJS_FLATTER) $(OBJS_MMO) $(OBJS_CAUSALIZE) $(LIBMODELICA) doc; \
-	find . -name "*.d" -delete
+	$(RM) -rf $(BUILD_DIR) $(LIBMODELICA) doc
 
 help:
 	@echo "make MODE=<Debug|Release> "

@@ -1,22 +1,37 @@
-SRC_COMMON_CAUSALIZE :=  \
-                  causalize/common/for_unrolling/for_index_iterator.cpp \
-                  util/debug.cpp \
-                  util/table.cpp \
-                  util/type.cpp \
-                  util/solve/solve.cpp \
-                  util/ast_visitors/all_expressions.cpp \
-                  util/ast_visitors/replace_expression.cpp \
-                  util/ast_visitors/eval_expression.cpp \
-                  util/ast_visitors/partial_eval_expression.cpp \
-                  util/ast_visitors/ginac_interface.cpp \
-                  util/ast_visitors/contains_expression.cpp \
-                  util/ast_visitors/splitfor_visitor.cpp \
-                  util/ast_visitors/state_variables_finder.cpp \
-                  mmo/mmo_class.cpp
+# The Directories, Source, Includes, Objects, Binary 
+UTIL_DIR        := util
+MMO_DIR         := mmo
+CAUSALIZE_DIR   := causalize
 
+# Sources
 
-OBJS_COMMON_CAUSALIZE = $(SRC_COMMON_CAUSALIZE:.cpp=.o)
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_COMMON_CAUSALIZE)))
+CAUSALIZE_COMMON_SRC := \
+    $(CAUSALIZE_DIR)/common/for_unrolling/for_index_iterator.cpp \
+    $(UTIL_DIR)/debug.cpp \
+    $(UTIL_DIR)/table.cpp \
+    $(UTIL_DIR)/type.cpp \
+    $(UTIL_DIR)/solve/solve.cpp \
+    $(UTIL_DIR)/ast_visitors/all_expressions.cpp \
+    $(UTIL_DIR)/ast_visitors/replace_expression.cpp \
+    $(UTIL_DIR)/ast_visitors/eval_expression.cpp \
+    $(UTIL_DIR)/ast_visitors/partial_eval_expression.cpp \
+    $(UTIL_DIR)/ast_visitors/ginac_interface.cpp \
+    $(UTIL_DIR)/ast_visitors/contains_expression.cpp \
+    $(UTIL_DIR)/ast_visitors/splitfor_visitor.cpp \
+    $(UTIL_DIR)/ast_visitors/state_variables_finder.cpp \
+    $(MMO_DIR)/mmo_class.cpp
+
+# Objects
+CAUSALIZE_COMMON_OBJ=$(addprefix $(BUILD_DIR)/, $(CAUSALIZE_COMMON_SRC:.cpp=.o))
+
+create-folders::
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/common
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/common/for_unrolling        
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/ast_visitors
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/solve    
+	@mkdir -p $(BUILD_DIR)/$(MMO_DIR)
 
 include causalize/graph_implementation/Makefile.include
 include causalize/vg_implementation/Makefile.include
