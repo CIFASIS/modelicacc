@@ -1,23 +1,30 @@
-all: test/util/GraphTest test/util/PrintGraphs
+# The Directories, Source, Includes, Objects, Binary 
+UTIL_DIR        := util
+TEST_DIR        := test
+GRP_TEST        := test/util/GraphTest
+GRP_PRINT_TEST  := test/util/PrintGraphs
 
-SRC_TEST_UTIL1 := test/util/GraphTest.cpp \
-    util/graph/graph_definition.cpp \
-    util/debug.cpp 
+all: $(GRP_TEST) $(GRP_PRINT_TEST) 
 
-SRC_TEST_UTIL2 := test/util/PrintGraphs.cpp
+GRP_TEST_SRC := \
+    $(TEST_DIR)/util/GraphTest.cpp \
+    $(UTIL_DIR)/graph/graph_definition.cpp \
+    $(UTIL_DIR)/debug.cpp 
 
-OBJS_TEST_UTIL1= $(SRC_TEST_UTIL1:.cpp=.o)
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_TEST_UTIL1)))
+GRP_PRINT_TEST_SRC := \
+    test/util/PrintGraphs.cpp
 
-OBJS_TEST_UTIL2= $(SRC_TEST_UTIL2:.cpp=.o)
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC_TEST_UTIL2)))
+# Objects
+GRP_TEST_OBJ=$(addprefix $(BUILD_DIR)/, $(GRP_TEST_SRC:.cpp=.o))
 
-test/util/GraphTest: $(OBJS_TEST_UTIL1)
-	$(CXX) $(CXXFLAGS) -o test/util/GraphTest $(OBJS_TEST_UTIL1) $(LIB_TEST)
+GRP_PRINT_TEST_OBJ=$(addprefix $(BUILD_DIR)/, $(GRP_PRINT_TEST_SRC:.cpp=.o))
 
-test/util/PrintGraphs: $(OBJS_TEST_UTIL2)
-	$(CXX) $(CXXFLAGS) -o test/util/PrintGraphs $(OBJS_TEST_UTIL2) $(LIB_TEST)
+create-folders::
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/test
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/test/util
 
+$(GRP_TEST): $($(GRP_TEST_OBJ)
+	$(CXX) $(INCLUDES) $(CXXFLAGS) -o $(GRP_TEST) $(GRP_TEST_OBJ) $(LIBS)
 
-
-	
+$(GRP_PRINT_TEST): $($(GRP_PRINT_TEST_OBJ)
+	$(CXX) $(INCLUDES) $(CXXFLAGS) -o $(GRP_PRINT_TEST) $(GRP_PRINT_TEST_OBJ) $(LIBS)
