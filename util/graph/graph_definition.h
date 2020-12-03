@@ -18,18 +18,18 @@
 ******************************************************************************/
 
 /*! \file graph_definition.h
-*   General library to work with set based graphs.
-*   The main goal of this module was to abstract
-*   classes that describe mathematical entities,
-*   such as sets, graphs, etc.
-*   If implementation has to change, a new concrete
-*   class can be defined, but the client modules
-*   of graph_definition will call abstract classes,
-*   so no change is needed in the rest of the compiler.
-*   Through typename template the abstract class uses
-*   the new concrete implementation, therefore, requiring
-*   little change appart from concrete class implementation.
-*/
+ *   General library to work with set based graphs.
+ *   The main goal of this module was to abstract
+ *   classes that describe mathematical entities,
+ *   such as sets, graphs, etc.
+ *   If implementation has to change, a new concrete
+ *   class can be defined, but the client modules
+ *   of graph_definition will call abstract classes,
+ *   so no change is needed in the rest of the compiler.
+ *   Through typename template the abstract class uses
+ *   the new concrete implementation, therefore, requiring
+ *   little change appart from concrete class implementation.
+ */
 
 #ifndef GRAPH_DEFINITION_
 #define GRAPH_DEFINITION_
@@ -60,21 +60,22 @@ using namespace std;
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 
-template<template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT>
-struct IntervalImp1{
+template <template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
+                    typename Alloc = std::allocator<Value>>
+          class CT>
+struct IntervalImp1 {
   int lo;
   int step;
   int hi;
   bool empty;
 
-  int gcd(int a, int b){
+  int gcd(int a, int b)
+  {
     int c;
 
-    do{
+    do {
       c = a % b;
-      if(c > 0){
+      if (c > 0) {
         a = b;
         b = c;
       }
@@ -83,50 +84,52 @@ struct IntervalImp1{
     return b;
   }
 
-  int lcm(int a, int b){
-    if(a < 0 || b < 0)
-      return -1;
+  int lcm(int a, int b)
+  {
+    if (a < 0 || b < 0) return -1;
 
     return (a * b) / gcd(a, b);
   }
 
   IntervalImp1(){};
-  IntervalImp1(bool isEmpty){ 
+  IntervalImp1(bool isEmpty)
+  {
     lo = -1;
     step = -1;
     hi = -1;
     empty = isEmpty;
   };
-  IntervalImp1(int vlo, int vstep, int vhi){ 
-    if(vlo >= 0 && vstep > 0 && vhi >= 0){
+  IntervalImp1(int vlo, int vstep, int vhi)
+  {
+    if (vlo >= 0 && vstep > 0 && vhi >= 0) {
       empty = false;
       lo = vlo;
       step = vstep;
 
-      if(vlo <= vhi && vhi < Inf){
-        int rem = std::fmod(vhi - vlo, vstep); 
-        hi = vhi - rem; 
+      if (vlo <= vhi && vhi < Inf) {
+        int rem = std::fmod(vhi - vlo, vstep);
+        hi = vhi - rem;
       }
 
-      else if(vlo <= vhi && vhi == Inf){
+      else if (vlo <= vhi && vhi == Inf) {
         hi = Inf;
       }
 
-      else{
-        //WARNING("Wrong values for subscript (check low <= hi)");
+      else {
+        // WARNING("Wrong values for subscript (check low <= hi)");
         empty = true;
       }
     }
 
-    else if(vlo >= 0 && vstep == 0 && vhi == vlo){
+    else if (vlo >= 0 && vstep == 0 && vhi == vlo) {
       empty = false;
       lo = vlo;
       hi = vhi;
-      step = 1; 
+      step = 1;
     }
 
-    else{ 
-      //WARNING("Subscripts should be positive");
+    else {
+      // WARNING("Subscripts should be positive");
       lo = -1;
       step = -1;
       hi = -1;
@@ -134,43 +137,35 @@ struct IntervalImp1{
     }
   }
 
-  int lo_(){
-    return lo;
-  }
+  int lo_() { return lo; }
 
-  int step_(){
-    return step;
-  }
+  int step_() { return step; }
 
-  int hi_(){
-    return hi;
-  }
+  int hi_() { return hi; }
 
-  bool empty_() const{
-    return empty;
-  }
+  bool empty_() const { return empty; }
 
-  bool isIn(int x){
-    if(x < lo || x > hi || empty)
-      return false;
+  bool isIn(int x)
+  {
+    if (x < lo || x > hi || empty) return false;
 
     float aux = fmod(x - lo, step);
-    if(aux == 0)
-      return true;
+    if (aux == 0) return true;
 
     return false;
-  } 
+  }
 
-  IntervalImp1 cap(IntervalImp1 &inter2){
+  IntervalImp1 cap(IntervalImp1 &inter2)
+  {
     int maxLo = max(lo, inter2.lo), newLo = -1;
     int newStep = lcm(step, inter2.step);
     int newEnd = min(hi, inter2.hi);
 
-    if(!empty && !inter2.empty)
-      for(int i = 0; i < newStep; i++){
+    if (!empty && !inter2.empty)
+      for (int i = 0; i < newStep; i++) {
         int res1 = maxLo + i;
 
-        if(isIn(res1) && inter2.isIn(res1)){
+        if (isIn(res1) && inter2.isIn(res1)) {
           newLo = res1;
           break;
         }
@@ -179,156 +174,150 @@ struct IntervalImp1{
     else
       return IntervalImp1(true);
 
-
-    if(newLo < 0)
-      return IntervalImp1(true);
+    if (newLo < 0) return IntervalImp1(true);
 
     return IntervalImp1(newLo, newStep, newEnd);
   }
 
-  CT<IntervalImp1> diff(IntervalImp1 &i2){
+  CT<IntervalImp1> diff(IntervalImp1 &i2)
+  {
     CT<IntervalImp1> res;
     IntervalImp1 capres = cap(i2);
 
-    if(capres.empty){
+    if (capres.empty) {
       res.insert(*this);
       return res;
     }
 
-    if(capres == *this)
-      return res;
+    if (capres == *this) return res;
 
     // "Before" intersection
-    if(lo < capres.lo){
+    if (lo < capres.lo) {
       IntervalImp1 aux = IntervalImp1(lo, 1, capres.lo - 1);
       IntervalImp1 left = cap(aux);
       res.insert(left);
     }
 
     // "During" intersection
-    if(capres.step <= (capres.hi - capres.lo)){
+    if (capres.step <= (capres.hi - capres.lo)) {
       int nInters = capres.step / step;
-      for(int i = 1; i < nInters; i++){
+      for (int i = 1; i < nInters; i++) {
         IntervalImp1 aux = IntervalImp1(capres.lo + i * step, capres.step, capres.hi);
         res.insert(aux);
-      }  
+      }
     }
 
     // "After" intersection
-    if(hi > capres.hi){
+    if (hi > capres.hi) {
       IntervalImp1 aux = IntervalImp1(capres.hi + 1, 1, hi);
       IntervalImp1 right = cap(aux);
       res.insert(right);
     }
-  
+
     return res;
   }
 
-  int minElem(){
-    return lo;
-  }
-  
-  int size(){
+  int minElem() { return lo; }
+
+  // Cardinality of interval
+  int size()
+  {
     int res = (hi - lo) / step + 1;
     return res;
   }
 
-  bool operator==(const IntervalImp1 &other) const{
-    return (lo == other.lo) && (step == other.step) && (hi == other.hi) &&
-           (empty == other.empty);
+  bool operator==(const IntervalImp1 &other) const
+  {
+    return (lo == other.lo) && (step == other.step) && (hi == other.hi) && (empty == other.empty);
   }
 
-  bool operator!=(const IntervalImp1 &other) const{
-    return (lo != other.lo) || (step != other.step) || (hi != other.hi) ||
-           (empty != other.empty);
+  bool operator!=(const IntervalImp1 &other) const
+  {
+    return (lo != other.lo) || (step != other.step) || (hi != other.hi) || (empty != other.empty);
   }
 
-  size_t hash(){
-    return lo;
-  }
+  size_t hash() { return lo; }
 };
 
-template<template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT>
-size_t hash_value(IntervalImp1<CT> inter){
+template <template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
+                    typename Alloc = std::allocator<Value>>
+          class CT>
+size_t hash_value(IntervalImp1<CT> inter)
+{
   return inter.hash();
 }
 
 // MultiIntervals ---------------------------------------------------------------------------------
 
-template<template<typename T, typename = allocator<T>> class CT1,
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-         typename IntervalImp, typename NumImp>
-struct MultiInterImp1{
+template <template <typename T, typename = allocator<T>> class CT1,
+          template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
+                    typename Alloc = std::allocator<Value>>
+          class CT2,
+          typename IntervalImp, typename NumImp>
+struct MultiInterImp1 {
   typedef typename CT1<IntervalImp>::iterator IntImpIt;
 
   CT1<IntervalImp> inters;
   int ndim;
 
-  MultiInterImp1(){
+  MultiInterImp1()
+  {
     CT1<IntervalImp> emptyRes;
-    inters = emptyRes;  
+    inters = emptyRes;
     ndim = 0;
   }
-  MultiInterImp1(CT1<IntervalImp> is){
+  MultiInterImp1(CT1<IntervalImp> is)
+  {
     IntImpIt it = is.begin();
     bool areEmptys = false;
 
-    while(it != is.end()){
-      if((*it).empty_())
-        areEmptys = true;
+    while (it != is.end()) {
+      if ((*it).empty_()) areEmptys = true;
 
       ++it;
-    } 
- 
-    if(areEmptys){
-      //WARNING("Empty dimension"); 
+    }
+
+    if (areEmptys) {
+      // WARNING("Empty dimension");
 
       CT1<IntervalImp> aux;
       inters = aux;
       ndim = 0;
     }
 
-    else{
+    else {
       inters = is;
       ndim = is.size();
     }
   }
 
-  CT1<IntervalImp> inters_(){
-    return inters;
-  }
+  CT1<IntervalImp> inters_() { return inters; }
 
-  int ndim_(){
-    return ndim;
-  }
+  int ndim_() { return ndim; }
 
-  void addInter(IntervalImp i){
-    if(!i.empty_()){
+  void addInter(IntervalImp i)
+  {
+    if (!i.empty_()) {
       inters.insert(inters.end(), i);
       ++ndim;
     }
   }
 
-  bool empty(){
-    if(inters.empty())
-      return true;
-  
+  bool empty()
+  {
+    if (inters.empty()) return true;
+
     return false;
   }
 
-  bool isIn(CT1<NumImp> elem){
+  bool isIn(CT1<NumImp> elem)
+  {
     IntImpIt it2 = inters.begin();
 
-    if((int) elem.size() != ndim)
-      return false;
+    if ((int)elem.size() != ndim) return false;
 
-    BOOST_FOREACH(NumImp n, elem){
-      if(!(*it2).isIn(n))
-        return false;      
+    BOOST_FOREACH (NumImp n, elem) {
+      if (!(*it2).isIn(n)) return false;
 
       ++it2;
     }
@@ -336,16 +325,17 @@ struct MultiInterImp1{
     return true;
   }
 
-  MultiInterImp1 cap(MultiInterImp1 &mi2){
+  MultiInterImp1 cap(MultiInterImp1 &mi2)
+  {
     CT1<IntervalImp> res;
     IntImpIt itres = res.begin();
 
     IntImpIt it2 = mi2.inters.begin();
-    if(ndim == mi2.ndim){
-      BOOST_FOREACH(IntervalImp i1, inters){
+    if (ndim == mi2.ndim) {
+      BOOST_FOREACH (IntervalImp i1, inters) {
         IntervalImp capres = i1.cap(*it2);
-     
-        if(capres.empty_()){
+
+        if (capres.empty_()) {
           CT1<IntervalImp> aux;
           return MultiInterImp1(aux);
         }
@@ -353,41 +343,40 @@ struct MultiInterImp1{
         itres = res.insert(itres, capres);
         ++itres;
 
-        ++it2;    
+        ++it2;
       }
     }
 
     return MultiInterImp1(res);
   }
 
-  CT2<MultiInterImp1> diff(MultiInterImp1 &mi2){
+  CT2<MultiInterImp1> diff(MultiInterImp1 &mi2)
+  {
     MultiInterImp1 capres = cap(mi2);
 
     CT2<MultiInterImp1> resmi;
     typename CT2<MultiInterImp1>::iterator itresmi = resmi.begin();
 
-    if(inters.empty())
-      return resmi;
+    if (inters.empty()) return resmi;
 
-    if(ndim != mi2.ndim){
+    if (ndim != mi2.ndim) {
       return resmi;
     }
 
-    if(capres.empty()){
+    if (capres.empty()) {
       resmi.insert(*this);
       return resmi;
     }
 
-    if(inters == capres.inters)
-      return resmi;
+    if (inters == capres.inters) return resmi;
 
     IntImpIt itcap = capres.inters.begin();
     CT1<CT2<IntervalImp>> diffs;
     typename CT1<CT2<IntervalImp>>::iterator itdiffs = diffs.begin();
 
-    BOOST_FOREACH(IntervalImp i, inters){
+    BOOST_FOREACH (IntervalImp i, inters) {
       itdiffs = diffs.insert(itdiffs, i.diff(*itcap));
- 
+
       ++itcap;
       ++itdiffs;
     }
@@ -395,33 +384,33 @@ struct MultiInterImp1{
     IntImpIt it1 = inters.begin();
     ++it1;
     itdiffs = diffs.begin();
-    
+
     int count = 0;
-    BOOST_FOREACH(CT2<IntervalImp> vdiff, diffs){
-      BOOST_FOREACH(IntervalImp i, vdiff){
-        if(!i.empty_()){
+    BOOST_FOREACH (CT2<IntervalImp> vdiff, diffs) {
+      BOOST_FOREACH (IntervalImp i, vdiff) {
+        if (!i.empty_()) {
           CT1<IntervalImp> resi;
           IntImpIt itresi = resi.begin();
-  
+
           itcap = capres.inters.begin();
 
-          if(count > 0){
-            for(int j = 0; j < count; j++){
-              itresi = resi.insert(itresi, *itcap);         
-              ++itresi; 
+          if (count > 0) {
+            for (int j = 0; j < count; j++) {
+              itresi = resi.insert(itresi, *itcap);
+              ++itresi;
 
               ++itcap;
             }
           }
 
           itresi = resi.insert(itresi, i);
-          ++itresi; 
+          ++itresi;
 
           IntImpIt auxit1 = it1;
-          while(auxit1 != inters.end()){
+          while (auxit1 != inters.end()) {
             itresi = resi.insert(itresi, *auxit1);
             ++itresi;
-        
+
             ++auxit1;
           }
 
@@ -437,16 +426,17 @@ struct MultiInterImp1{
     return resmi;
   }
 
-  MultiInterImp1 crossProd(MultiInterImp1 mi2){
-    CT1<IntervalImp> res; 
+  MultiInterImp1 crossProd(MultiInterImp1 mi2)
+  {
+    CT1<IntervalImp> res;
     IntImpIt itres = res.begin();
 
-    BOOST_FOREACH(IntervalImp i, inters){
+    BOOST_FOREACH (IntervalImp i, inters) {
       itres = res.insert(itres, i);
       ++itres;
     }
 
-    BOOST_FOREACH(IntervalImp i, mi2.inters){
+    BOOST_FOREACH (IntervalImp i, mi2.inters) {
       itres = res.insert(itres, i);
       ++itres;
     }
@@ -454,30 +444,32 @@ struct MultiInterImp1{
     return MultiInterImp1(res);
   }
 
-  CT1<NumImp> minElem(){
+  CT1<NumImp> minElem()
+  {
     CT1<NumImp> res;
     typename CT1<NumImp>::iterator itres = res.begin();
 
-    BOOST_FOREACH(IntervalImp i, inters){
-      if(i.empty_()){
+    BOOST_FOREACH (IntervalImp i, inters) {
+      if (i.empty_()) {
         CT1<NumImp> aux;
         return aux;
       }
 
       itres = res.insert(itres, i.minElem());
       ++itres;
-    }    
+    }
 
     return res;
   }
 
-  MultiInterImp1 replace(IntervalImp &i, int dim){
+  MultiInterImp1 replace(IntervalImp &i, int dim)
+  {
     CT1<IntervalImp> auxRes;
     IntImpIt itAux = auxRes.begin();
     int count = 1;
 
-    BOOST_FOREACH(IntervalImp ii, inters){
-      if(dim == count)
+    BOOST_FOREACH (IntervalImp ii, inters) {
+      if (dim == count)
         itAux = auxRes.insert(itAux, i);
       else
         itAux = auxRes.insert(itAux, ii);
@@ -490,22 +482,26 @@ struct MultiInterImp1{
     return MultiInterImp1(auxRes);
   }
 
-  int size(){
+  int size()
+  {
     int res = 1;
-    BOOST_FOREACH(IntervalImp i, inters){
+
+    BOOST_FOREACH (IntervalImp i, inters) {
       res *= i.size();
     }
 
-    return res; 
+    if (inters.empty()) res = 0;
+
+    return res;
   }
 
-  bool operator<(const MultiInterImp1 &other) const{
+  bool operator<(const MultiInterImp1 &other) const
+  {
     typename CT1<IntervalImp>::const_iterator iti2 = other.inters.begin();
 
-    BOOST_FOREACH(IntervalImp i1, inters){
-      IntervalImp aux = *iti2; 
-      if(i1.minElem() < aux.minElem())
-        return true;      
+    BOOST_FOREACH (IntervalImp i1, inters) {
+      IntervalImp aux = *iti2;
+      if (i1.minElem() < aux.minElem()) return true;
 
       ++iti2;
     }
@@ -513,84 +509,75 @@ struct MultiInterImp1{
     return false;
   }
 
-  bool operator==(const MultiInterImp1 &other) const{
-    return inters == other.inters;
-  }
+  bool operator==(const MultiInterImp1 &other) const { return inters == other.inters; }
 
-  bool operator!=(const MultiInterImp1 &other) const{
-    return inters != other.inters;
-  }
+  bool operator!=(const MultiInterImp1 &other) const { return inters != other.inters; }
 
-  size_t hash(){
-    return inters.size(); 
-  }
+  size_t hash() { return inters.size(); }
 };
 
-template<template<typename T, typename = allocator<T>> class CT1,
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-         typename IntervalImp, typename NumImp>
-size_t hash_value(MultiInterImp1<CT1, CT2, IntervalImp, NumImp> mi){
+template <template <typename T, typename = allocator<T>> class CT1,
+          template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
+                    typename Alloc = std::allocator<Value>>
+          class CT2,
+          typename IntervalImp, typename NumImp>
+size_t hash_value(MultiInterImp1<CT1, CT2, IntervalImp, NumImp> mi)
+{
   return mi.hash();
 }
 
 // Atomic sets ------------------------------------------------------------------------------------
 
-template<template<typename T, typename = allocator<T>> class CT1, 
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-         typename MultiInterImp, typename IntervalImp, typename NumImp>
-struct AtomSetImp1{
+template <template <typename T, typename = allocator<T>> class CT1,
+          template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
+                    typename Alloc = std::allocator<Value>>
+          class CT2,
+          typename MultiInterImp, typename IntervalImp, typename NumImp>
+struct AtomSetImp1 {
   MultiInterImp aset;
   int ndim;
 
-  AtomSetImp1(){
+  AtomSetImp1()
+  {
     MultiInterImp emptyRes;
     aset = emptyRes;
     ndim = 0;
   }
-  AtomSetImp1(MultiInterImp as){
+  AtomSetImp1(MultiInterImp as)
+  {
     aset = as;
     ndim = as.ndim_();
   }
 
-  MultiInterImp aset_(){
-    return aset;
-  }
+  MultiInterImp aset_() { return aset; }
 
-  int ndim_(){
-    return ndim;
-  }
+  int ndim_() { return ndim; }
 
-  bool empty(){
-    return aset.empty();  
-  }
+  bool empty() { return aset.empty(); }
 
-  bool isIn(CT1<NumImp> elem){
-    return aset.isIn(elem);
-  }
+  bool isIn(CT1<NumImp> elem) { return aset.isIn(elem); }
 
-  AtomSetImp1 cap(AtomSetImp1 &aset2){
+  AtomSetImp1 cap(AtomSetImp1 &aset2)
+  {
     AtomSetImp1 aux(aset.cap(aset2.aset));
     return aux;
   }
 
-  CT2<AtomSetImp1> diff(AtomSetImp1 &aset2){
+  CT2<AtomSetImp1> diff(AtomSetImp1 &aset2)
+  {
     CT2<AtomSetImp1> res;
     typename CT2<AtomSetImp1>::iterator itres = res.begin();
 
     CT2<MultiInterImp> atomicDiff = aset.diff(aset2.aset);
 
-    if(atomicDiff.empty()){
+    if (atomicDiff.empty()) {
       CT2<AtomSetImp1> emptyRes;
       return emptyRes;
-    } 
+    }
 
-    else{
-      BOOST_FOREACH(MultiInterImp mi, atomicDiff){
-        itres = res.insert(itres, AtomSetImp1(mi)); 
+    else {
+      BOOST_FOREACH (MultiInterImp mi, atomicDiff) {
+        itres = res.insert(itres, AtomSetImp1(mi));
         ++itres;
       }
     }
@@ -598,79 +585,71 @@ struct AtomSetImp1{
     return res;
   }
 
-  AtomSetImp1 crossProd(AtomSetImp1 &aset2){
-    return AtomSetImp1(aset.crossProd(aset2.aset));
-  }
+  AtomSetImp1 crossProd(AtomSetImp1 &aset2) { return AtomSetImp1(aset.crossProd(aset2.aset)); }
 
-  CT1<NumImp> minElem(){
-    return aset.minElem();
-  }
+  CT1<NumImp> minElem() { return aset.minElem(); }
 
-  AtomSetImp1 replace(IntervalImp &i, int dim){
-    return AtomSetImp1(aset.replace(i, dim));
-  }
+  AtomSetImp1 replace(IntervalImp &i, int dim) { return AtomSetImp1(aset.replace(i, dim)); }
 
-  bool operator==(const AtomSetImp1 &other) const{
-    return aset == other.aset;
-  }
+  int size() { return aset.size(); }
 
-  bool operator!=(const AtomSetImp1 &other) const{
-    return aset != other.aset;
-  }
+  bool operator==(const AtomSetImp1 &other) const { return aset == other.aset; }
 
-  size_t hash(){
-    return aset.hash();
-  }
+  bool operator!=(const AtomSetImp1 &other) const { return aset != other.aset; }
+
+  size_t hash() { return aset.hash(); }
 };
 
-template<template<typename T, typename = allocator<T>> class CT1, 
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-         typename MultiInterImp, typename IntervalImp, typename NumImp>
-size_t hash_value(AtomSetImp1<CT1, CT2, MultiInterImp, IntervalImp, NumImp> as){
+template <template <typename T, typename = allocator<T>> class CT1,
+          template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
+                    typename Alloc = std::allocator<Value>>
+          class CT2,
+          typename MultiInterImp, typename IntervalImp, typename NumImp>
+size_t hash_value(AtomSetImp1<CT1, CT2, MultiInterImp, IntervalImp, NumImp> as)
+{
   return as.hash();
 }
 
 // Sets --------------------------------------------------------------------------------------------
 
-template<template<typename T, typename = allocator<T>> class CT1,
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-         typename ASetImp, typename NumImp>
-struct SetImp1{
+template <template <typename T, typename = allocator<T>> class CT1,
+          template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
+                    typename Alloc = std::allocator<Value>>
+          class CT2,
+          typename ASetImp, typename NumImp>
+struct SetImp1 {
   typedef CT2<ASetImp> SetType;
   typedef typename SetType::iterator SetIt;
 
   SetType asets;
   int ndim;
- 
-  SetImp1(){
+
+  SetImp1()
+  {
     SetType aux;
     asets = aux;
     ndim = 0;
   }
-  SetImp1(SetType ss){
+  SetImp1(SetType ss)
+  {
     ASetImp aux2;
 
-    if(!ss.empty()){
+    if (!ss.empty()) {
       aux2 = *(ss.begin());
       int aux1 = aux2.ndim_();
       bool equalDims = true;
       // Check if all atomic sets have the same dimension
-      BOOST_FOREACH(ASetImp as, ss){
-        if(aux1 != as.ndim_())
-          equalDims = false;
+      BOOST_FOREACH (ASetImp as, ss) {
+        if (aux1 != as.ndim_()) equalDims = false;
       }
 
-      if(equalDims && aux1 != 0){
+      if (equalDims && aux1 != 0) {
         asets = ss;
-        ndim = aux1; 
+        ndim = aux1;
       }
-    
-      else{
-        //WARNING("Using atomics sets of different sizes");
+
+      else {
+        // WARNING("Using atomics sets of different sizes");
 
         SetType aux3;
         asets = aux3;
@@ -678,55 +657,58 @@ struct SetImp1{
       }
     }
 
-    else{
+    else {
       asets = ss;
       ndim = 0;
     }
   }
 
-  SetType asets_(){
-    return asets;
+  SetType asets_() { return asets; }
+
+  int ndim_() { return ndim; }
+
+  bool empty()
+  {
+    if (asets.empty()) return true;
+
+    bool res = true;
+    BOOST_FOREACH (ASetImp as, asets) {
+      if (!as.empty()) res = false;
+    }
+
+    return res;
   }
 
-  int ndim_(){
-    return ndim;
-  }
-
-  bool empty(){
-    if(asets.empty())
-      return true;
-  
-    return false;
-  }
-
-  bool isIn(CT1<NumImp> elem){
-    BOOST_FOREACH(ASetImp as, asets){
-      if(as.isIn(elem))
-        return true;
+  bool isIn(CT1<NumImp> elem)
+  {
+    BOOST_FOREACH (ASetImp as, asets) {
+      if (as.isIn(elem)) return true;
     }
 
     return false;
   }
 
-  void addAtomSet(ASetImp &aset2){
-    if(!aset2.empty() && aset2.ndim_() == ndim && !asets.empty())
+  void addAtomSet(ASetImp &aset2)
+  {
+    if (!aset2.empty() && aset2.ndim_() == ndim && !asets.empty())
       asets.insert(aset2);
 
-    else if(!aset2.empty() && asets.empty()){
+    else if (!aset2.empty() && asets.empty()) {
       asets.insert(aset2);
       ndim = aset2.ndim_();
     }
- 
-    //else
-      //WARNING("Atomic sets should have the same dimension");
+
+    // else
+    // WARNING("Atomic sets should have the same dimension");
   }
 
-  void addAtomSets(SetType &sets2){
+  void addAtomSets(SetType &sets2)
+  {
     ASetImp aux;
 
     SetIt it = sets2.begin();
 
-    while(it != sets2.end()){
+    while (it != sets2.end()) {
       aux = *it;
       addAtomSet(aux);
 
@@ -734,42 +716,42 @@ struct SetImp1{
     }
   }
 
-  SetImp1 cap(SetImp1 &set2){
+  SetImp1 cap(SetImp1 &set2)
+  {
     ASetImp aux1, aux2;
 
-    if(asets.empty() || set2.asets.empty()){
+    if (asets.empty() || set2.asets.empty()) {
       SetImp1 emptyRes;
-      return emptyRes; 
+      return emptyRes;
     }
-    
+
     SetType res;
 
-    BOOST_FOREACH(ASetImp as1, asets){
-      BOOST_FOREACH(ASetImp as2, set2.asets){
+    BOOST_FOREACH (ASetImp as1, asets) {
+      BOOST_FOREACH (ASetImp as2, set2.asets) {
         ASetImp capres = as1.cap(as2);
-      
-        if(!capres.empty())
-          res.insert(capres);
+
+        if (!capres.empty()) res.insert(capres);
       }
     }
 
     return SetImp1(res);
   }
 
-  SetImp1 diff(SetImp1 &set2){
+  SetImp1 diff(SetImp1 &set2)
+  {
     SetImp1 res;
-    SetType capres = cap(set2).asets; 
+    SetType capres = cap(set2).asets;
 
-    if(!capres.empty()){
-
-      BOOST_FOREACH(ASetImp as1, asets){
+    if (!capres.empty()) {
+      BOOST_FOREACH (ASetImp as1, asets) {
         SetType aux;
         aux.insert(as1);
- 
-        BOOST_FOREACH(ASetImp as2, capres){
+
+        BOOST_FOREACH (ASetImp as2, capres) {
           SetImp1 newSets;
 
-          BOOST_FOREACH(ASetImp as3, aux){
+          BOOST_FOREACH (ASetImp as3, aux) {
             SetType diffres = as3.diff(as2);
             newSets.addAtomSets(diffres);
           }
@@ -784,24 +766,25 @@ struct SetImp1{
     else
       res.addAtomSets(asets);
 
-    return res; 
+    return res;
   }
 
-  SetImp1 cup(SetImp1 &set2){
+  SetImp1 cup(SetImp1 &set2)
+  {
     SetImp1 res = *this;
     SetImp1 aux = set2.diff(*this);
- 
-    if(!aux.empty()) 
-      res.addAtomSets(aux.asets);
+
+    if (!aux.empty()) res.addAtomSets(aux.asets);
 
     return res;
   }
 
-  SetImp1 crossProd(SetImp1 &set2){
+  SetImp1 crossProd(SetImp1 &set2)
+  {
     SetType res;
 
-    BOOST_FOREACH(ASetImp as1, asets.end){
-      BOOST_FOREACH(ASetImp as2, set2.asets){
+    BOOST_FOREACH (ASetImp as1, asets.end) {
+      BOOST_FOREACH (ASetImp as2, set2.asets) {
         ASetImp auxres = as1.crossProd(as2);
         res.addAtomSet(auxres);
       }
@@ -810,50 +793,73 @@ struct SetImp1{
     return SetImp1(res);
   }
 
-  CT1<NumImp> minElem(){
+  bool subseteq(SetImp1 &s2)
+  {
+    SetImp1 sdiff = (*this).diff(s2);
+
+    if (sdiff.empty()) return true;
+
+    return false;
+  }
+
+  bool subset(SetImp1 &s2)
+  {
+    SetImp1 sdiff1 = (*this).diff(s2);
+    SetImp1 sdiff2 = s2.diff(*this);
+
+    if (sdiff1.empty() && !sdiff2.empty()) return true;
+
+    return false;
+  }
+
+  CT1<NumImp> minElem()
+  {
     CT1<NumImp> res;
- 
-    if(empty())
-      return res;
 
-    ASetImp min = *(asets.begin()); 
+    if (empty()) return res;
 
-    BOOST_FOREACH(ASetImp as1, asets){
-      //CT1<NumImp> min1 = as1.aset_().minElem();
-      if(as1.aset_().minElem() < min.minElem())  
-        min = as1; 
+    ASetImp min = *(asets.begin());
+
+    BOOST_FOREACH (ASetImp as1, asets) {
+      // CT1<NumImp> min1 = as1.aset_().minElem();
+      if (as1.aset_().minElem() < min.minElem()) min = as1;
     }
 
     return min.minElem();
   }
 
-  bool operator==(const SetImp1 &other) const{
-    return asets == other.asets;
+  int size()
+  {
+    int res = 0;
+
+    BOOST_FOREACH (ASetImp as, asets) {
+      res += as.size();
+    }
+
+    return res;
   }
 
-  bool operator!=(const SetImp1 &other) const{
-    return asets != other.asets;
-  }
+  bool operator==(const SetImp1 &other) const { return asets == other.asets; }
 
-  size_t hash(){
-    return asets.size();
-  }
+  bool operator!=(const SetImp1 &other) const { return asets != other.asets; }
+
+  size_t hash() { return asets.size(); }
 };
 
-template<template<typename T, typename = allocator<T>> class CT1, 
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-         typename ASetImp, typename NumImp>
-size_t hash_value(SetImp1<CT1, CT2, ASetImp, NumImp> s){
+template <template <typename T, typename = allocator<T>> class CT1,
+          template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
+                    typename Alloc = std::allocator<Value>>
+          class CT2,
+          typename ASetImp, typename NumImp>
+size_t hash_value(SetImp1<CT1, CT2, ASetImp, NumImp> s)
+{
   return s.hash();
 }
 
 // LinearMaps ---------------------------------------------------------------------------------------
 
-template <template<typename T, typename = std::allocator<T>> class CT,
-          typename NumImp>
-struct LMapImp1{
+template <template <typename T, typename = std::allocator<T>> class CT, typename NumImp>
+struct LMapImp1 {
   typedef CT<NumImp> CTNum;
   typedef typename CTNum::iterator CTNumIt;
 
@@ -861,30 +867,31 @@ struct LMapImp1{
   CTNum offset;
   int ndim;
 
-  LMapImp1(){
+  LMapImp1()
+  {
     CTNum aux1;
     CTNum aux2;
     gain = aux2;
     offset = aux1;
     ndim = 0;
   }
-  LMapImp1(CTNum g, CTNum o){
+  LMapImp1(CTNum g, CTNum o)
+  {
     bool negative = false;
 
-    BOOST_FOREACH(NumImp gi, g){
-      if(gi < 0)
-        negative = true;
+    BOOST_FOREACH (NumImp gi, g) {
+      if (gi < 0) negative = true;
     }
 
-    if(!negative){
-      if(g.size() == o.size()){
+    if (!negative) {
+      if (g.size() == o.size()) {
         gain = g;
         offset = o;
         ndim = g.size();
       }
 
-      else{
-        //WARNING("Offset and gain should be of the same size");
+      else {
+        // WARNING("Offset and gain should be of the same size");
 
         CTNum aux1;
         CTNum aux2;
@@ -894,8 +901,8 @@ struct LMapImp1{
       }
     }
 
-    else{
-      //WARNING("All gains should be positive");
+    else {
+      // WARNING("All gains should be positive");
 
       CTNum aux1;
       CTNum aux2;
@@ -905,13 +912,14 @@ struct LMapImp1{
     }
   }
   // Constructs the id of LMaps
-  LMapImp1(int dim){
+  LMapImp1(int dim)
+  {
     CTNum g;
     CTNumIt itg = g.begin();
     CTNum o;
     CTNumIt ito = o.begin();
 
-    for(int i = 0; i < dim; i++){
+    for (int i = 0; i < dim; i++) {
       itg = g.insert(itg, 1.0);
       ++itg;
       ito = o.insert(ito, 0);
@@ -923,37 +931,33 @@ struct LMapImp1{
     ndim = dim;
   }
 
-  CTNum gain_(){
-    return gain;
-  }
+  CTNum gain_() { return gain; }
 
-  CTNum off_(){
-    return offset;
-  }
+  CTNum off_() { return offset; }
 
-  int ndim_(){
-    return ndim;
-  }
+  int ndim_() { return ndim; }
 
-  bool empty(){
-    if(gain.empty() && offset.empty())
-      return true;
+  bool empty()
+  {
+    if (gain.empty() && offset.empty()) return true;
 
     return false;
   }
 
-  void addGO(NumImp g, NumImp o){
-    if(g >= 0){
+  void addGO(NumImp g, NumImp o)
+  {
+    if (g >= 0) {
       gain.insert(gain.end(), g);
       offset.insert(offset.end(), o);
       ++ndim;
     }
 
-    //else
-      //WARNING("Gain should be positive");
+    // else
+    // WARNING("Gain should be positive");
   }
 
-  LMapImp1 compose(LMapImp1 &lm2){
+  LMapImp1 compose(LMapImp1 &lm2)
+  {
     CTNum resg;
     CTNumIt itresg = resg.begin();
     CTNum reso;
@@ -963,8 +967,8 @@ struct LMapImp1{
     CTNumIt itg2 = lm2.gain.begin();
     CTNumIt ito2 = lm2.offset.begin();
 
-    if(ndim == lm2.ndim){
-      BOOST_FOREACH(NumImp g1i, gain){
+    if (ndim == lm2.ndim) {
+      BOOST_FOREACH (NumImp g1i, gain) {
         itresg = resg.insert(itresg, g1i * (*itg2));
         ++itresg;
         itreso = reso.insert(itreso, (*ito2) * g1i + (*ito1));
@@ -973,11 +977,11 @@ struct LMapImp1{
         ++ito1;
         ++itg2;
         ++ito2;
-      } 
+      }
     }
 
-    else{
-      //WARNING("Linear maps should be of the same size");
+    else {
+      // WARNING("Linear maps should be of the same size");
       LMapImp1 aux;
       return aux;
     }
@@ -985,7 +989,8 @@ struct LMapImp1{
     return LMapImp1(resg, reso);
   }
 
-  LMapImp1 invLMap(){
+  LMapImp1 invLMap()
+  {
     CTNum resg;
     CTNumIt itresg = resg.begin();
     CTNum reso;
@@ -993,8 +998,8 @@ struct LMapImp1{
 
     CTNumIt ito1 = offset.begin();
 
-    BOOST_FOREACH(NumImp g1i, gain){
-      if(g1i != 0){
+    BOOST_FOREACH (NumImp g1i, gain) {
+      if (g1i != 0) {
         itresg = resg.insert(itresg, 1 / g1i);
         ++itresg;
 
@@ -1002,10 +1007,10 @@ struct LMapImp1{
         ++itreso;
       }
 
-      else{
+      else {
         itresg = resg.insert(itresg, Inf);
         ++itresg;
-      
+
         itreso = reso.insert(itreso, -Inf);
         ++itreso;
       }
@@ -1015,35 +1020,33 @@ struct LMapImp1{
 
     return LMapImp1(resg, reso);
   }
- 
-  bool operator==(const LMapImp1 &other) const{
-    return gain == other.gain && offset == other.offset;
-  }
+
+  bool operator==(const LMapImp1 &other) const { return gain == other.gain && offset == other.offset; }
 };
 
 // Piecewise atomic linear maps -----------------------------------------------------------------
 
-template<template<typename T, typename = allocator<T>> class CT,
-         typename LMapImp, typename ASetImp, typename MultiInterImp, typename IntervalImp, 
-         typename NumImp1, typename NumImp2>
-struct PWAtomLMapImp1{
+template <template <typename T, typename = allocator<T>> class CT, typename LMapImp, typename ASetImp, typename MultiInterImp,
+          typename IntervalImp, typename NumImp1, typename NumImp2>
+struct PWAtomLMapImp1 {
   ASetImp dom;
   LMapImp lmap;
 
-  PWAtomLMapImp1(){}
-  PWAtomLMapImp1(ASetImp d, LMapImp l){
+  PWAtomLMapImp1() {}
+  PWAtomLMapImp1(ASetImp d, LMapImp l)
+  {
     ASetImp aux1;
     LMapImp aux2;
 
-    if(d.ndim_() != l.ndim_()){
-      //WARNING("Atomic set and map should be of the same dimension");
+    if (d.ndim_() != l.ndim_()) {
+      // WARNING("Atomic set and map should be of the same dimension");
 
       dom = aux1;
       lmap = aux2;
     }
 
-    else{
-      CT<IntervalImp> ints = d.aset_().inters_(); 
+    else {
+      CT<IntervalImp> ints = d.aset_().inters_();
       CT<NumImp2> g = l.gain_();
       typename CT<NumImp2>::iterator itg = g.begin();
       CT<NumImp2> o = l.off_();
@@ -1052,24 +1055,24 @@ struct PWAtomLMapImp1{
 
       CT<IntervalImp> auxdom;
 
-      BOOST_FOREACH(IntervalImp i, ints){
-        NumImp2 auxLo = i.lo_() * (*itg) + (*ito); 
+      BOOST_FOREACH (IntervalImp i, ints) {
+        NumImp2 auxLo = i.lo_() * (*itg) + (*ito);
         NumImp2 auxStep = i.step_() * (*itg);
         NumImp2 auxHi = i.hi_() * (*itg) + (*ito);
 
-        if(*itg < Inf){
-          if(auxLo != (int) auxLo && i.lo_()){
-            //WARNING("Incompatible map");
+        if (*itg < Inf) {
+          if (auxLo != (int)auxLo && i.lo_()) {
+            // WARNING("Incompatible map");
             incompatible = true;
           }
 
-          if(auxStep != (int) auxStep && i.step_()){
-            //WARNING("Incompatible map");
+          if (auxStep != (int)auxStep && i.step_()) {
+            // WARNING("Incompatible map");
             incompatible = true;
           }
 
-          if(auxHi != (int) auxHi && i.hi_()){
-            //WARNING("Incompatible map");
+          if (auxHi != (int)auxHi && i.hi_()) {
+            // WARNING("Incompatible map");
             incompatible = true;
           }
 
@@ -1078,32 +1081,27 @@ struct PWAtomLMapImp1{
         }
       }
 
-      if(incompatible){
+      if (incompatible) {
         dom = aux1;
         lmap = aux2;
       }
 
-      else{
-        dom = d; 
+      else {
+        dom = d;
         lmap = l;
       }
     }
   }
 
-  ASetImp dom_(){
-    return dom;
-  }
+  ASetImp dom_() { return dom; }
 
-  LMapImp lmap_(){
-    return lmap;
-  }
+  LMapImp lmap_() { return lmap; }
 
-  bool empty(){
-    return dom.empty() && lmap.empty();
-  }
- 
-  ASetImp image(ASetImp &s){
-    CT<IntervalImp> inters = (s.cap(dom)).aset_().inters_(); 
+  bool empty() { return dom.empty() && lmap.empty(); }
+
+  ASetImp image(ASetImp &s)
+  {
+    CT<IntervalImp> inters = (s.cap(dom)).aset_().inters_();
     CT<NumImp2> g = lmap.gain_();
     typename CT<NumImp2>::iterator itg = g.begin();
     CT<NumImp2> o = lmap.off_();
@@ -1112,12 +1110,12 @@ struct PWAtomLMapImp1{
     CT<IntervalImp> res;
     typename CT<IntervalImp>::iterator itres = res.begin();
 
-    if(dom.empty()){
+    if (dom.empty()) {
       ASetImp aux2;
       return aux2;
     }
 
-    BOOST_FOREACH(IntervalImp capi, inters){
+    BOOST_FOREACH (IntervalImp capi, inters) {
       NumImp1 newLo;
       NumImp1 newStep;
       NumImp1 newHi;
@@ -1126,30 +1124,30 @@ struct PWAtomLMapImp1{
       NumImp2 auxStep = capi.step_() * (*itg);
       NumImp2 auxHi = capi.hi_() * (*itg) + (*ito);
 
-      if(*itg < Inf){
-        if(auxLo >= Inf)
+      if (*itg < Inf) {
+        if (auxLo >= Inf)
           newLo = Inf;
-        else 
-          newLo = (NumImp1) auxLo;
+        else
+          newLo = (NumImp1)auxLo;
 
-        if(auxStep >= Inf)
+        if (auxStep >= Inf)
           newStep = Inf;
         else
-          newStep = (NumImp1) auxStep;
+          newStep = (NumImp1)auxStep;
 
-        if(auxHi >= Inf)
+        if (auxHi >= Inf)
           newHi = Inf;
-        else 
-          newHi = (NumImp1) auxHi;
+        else
+          newHi = (NumImp1)auxHi;
       }
 
-      else{
+      else {
         newLo = 1;
         newStep = 1;
         newHi = Inf;
       }
 
-      IntervalImp aux1(newLo, newStep, newHi); 
+      IntervalImp aux1(newLo, newStep, newHi);
       itres = res.insert(itres, aux1);
       ++itres;
 
@@ -1159,56 +1157,58 @@ struct PWAtomLMapImp1{
 
     MultiInterImp aux2(res);
     return ASetImp(aux2);
-  } 
+  }
 
-  ASetImp preImage(ASetImp &s){
+  ASetImp preImage(ASetImp &s)
+  {
     ASetImp fullIm = image(dom);
     ASetImp actualIm = fullIm.cap(s);
-    PWAtomLMapImp1 inv(actualIm, lmap.invLMap());  
+    PWAtomLMapImp1 inv(actualIm, lmap.invLMap());
 
     ASetImp aux = inv.image(actualIm);
     return dom.cap(aux);
   }
 
-  bool operator==(const PWAtomLMapImp1 &other) const{
-    return dom == other.dom && lmap == other.lmap;
-  }
+  bool operator==(const PWAtomLMapImp1 &other) const { return dom == other.dom && lmap == other.lmap; }
 };
 
 // Piecewise linear maps ------------------------------------------------------------------------
 
-template<template<typename T, class = allocator<T>> class CT1,
-         template<typename Value, typename Hash = boost::hash<Value>, 
-                  typename Pred = std::equal_to<Value>, 
-                  typename Alloc = std::allocator<Value>> class CT2,
-         typename PWAtomLMapImp, typename LMapImp, typename SetImp, typename ASetImp, 
-         typename NumImp1, typename NumImp2>
-struct PWLMapImp1{
+template <template <typename T, class = allocator<T>> class CT1,
+          template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
+                    typename Alloc = std::allocator<Value>>
+          class CT2,
+          typename PWAtomLMapImp, typename LMapImp, typename SetImp, typename ASetImp, typename NumImp1, typename NumImp2>
+struct PWLMapImp1 {
   typedef CT1<SetImp> CTSet;
   typedef typename CT1<SetImp>::iterator CTSetIt;
   typedef CT1<LMapImp> CTLMap;
   typedef typename CT1<LMapImp>::iterator CTLMapIt;
 
-  CT1<SetImp> dom; 
-  CT1<LMapImp> lmap;  
+  CTSet dom;
+  CTLMap lmap;
   int ndim = 0;
 
-  PWLMapImp1(){}
-  PWLMapImp1(CTSet d, CTLMap l){
+  PWLMapImp1() {}
+  PWLMapImp1(CTSet d, CTLMap l)
+  {
     CTLMapIt itl = l.begin();
     int auxndim = (*(d.begin())).ndim_();
     bool different = false;
-  
-    if(d.size() == l.size()){
-      BOOST_FOREACH(SetImp sd, d){
-        if(sd.ndim_() != auxndim || (*itl).ndim_() != auxndim)
-          different = true;
 
-        ++itl; 
+    if (d.size() == l.size()) {
+      BOOST_FOREACH (SetImp sd, d) {
+        BOOST_FOREACH (ASetImp as, sd.asets_()) {
+          PWAtomLMapImp pwatom(as, *itl);
+
+          if (pwatom.empty()) different = true;
+        }
+
+        ++itl;
       }
 
-      if(different){
-        //WARNING("Sets and maps should have the same dimension");
+      if (different) {
+        // WARNING("Sets and maps should have the same dimension");
 
         CTSet aux1;
         CTLMap aux2;
@@ -1217,29 +1217,30 @@ struct PWLMapImp1{
         ndim = 0;
       }
 
-      else{
+      else {
         dom = d;
         lmap = l;
         ndim = auxndim;
       }
     }
 
-    else{
-      //WARNING("Domain size should be equal to map size");
+    else {
+      // WARNING("Domain size should be equal to map size");
 
       CTSet aux1;
       CTLMap aux2;
       dom = aux1;
       lmap = aux2;
-      ndim = 0;     
+      ndim = 0;
     }
   }
   // Id PWLMap, the set stays the same, the map is the id map
-  PWLMapImp1(SetImp &s){
+  PWLMapImp1(SetImp &s)
+  {
     CTSet d;
     CTLMap lm;
 
-    LMapImp aux(s.ndim_());    
+    LMapImp aux(s.ndim_());
 
     d.insert(d.begin(), s);
     lm.insert(lm.begin(), aux);
@@ -1249,23 +1250,16 @@ struct PWLMapImp1{
     ndim = 1;
   }
 
-  CTSet dom_(){
-    return dom;
-  }
+  CTSet dom_() { return dom; }
 
-  CTLMap lmap_(){
-    return lmap;
-  }
+  CTLMap lmap_() { return lmap; }
 
-  int ndim_(){
-    return ndim;
-  }
+  int ndim_() { return ndim; }
 
-  bool empty(){
-    return dom.empty() && lmap.empty();
-  }
+  bool empty() { return dom.empty() && lmap.empty(); }
 
-  void addSetLM(SetImp s, LMapImp lm){
+  void addSetLM(SetImp s, LMapImp lm)
+  {
     dom.insert(dom.end(), s);
     lmap.insert(lmap.end(), lm);
     PWLMapImp1 auxpw(dom, lmap);
@@ -1274,30 +1268,32 @@ struct PWLMapImp1{
     lmap = auxpw.lmap;
   }
 
-  void addLMSet(LMapImp lm, SetImp s){
+  void addLMSet(LMapImp lm, SetImp s)
+  {
     dom.insert(dom.begin(), s);
     lmap.insert(lmap.begin(), lm);
     PWLMapImp1 auxpw(dom, lmap);
-    
+
     dom = auxpw.dom;
     lmap = auxpw.lmap;
   }
 
-  SetImp image(SetImp &s){
-    CTLMapIt itl = lmap.begin(); 
+  SetImp image(SetImp &s)
+  {
+    CTLMapIt itl = lmap.begin();
 
     SetImp res;
 
-    BOOST_FOREACH(SetImp ss, dom){
+    BOOST_FOREACH (SetImp ss, dom) {
       SetImp aux1 = ss.cap(s);
       SetImp partialRes;
-      
+
       CT2<ASetImp> aux1as = aux1.asets_();
-      BOOST_FOREACH(ASetImp as, aux1as){
+      BOOST_FOREACH (ASetImp as, aux1as) {
         PWAtomLMapImp auxMap(as, *itl);
         ASetImp aux2 = auxMap.image(as);
         partialRes.addAtomSet(aux2);
-      } 
+      }
 
       res = res.cup(partialRes);
 
@@ -1307,37 +1303,39 @@ struct PWLMapImp1{
     return res;
   }
 
-  SetImp preImage(SetImp &s){
+  SetImp preImage(SetImp &s)
+  {
     CTLMapIt itl = lmap.begin();
 
     SetImp res;
 
-    BOOST_FOREACH(SetImp ss, dom){
-       SetImp partialRes;
+    BOOST_FOREACH (SetImp ss, dom) {
+      SetImp partialRes;
 
-       CT2<ASetImp> ssas = ss.asets_();
-       BOOST_FOREACH(ASetImp as1, ssas){
-         PWAtomLMapImp auxMap(as1, *itl);
-         
-         CT2<ASetImp> sas = s.asets_();
-         BOOST_FOREACH(ASetImp as2, sas){
-           ASetImp aux2 = auxMap.preImage(as2);
-           partialRes.addAtomSet(aux2);
-         }
-       }
+      CT2<ASetImp> ssas = ss.asets_();
+      BOOST_FOREACH (ASetImp as1, ssas) {
+        PWAtomLMapImp auxMap(as1, *itl);
 
-       res = res.cup(partialRes);
- 
-       ++itl;
+        CT2<ASetImp> sas = s.asets_();
+        BOOST_FOREACH (ASetImp as2, sas) {
+          ASetImp aux2 = auxMap.preImage(as2);
+          partialRes.addAtomSet(aux2);
+        }
+      }
+
+      res = res.cup(partialRes);
+
+      ++itl;
     }
 
     return res;
-  } 
+  }
 
-  PWLMapImp1 compPW(PWLMapImp1 &pw2){
+  PWLMapImp1 compPW(PWLMapImp1 &pw2)
+  {
     CTLMapIt itlm1 = lmap.begin();
-    CTLMapIt itlm2 = pw2.lmap.begin();     
- 
+    CTLMapIt itlm2 = pw2.lmap.begin();
+
     CTSet ress;
     CTSetIt itress = ress.begin();
     CTLMap reslm;
@@ -1346,22 +1344,22 @@ struct PWLMapImp1{
     SetImp auxDom;
     SetImp newDom;
 
-    BOOST_FOREACH(SetImp d1, dom){
-      itlm2 = pw2.lmap.begin();     
+    BOOST_FOREACH (SetImp d1, dom) {
+      itlm2 = pw2.lmap.begin();
 
-      BOOST_FOREACH(SetImp d2, pw2.dom){
+      BOOST_FOREACH (SetImp d2, pw2.dom) {
         auxDom = pw2.image(d2);
         auxDom = auxDom.cap(d1);
         auxDom = pw2.preImage(auxDom);
-        newDom = auxDom.cap(d2); 
+        newDom = auxDom.cap(d2);
 
-        if(!newDom.empty()){
+        if (!newDom.empty()) {
           LMapImp newLM((*itlm1).compose(*itlm2));
 
           itress = ress.insert(itress, newDom);
           ++itress;
-          itreslm = reslm.insert(itreslm, newLM); 
-          ++itreslm; 
+          itreslm = reslm.insert(itreslm, newLM);
+          ++itreslm;
         }
 
         ++itlm2;
@@ -1372,50 +1370,69 @@ struct PWLMapImp1{
 
     return PWLMapImp1(ress, reslm);
   }
- 
-  PWLMapImp1 minInvCompact(){
+
+  /*
+  PWLMapImp1 minInvCompact(SetImp s){
     // Only one component
     if(dom.size() == 1){
       SetImp auxDom = (*(dom.begin()));
-      SetImp domInv = image(auxDom);
+      //SetImp auxIm = image(auxDom);
+      //SetImp domInv = s.cap(auxIm);
       LMapImp auxMap = (*(lmap.begin()));
       LMapImp mapInv = auxMap.invLMap();
-      CT1<NumImp1> min = auxDom.minElem();
-      typename CT1<NumImp1>::iterator itmin = min.begin();
-
-      CT1<NumImp2> resg;
-      typename CT1<NumImp2>::iterator itresg = resg.begin();
-      CT1<NumImp2> reso;
-      typename CT1<NumImp2>::iterator itreso = reso.begin();
 
       CT1<NumImp2> g = mapInv.gain_();
-      CT1<NumImp2> o = mapInv.off_(); 
+      CT1<NumImp2> o = mapInv.off_();
       typename CT1<NumImp2>::iterator ito = o.begin();
-      BOOST_FOREACH(NumImp2 gi, g){
-        if(gi == Inf){
-          itresg = resg.insert(itresg, 0);
-          ++itresg;
-          itreso = reso.insert(itreso, *itmin);
-          ++itreso;
+
+      CTSet domRes;
+      CTSetIt itDomRes = domRes.begin();
+      CTLMap lmRes;
+      CTLMapIt itLmRes = lmRes.begin();
+      BOOST_FOREACH(ASetImp as, auxDom.asets_()){
+        PWAtomLMapImp auxpw(as, auxMap);
+        ASetImp im = auxpw.image(as);
+        SetImp sim;
+        sim.addAtomSet(im);
+        SetImp domi = sim.cap(s);
+
+        itDomRes = domRes.insert(itDomRes, domi);
+        ++itDomRes;
+
+        CT1<NumImp2> resg;
+        typename CT1<NumImp2>::iterator itresg = resg.begin();
+        CT1<NumImp2> reso;
+        typename CT1<NumImp2>::iterator itreso = reso.begin();
+        ito = o.begin();
+
+        CT1<NumImp1> min = as.minElem();
+        typename CT1<NumImp1>::iterator itmin = min.begin();
+
+        BOOST_FOREACH(NumImp2 gi, g){
+          if(gi == Inf){
+            itresg = resg.insert(itresg, 0);
+            ++itresg;
+            itreso = reso.insert(itreso, *itmin);
+            ++itreso;
+          }
+
+          else{
+            itresg = resg.insert(itresg, gi);
+            ++itresg;
+            itreso = reso.insert(itreso, *ito);
+            ++itreso;
+          }
+
+          ++ito;
+          ++itmin;
         }
 
-        else{
-          itresg = resg.insert(itresg, gi);
-          ++itresg;
-          itreso = reso.insert(itreso, *ito);
-          ++itreso;
-        }
-
-        ++ito;
-        ++itmin;
+        LMapImp auxlm(resg, reso);
+        itLmRes = lmRes.insert(itLmRes, auxlm);
+        ++itLmRes;
       }
 
-      CTSet auxDomRes;
-      auxDomRes.insert(auxDomRes.begin(), domInv);
-      LMapImp auxLM(resg, reso);
-      CTLMap auxLMRes;
-      auxLMRes.insert(auxLMRes.begin(), auxLM);
-      return PWLMapImp1(auxDomRes, auxLMRes); 
+      return PWLMapImp1(domRes, lmRes);
     }
 
     else{
@@ -1425,39 +1442,96 @@ struct PWLMapImp1{
       return aux;
     }
   }
+  */
 
-  SetImp wholeDom(){
-    SetImp res; 
+  PWLMapImp1 minInvCompact(SetImp s)
+  {
+    CTSet domRes;
+    CTLMap lmRes;
 
-    BOOST_FOREACH(SetImp s, dom){
+    if (dom.size() == 1) {
+      SetImp wDom = wholeDom();
+      CT1<NumImp1> minElem = wDom.minElem();
+      typename CT1<NumImp1>::iterator itmin = minElem.begin();
+      SetImp im = image(wDom);
+      SetImp domInv = im.cap(s);
+
+      if (domInv.empty()) {
+        PWLMapImp1 res;
+        return res;
+      }
+
+      domRes.insert(domRes.begin(), domInv);
+
+      LMapImp lm = *(lmap.begin());
+      LMapImp lmInv = lm.invLMap();
+      CT1<NumImp2> g = lmInv.gain_();
+      CT1<NumImp2> o = lmInv.off_();
+      typename CT1<NumImp2>::iterator ito = o.begin();
+      CT1<NumImp2> gres;
+      typename CT1<NumImp2>::iterator itgres = gres.begin();
+      CT1<NumImp2> ores;
+      typename CT1<NumImp2>::iterator itores = ores.begin();
+
+      BOOST_FOREACH (NumImp2 gi, g) {
+        if (gi == Inf) {
+          itgres = gres.insert(itgres, 0);
+          itores = ores.insert(itores, *itmin);
+        }
+
+        else {
+          itgres = gres.insert(itgres, gi);
+          itores = ores.insert(itores, *ito);
+        }
+
+        ++ito;
+        ++itgres;
+        ++itores;
+        ++itmin;
+      }
+
+      LMapImp aux(gres, ores);
+      lmRes.insert(lmRes.begin(), aux);
+    }
+
+    PWLMapImp1 res(domRes, lmRes);
+    return res;
+  }
+
+  SetImp wholeDom()
+  {
+    SetImp res;
+
+    BOOST_FOREACH (SetImp s, dom) {
       res = res.cup(s);
     }
 
     return res;
   }
 
-  PWLMapImp1 combine(PWLMapImp1 &pw2){
+  PWLMapImp1 combine(PWLMapImp1 &pw2)
+  {
     CTSet sres = dom;
     CTSetIt its = sres.end();
     CTLMap lres = lmap;
     CTLMapIt itl = lres.end();
 
-    if(empty())
+    if (empty())
       return pw2;
 
-    else if(pw2.empty())
+    else if (pw2.empty())
       return *this;
 
-    else{
-      SetImp aux1 = wholeDom(); 
-      CTSet dom2 = pw2.dom_(); 
+    else {
+      SetImp aux1 = wholeDom();
+      CTSet dom2 = pw2.dom_();
       CTLMap lm2 = pw2.lmap_();
       CTLMapIt itlm2 = lm2.begin();
 
-      BOOST_FOREACH(SetImp s2, dom2){
+      BOOST_FOREACH (SetImp s2, dom2) {
         SetImp newDom = s2.diff(aux1);
-        
-        if(!newDom.empty()){
+
+        if (!newDom.empty()) {
           its = sres.insert(its, newDom);
           ++its;
           itl = lres.insert(itl, *itlm2);
@@ -1471,16 +1545,17 @@ struct PWLMapImp1{
     PWLMapImp1 res(sres, lres);
     return res;
   }
- 
-  PWLMapImp1 atomize(){
+
+  PWLMapImp1 atomize()
+  {
     CTSet dres;
     CTSetIt itdres = dres.begin();
     CTLMap lres;
-    CTLMapIt itlres = lres.begin(); 
+    CTLMapIt itlres = lres.begin();
 
     CTLMapIt itlm = lmap.begin();
-    BOOST_FOREACH(SetImp d, dom){
-      BOOST_FOREACH(ASetImp as, d.asets_()){
+    BOOST_FOREACH (SetImp d, dom) {
+      BOOST_FOREACH (ASetImp as, d.asets_()) {
         SetImp aux;
         aux.addAtomSet(as);
 
@@ -1491,15 +1566,59 @@ struct PWLMapImp1{
       }
 
       ++itlm;
-    }   
+    }
 
     PWLMapImp1 res(dres, lres);
     return res;
   }
 
-  bool operator==(const PWLMapImp1 &other) const{
-    return dom == other.dom && lmap == other.lmap;
+  PWLMapImp1 concat(PWLMapImp1 &pw2)
+  {
+    CTSetIt itdom = dom.end();
+    CTLMapIt itlmap = lmap.end();
+
+    BOOST_FOREACH (SetImp s, pw2.dom_()) {
+      itdom = dom.insert(itdom, s);
+      ++itdom;
+    }
+
+    BOOST_FOREACH (LMapImp lm, pw2.lmap_()) {
+      itlmap = lmap.insert(itlmap, lm);
+      ++itlmap;
+    }
+
+    PWLMapImp1 res(dom, lmap);
+    return res;
   }
+
+  PWLMapImp1 restrictMap(SetImp newdom)
+  {
+    CTSet resdom;
+    CTSetIt itresdom = resdom.begin();
+    CTLMap reslm;
+    CTLMapIt itreslm = reslm.begin();
+
+    CTSetIt itdom = dom.begin();
+    CTLMapIt itlm = lmap.begin();
+
+    for (; itdom != dom.end(); ++itdom) {
+      SetImp scap = newdom.cap(*itdom);
+
+      if (!scap.empty()) {
+        itresdom = resdom.insert(itresdom, scap);
+        ++itresdom;
+        itreslm = reslm.insert(itreslm, *itlm);
+        ++itreslm;
+      }
+
+      ++itlm;
+    }
+
+    PWLMapImp1 res(resdom, reslm);
+    return res;
+  }
+
+  bool operator==(const PWLMapImp1 &other) const { return dom == other.dom && lmap == other.lmap; }
 };
 
 // Type definitions --------------------------------------------------------------------------------
@@ -1507,12 +1626,10 @@ struct PWLMapImp1{
 typedef int NI1;
 typedef float NI2;
 
-template<typename T, class = allocator<T>>
+template <typename T, class = allocator<T>>
 using OrdCT = list<T>;
 
-template<typename Value, typename Hash = boost::hash<Value>, 
-         typename Pred = std::equal_to<Value>, 
-         typename Alloc = std::allocator<Value>>
+template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>, typename Alloc = std::allocator<Value>>
 using UnordCT = boost::unordered_set<Value>;
 
 typedef OrdCT<NI1> contNI1;
@@ -1564,6 +1681,7 @@ ostream &operator<<(ostream &out, PWLMap &pw);
 PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2);
 PWLMap minPW(Set &dom, LMap &lm1, LMap &lm2);
 PWLMap minMap(PWLMap &pw1, PWLMap &pw2);
+PWLMap minInv(PWLMap &pw, Set &s);
 
 PWLMap reduceMapN(PWLMap pw, int dim);
 
@@ -1579,30 +1697,35 @@ PWLMap minAdjMap(PWLMap pw2, PWLMap pw1);
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 
-struct SetVertex{
-  SetVertex(){
+struct SetVertex {
+  SetVertex()
+  {
     name = "";
     id = -1;
     Set aux;
     vs = aux;
     index = 0;
   };
-  SetVertex(string n, Set v){
+  SetVertex(string n, Set v)
+  {
     name = n;
     id = -1;
     vs = v;
     index = 0;
-  }; 
-  SetVertex(string n, int i, Set v, int ind){
+  };
+  SetVertex(string n, int i, Set v, int ind)
+  {
     name = n;
     id = i;
     vs = v;
     index = ind;
-  }; 
+  };
 
-  Set vs_(){
-    return vs;
-  }
+  Set vs_() { return vs; }
+
+  bool operator==(const SetVertex &other) const { return id == other.id; }
+
+  size_t hash() { return id; }
 
   // For pretty-printing
   string name;
@@ -1616,8 +1739,11 @@ struct SetVertex{
   int index;
 };
 
-struct SetEdge{
-  SetEdge(){
+size_t hash_value(SetVertex v);
+
+struct SetEdge {
+  SetEdge()
+  {
     name = "";
     id = -1;
     PWLMap aux;
@@ -1625,14 +1751,16 @@ struct SetEdge{
     es2 = aux;
     index = 0;
   };
-  SetEdge(string nm, PWLMap e1, PWLMap e2){
+  SetEdge(string nm, PWLMap e1, PWLMap e2)
+  {
     name = nm;
     id = -1;
     es1 = e1;
     es2 = e2;
     index = 0;
   };
-  SetEdge(string nm, int i, PWLMap e1, PWLMap e2, int ind){
+  SetEdge(string nm, int i, PWLMap e1, PWLMap e2, int ind)
+  {
     name = nm;
     id = i;
     es1 = e1;
@@ -1640,13 +1768,11 @@ struct SetEdge{
     index = ind;
   };
 
-  PWLMap es1_(){
-    return es1;
-  }
+  PWLMap es1_() { return es1; }
 
-  PWLMap es2_(){
-    return es2;
-  }
+  PWLMap es2_() { return es2; }
+
+  int id_() { return id; }
 
   string name;
 
@@ -1657,15 +1783,13 @@ struct SetEdge{
   int index;
 };
 
-typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, SetVertex, SetEdge>
- SBGraph;
+typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, SetVertex, SetEdge> SBGraph;
 typedef SBGraph::vertex_descriptor SetVertexDesc;
 typedef boost::graph_traits<SBGraph>::vertex_iterator VertexIt;
 typedef SBGraph::edge_descriptor SetEdgeDesc;
 typedef boost::graph_traits<SBGraph>::edge_iterator EdgeIt;
+typedef boost::graph_traits<SBGraph>::out_edge_iterator OutEdgeIt;
 
-PWLMap connectedComponents(SBGraph g);
-
-} // SBG namespace
+}  // namespace SBG
 
 #endif

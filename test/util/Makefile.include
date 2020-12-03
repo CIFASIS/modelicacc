@@ -9,6 +9,7 @@ all: $(GRP_TEST) $(GRP_PRINT_TEST)
 GRP_TEST_SRC := \
     $(TEST_DIR)/util/GraphTest.cpp \
     $(UTIL_DIR)/graph/graph_definition.cpp \
+    $(UTIL_DIR)/graph/graph_algorithms.cpp \
     $(UTIL_DIR)/debug.cpp 
 
 GRP_PRINT_TEST_SRC := \

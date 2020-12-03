@@ -23,6 +23,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <time.h>
 #include <unistd.h>
 
 #include <flatter/class_finder.h>
@@ -34,14 +35,15 @@
 
 #include <util/table.h>
 
-int main(int argc, char** argv){
+int main(int argc, char** argv)
+{
   using namespace std;
   using namespace Modelica::AST;
   using namespace Modelica;
   using namespace boost;
 
   bool ret;
-  char *className = NULL;
+  char* className = NULL;
   string filename;
   char opt;
   int debug = 0;
@@ -60,61 +62,66 @@ int main(int argc, char** argv){
     }
   }
 
-
   StoredDef sd;
   if (argv[optind] != NULL)
     sd = Parser::ParseFile(argv[optind], ret);
   else
     sd = Parser::ParseFile("", ret);
 
-  if(ret){
+  if (ret) {
     MMO_Tree mt;
     MMO_Class mmo = mt.create(sd);
 
     Flatter f = Flatter();
-    if(className == NULL)
-      className = (char*)::className(sd.classes().back()).c_str();
-    
-    if(className != NULL){
-      if (debug) 
-        std::cerr << "Searching for class " << (className ? className : "NULL") << std::endl;
+    if (className == NULL) className = (char*)::className(sd.classes().back()).c_str();
+
+    if (className != NULL) {
+      if (debug) std::cerr << "Searching for class " << (className ? className : "NULL") << std::endl;
 
       ClassFinder re = ClassFinder();
       OptTypeDefinition m = re.resolveType(mmo, className);
-      if(m){
+      if (m) {
         typeDefinition td = m.get();
         Type::Type t_final = get<1>(td);
-        if (is<Type::Class>(t_final)) 
-          mmo = *(boost::get<Type::Class>(t_final).clase());
+        if (is<Type::Class>(t_final)) mmo = *(boost::get<Type::Class>(t_final).clase());
       }
     }
 
-    if(debug){
+    if (debug) {
       std::cerr << "Class to  Flat: " << endl;
       std::cerr << mmo << std::endl;
       std::cerr << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl << std::endl;
     }
 
     f.Flat(mmo, false, true);
-    if(debug){
+    if (debug) {
       std::cerr << "First Flatter: " << endl;
       std::cerr << mmo << std::endl;
       std::cerr << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl << std::endl;
     }
 
     Connectors co(mmo);
+
+    clock_t start, end;
+    start = clock();
+
     co.solve();
-    if(debug){
+
+    end = clock();
+    double exect = double(end - start) / double(CLOCKS_PER_SEC);
+
+    if (debug) {
       std::cerr << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
-      if(filename.empty())
-        co.debug("prueba.dot");
+      if (filename.empty()) co.debug("prueba.dot");
 
       co.debug(filename);
+
+      std::cout << "Execution time: " << exect << "\n";
       std::cerr << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
     }
 
     f.removeConnectorVar(mmo);
-  } 
+  }
 
   else
     std::cout << "Error parser" << std::endl;
