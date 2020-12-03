@@ -3,6 +3,7 @@ UTIL_DIR        := util
 MMO_DIR         := mmo
 FLATTER_DIR     := flatter
 FLATTER         := bin/flatter
+FLATTER_TEST    := test-flatter
 
 all: $(FLATTER) 
 
@@ -40,3 +41,11 @@ create-folders::
 
 $(FLATTER): $(FLATTER_OBJ) $(LIBMODELICA) 
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(FLATTER_OBJ) -o $(FLATTER) $(LIBS)
+
+$(FLATTER_TEST):
+	@echo BUILDING FLATTER TESTS
+	@cd flatter/test && $(MAKE) bin/test-flatter 
+	@echo Done
+	@echo RUNNING FLATTER TESTS
+	@cd flatter/test && $(MAKE) test-flatter 
+	@echo Done
