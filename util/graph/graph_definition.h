@@ -216,7 +216,7 @@ struct IntervalImp1{
 
     // "After" intersection
     if(hi > capres.hi){
-      IntervalImp1 aux = IntervalImp1(capres.hi + 1, 1, hi);
+      IntervalImp1 aux = IntervalImp1(capres.hi + step, 1, hi);
       IntervalImp1 right = cap(aux);
       res.insert(right);
     }
