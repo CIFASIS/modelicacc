@@ -1,0 +1,19 @@
+# The Directories, Source, Includes, Objects, Binary 
+CAUSALIZE_SBG_DIR := $(CAUSALIZE_DIR)/sbg_implementation
+CAUSALIZE_SBG     := bin/causalize
+
+all: $(CAUSALIZE_SBG)
+
+# Sources
+CAUSALIZE_SBG_SRC := \
+    $(CAUSALIZE_SBG_DIR)/main.cpp \
+	$(CAUSALIZE_SBG_DIR)/matching_graph_builder.cpp
+
+# Objects
+CAUSALIZE_SBG_OBJ=$(addprefix $(BUILD_DIR)/, $(CAUSALIZE_SBG_SRC:.cpp=.o))
+
+create-folders::
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/sbg_implementation
+
+$(CAUSALIZE_SBG): $(CAUSALIZE_SBG_OBJ) $(CAUSALIZE_COMMON_OBJ) $(LIBMODELICA)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(CAUSALIZE_SBG) $(CAUSALIZE_COMMON_OBJ) $(CAUSALIZE_SBG_OBJ) $(LIBS)
