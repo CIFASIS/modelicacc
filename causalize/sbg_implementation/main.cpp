@@ -18,7 +18,6 @@
 
 ******************************************************************************/
 
-#include <stdio.h>
 #include <boost/variant/get.hpp>
 
 #include <causalize/sbg_implementation/matching_graph_builder.h>

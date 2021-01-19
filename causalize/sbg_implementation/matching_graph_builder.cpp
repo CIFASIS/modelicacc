@@ -18,6 +18,8 @@
 ******************************************************************************/
 
 #include <causalize/sbg_implementation/matching_graph_builder.h>
+#include <util/ast_visitors/matching_exps.h>
+
 
 using namespace Modelica;
 using namespace SBG;
