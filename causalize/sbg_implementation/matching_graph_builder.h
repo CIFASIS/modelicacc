@@ -28,8 +28,16 @@ class MatchingGraphBuilder {
   ~MatchingGraphBuilder() = default;
   virtual SBG::SBGraph makeGraph();
 
+  protected:
+  SBG::Set buildSet(VarInfo variable);
+  SBG::Set buildSet(Equation eq);
+  SBG::SetVertexDesc addVertex(std::string vertex_name, SBG::Set set, SBG::SBGraph& graph);
+  void addEquation(int id, SBG::Set set, SBG::SBGraph& graph);
+
   private:
   Modelica::MMO_Class& _mmo_class;
+  std::list<SBG::SetVertexDesc> _var_nodes;
+  std::list<SBG::SetVertexDesc> _equation_nodes;
 };
 
 }  // namespace Causalize
