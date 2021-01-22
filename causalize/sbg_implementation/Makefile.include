@@ -1,6 +1,7 @@
 # The Directories, Source, Includes, Objects, Binary 
-CAUSALIZE_SBG_DIR := $(CAUSALIZE_DIR)/sbg_implementation
-CAUSALIZE_SBG     := bin/causalize
+CAUSALIZE_SBG_DIR  := $(CAUSALIZE_DIR)/sbg_implementation
+CAUSALIZE_SBG      := bin/causalize
+CAUSALIZE_SBG_TEST := test-causalize
 
 all: $(CAUSALIZE_SBG)
 
@@ -19,3 +20,11 @@ create-folders::
 
 $(CAUSALIZE_SBG): $(CAUSALIZE_SBG_OBJ) $(CAUSALIZE_COMMON_OBJ) $(LIBMODELICA)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(CAUSALIZE_SBG) $(CAUSALIZE_COMMON_OBJ) $(CAUSALIZE_SBG_OBJ) $(LIBS)
+
+$(CAUSALIZE_SBG_TEST):
+	@echo BUILDING CAUSALIZE TESTS
+	@cd causalize/sbg_implementation/test && $(MAKE) bin/test-causalize 
+	@echo Done
+	@echo RUNNING CAUSALIZE TESTS
+	@cd causalize/sbg_implementation/test && $(MAKE) test-causalize 
+	@echo Done

@@ -19,6 +19,7 @@
 ******************************************************************************/
 
 #include <boost/variant/get.hpp>
+#include <getopt.h>
 
 #include <causalize/sbg_implementation/matching_graph_builder.h>
 #include <mmo/mmo_class.h>
@@ -32,19 +33,59 @@ using namespace Modelica;
 using namespace Modelica::AST;
 using namespace Causalize;
 
+void usage()
+{
+  cout << "Usage causalize [options] file" << endl;
+  cout << "Generates matching graph dot file for a gibven Modelica mode file." << endl;
+  cout << endl;
+  cout << "-h, --help      Display this information and exit" << endl;
+  cout << "-o <path>, --output <path> Sets the output path for the generated graph dot file." << endl;
+  cout << "-v, --version   Display version information and exit" << endl;
+  cout << endl;
+  cout << "Modelica C Compiler home page: https://github.com/CIFASIS/modelicacc " << endl;
+}
+
+void version()
+{
+  cout << "Modelica C Compiler 2.0" << endl;
+  cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << endl;
+  cout << "This is free software: you are free to change and redistribute it." << endl;
+  cout << "There is NO WARRANTY, to the extent permitted by law." << endl;
+}
+
 int main(int argc, char **argv)
 {
   bool status;
   int opt;
-  while ((opt = getopt(argc, argv, "d")) != -1) {
-    switch (opt) {
-    case 'd':
-      if (optarg != NULL && isDebugParam(optarg)) {
-        debugInit(optarg);
-      } else {
-        ERROR("command-line option d has no arguments\n");
-      }
+  extern char* optarg;
+  string output_path = "";
+
+  while (true) {
+    static struct option long_options[] = {{"version", no_argument, 0, 'v'},
+                                           {"help", no_argument, 0, 'h'},
+                                           {"output", required_argument, 0, 'o'},
+                                           {0, 0, 0, 0}};
+    int option_index = 0;
+    opt = getopt_long(argc, argv, "vho:", long_options, &option_index);
+    if (opt == EOF) {
       break;
+    }
+    switch (opt) {
+    case 'v':
+      version();
+      exit(0);
+    case 'h':
+      usage();
+      exit(0);
+    case 'o':
+      output_path = optarg;
+      break;
+    case '?':
+      usage();
+      exit(-1);
+      break;
+    default:
+      abort();
     }
   }
 
@@ -67,6 +108,6 @@ int main(int argc, char **argv)
   SBG::SBGraph matching_graph = matching_graph_builder.makeGraph();
   SBG::GraphPrinter printer(matching_graph, 0);
 
-  printer.printGraph(mmo_class.name()+".dot");
+  printer.printGraph(output_path+mmo_class.name()+".dot");
   return 0;
 }
