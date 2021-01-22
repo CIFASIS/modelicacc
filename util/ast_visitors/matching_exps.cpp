@@ -101,4 +101,7 @@ bool MatchingExps::operator()(Reference v) const
   }
   return false;
 }
+
+std::list<Expression> MatchingExps::matchedExps() const { return _matched_exps; }
+
 }  // namespace Modelica

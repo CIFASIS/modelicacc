@@ -114,4 +114,8 @@ bool PWLMapValues::operator()(UnaryOp v) const
   return ret;
 }
 
+int PWLMapValues::constant() const  { return _constant; }
+
+int PWLMapValues::slope() const  { return _slope; }
+
 }  // namespace Modelica
