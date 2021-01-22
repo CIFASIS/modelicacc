@@ -29,15 +29,23 @@ class MatchingGraphBuilder {
   virtual SBG::SBGraph makeGraph();
 
   protected:
+  typedef std::pair<SBG::PWLMap, SBG::PWLMap> MatchingMaps;
+
   SBG::Set buildSet(VarInfo variable);
   SBG::Set buildSet(Equation eq);
+  SBG::Set buildSet(SBG::MultiInterval variable);
   SBG::SetVertexDesc addVertex(std::string vertex_name, SBG::Set set, SBG::SBGraph& graph);
-  void addEquation(int id, SBG::Set set, SBG::SBGraph& graph);
+  void addEquation(Equation eq, int id, SBG::Set set, SBG::SBGraph& graph);
+  Real getValue(Expression exp);
+  SBG::PWLMap buildPWLMap(SBG::OrdCT<SBG::NI2> constants, SBG::OrdCT<SBG::NI2> slopes, SBG::Set dom);
+  MatchingMaps generatePWLMaps(Expression exp, SBG::Set dom, int offset);
 
   private:
+  typedef std::pair<SBG::SetVertexDesc, Equality> EquationDesc; 
+
   Modelica::MMO_Class& _mmo_class;
   std::list<SBG::SetVertexDesc> _var_nodes;
-  std::list<SBG::SetVertexDesc> _equation_nodes;
+  std::list<EquationDesc> _equation_nodes;
 };
 
 }  // namespace Causalize
