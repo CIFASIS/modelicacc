@@ -19,3 +19,5 @@ configure
 # Test generated files.
 /flatter/test/test_data/*
 /flatter/test/bin/*
+/causalize/sbg_implementation/test/test_data/*
+/causalize/sbg_implementation/test/bin/*

@@ -35,3 +35,4 @@ create-folders::
 
 include causalize/graph_implementation/Makefile.include
 include causalize/vg_implementation/Makefile.include
+include causalize/sbg_implementation/Makefile.include

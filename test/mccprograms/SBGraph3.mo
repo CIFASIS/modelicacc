@@ -13,7 +13,7 @@ model Test
   end Cell;
 
   Real N = 1000;
-  Real M = 100;
+  Real M = 1000;
   Obj S[1, 1];
   Obj G[1, 1];
   Cell C[N, M];
@@ -25,8 +25,8 @@ equation
   end for;
 
   for j in 1:M loop
-    connect(S.p, C[1, j].u);
-    connect(C[N, j].d, G.p);
+    connect(S[1,1].p, C[1, j].u);
+    connect(C[N, j].d, G[1,1].p);
   end for;
 
   for i in 1:N-1, j in 1:M loop

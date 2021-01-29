@@ -31,6 +31,7 @@
 #include <util/ast_visitors/replace_expression.h>
 #include <util/ast_visitors/constant_expression.h>
 #include <util/graph/graph_definition.h>
+#include <util/graph/graph_algorithms.h>
 #include <util/graph/graph_printer.h>
 #include <util/table.h>
 #include <util/type.h>
@@ -39,17 +40,17 @@ using namespace Modelica;
 using namespace Modelica::AST;
 using namespace SBG;
 
-typedef Option<ExpList> ExpOptList; 
+typedef Option<ExpList> ExpOptList;
 
-struct VertexNameTable : public SymbolTable<MultiInterval, Name>{
-  VertexNameTable(){}
+struct VertexNameTable : public SymbolTable<MultiInterval, Name> {
+  VertexNameTable() {}
 };
 
-struct NameVertexTable : public SymbolTable<Name, MultiInterval>{
-  NameVertexTable(){}
+struct NameVertexTable : public SymbolTable<Name, MultiInterval> {
+  NameVertexTable() {}
 };
 
-class Connectors{
+class Connectors {
   public:
   Connectors(MMO_Class &c);
 
@@ -71,7 +72,7 @@ class Connectors{
   Pair<ExpList, bool> transMulti(MultiInterval mi1, MultiInterval mi2, ExpList nms, bool forFlow);
   MultiInterval applyOff(MultiInterval mi, OrdCT<NI1> off);
   EquationList simplifyCode(EquationList &eql);
-  //ExpList lmToExpList(LMap lm, ExpList vs);
+  // ExpList lmToExpList(LMap lm, ExpList vs);
 
   private:
   SBGraph G;
@@ -81,7 +82,7 @@ class Connectors{
   member_(MMO_Class, mmoclass);
   member_(VertexNameTable, vnmtable);
   member_(NameVertexTable, nmvtable);
-  //member_(EquationList, oldeqs);
+  // member_(EquationList, oldeqs);
   static EquationList oldeqs;
   static EquationList::iterator itold;
 };

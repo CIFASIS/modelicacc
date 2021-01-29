@@ -24,6 +24,7 @@
 using namespace std;
 using namespace Modelica;
 using namespace Modelica::AST;
+using namespace SBG;
 
 #define NameToRef(X) Reference(Reference(), X, Option<ExpList>())
 #define RefIndex(X, Y) Reference(Reference(), X, Option<ExpList>(Y))

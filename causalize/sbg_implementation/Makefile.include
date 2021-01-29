@@ -1,0 +1,30 @@
+# The Directories, Source, Includes, Objects, Binary 
+CAUSALIZE_SBG_DIR  := $(CAUSALIZE_DIR)/sbg_implementation
+CAUSALIZE_SBG      := bin/causalize
+CAUSALIZE_SBG_TEST := test-causalize
+
+all: $(CAUSALIZE_SBG)
+
+# Sources
+CAUSALIZE_SBG_SRC := \
+    $(CAUSALIZE_SBG_DIR)/main.cpp\
+	$(CAUSALIZE_SBG_DIR)/matching_graph_builder.cpp\
+	$(UTIL_DIR)/ast_visitors/matching_exps.cpp \
+	$(UTIL_DIR)/ast_visitors/pwl_map_values.cpp
+
+# Objects
+CAUSALIZE_SBG_OBJ=$(addprefix $(BUILD_DIR)/, $(CAUSALIZE_SBG_SRC:.cpp=.o))
+
+create-folders::
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/sbg_implementation
+
+$(CAUSALIZE_SBG): $(CAUSALIZE_SBG_OBJ) $(CAUSALIZE_COMMON_OBJ) $(LIBMODELICA)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(CAUSALIZE_SBG) $(CAUSALIZE_COMMON_OBJ) $(CAUSALIZE_SBG_OBJ) $(LIBS)
+
+$(CAUSALIZE_SBG_TEST):
+	@echo BUILDING CAUSALIZE TESTS
+	@cd causalize/sbg_implementation/test && $(MAKE) bin/test-causalize 
+	@echo Done
+	@echo RUNNING CAUSALIZE TESTS
+	@cd causalize/sbg_implementation/test && $(MAKE) test-causalize 
+	@echo Done
