@@ -7,6 +7,14 @@ TEST_FILES=".dot"
 
 test_results () 
 {
+    if [ -f "$TEST_FILE" ]; then
+        echo "Model " $MODEL " test failed for " $TEST_FILE
+        echo "File " $TEST_FILE " don't exist." > $TEST_FILE.failed
+    fi
+    if [ -f "$GT_FILE" ]; then
+        echo "Model " $MODEL " test failed for " $TEST_FILE
+        echo "File " $GT_FILE " don't exist." > $TEST_FILE.failed
+    fi
     RESULT="$(diff "$GT_FILE" "$TEST_FILE")"
     if [ -n "$RESULT" ]; then
         echo "Model " $MODEL " test failed for " $TEST_FILE
