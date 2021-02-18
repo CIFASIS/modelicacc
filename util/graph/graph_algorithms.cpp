@@ -126,13 +126,28 @@ UnordCT<Set> MatchingStruct::split(Set ftilde){
   OutEdgeIt ei_start, ei_end;
   boost::tie(ei_start, ei_end) = boost::out_edges(*vi_start, g);
  
+  Set aux = mapF.preImage(ftilde);
   for(; ei_start != ei_end; ++ei_start){
     SetEdge e = g[*ei_start];
-    PWLMap es1 = e.es1_(); 
 
-    Set pre = es1.preImage(ftilde);
-    Set etilde = pre.diff(matchedE);
-    res.insert(etilde);
+    PWLMap es2 = e.es2_();
+    OrdCT<Set> dome2 = es2.dom_();
+
+    BOOST_FOREACH(Set d2, dome2){
+      Set etildei = d2.diff(matchedE);
+      Set etildej = etildei.cap(aux);
+      if(!etildej.empty())
+        res.insert(etildej);
+
+      //int sze = etilde.size();
+      //int szf = ftilde.size();
+
+      //if(sze != szf){
+      //  std::cerr << "Assumption 1 not true\n";
+      //  UnordCT<Set> emptyRes;
+      //  return emptyRes;
+      //}
+    }
   }
 
   return res;
@@ -148,6 +163,7 @@ MatchingStruct::MatchingStruct(SBGraph garg){
     PWLMap fmap = (g[*ei_start]).es1_();
     PWLMap umap = (g[*ei_start]).es2_();
 
+    cout << fmap << " | " << umap << "\n";
 
     mapF = mapF.concat(fmap);
     mapU = mapU.concat(umap);
@@ -208,6 +224,8 @@ SetPath MatchingStruct::waspf(Set ftilde){
 
         auxp.insert(auxp.begin(), auxinvim); 
         pmax = auxp;
+  
+        return pmax;
       }
     }
 
@@ -230,7 +248,7 @@ SetPath MatchingStruct::waspf(Set ftilde){
           if(!phat.empty()){
             Set p1 = *(phat.begin());
 
-            if(p1.size() > wmax){
+            if(p1.size() >= wmax){
               wmax = uhm.size(); 
               Set imp1 = mapU.image(p1);
               PWLMap mapUaux = mapU.restrictMap(eh);
@@ -256,8 +274,14 @@ SetPath MatchingStruct::waspu(Set utilde){
   Set auxs2 = auxs1.cap(matchedE); 
   Set Ftilde = mapF.image(auxs2);
 
-  BOOST_FOREACH(Set sf, auxF){
-    Set auxFi = sf.cap(Ftilde);
+  VertexIt vi_start, vi_end;
+  boost::tie(vi_start, vi_end) = vertices(g);
+
+  for(; vi_start != vi_end; ++vi_start){
+    SetVertex v = g[*vi_start];
+    Set vs = v.vs_();
+
+    Set auxFi = vs.cap(Ftilde);
 
     if(auxFi.size() > wmax){
       bool notinpath = true;
@@ -276,7 +300,7 @@ SetPath MatchingStruct::waspu(Set utilde){
         if(!phat.empty()){
           Set p1 = *(phat.begin());
           int sz = p1.size();
-          if(sz > wmax){
+          if(sz >= wmax){
             wmax = sz;
             Set imp1 = mapF.image(p1);
             Set predom = mapF.preImage(imp1);
@@ -299,11 +323,23 @@ Set MatchingStruct::SBGMatching(){
 
   if(vi_start != vi_end){
     SetPath P;
+    Set wholeF = mapF.wholeDom();
+    Set leftvs = mapF.image(wholeF);
+    visitedF = leftvs; 
 
     UnordCT<Set> F = auxF;
 
     do{
-      Set ftilde = *(auxF.begin()); // TODO: hacer bien la heurística
+      Set ftilde = *(auxF.begin());
+      int maxcard = ftilde.size();
+
+      BOOST_FOREACH(Set auxFi, auxF){
+        int cardi = auxFi.size();
+        if(cardi > maxcard){
+          maxcard = cardi;
+          ftilde = auxFi;
+        }
+      }
 
       UnordCT<Set> emptyUnordSet;
       visitedU = emptyUnordSet;
@@ -355,9 +391,16 @@ Set MatchingStruct::SBGMatching(){
  
           ++l;
         }
+
+        Set aux = visitedF.diff(newFm);
+        visitedF = aux;
+      }
+ 
+      else{
+        auxF.erase(ftilde);
       }
     }
-    while(!P.empty());
+    while(!auxF.empty());
   }
   
   return matchedE;

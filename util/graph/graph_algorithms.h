@@ -62,6 +62,7 @@ struct MatchingStruct{
   int wmax; // Maximum augmenting path width found
 
   UnordCT<Set> auxF; // Auxiliary set of left set-vertices
+  Set visitedF; // Auxiliary set of left set-vertices
 
   Set matchedF;
   Set matchedU;
