@@ -1929,6 +1929,53 @@ void TestPWAtomPre4(){
   BOOST_CHECK(res1 == res2);
 }
 
+void TestPWAtomPre5(){
+  Interval i1(1, 1, 10);
+  Interval i2(1, 1, 10);
+  Interval i3(1, 1, 10);
+
+  MultiInterval mi1; 
+  mi1.addInter(i1);
+  mi1.addInter(i2);
+  mi1.addInter(i3);
+
+  AtomSet as1(mi1);
+
+  LMap lm1;
+
+  lm1.addGO(2.0, 0.0);
+  lm1.addGO(3.0, 0.0);
+  lm1.addGO(1.0, -1.0);
+
+  PWAtomLMap pwatom1(as1, lm1);
+
+  Interval i4(1, 1, 10);
+  Interval i5(1, 1, 10);
+  Interval i6(1, 1, 10);
+
+  MultiInterval mi2;
+  mi2.addInter(i4);
+  mi2.addInter(i5);
+  mi2.addInter(i6);
+
+  AtomSet as2(mi2);
+
+  AtomSet res1 = pwatom1.preImage(as2);
+
+  Interval i7(1, 1, 5);
+  Interval i8(1, 1, 3);
+  Interval i9(2, 1, 10);
+
+  MultiInterval mi3;
+  mi3.addInter(i7);
+  mi3.addInter(i8);
+  mi3.addInter(i9);
+ 
+  AtomSet res2(mi3);
+
+  BOOST_CHECK(res1 == res2);
+}
+
 void TestPWAtomMin1(){
   BOOST_CHECK(true);
 }
@@ -5143,7 +5190,6 @@ void TestMatching(){
   float n = 100;
 
   // Equations
-
   float offF1 = 1;
   float offF2 = offF1 + n;
   float offF3 = offF2 + n; 
@@ -5610,6 +5656,7 @@ test_suite *init_unit_test_suite(int, char *[]){
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomPre2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomPre3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomPre4));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomPre5));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomMin1));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapCreation1));
