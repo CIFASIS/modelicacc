@@ -25,6 +25,7 @@
 #include <mmo/mmo_class.h>
 #include <parser/parser.h>
 #include <util/debug.h>
+#include <util/graph/graph_algorithms.h>
 #include <util/graph/graph_definition.h>
 #include <util/graph/graph_printer.h>
 
@@ -55,7 +56,6 @@ void version()
 
 int main(int argc, char **argv)
 {
-  bool status;
   int opt;
   extern char* optarg;
   string output_path = "";
@@ -90,11 +90,10 @@ int main(int argc, char **argv)
   }
 
   StoredDef stored_def;
-  if (argv[optind] != NULL) {
+  bool status = false;
+  if (argv[optind] != nullptr) {
     stored_def = Parser::ParseFile(argv[optind], status);
-  } else {
-    stored_def = Parser::ParseFile("", status);
-  }
+  } 
 
   if (!status) {
     return -1;
@@ -109,5 +108,11 @@ int main(int argc, char **argv)
   SBG::GraphPrinter printer(matching_graph, 0);
 
   printer.printGraph(output_path+mmo_class.name()+".dot");
+  
+  MatchingStruct match(matching_graph);
+  SBG::Set res = match.SBGMatching();
+  cout << "Generated matching:\n";
+  cout << res << "\n";
+
   return 0;
 }
