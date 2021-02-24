@@ -22,8 +22,8 @@ GRP_TEST_OBJ=$(addprefix $(BUILD_DIR)/, $(GRP_TEST_SRC:.cpp=.o))
 GRP_PRINT_TEST_OBJ=$(addprefix $(BUILD_DIR)/, $(GRP_PRINT_TEST_SRC:.cpp=.o))
 
 create-folders::
-	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/test
-	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/test/util
+	@mkdir -p $(BUILD_DIR)/test
+	@mkdir -p $(BUILD_DIR)/test/util
 
 $(GRP_TEST): $(GRP_TEST_OBJ)
 	$(CXX) $(INCLUDES) $(CXXFLAGS) -o $(GRP_TEST) $(GRP_TEST_OBJ) $(LIBS)
