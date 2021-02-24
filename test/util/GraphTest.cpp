@@ -5624,6 +5624,9 @@ void TestMatching()
 
   MatchingStruct match(g);
   Set res = match.SBGMatching();
+  SBG::GraphPrinter printer(g, 0);
+  printer.printGraph("matching_test.dot");
+
   cout << "\n\nTest matching:\n";
   cout << res << "\n";
 
@@ -5753,7 +5756,7 @@ test_suite *init_unit_test_suite(int, char *[])
   // framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
   // framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
 
-  // framework::master_test_suite().add(BOOST_TEST_CASE(&TestSplit));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestSplit));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching));
 
   return 0;
