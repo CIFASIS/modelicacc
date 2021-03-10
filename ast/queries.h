@@ -75,13 +75,28 @@ inline bool isDiscrete(Name n, const VarSymbolTable& syms)
 inline bool isConstant(Name n, const VarSymbolTable& syms)
 {
   Option<VarInfo> var_info = syms[n];
-  if (!var_info) ERROR("No symbol %s", n.c_str());
+  if (!var_info) {
+    ERROR("No symbol %s", n.c_str());
+  }
   foreach_(Option<TypePrefix> t, var_info.get().prefixes())
   {
-    if (t && t.get() == constant) return true;
+    if (t && t.get() == constant) {
+      return true;
+    }
   }
   return false;
 }
+
+/// Do not fail if variable do not exist, FIX ME see https://github.com/CIFASIS/modelicacc/issues/27.  
+inline bool isConstantNoCheck(Name n, const VarSymbolTable& syms)
+{
+  Option<VarInfo> var_info = syms[n];
+  if (!var_info) {
+    return false;
+  }
+  return isConstant(n, syms);
+}
+
 
 inline Name refName(Reference r) { return get<0>(r.ref().front()); }
 
