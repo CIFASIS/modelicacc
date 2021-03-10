@@ -24,8 +24,8 @@ create-folders::
 	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/test
 	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/test/util
 
-$(GRP_TEST): $($(GRP_TEST_OBJ)
+$(GRP_TEST): $(GRP_TEST_OBJ)
 	$(CXX) $(INCLUDES) $(CXXFLAGS) -o $(GRP_TEST) $(GRP_TEST_OBJ) $(LIBS)
 
-$(GRP_PRINT_TEST): $($(GRP_PRINT_TEST_OBJ)
+$(GRP_PRINT_TEST): $(GRP_PRINT_TEST_OBJ)
 	$(CXX) $(INCLUDES) $(CXXFLAGS) -o $(GRP_PRINT_TEST) $(GRP_PRINT_TEST_OBJ) $(LIBS)
