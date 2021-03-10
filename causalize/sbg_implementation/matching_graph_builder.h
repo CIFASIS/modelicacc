@@ -39,6 +39,7 @@ class MatchingGraphBuilder {
   Real getValue(Expression exp);
   SBG::PWLMap buildPWLMap(SBG::OrdCT<SBG::NI2> constants, SBG::OrdCT<SBG::NI2> slopes, SBG::Set dom);
   MatchingMaps generatePWLMaps(Expression exp, SBG::Set dom, int offset);
+  SBG::Set generateMapDom(SBG::Set dom, int offset);
 
   private:
   typedef std::pair<SBG::SetVertexDesc, Equality> EquationDesc; 

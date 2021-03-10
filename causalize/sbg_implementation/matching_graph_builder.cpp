@@ -89,6 +89,26 @@ SBG::Set MatchingGraphBuilder::buildSet(Equation eq)
   return buildSet(equation_intervals);
 }
 
+/**
+ * @brief Add the offset to a given equation domain.
+ * 
+ * @param dom 
+ * @param offset 
+ * @return SBG::Set The new set with all the offsets applied.
+ */
+SBG::Set MatchingGraphBuilder::generateMapDom(SBG::Set dom, int offset)
+{
+  MultiInterval edge_set_intervals;
+  SBG::contAS atom_sets = dom.asets_(); 
+  foreach_(AtomSet atom_set, atom_sets) {
+    MultiInterval dom_intervals = atom_set.aset_();
+    foreach_(Interval inter, dom_intervals.inters_()) {
+      edge_set_intervals.addInter(Interval(inter.lo_()+offset, inter.step_(), inter.hi_()+offset));
+    }
+  }
+  return buildSet(edge_set_intervals);
+}
+
 SetVertexDesc MatchingGraphBuilder::addVertex(std::string vertex_name, SBG::Set set, SBGraph& graph)
 {
   SetVertex V(vertex_name, set);
