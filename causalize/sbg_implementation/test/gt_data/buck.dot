@@ -1,0 +1,20 @@
+digraph G{
+    ratio="fill"
+    node[shape="ellipse"]
+    uC [label="uC"]
+    iL [label="iL"]
+    iD [label="iD"]
+    s [label="s"]
+    eq_1 [label="eq_1"]
+    eq_2 [label="eq_2"]
+    eq_3 [label="eq_3"]
+    eq_4 [label="eq_4"]
+    
+eq_1 -> iD [label="E_1", arrowhead="none"]
+    eq_2 -> iD [label="E_2", arrowhead="none"]
+    eq_2 -> iD [label="E_3", arrowhead="none"]
+    eq_2 -> s [label="E_4", arrowhead="none"]
+    eq_3 -> iL [label="E_5", arrowhead="none"]
+    eq_4 -> uC [label="E_6", arrowhead="none"]
+    
+}

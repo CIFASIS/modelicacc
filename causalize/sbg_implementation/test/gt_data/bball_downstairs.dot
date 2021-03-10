@@ -1,0 +1,22 @@
+digraph G{
+    ratio="fill"
+    node[shape="ellipse"]
+    x [label="x"]
+    vx [label="vx"]
+    y [label="y"]
+    vy [label="vy"]
+    eq_1 [label="eq_1"]
+    eq_2 [label="eq_2"]
+    eq_3 [label="eq_3"]
+    eq_4 [label="eq_4"]
+    
+eq_1 -> y [label="E_1", arrowhead="none"]
+    eq_1 -> vy [label="E_2", arrowhead="none"]
+    eq_2 -> vy [label="E_3", arrowhead="none"]
+    eq_2 -> vy [label="E_4", arrowhead="none"]
+    eq_3 -> x [label="E_5", arrowhead="none"]
+    eq_3 -> vx [label="E_6", arrowhead="none"]
+    eq_4 -> vx [label="E_7", arrowhead="none"]
+    eq_4 -> vx [label="E_8", arrowhead="none"]
+    
+}

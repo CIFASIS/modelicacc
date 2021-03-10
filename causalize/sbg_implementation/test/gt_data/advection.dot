@@ -1,0 +1,13 @@
+digraph G{
+    ratio="fill"
+    node[shape="ellipse"]
+    u [label="u"]
+    eq_1 [label="eq_1"]
+    eq_2 [label="eq_2"]
+    
+eq_1 -> u [label="E_1", arrowhead="none"]
+    eq_1 -> u [label="E_2", arrowhead="none"]
+    eq_2 -> u [label="E_3", arrowhead="none"]
+    eq_2 -> u [label="E_4", arrowhead="none"]
+    
+}
