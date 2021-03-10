@@ -81,7 +81,7 @@ create-folders::
 	@mkdir -p $(BUILD_DIR)/$(AST_DIR)
 	@mkdir -p $(BUILD_DIR)/$(PARSER_DIR)
 
-test: lib-gtest $(FLATTER_TEST) $(CAUSALIZE_SBG_TEST)
+test: lib-gtest $(FLATTER_TEST) $(CAUSALIZE_SBG_TEST) $(SBG_GRAPH_TEST)
 
 clean:
 	$(RM) -rf $(BUILD_DIR) $(LIBMODELICA) doc
