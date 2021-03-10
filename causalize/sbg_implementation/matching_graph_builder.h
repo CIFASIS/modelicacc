@@ -45,8 +45,8 @@ class MatchingGraphBuilder {
   typedef std::pair<SBG::SetVertexDesc, Equality> EquationDesc; 
 
   Modelica::MMO_Class& _mmo_class;
-  std::list<SBG::SetVertexDesc> _var_nodes;
-  std::list<EquationDesc> _equation_nodes;
+  std::list<SBG::SetVertexDesc> _U;
+  std::list<EquationDesc> _F;
 };
 
 }  // namespace Causalize
