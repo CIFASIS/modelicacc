@@ -21,5 +21,5 @@ configure
 /flatter/test/bin/*
 /causalize/sbg_implementation/test/test_data/*
 /causalize/sbg_implementation/test/bin/*
-test/util/GraphTest
-test/util/PrintGraphs
+/test/util/GraphTest
+/test/util/PrintGraphs
