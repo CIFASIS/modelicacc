@@ -17,18 +17,20 @@
 
 ******************************************************************************/
 
-#include <boost/variant/static_visitor.hpp>
-#include <ast/expression.h>
-
 #ifndef AST_VISITOR_CONSTANTEXP
 #define AST_VISITOR_CONSTANTEXP
+
+#include <boost/variant/static_visitor.hpp>
+
+#include <ast/expression.h>
+#include <util/table.h>
 
 namespace Modelica {
 
 using namespace Modelica::AST;
 class ConstantExpression : public boost::static_visitor<bool> {
   public:
-  ConstantExpression();
+  ConstantExpression(VarSymbolTable& symbols);
   bool operator()(Integer v) const;
   bool operator()(Boolean v) const;
   bool operator()(AddAll v) const;
@@ -49,6 +51,9 @@ class ConstantExpression : public boost::static_visitor<bool> {
   bool operator()(Output) const;
   bool operator()(Reference) const;
   bool operator()(Range) const;
+
+  protected:
+  VarSymbolTable _symbols;
 };
 }  // namespace Modelica
 #endif
