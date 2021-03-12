@@ -100,7 +100,7 @@ namespace SBG {
         default:
           VertexIt vi, vi_end;
           for(boost::tie(vi, vi_end) = boost::vertices(graph); vi != vi_end; ++vi){
-            stri << vPrinter(graph[*vi]) << " [label=\"" << vPrinter(graph[*vi]) << "\"]";
+            stri << vPrinter(graph[*vi]) << " [label=\"" << vLabelPrinter(graph[*vi]) << "\"]";
             stri << "\n";
             MAKE_SPACE
           }
@@ -132,8 +132,19 @@ namespace SBG {
       return v.name;
     };
 
+    std::string vLabelPrinter(SetVertex v){      
+      std::stringstream label;
+      SBG::Set dom = v.vs_();
+      label << "{ " << v.name << " Dom: " << dom << " }" << std::endl; 
+      return label.str();
+    };
+
     std::string ePrinter(SetEdge e){
-      return e.name;
+      std::stringstream label;
+      PWLMap mapF = e.es1_();
+      PWLMap mapU = e.es2_();
+      label << "{ " << e.name << " mapF: " << mapF << " mapU: " << mapU << " }" << std::endl;
+      return label.str();
     };
   };
 } // namespace SBG
