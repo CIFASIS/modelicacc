@@ -1768,9 +1768,9 @@ struct SetEdge {
     index = ind;
   };
 
-  PWLMap es1_() { return es1; }
+  PWLMap es1_() const { return es1; }
 
-  PWLMap es2_() { return es2; }
+  PWLMap es2_() const { return es2; }
 
   int id_() { return id; }
 
