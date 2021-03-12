@@ -110,6 +110,8 @@ ostream &operator<<(ostream &out, Set &s)
   return out;
 }
 
+std::string mapOper(NI2 cte) { return (cte >= 0) ? "+ " : ""; }
+
 ostream &operator<<(ostream &out, LMap &lm)
 {
   OrdCT<NI2> g = lm.gain_();
@@ -120,20 +122,20 @@ ostream &operator<<(ostream &out, LMap &lm)
   if (g.size() == 0) return out;
 
   if (g.size() == 1) {
-    out << "[" << *itg << " * x + " << *ito << "]";
+    out << "[" << *itg << " * x " << mapOper(*ito) << *ito << "]";
     return out;
   }
 
-  out << "[" << *itg << " * x + " << *ito;
+  out << "[" << *itg << " * x " << mapOper(*ito) << *ito;
   ++itg;
   ++ito;
   while (next(itg, 1) != g.end()) {
-    out << ", " << *itg << " * x + " << *ito;
+    out << ", " << *itg << " * x " << mapOper(*ito) << *ito;
 
     ++itg;
     ++ito;
   }
-  out << ", " << *itg << " * x + " << *ito << "]";
+  out << ", " << *itg << " * x " << mapOper(*ito) << *ito << "]";
 
   return out;
 }
