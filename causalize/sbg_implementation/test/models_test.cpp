@@ -48,7 +48,7 @@ TEST_P(ITests, GenerateCode)
   EXPECT_TRUE(result.good());
 }
 
-const char* models[] = {"advection", "airconds", "aircont", "bball_downstairs", "buck"};
+const char* models[] = {"advection", "airconds", "aircont", "bball_downstairs", "buck", "rlc_loop"};
 
 INSTANTIATE_TEST_SUITE_P(Models, ITests, testing::ValuesIn(models));
 

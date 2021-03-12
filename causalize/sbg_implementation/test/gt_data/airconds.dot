@@ -1,9 +1,9 @@
 digraph G{
     ratio="fill"
     node[shape="ellipse"]
-    th [label="th"]
-    eq_1 [label="eq_1"]
+    th [label="{ th Dom: {{[1:1:20000]}} }"]
+    eq_1 [label="{ eq_1 Dom: {{[1:1:20000]}} }"]
     
-eq_1 -> th [label="E_1", arrowhead="none"]
+eq_1 -> th [label="{ E_1 mapF: [({{[1:1:20000]}}, [1 * x + 0])] mapU: [({{[1:1:20000]}}, [1 * x + 0])] }", arrowhead="none"]
     
 }
