@@ -135,7 +135,7 @@ namespace SBG {
     std::string vLabelPrinter(SetVertex v){      
       std::stringstream label;
       SBG::Set dom = v.vs_();
-      label << "{ " << v.name << " Dom: " << dom << " }" << std::endl; 
+      label << "{ " << v.name << " Dom: " << dom << " }"; 
       return label.str();
     };
 
@@ -143,7 +143,7 @@ namespace SBG {
       std::stringstream label;
       PWLMap mapF = e.es1_();
       PWLMap mapU = e.es2_();
-      label << "{ " << e.name << " mapF: " << mapF << " mapU: " << mapU << " }" << std::endl;
+      label << "{ " << e.name << " mapF: " << mapF << " mapU: " << mapU << " }";
       return label.str();
     };
   };
