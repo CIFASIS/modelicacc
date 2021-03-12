@@ -17,6 +17,7 @@
 
 ******************************************************************************/
 
+#include <ast/queries.h>
 #include <util/ast_visitors/eval_expression.h>
 #include <util/ast_visitors/pwl_map_values.h>
 #include <util/debug.h>
@@ -59,7 +60,17 @@ bool PWLMapValues::operator()(Named v) const { return false; }
 
 bool PWLMapValues::operator()(Output v) const { return false; }
 
-bool PWLMapValues::operator()(Reference v) const { return true; }
+bool PWLMapValues::operator()(Reference v) const
+{
+  std::string var_name = get<0>(v.ref().front());
+  if (isConstantNoCheck(var_name, _symbols)) {
+    EvalExpression eval_exp(_symbols);
+    _constant = Apply(eval_exp, (Expression)v);
+    _slope = 0;
+    return false;
+  }
+  return true;
+}
 
 void PWLMapValues::assign(Expression left, Expression right, bool var_left, bool var_right, int sign) const
 {

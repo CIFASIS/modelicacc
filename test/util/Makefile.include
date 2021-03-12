@@ -14,7 +14,8 @@ GRP_TEST_SRC := \
     $(UTIL_DIR)/debug.cpp 
 
 GRP_PRINT_TEST_SRC := \
-    test/util/PrintGraphs.cpp
+    test/util/PrintGraphs.cpp \
+    $(UTIL_DIR)/graph/graph_definition.cpp
 
 # Objects
 GRP_TEST_OBJ=$(addprefix $(BUILD_DIR)/, $(GRP_TEST_SRC:.cpp=.o))

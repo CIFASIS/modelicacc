@@ -74,7 +74,12 @@ bool MatchingExps::operator()(Range v) const
   return rs || re;
 }
 
-bool MatchingExps::operator()(Brace v) const { return false; }
+bool MatchingExps::operator()(Brace v) const
+{ 
+  bool matched = false;
+  foreach_(Expression e, v.args()) { matched = matched || ApplyThis(e); }
+  return matched;
+}
 
 bool MatchingExps::operator()(Bracket v) const { return false; }
 
