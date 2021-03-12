@@ -27,6 +27,7 @@ FLATTER_SRC := \
 	$(UTIL_DIR)/ast_visitors/replace_expression.cpp \
     $(UTIL_DIR)/graph/graph_definition.cpp \
 	$(UTIL_DIR)/graph/graph_algorithms.cpp \
+	$(UTIL_DIR)/graph/graph_printer.cpp \
 	$(MMO_DIR)/mmo_class.cpp \
 	$(MMO_DIR)/mmo_tree.cpp
 
