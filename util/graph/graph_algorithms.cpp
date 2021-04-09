@@ -324,8 +324,6 @@ Set MatchingStruct::SBGMatching(){
   if(vi_start != vi_end){
     SetPath P;
     Set wholeF = mapF.wholeDom();
-    Set leftvs = mapF.image(wholeF);
-    visitedF = leftvs; 
 
     UnordCT<Set> F = auxF;
 
@@ -391,9 +389,6 @@ Set MatchingStruct::SBGMatching(){
  
           ++l;
         }
-
-        Set aux = visitedF.diff(newFm);
-        visitedF = aux;
       }
  
       else{

@@ -34,11 +34,11 @@
 
 using namespace SBG;
 
-// Connected components --------------------------------------------------------------------------
+// Connected components of undirected SBGraphs ---------------------------------------------------
 
 PWLMap connectedComponents(SBGraph g);
 
-// Matching --------------------------------------------------------------------------------------
+// Matching of undirected SBGraphs ---------------------------------------------------------------
 
 typedef OrdCT<Set> SetPath;
 
@@ -61,8 +61,7 @@ struct MatchingStruct{
 
   int wmax; // Maximum augmenting path width found
 
-  UnordCT<Set> auxF; // Auxiliary set of left set-vertices
-  Set visitedF; // Auxiliary set of left set-vertices
+  UnordCT<Set> auxF; // Auxiliary set of left not matched set-vertices
 
   Set matchedF;
   Set matchedU;
