@@ -34,17 +34,17 @@
 
 using namespace SBG;
 
-// Connected components --------------------------------------------------------------------------
+// Connected components of undirected SBGraphs ---------------------------------------------------
 
 PWLMap connectedComponents(SBGraph g);
 
-// Matching --------------------------------------------------------------------------------------
+// Matching of undirected SBGraphs ---------------------------------------------------------------
 
 typedef OrdCT<Set> SetPath;
 
-// typedef VertexMap property_map<SBGraph, > // For access to set-vertices
+//typedef VertexMap property_map<SBGraph, > // For access to set-vertices
 
-struct MatchingStruct {
+struct MatchingStruct{
   MatchingStruct(SBGraph g);
 
   Set SBGMatching();
@@ -56,21 +56,21 @@ struct MatchingStruct {
 
   SBGraph g;
 
-  PWLMap mapF;  // "Left" maps
-  PWLMap mapU;  // "Right" maps
+  PWLMap mapF; // "Left" maps
+  PWLMap mapU; // "Right" maps
 
-  int wmax;  // Maximum augmenting path width found
+  int wmax; // Maximum augmenting path width found
 
-  UnordCT<Set> auxF;  // Auxiliary set of left set-vertices
+  UnordCT<Set> auxF; // Auxiliary set of left not matched set-vertices
 
   Set matchedF;
   Set matchedU;
 
   UnordCT<Set> visitedU;
 
-  UnordCT<Set> currentF;  // Set of set-vertices in current path
+  UnordCT<Set> currentF; // Set of set-vertices in current path
 
-  Set matchedE;
+  Set matchedE; 
 
   SetPath Pmax;
 };
