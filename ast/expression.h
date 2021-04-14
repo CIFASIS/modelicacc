@@ -95,11 +95,13 @@ typedef std::vector<ExpPair> ElseIf;
 struct SubEnd {
   comparable(SubEnd);
   printable(SubEnd);
+  order_by(SubEnd);
 };
 
 struct SubAll {
   comparable(SubAll);
   printable(SubAll);
+  order_by(SubAll);
 };
 
 // WARNING: this structure is intended to be used
@@ -114,6 +116,7 @@ struct AddAll{
 
   printable(AddAll);
   comparable(AddAll);
+  order_by(AddAll);
 };
 
 struct String {
@@ -122,6 +125,7 @@ struct String {
   String();
   friend std::ostream& operator<<(std::ostream& out, const String& s);
   comparable(String);
+  order_by(String);
   member_(std::string, val);
 };
 
@@ -134,6 +138,7 @@ struct Boolean {
 
   printable(Boolean);
   comparable(Boolean);
+  order_by(Boolean);
   member_(bool, val);
 };
 
@@ -143,6 +148,7 @@ struct BinOp {
 
   comparable(BinOp);
   printable(BinOp);
+  order_by(BinOp);
   member_(Expression, left);
   member_(Expression, right);
   member_(BinOpType, op);
@@ -154,6 +160,7 @@ struct IfExp {
   IfExp(Expression a, Expression b, std::vector<boost::fusion::vector2<Expression, Expression>> elseif, Expression c);
   comparable(IfExp);
   printable(IfExp);
+  order_by(IfExp);
   member_(Expression, cond);
   member_(Expression, then);
   member_(List<ExpPair>, elseif) member_(Expression, elseexp);
@@ -164,6 +171,7 @@ struct Call {
   Call(Name n, Expression arg);
   Call(Name n, ExpList args);
   printable(Call);
+  order_by(Call);
   comparable(Call);
   member_(Name, name);
   member_(ExpList, args)
@@ -173,6 +181,7 @@ struct Index {
   Index(){};
   Index(Name n, OptExp e);
   printable(Index);
+  order_by(Index);
   comparable(Index);
   member_(OptExp, exp) member_(Name, name)
 };
@@ -183,6 +192,7 @@ struct Indexes {
   Indexes(){};
   Indexes(IndexList ind) : indexes_(ind){};
   printable(Indexes);
+  order_by(Indexes);
   comparable(Indexes);
   member_(IndexList, indexes);
 };
@@ -191,6 +201,7 @@ struct ForExp {
   ForExp(){};
   ForExp(Expression, Indexes);
   comparable(ForExp);
+  order_by(ForExp);
   printable(ForExp);
   member_(Indexes, indices);
   member_(Expression, exp);
@@ -200,6 +211,7 @@ struct Named {
   Named(){};
   Named(Name n, Expression e);
   printable(Named);
+  order_by(Named);
   comparable(Named);
   member_(Name, name);
   member_(Expression, exp);
@@ -209,6 +221,7 @@ struct UnaryOp {
   UnaryOp(){};
   UnaryOp(Expression e, UnaryOpType op);
   printable(UnaryOp);
+  order_by(UnaryOp);
   comparable(UnaryOp);
   member_(Expression, exp);
   member_(UnaryOpType, op);
@@ -225,6 +238,7 @@ struct Reference {  //:vector<RefTuple>
   Reference(Name n);
   Reference(Ref r);
   printable(Reference);
+  order_by(Reference);
   comparable(Reference);
   member_(Ref, ref);
 };
@@ -235,6 +249,7 @@ struct Range {
   Range(Expression s, Expression i, Expression e);
   comparable(Range);
   printable(Range);
+  order_by(Range);
   member_(Expression, start);
   member_(OptExp, step);
   member_(Expression, end);
@@ -245,6 +260,7 @@ struct Output {
   Output(Expression e);
   Output(OptExpList l);
   printable(Output);
+  order_by(Output);
   comparable(Output);
   member_(OptExpList, args)
 };
@@ -253,6 +269,7 @@ struct FunctionExp {
   FunctionExp(){};
   FunctionExp(Name n, ExpList args);
   printable(FunctionExp);
+  order_by(FunctionExp);
   comparable(FunctionExp);
   member_(Name, name) member_(ExpList, args)
 };
@@ -262,6 +279,7 @@ struct Brace {
   Brace(Expression arg);
   Brace(ExpList args);
   printable(Brace);
+  order_by(Brace);
   comparable(Brace);
   member_(ExpList, args)
 };
@@ -270,6 +288,7 @@ struct Bracket {
   Bracket(){};
   Bracket(ExpListList args);
   printable(Bracket);
+  order_by(Bracket);
   comparable(Bracket);
   member_(ExpListList, args)
 };
