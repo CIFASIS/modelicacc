@@ -24,9 +24,13 @@
 
 namespace Modelica {
 
-PWLMapValues::PWLMapValues(VarSymbolTable symbols) : _constant(0), _slope(1), _symbols(symbols){};
+PWLMapValues::PWLMapValues(VarSymbolTable symbols) : _constant(0), _slope(1), _symbols(symbols), _variable() {};
 
-bool PWLMapValues::operator()(Integer v) const { return false; }
+bool PWLMapValues::operator()(Integer v) const
+{ 
+  _constant = v;  
+  return false; 
+}
 
 bool PWLMapValues::operator()(Boolean v) const { return false; }
 
@@ -62,8 +66,8 @@ bool PWLMapValues::operator()(Output v) const { return false; }
 
 bool PWLMapValues::operator()(Reference v) const
 {
-  std::string var_name = get<0>(v.ref().front());
-  if (isConstantNoCheck(var_name, _symbols)) {
+  _variable = get<0>(v.ref().front());
+  if (isConstantNoCheck(_variable, _symbols)) {
     EvalExpression eval_exp(_symbols);
     _constant = Apply(eval_exp, (Expression)v);
     _slope = 0;
@@ -76,11 +80,11 @@ void PWLMapValues::assign(Expression left, Expression right, bool var_left, bool
 {
   EvalExpression eval_exp(_symbols);
   if (var_left) {
-    _constant = Apply(eval_exp, right);
+    _constant = sign * Apply(eval_exp, right);
   } else if (var_right) {
-    _constant = Apply(eval_exp, left);
+    _constant = sign * Apply(eval_exp, left);
   } else {
-    _constant = Apply(eval_exp, left) + sign * Apply(eval_exp, right);
+    _constant = sign * (Apply(eval_exp, left) +  Apply(eval_exp, right));
   }
 }
 
@@ -128,5 +132,7 @@ bool PWLMapValues::operator()(UnaryOp v) const
 int PWLMapValues::constant() const  { return _constant; }
 
 int PWLMapValues::slope() const  { return _slope; }
+
+std::string PWLMapValues::variable() const  { return _variable; }
 
 }  // namespace Modelica

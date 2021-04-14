@@ -52,6 +52,7 @@ class PWLMapValues : public boost::static_visitor<bool> {
 
   int constant() const;
   int slope() const;
+  std::string variable() const;
 
   protected:
   void assign(Expression left, Expression right, bool var_left, bool var_right, int sign) const;
@@ -59,7 +60,7 @@ class PWLMapValues : public boost::static_visitor<bool> {
   mutable int _constant;
   mutable int _slope;
   VarSymbolTable _symbols;
-
+  mutable std::string _variable;
 };
 
 }  // namespace Modelica
