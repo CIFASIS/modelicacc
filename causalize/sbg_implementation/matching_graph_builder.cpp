@@ -27,7 +27,7 @@ using namespace Modelica;
 using namespace SBG;
 
 namespace Causalize {
-MatchingGraphBuilder::MatchingGraphBuilder(MMO_Class &mmo_class) : _mmo_class(mmo_class), _U(), _F() {}
+MatchingGraphBuilder::MatchingGraphBuilder(MMO_Class &mmo_class) : _mmo_class(mmo_class), _U(), _F(), _eq_usage() {}
 
 Real MatchingGraphBuilder::getValue(Expression exp)
 {
@@ -61,8 +61,9 @@ SBG::Set MatchingGraphBuilder::buildSet(VarInfo variable)
   return buildSet(variable_intervals);
 }
 
-SBG::Set MatchingGraphBuilder::buildSet(Equation eq)
+SBG::Set MatchingGraphBuilder::buildSet(Equation eq, string eq_id)
 {
+  Usage usage;
   MultiInterval equation_intervals;
   if (is<ForEq>(eq)) {
     ForEq for_eq = get<ForEq>(eq);
@@ -81,7 +82,9 @@ SBG::Set MatchingGraphBuilder::buildSet(Equation eq)
       }
       Interval interval(lower, step, upper);
       equation_intervals.addInter(interval);
+      usage[idx.name()] = lower;
     }
+    _eq_usage[eq_id] = usage;
   } else {
     Interval interval(1, 1, 1);
     equation_intervals.addInter(interval);
@@ -103,7 +106,7 @@ SBG::Set MatchingGraphBuilder::generateMapDom(SBG::Set dom, int offset)
   foreach_(AtomSet atom_set, atom_sets) {
     MultiInterval dom_intervals = atom_set.aset_();
     foreach_(Interval inter, dom_intervals.inters_()) {
-      edge_set_intervals.addInter(Interval(inter.lo_()+offset, inter.step_(), inter.hi_()+offset));
+      edge_set_intervals.addInter(Interval(offset, inter.step_(), inter.size()+offset-1));
     }
   }
   return buildSet(edge_set_intervals);
@@ -117,13 +120,12 @@ SetVertexDesc MatchingGraphBuilder::addVertex(std::string vertex_name, SBG::Set 
   return v;
 }
 
-void MatchingGraphBuilder::addEquation(Equation eq, int id, SBG::Set set, SBGraph& graph)
+void MatchingGraphBuilder::addEquation(Equation eq, string id, SBG::Set set, SBGraph& graph)
 {
   if (!is<Equality>(eq)) {
     ERROR("Only Equality equations supported.");
   }
-  string eq_name = "eq_" + to_string(id);
-  _F.push_back(make_pair(addVertex(eq_name, set, graph),get<Equality>(eq)));  
+  _F.push_back(make_pair(addVertex(id, set, graph),get<Equality>(eq)));  
 }
 
 PWLMap MatchingGraphBuilder::buildPWLMap(OrdCT<NI2> constants, OrdCT<NI2> slopes, SBG::Set dom)
@@ -139,7 +141,7 @@ PWLMap MatchingGraphBuilder::buildPWLMap(OrdCT<NI2> constants, OrdCT<NI2> slopes
   return map;
 }
 
-MatchingGraphBuilder::MatchingMaps MatchingGraphBuilder::generatePWLMaps(Expression exp, SBG::Set dom, int offset)
+MatchingGraphBuilder::MatchingMaps MatchingGraphBuilder::generatePWLMaps(Expression exp, SBG::Set dom, int offset, string eq_id)
 {
   assert(is<Reference>(exp));
   VarSymbolTable symbols = _mmo_class.syms();
@@ -155,19 +157,24 @@ MatchingGraphBuilder::MatchingMaps MatchingGraphBuilder::generatePWLMaps(Express
   Reference occur = get<Reference>(exp);   
   ExpList indexes = get<1>(occur.ref().front());
   SBG::Set map_dom = generateMapDom(dom, offset);
+  int map_offset = offset - 1;
   foreach_(Expression idx, indexes)
   {
     PWLMapValues pwl_map_values(symbols);
     Apply(pwl_map_values, idx);
-    constant_pwl_map_u_it = constant_pwl_map_u.insert(constant_pwl_map_u_it, pwl_map_values.constant() - pwl_map_values.slope() * offset);
+    Usage usage = _eq_usage[eq_id];
+    int range_init_value = usage[pwl_map_values.variable()];
+    int set_vertex_offset = pwl_map_values.slope() * offset;
+    int map_first_value = pwl_map_values.constant() + pwl_map_values.slope() * range_init_value;
+    constant_pwl_map_u_it = constant_pwl_map_u.insert(constant_pwl_map_u_it, map_first_value - set_vertex_offset);
     slope_pwl_map_u_it = slope_pwl_map_u.insert(slope_pwl_map_u_it, pwl_map_values.slope());
-    constant_pwl_map_f_it = constant_pwl_map_f.insert(constant_pwl_map_f_it, -offset);
+    constant_pwl_map_f_it = constant_pwl_map_f.insert(constant_pwl_map_f_it, -map_offset);
     slope_pwl_map_f_it = slope_pwl_map_f.insert(slope_pwl_map_f_it, 1); 
   }
   if (indexes.empty()) { // Scalar variable.
-    constant_pwl_map_u_it = constant_pwl_map_u.insert(constant_pwl_map_u_it, - offset);
+    constant_pwl_map_u_it = constant_pwl_map_u.insert(constant_pwl_map_u_it, - map_offset);
     slope_pwl_map_u_it = slope_pwl_map_u.insert(slope_pwl_map_u_it, 1);
-    constant_pwl_map_f_it = constant_pwl_map_f.insert(constant_pwl_map_f_it, - offset);
+    constant_pwl_map_f_it = constant_pwl_map_f.insert(constant_pwl_map_f_it, - map_offset);
     slope_pwl_map_f_it = slope_pwl_map_f.insert(slope_pwl_map_f_it, 1); 
   }
   return make_pair(buildPWLMap(constant_pwl_map_f, slope_pwl_map_f, map_dom), buildPWLMap(constant_pwl_map_u, slope_pwl_map_u, map_dom));
@@ -194,23 +201,26 @@ SBGraph MatchingGraphBuilder::makeGraph()
   foreach_(Equation eq, eqs)
   {
     SBG::Set range;
-    range = buildSet(eq);
     if (is<ForEq>(eq)) {   
       ForEq for_eq = get<ForEq>(eq);
       vector<Equation>  for_eqs = for_eq.elements();
       foreach_(Equation for_el, for_eqs)  
       {
-        addEquation(for_el, id++, range, graph);
+        string eq_name = "eq_" + to_string(id++);
+        range = buildSet(eq, eq_name);
+        addEquation(for_el, eq_name, range, graph);
       }
     } else if (is<Equality>(eq)) {
-      addEquation(eq, id++, range, graph);
+      string eq_name = "eq_" + to_string(id++);
+      range = buildSet(eq, eq_name);
+      addEquation(eq, eq_name, range, graph);
     } else {
       ERROR("Only causalization of for and equality equations");
     }
   }
 
   // Build edges.
-  int set_edge_offset = 0;
+  int set_edge_offset = 1;
   unsigned int edge_id = 1;
   foreach_(EquationDesc eq_desc, _F)
   {
@@ -225,13 +235,13 @@ SBGraph MatchingGraphBuilder::makeGraph()
       MatchingExps matching_exps(unknown_vertex.name);
       Apply(matching_exps, left);
       Apply(matching_exps, right);
-      list<Expression> matched_exps = matching_exps.matchedExps();
+      set<Expression> matched_exps = matching_exps.matchedExps();
       cout << "Matched exps for: " << unknown_vertex.name << " in " << eq_desc.second << endl;
       cout << "Equation dom: " << dom << endl;
       foreach_(Expression exp, matched_exps)
       {
         cout << "Expression: " << exp << endl;
-        MatchingMaps maps = generatePWLMaps(exp, dom, set_edge_offset); 
+        MatchingMaps maps = generatePWLMaps(exp, dom, set_edge_offset, eq_vertex.name); 
         set_edge_offset += dom.size();
         string edge_name = "E_" + to_string(edge_id++);
         cout << "MapF: " << maps.first << endl;
