@@ -21,6 +21,8 @@
 #define AST_VISITOR_MATCHING_EXPS
 
 #include <boost/variant/static_visitor.hpp>
+#include <set>
+
 #include <ast/expression.h>
 
 namespace Modelica {
@@ -51,10 +53,10 @@ class MatchingExps : public boost::static_visitor<bool> {
   bool operator()(Reference) const;
   bool operator()(Range) const;
 
-  std::list<Expression> matchedExps() const;  
+  std::set<Expression> matchedExps() const;  
   
   private:
-  mutable std::list<Expression> _matched_exps;
+  mutable std::set<Expression> _matched_exps;
   std::string _variable_name;
 };
 
