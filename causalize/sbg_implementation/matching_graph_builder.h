@@ -32,21 +32,24 @@ class MatchingGraphBuilder {
   typedef std::pair<SBG::PWLMap, SBG::PWLMap> MatchingMaps;
 
   SBG::Set buildSet(VarInfo variable);
-  SBG::Set buildSet(Equation eq);
+  SBG::Set buildSet(Equation eq, std::string eq_id);
   SBG::Set buildSet(SBG::MultiInterval variable);
   SBG::SetVertexDesc addVertex(std::string vertex_name, SBG::Set set, SBG::SBGraph& graph);
-  void addEquation(Equation eq, int id, SBG::Set set, SBG::SBGraph& graph);
+  void addEquation(Equation eq, std::string id, SBG::Set set, SBG::SBGraph& graph);
   Real getValue(Expression exp);
   SBG::PWLMap buildPWLMap(SBG::OrdCT<SBG::NI2> constants, SBG::OrdCT<SBG::NI2> slopes, SBG::Set dom);
-  MatchingMaps generatePWLMaps(Expression exp, SBG::Set dom, int offset);
+  MatchingMaps generatePWLMaps(Expression exp, SBG::Set dom, int offset, std::string eq_id);
   SBG::Set generateMapDom(SBG::Set dom, int offset);
 
   private:
   typedef std::pair<SBG::SetVertexDesc, Equality> EquationDesc; 
+  typedef std::map<std::string, int> Usage;
+  typedef std::map<std::string, Usage> EqUsage;
 
   Modelica::MMO_Class& _mmo_class;
   std::list<SBG::SetVertexDesc> _U;
   std::list<EquationDesc> _F;
+  EqUsage _eq_usage;
 };
 
 }  // namespace Causalize

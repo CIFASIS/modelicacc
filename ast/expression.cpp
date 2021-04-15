@@ -19,6 +19,9 @@
 
 #include <boost/foreach.hpp>
 #include <boost/variant/get.hpp>
+#include <iostream>
+#include <sstream>
+
 #include <ast/expression.h>
 #include <util/debug.h>
 
@@ -29,6 +32,25 @@ namespace AST {
 const char* BinOpTypeName[] = {" or ", " and ", "<", "<=", ">", ">=", "<>", "==", "+", ".+", "-", ".-", "/", "./", "*", ".*", "^", ".^"};
 const char* UnaryOpTypeName[] = {" not ", "-", "+"};
 
+// SubEnd
+bool SubEnd::operator==(const SubEnd& other) const { return true; }
+std::ostream& operator<<(std::ostream& out, const SubEnd& s)
+{
+  out << "end";
+  return out;
+};
+order_by_imp(SubEnd);
+
+// SubAll
+bool SubAll::operator==(const SubAll& other) const { return true; }
+std::ostream& operator<<(std::ostream& out, const SubAll& s)
+{
+  out << ":";
+  return out;
+};
+order_by_imp(SubAll);
+
+// AddAll
 AddAll::AddAll(RefTuple a) : arr_(a){}
 
 member_imp(AddAll, RefTuple, arr);
@@ -47,6 +69,7 @@ std::ostream& operator<<(std::ostream& out, const AddAll &aa){
   out << *iti << "])";
   return out;
 }
+order_by_imp(AddAll);
 
 // String
 String::String(std::string s) : val_(s) {}
@@ -63,6 +86,9 @@ std::ostream& operator<<(std::ostream& out, const String& s)  // output
 }
 member_imp(String, std::string, val);
 
+order_by_imp(String);
+
+// Boolean
 Boolean::Boolean(Bool b) : val_(b == TRUE ? true : false) {}
 member_imp(Boolean, bool, val);
 std::ostream& operator<<(std::ostream& out, const Boolean& b)  // output
@@ -72,6 +98,9 @@ std::ostream& operator<<(std::ostream& out, const Boolean& b)  // output
 }
 bool Boolean::operator==(const Boolean& other) const { return (other.val() == val()); }
 
+order_by_imp(Boolean);
+
+// BinOp
 BinOp::BinOp(Expression l, BinOpType op, Expression r) : left_(l), right_(r), op_(op) {}
 
 bool BinOp::operator==(const BinOp& other) const { return (other.op() == op() && other.left() == left() && other.right() == right()); }
@@ -92,7 +121,9 @@ std::ostream& operator<<(std::ostream& out, const BinOp& b)  // output
 member_imp(BinOp, Expression, left);
 member_imp(BinOp, Expression, right);
 member_imp(BinOp, BinOpType, op);
+order_by_imp(BinOp);
 
+// IfExp
 IfExp::IfExp(){};
 IfExp::IfExp(Expression a, Expression b, std::vector<boost::fusion::vector2<Expression, Expression>> elseif, Expression c)
     : cond_(a), then_(b), elseexp_(c)
@@ -116,7 +147,9 @@ member_imp(IfExp, Expression, cond);
 member_imp(IfExp, Expression, then);
 member_imp(IfExp, Expression, elseexp);
 member_imp(IfExp, List<ExpPair>, elseif);
+order_by_imp(IfExp);
 
+// Call
 Call::Call(Name n, Expression arg) : name_(n) { Call::args_.push_back(arg); };
 Call::Call(Name n, ExpList args) : name_(n), args_(args){};
 std::ostream& operator<<(std::ostream& out, const Call& c)  // output
@@ -134,47 +167,63 @@ std::ostream& operator<<(std::ostream& out, const Call& c)  // output
 bool Call::operator==(const Call& other) const { return other.name() == name() && other.args() == args(); }
 member_imp(Call, Name, name);
 member_imp(Call, ExpList, args);
+order_by_imp(Call);
 
-Brace::Brace(Expression arg) { Brace::args_.push_back(arg); };
-Brace::Brace(ExpList args) : args_(args){};
-std::ostream& operator<<(std::ostream& out, const Brace& c)  // output
+// Index
+Index::Index(Name n, OptExp e) : exp_(e), name_(n){};
+std::ostream& operator<<(std::ostream& out, const Index& n)
 {
-  out << "{";
-  int l = c.args().size(), i = 0;
-  foreach_(Expression e, c.args())
+  out << n.name();
+  if (n.exp()) out << " in " << n.exp().get();
+  return out;
+};
+bool Index::operator==(const Index& other) const { return other.exp() == exp() && other.name() == name(); };
+member_imp(Index, OptExp, exp);
+member_imp(Index, Name, name);
+order_by_imp(Index);
+
+// Indexes
+std::ostream& operator<<(std::ostream& out, const Indexes& n)
+{
+  int size = n.indexes().size(), ii = 0;
+  foreach_(Index i, n.indexes())
   {
-    out << e;
-    if (++i < l) out << ",";
+    out << i;
+    if (++ii < size) out << ",";
   }
-  out << "}";
+  return out;
+};
+member_imp(Indexes, IndexList, indexes);
+bool Indexes::operator==(const Indexes& other) const { return other.indexes() == indexes(); };
+order_by_imp(Indexes);
+
+// ForExp
+ForExp::ForExp(Expression e, Indexes ind)
+    : indices_(ind), exp_(e){};
+std::ostream& operator<<(std::ostream& out, const ForExp& n)  // output
+{
+  out << n.exp() << " for " << n.indices();
   return out;
 }
-bool Brace::operator==(const Brace& other) const { return other.args() == args(); }
-member_imp(Brace, ExpList, args)
+bool ForExp::operator==(const ForExp& other) const { return other.indices() == indices(); }
+member_imp(ForExp, Indexes, indices);
+member_imp(ForExp, Expression, exp);
+order_by_imp(ForExp);
 
-    Bracket::Bracket(ExpListList args)
-    : args_(args){};
-std::ostream& operator<<(std::ostream& out, const Bracket& c)  // output
+// Named
+Named::Named(Name n, Expression e) : name_(n), exp_(){};
+std::ostream& operator<<(std::ostream& out, const Named& n)
 {
-  out << "[";
-  int l = c.args().size(), i = 0;
-  foreach_(ExpList le, c.args())
-  {
-    int ll = le.size(), ii = 0;
-    foreach_(Expression e, le)
-    {
-      out << e;
-      if (++ii < ll) out << ",";
-    }
-    if (++i < l) out << ";";
-  }
-  out << "]";
+  out << n.name() << "=" << n.exp();
   return out;
-}
-bool Bracket::operator==(const Bracket& other) const { return other.args() == args(); }
-member_imp(Bracket, ExpListList, args)
+};
+bool Named::operator==(const Named& other) const { return other.exp() == exp() && other.name() == name(); };
+member_imp(Named, Expression, exp);
+member_imp(Named, Name, name);
+order_by_imp(Named);
 
-    UnaryOp::UnaryOp(Expression e, UnaryOpType op)
+// UnaryOp
+UnaryOp::UnaryOp(Expression e, UnaryOpType op)
     : exp_(e), op_(op){};
 std::ostream& operator<<(std::ostream& out, const UnaryOp& n)  // output
 {
@@ -189,18 +238,9 @@ std::ostream& operator<<(std::ostream& out, const UnaryOp& n)  // output
 bool UnaryOp::operator==(const UnaryOp& other) const { return other.exp() == exp() && other.op() == op(); }
 member_imp(UnaryOp, Expression, exp); 
 member_imp(UnaryOp, UnaryOpType, op);
+order_by_imp(UnaryOp);
 
-    ForExp::ForExp(Expression e, Indexes ind)
-    : indices_(ind), exp_(e){};
-std::ostream& operator<<(std::ostream& out, const ForExp& n)  // output
-{
-  out << n.exp() << " for " << n.indices();
-  return out;
-}
-bool ForExp::operator==(const ForExp& other) const { return other.indices() == indices(); }
-member_imp(ForExp, Indexes, indices);
-member_imp(ForExp, Expression, exp);
-
+// Reference
 Reference::Reference(Ref r) : ref_(r) {}
 Reference::Reference(Name n) : ref_(Ref(1, RefTuple(n, ExpList(0)))) {}
 Reference::Reference(Name n, ExpList is) : ref_(Ref(1, RefTuple(n, is))) {}
@@ -245,7 +285,9 @@ std::ostream& operator<<(std::ostream& out, const Reference& r)  // output
 }
 bool Reference::operator==(const Reference& other) const { return other.ref() == ref(); }
 member_imp(Reference, Ref, ref);
+order_by_imp(Reference);
 
+// Range
 Range::Range(Expression s, Expression e) : start_(s), end_(e){};
 Range::Range(Expression s, Expression i, Expression e) : start_(s), step_(i), end_(e){};
 
@@ -269,7 +311,9 @@ bool Range::operator==(const Range& other) const
 member_imp(Range, Expression, start);
 member_imp(Range, Expression, end);
 member_imp(Range, OptExp, step);
+order_by_imp(Range);
 
+// Output
 Output::Output(Expression e) { args_.push_back(e); }
 Output::Output(OptExpList l) : args_(l){};
 
@@ -292,55 +336,9 @@ std::ostream& operator<<(std::ostream& out, const Output& o)
 bool Output::operator==(const Output& other) const { return other.args() == args(); }
 
 member_imp(Output, OptExpList, args);
+order_by_imp(Output);
 
-bool SubEnd::operator==(const SubEnd& other) const { return true; }
-std::ostream& operator<<(std::ostream& out, const SubEnd& s)
-{
-  out << "end";
-  return out;
-};
-
-bool SubAll::operator==(const SubAll& other) const { return true; }
-std::ostream& operator<<(std::ostream& out, const SubAll& s)
-{
-  out << ":";
-  return out;
-};
-
-Named::Named(Name n, Expression e) : name_(n), exp_(){};
-std::ostream& operator<<(std::ostream& out, const Named& n)
-{
-  out << n.name() << "=" << n.exp();
-  return out;
-};
-bool Named::operator==(const Named& other) const { return other.exp() == exp() && other.name() == name(); };
-member_imp(Named, Expression, exp);
-member_imp(Named, Name, name);
-
-Index::Index(Name n, OptExp e) : exp_(e), name_(n){};
-std::ostream& operator<<(std::ostream& out, const Index& n)
-{
-  out << n.name();
-  if (n.exp()) out << " in " << n.exp().get();
-  return out;
-};
-bool Index::operator==(const Index& other) const { return other.exp() == exp() && other.name() == name(); };
-std::ostream& operator<<(std::ostream& out, const Indexes& n)
-{
-  int size = n.indexes().size(), ii = 0;
-  foreach_(Index i, n.indexes())
-  {
-    out << i;
-    if (++ii < size) out << ",";
-  }
-  return out;
-};
-member_imp(Indexes, IndexList, indexes);
-bool Indexes::operator==(const Indexes& other) const { return other.indexes() == indexes(); };
-
-member_imp(Index, OptExp, exp);
-member_imp(Index, Name, name);
-
+// FunctionExp
 FunctionExp::FunctionExp(Name n, ExpList args) : name_(n), args_(args){};
 std::ostream& operator<<(std::ostream& out, const FunctionExp& c)  // output
 {
@@ -359,6 +357,51 @@ bool FunctionExp::operator==(const FunctionExp& other) const { return other.name
 
 member_imp(FunctionExp, Name, name);
 member_imp(FunctionExp, ExpList, args);
+order_by_imp(FunctionExp);
+
+// Brace
+Brace::Brace(Expression arg) { Brace::args_.push_back(arg); };
+Brace::Brace(ExpList args) : args_(args){};
+std::ostream& operator<<(std::ostream& out, const Brace& c)  // output
+{
+  out << "{";
+  int l = c.args().size(), i = 0;
+  foreach_(Expression e, c.args())
+  {
+    out << e;
+    if (++i < l) out << ",";
+  }
+  out << "}";
+  return out;
+}
+bool Brace::operator==(const Brace& other) const { return other.args() == args(); }
+member_imp(Brace, ExpList, args)
+order_by_imp(Brace);
+
+// Bracket
+Bracket::Bracket(ExpListList args)
+    : args_(args){};
+std::ostream& operator<<(std::ostream& out, const Bracket& c)  // output
+{
+  out << "[";
+  int l = c.args().size(), i = 0;
+  foreach_(ExpList le, c.args())
+  {
+    int ll = le.size(), ii = 0;
+    foreach_(Expression e, le)
+    {
+      out << e;
+      if (++ii < ll) out << ",";
+    }
+    if (++i < l) out << ";";
+  }
+  out << "]";
+  return out;
+}
+bool Bracket::operator==(const Bracket& other) const { return other.args() == args(); }
+member_imp(Bracket, ExpListList, args)
+order_by_imp(Bracket);
+
 Boolean True(TRUE);
 Boolean False(FALSE);
 

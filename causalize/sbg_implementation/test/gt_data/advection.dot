@@ -6,8 +6,7 @@ digraph G{
     eq_2 [label="{ eq_2 Dom: {{[2:1:20000]}} }"]
     
 eq_1 -> u [label="{ E_1 mapF: [({{[1:1:1]}}, [1 * x + 0])] mapU: [({{[1:1:1]}}, [1 * x + 0])] }", arrowhead="none"]
-    eq_1 -> u [label="{ E_2 mapF: [({{[2:1:2]}}, [1 * x -1])] mapU: [({{[2:1:2]}}, [1 * x -1])] }", arrowhead="none"]
-    eq_2 -> u [label="{ E_3 mapF: [({{[4:1:20002]}}, [1 * x -2])] mapU: [({{[4:1:20002]}}, [1 * x -2])] }", arrowhead="none"]
-    eq_2 -> u [label="{ E_4 mapF: [({{[20003:1:40001]}}, [1 * x -20001])] mapU: [({{[20003:1:40001]}}, [1 * x -20001])] }", arrowhead="none"]
+    eq_2 -> u [label="{ E_2 mapF: [({{[2:1:20000]}}, [1 * x -1])] mapU: [({{[2:1:20000]}}, [1 * x -1])] }", arrowhead="none"]
+    eq_2 -> u [label="{ E_3 mapF: [({{[20001:1:39999]}}, [1 * x -20000])] mapU: [({{[20001:1:39999]}}, [1 * x -19999])] }", arrowhead="none"]
     
 }

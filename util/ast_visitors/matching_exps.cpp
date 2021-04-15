@@ -96,17 +96,26 @@ bool MatchingExps::operator()(ForExp v) const { return false; }
 
 bool MatchingExps::operator()(Named v) const { return false; }
 
-bool MatchingExps::operator()(Output v) const { return false; }
+bool MatchingExps::operator()(Output v) const
+{
+  bool matched = false;
+  foreach_(OptExp out_exp, v.args()) {
+    if (out_exp) {
+      matched = matched || ApplyThis(out_exp.get());
+    }
+  }
+  return matched; 
+}
 
 bool MatchingExps::operator()(Reference v) const
 {
   if (get<0>(v.ref().front()) == _variable_name) {
-    _matched_exps.push_back(v);
+    _matched_exps.insert(v);
     return true;
   }
   return false;
 }
 
-std::list<Expression> MatchingExps::matchedExps() const { return _matched_exps; }
+set<Expression> MatchingExps::matchedExps() const { return _matched_exps; }
 
 }  // namespace Modelica

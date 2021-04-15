@@ -112,6 +112,16 @@ const char *typePrefix(Option<TypePrefix>);
   X C::Y() const { return Y##_; }    \
   void C::set_##Y(X x) { Y##_ = x; } \
   X &C::Y##_ref() { return Y##_; }
+#define order_by(X) bool operator<(const X &other) const;
+#define order_by_imp(X)                      \
+  bool X::operator<(const X &other) const    \
+  {                                          \
+    std::stringstream cmp_this;              \
+    std::stringstream cmp_other;             \
+    cmp_this << *this;                       \
+    cmp_other << other;                      \
+    return cmp_this.str() < cmp_other.str(); \
+  }                                            
 #define comparable(X) bool operator==(const X &other) const;
 #define printable(X) friend std::ostream &operator<<(std::ostream &out, const X &);
 #define INDENTSPACE 2
