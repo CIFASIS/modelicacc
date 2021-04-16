@@ -31,16 +31,18 @@ class MatchingGraphBuilder {
   protected:
   typedef std::pair<SBG::PWLMap, SBG::PWLMap> MatchingMaps;
 
-  SBG::Set buildSet(VarInfo variable, int offset);
-  SBG::Set buildSet(Equation eq, std::string eq_id, int offset);
+  SBG::Set buildSet(VarInfo variable, int offset, size_t max_dim);
+  SBG::Set buildSet(Equation eq, std::string eq_id, int offset, size_t max_dim);
   SBG::Set buildSet(SBG::MultiInterval variable);
   SBG::SetVertexDesc addVertex(std::string vertex_name, SBG::Set set, SBG::SBGraph& graph);
   void addEquation(Equation eq, std::string id, SBG::Set set, SBG::SBGraph& graph);
   Real getValue(Expression exp);
-  SBG::PWLMap buildPWLMap(SBG::OrdCT<SBG::NI2> constants, SBG::OrdCT<SBG::NI2> slopes, SBG::Set dom);
-  MatchingMaps generatePWLMaps(Expression exp, SBG::Set dom, SBG::Set unk_dom, int offset, std::string eq_id);
-  SBG::Set generateMapDom(SBG::Set dom, SBG::Set unk_dom, int offset);
-
+  SBG::PWLMap buildPWLMap(SBG::contNI2 constants, SBG::contNI2 slopes, SBG::Set dom);
+  MatchingMaps generatePWLMaps(Expression exp, SBG::Set dom, SBG::Set unk_dom, int offset, std::string eq_id, size_t max_dim);
+  SBG::Set generateMapDom(SBG::Set dom, SBG::Set unk_dom, int offset, size_t max_dim);
+  void addDims(size_t max_dim, size_t exp_dim, SBG::MultiInterval& intervals, int offset);
+  void addDims(size_t max_dim, size_t exp_dim, SBG::contNI2& constant, SBG::contNI2& slope);
+  
   private:
   typedef std::pair<SBG::SetVertexDesc, Equality> EquationDesc; 
   typedef std::map<std::string, int> Usage;
