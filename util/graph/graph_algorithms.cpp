@@ -153,6 +153,7 @@ UnordCT<Set> MatchingStruct::split(Set ftilde){
   return res;
 }
 
+
 MatchingStruct::MatchingStruct(SBGraph garg){
   g = garg; 
 
@@ -163,7 +164,7 @@ MatchingStruct::MatchingStruct(SBGraph garg){
     PWLMap fmap = (g[*ei_start]).es1_();
     PWLMap umap = (g[*ei_start]).es2_();
 
-    cout << fmap << " | " << umap << "\n";
+    //cout << fmap << " | " << umap << "\n";
 
     mapF = mapF.concat(fmap);
     mapU = mapU.concat(umap);
@@ -286,16 +287,16 @@ SetPath MatchingStruct::waspu(Set utilde){
     if(auxFi.size() > wmax){
       bool notinpath = true;
       BOOST_FOREACH(Set auxs, currentF){
-        if(auxs == auxFi){
+        if(auxs == vs){
           notinpath = false;
           break;
         }
       }
 
       if(notinpath){
-        currentF.insert(auxFi);
+        currentF.insert(vs);
         SetPath phat = waspf(auxFi);
-        currentF.erase(auxFi);
+        currentF.erase(vs);
 
         if(!phat.empty()){
           Set p1 = *(phat.begin());
@@ -311,10 +312,130 @@ SetPath MatchingStruct::waspu(Set utilde){
           }
         }
       }
+
+      else {
+        PWLMap minReach = minReachable();
+        cout << "minReach: " << minReach << "\n";
+      }
     }
   }
 
   return pmax;
+}
+
+PWLMap MatchingStruct::minRight(Set E)
+{
+  OrdCT<Set> minset;
+  OrdCT<Set>::iterator itset = minset.begin();
+  OrdCT<LMap> minlm;
+  OrdCT<LMap>::iterator itlm = minlm.begin();
+
+  EdgeIt ei_start, ei_end;
+  boost::tie(ei_start, ei_end) = edges(g);
+
+  for (; ei_start != ei_end; ++ei_start) {
+    SetEdge e = g[*ei_start];
+
+    PWLMap es1 = e.es1_();
+    OrdCT<Set> dome1 = es1.dom_();
+    OrdCT<LMap> lm1 = es1.lmap_();
+    OrdCT<LMap>::iterator itlm1 = lm1.begin();
+
+    PWLMap es2 = e.es2_();
+    OrdCT<LMap> lm2 = es2.lmap_();
+    OrdCT<LMap>::iterator itlm2 = lm2.begin();
+
+    // Traverse each left "sub-set-vertex"
+    BOOST_FOREACH (Set s1, dome1) {
+      Set e1matched = s1.cap(E);
+      Set s1matched = mapF.image(e1matched);
+
+      if (!s1matched.empty()) {
+        LMap lmaux = (*itlm1).invLMap();
+        LMap minrlm = (*itlm2).compose(lmaux);
+
+        itset = minset.insert(itset, s1matched);
+        itlm = minlm.insert(itlm, minrlm);
+
+        ++itset;
+        ++itlm;
+      }
+
+      ++itlm1;
+      ++itlm2;
+    }
+  }
+
+  return PWLMap(minset, minlm);
+}
+
+PWLMap MatchingStruct::minReachable()
+{
+  PWLMap rmap;
+
+  VertexIt vi_start, vi_end;
+  boost::tie(vi_start, vi_end) = vertices(g);
+  EdgeIt ei_start, ei_end;
+  boost::tie(ei_start, ei_end) = edges(g);
+
+  if(vi_start != vi_end /*&& ei_start != ei_end*/){
+    Set auxset1 = mapF.wholeDom();
+    Set auxset2 = mapU.wholeDom();
+    Set allVertices = auxset1.cup(auxset2);
+    Set En = allVertices.diff(matchedE);
+
+    Set edgesFdom = mapF.wholeDom();
+    Set edgesUdom = mapU.wholeDom(); 
+
+    Set F = mapF.image(edgesFdom);
+    Set U = mapU.image(edgesUdom);
+
+    Set Fm = mapF.image(matchedE);
+    Set Fn = F.diff(Fm);
+
+    PWLMap auxmap1 = minRight(matchedE);
+    Set auxset = U.cup(Fn);
+    PWLMap auxmap2(auxset);
+
+    rmap = auxmap1.concat(auxmap2);
+
+    Set lastIm;
+    auxset = rmap.wholeDom();
+    Set newIm = rmap.image(auxset);
+    Set diffIm = auxset;
+
+    while(!diffIm.empty()){
+      cout << rmap << "\n";
+      PWLMap unmatchedU = mapU.restrictMap(En);
+      PWLMap matchedU = mapU.restrictMap(matchedE);
+      PWLMap unmatchedF = mapF.restrictMap(En);
+      PWLMap matchedF = mapF.restrictMap(matchedE);
+
+      PWLMap URn = rmap.compPW(unmatchedU);
+      PWLMap URm = rmap.compPW(matchedU);
+      PWLMap FRn = rmap.compPW(unmatchedF);
+      PWLMap FRm = rmap.compPW(matchedF);
+
+      PWLMap rmap1 = minAdjMap(URn, FRn);
+      PWLMap rmap2 = minAdjMap(FRm, URm);
+      rmap1 = rmap1.combine(rmap);
+      rmap2 = rmap2.combine(rmap);
+
+      PWLMap newRes = minMap(rmap1, rmap2);
+ 
+      lastIm = newIm;
+      newIm = newRes.image(allVertices);
+      diffIm = lastIm.diff(newIm);
+
+      if(!diffIm.empty()){
+        rmap = newRes;
+        rmap = mapInf(rmap);
+        newIm = rmap.image(allVertices);
+      }
+    }
+  }
+
+  return rmap;
 }
 
 Set MatchingStruct::SBGMatching(){

@@ -1,3 +1,4 @@
+
 /*****************************************************************************
 
     This file is part of Modelica C Compiler.
@@ -50,6 +51,9 @@ struct MatchingStruct{
   Set SBGMatching();
 
   UnordCT<Set> split(Set ftilde);
+
+  PWLMap minRight(Set E);
+  PWLMap minReachable();
 
   SetPath waspf(Set ftilde);
   SetPath waspu(Set utilde);

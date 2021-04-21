@@ -186,7 +186,19 @@ ostream &operator<<(ostream &out, PWLMap &pw)
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 
-// This operations are implemented here to simplificate the implementation.
+// This operations are implemented here to simplify the implementation.
+
+PWLMap offsetPW(Set V, NI1 n)
+{
+  PWLMap res;
+
+  LMap lmres;
+  lmres.addGO(1.0, NI2(n));
+
+  res.addSetLM(V, lmres);
+
+  return res;
+}
 
 PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2)
 {

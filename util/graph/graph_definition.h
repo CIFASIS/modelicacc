@@ -155,6 +155,18 @@ struct IntervalImp1 {
     return false;
   }
 
+  IntervalImp1 offset(int off)
+  {
+    int newLo = lo + off;
+    int newHi = hi + off;
+
+    if (!empty)
+      return IntervalImp1(newLo, step, newHi);
+
+    else
+      return IntervalImp1(true);
+  }
+
   IntervalImp1 cap(IntervalImp1 &inter2)
   {
     int maxLo = max(lo, inter2.lo), newLo = -1;
@@ -323,6 +335,21 @@ struct MultiInterImp1 {
     }
 
     return true;
+  }
+
+  MultiInterImp1 offset(NumImp off)
+  {
+    CT1<IntervalImp> res;
+    IntImpIt itres = res.begin();
+
+    BOOST_FOREACH (IntervalImp i, inters) {
+      IntervalImp ioff = i.offset(off);
+
+      itres = res.insert(itres, ioff);
+      ++itres;
+    }
+
+    return MultiInterImp1(res);
   }
 
   MultiInterImp1 cap(MultiInterImp1 &mi2)
@@ -557,6 +584,12 @@ struct AtomSetImp1 {
 
   bool isIn(CT1<NumImp> elem) { return aset.isIn(elem); }
 
+  AtomSetImp1 offset(NumImp off)
+  {
+    AtomSetImp1 aux(aset.offset(off));
+    return aux;
+  }
+
   AtomSetImp1 cap(AtomSetImp1 &aset2)
   {
     AtomSetImp1 aux(aset.cap(aset2.aset));
@@ -714,6 +747,17 @@ struct SetImp1 {
 
       ++it;
     }
+  }
+
+  SetImp1 offset(NumImp off)
+  {
+    SetType res;
+
+    BOOST_FOREACH(ASetImp as, asets) {
+      res.insert(as.offset(off));
+    }
+
+    return SetImp1(res);
   }
 
   SetImp1 cap(SetImp1 &set2)
@@ -1677,6 +1721,8 @@ ostream &auxSetLMap(ostream &out, Set &s, LMap &lm);
 ostream &operator<<(ostream &out, PWLMap &pw);
 
 // Function declarations ---------------------------------------------------------------------------
+
+PWLMap offsetPW(Set V, NI1 n);
 
 PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2);
 PWLMap minPW(Set &dom, LMap &lm1, LMap &lm2);
