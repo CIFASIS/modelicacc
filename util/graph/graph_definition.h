@@ -1637,10 +1637,11 @@ struct PWLMapImp1 {
          if (!mutualDom.empty()) {
            SetImp im1 = image(mutualDom);
            SetImp im2 = pw2.image(mutualDom);
+           SetImp diffIm1 = im1.diff(im2);
+           SetImp diffIm2 = im2.diff(im1);
 
-           if (im1 == im2) {
+           if (diffIm1.empty() && diffIm2.empty()) 
              res = res.cup(mutualDom);
-           }
          }
        }
      }
