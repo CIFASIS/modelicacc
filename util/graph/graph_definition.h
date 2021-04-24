@@ -1000,6 +1000,28 @@ struct LMapImp1 {
     // WARNING("Gain should be positive");
   }
 
+  LMapImp1 offsetLM(int n)
+  {
+    CTNumIt olm = offset.begin();
+  
+    CTNum resg;
+    CTNumIt itresg = resg.begin();
+    CTNum reso;
+    CTNumIt itreso = reso.begin();
+  
+    BOOST_FOREACH (NumImp glm, gain) {
+      itresg = resg.insert(itresg, glm);
+      ++itresg;
+      itreso = reso.insert(itreso, *olm + n);
+      ++itreso;
+  
+      ++olm;
+    }
+  
+    return LMapImp1(resg, reso);
+  }
+
+
   LMapImp1 compose(LMapImp1 &lm2)
   {
     CTNum resg;
@@ -1322,6 +1344,20 @@ struct PWLMapImp1 {
     lmap = auxpw.lmap;
   }
 
+  PWLMapImp1 offsetImage(NumImp1 n)
+  {
+    CTLMap lmres;
+    CTLMapIt itlmres = lmres.begin();
+
+    BOOST_FOREACH (LMapImp lm, lmap) {
+      LMapImp auxlm = lm.offsetLM(n);
+      itlmres = lmres.insert(itlmres, lm.offsetLM(n));
+      ++itlmres;
+    }
+
+    return PWLMapImp1(dom, lmres);
+  }
+
   SetImp image(SetImp &s)
   {
     CTLMapIt itl = lmap.begin();
@@ -1588,6 +1624,28 @@ struct PWLMapImp1 {
 
     PWLMapImp1 res(sres, lres);
     return res;
+  }
+
+  SetImp sameImage(PWLMapImp1 &pw2) 
+  {
+     SetImp res;
+
+     BOOST_FOREACH (SetImp d1, dom) {
+       BOOST_FOREACH (SetImp d2, pw2.dom_()) {
+         SetImp mutualDom = d1.cap(d2);
+
+         if (!mutualDom.empty()) {
+           SetImp im1 = image(mutualDom);
+           SetImp im2 = pw2.image(mutualDom);
+
+           if (im1 == im2) {
+             res = res.cup(mutualDom);
+           }
+         }
+       }
+     }
+
+     return res;
   }
 
   PWLMapImp1 atomize()

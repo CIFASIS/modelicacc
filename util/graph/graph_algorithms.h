@@ -50,31 +50,14 @@ struct MatchingStruct{
 
   Set SBGMatching();
 
-  UnordCT<Set> split(Set ftilde);
-
-  PWLMap minRight(Set E);
+  PWLMap minLeft(Set E);
+  void swapMatched(PWLMap augmentingPaths);
   PWLMap minReachable();
-
-  SetPath waspf(Set ftilde);
-  SetPath waspu(Set utilde);
 
   SBGraph g;
 
   PWLMap mapF; // "Left" maps
   PWLMap mapU; // "Right" maps
 
-  int wmax; // Maximum augmenting path width found
-
-  UnordCT<Set> auxF; // Auxiliary set of left not matched set-vertices
-
-  Set matchedF;
-  Set matchedU;
-
-  UnordCT<Set> visitedU;
-
-  UnordCT<Set> currentF; // Set of set-vertices in current path
-
   Set matchedE; 
-
-  SetPath Pmax;
 };
