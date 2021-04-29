@@ -1350,7 +1350,6 @@ struct PWLMapImp1 {
     CTLMapIt itlmres = lmres.begin();
 
     BOOST_FOREACH (LMapImp lm, lmap) {
-      LMapImp auxlm = lm.offsetLM(n);
       itlmres = lmres.insert(itlmres, lm.offsetLM(n));
       ++itlmres;
     }
@@ -1589,6 +1588,38 @@ struct PWLMapImp1 {
     return res;
   }
 
+  CT2<SetImp> sameImage(PWLMapImp1 &pw2) 
+  {
+    CT2<SetImp> res;
+
+    SetImp dom1 = wholeDom();
+    SetImp dom2 = pw2.wholeDom();
+    SetImp newDom = dom1.cap(dom2);  
+
+    BOOST_FOREACH (ASetImp as, newDom.asets_()) {
+      SetImp sas;
+      sas.addAtomSet(as);
+
+      SetImp im1 = image(sas);
+      SetImp im2 = pw2.image(sas);
+      SetImp diff1 = im1.diff(im2);
+      SetImp diff2 = im2.diff(im1);
+
+      SetImp pre1 = preImage(im1);
+      SetImp pre2 = pw2.preImage(im2);
+
+      if (diff1.empty() && diff2.empty())
+        res.insert(pre1.cup(pre2));
+
+      SetImp pre = pre1.cup(pre2);
+      //cout << "sas: " << sas << "\n";
+      //cout << "im: " << im1 << ", " << im2 << "\n";
+      //cout << "pre: " << pre << "\n";
+    }
+
+    return res;
+  }
+
   PWLMapImp1 combine(PWLMapImp1 &pw2)
   {
     CTSet sres = dom;
@@ -1624,29 +1655,6 @@ struct PWLMapImp1 {
 
     PWLMapImp1 res(sres, lres);
     return res;
-  }
-
-  SetImp sameImage(PWLMapImp1 &pw2) 
-  {
-     SetImp res;
-
-     BOOST_FOREACH (SetImp d1, dom) {
-       BOOST_FOREACH (SetImp d2, pw2.dom_()) {
-         SetImp mutualDom = d1.cap(d2);
-
-         if (!mutualDom.empty()) {
-           SetImp im1 = image(mutualDom);
-           SetImp im2 = pw2.image(mutualDom);
-           SetImp diffIm1 = im1.diff(im2);
-           SetImp diffIm2 = im2.diff(im1);
-
-           if (diffIm1.empty() && diffIm2.empty()) 
-             res = res.cup(mutualDom);
-         }
-       }
-     }
-
-     return res;
   }
 
   PWLMapImp1 atomize()

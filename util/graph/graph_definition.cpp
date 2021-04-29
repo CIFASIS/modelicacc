@@ -446,7 +446,6 @@ PWLMap minInv(PWLMap &pw, Set &s)
       ++itlm;
     }
 
-    // cout << "pw2: " << pw2 << "\n";
     return pw2;
   }
 
@@ -641,6 +640,7 @@ PWLMap reduceMapN(PWLMap pw, int dim)
   return res;
 }
 
+// TODO: generalize mapInf with order of maxit
 PWLMap mapInf(PWLMap pw)
 {
   PWLMap res;
@@ -709,7 +709,9 @@ PWLMap mapInf(PWLMap pw)
     else
       maxit = floor(log2(maxit)) + 1;
 
-    for (int j = 0; j < maxit; ++j) res = res.compPW(res);
+    for (int j = 0; j < maxit; ++j) {
+      res = res.compPW(res);
+    }
   }
 
   return res;

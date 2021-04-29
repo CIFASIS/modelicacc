@@ -4,18 +4,18 @@ model rlc_loop
     Real IR2[N], IL[N], UC1[N], Ua[N], IR1[N], UC2[N];
     Real VR, IR;
 equation
-    L*der(IL[1]) = Vs - Ua[1]; // IL[1]
-    C2*der(UC2[N]) = IR2[N] - IR; // IR2[N]
+    L*der(IL[1]) = Vs - Ua[1];  
+    C2*der(UC2[N]) = IR2[N] - IR; 
     for i in 1:N loop
-        IR1[i] = (Ua[i] - UC1[i])/R1;
-        IR2[i] = (Ua[i] - UC2[i])/R2; // IR2[1:N-1] 
-        IL[i] = IR1[i] + IR2[i]; // IL[2:N]
+        IR1[i] = (Ua[i] - UC1[i])/R1; 
+        IR2[i] = (Ua[i] - UC2[i])/R2;  
+        IL[i] = IR1[i] + IR2[i];  
         C1*der(UC1[i]) = IR1[i];
     end for;
     for i in 1:N-1 loop
         C2*der(UC2[i]) = IR2[i] - IL[i+1];
-        L*der(IL[i+1]) = UC2[i]-Ua[i+1];
+        L*der(IL[i+1]) = UC2[i]-Ua[i+1]; 
     end for;
     VR = R*IR;
-    UC2[N] = VR;
+    UC2[N] = VR; 
 end rlc_loop;

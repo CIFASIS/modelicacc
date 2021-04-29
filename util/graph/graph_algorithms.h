@@ -50,14 +50,26 @@ struct MatchingStruct{
 
   Set SBGMatching();
 
-  PWLMap minLeft(Set E);
-  void swapMatched(PWLMap augmentingPaths);
-  PWLMap minReachable();
+  UnordCT<Set> split(Set ftilde);
+  Set widest();
 
+  void connectAlternating();
+  void swapMatched(Set unmatchedPart);
+  void minReachable();
+
+  private:
   SBGraph g;
 
   PWLMap mapF; // "Left" maps
   PWLMap mapU; // "Right" maps
 
+  Set allEdges;
+
   Set matchedE; 
+  Set unmatchedE; 
+
+  Set matchedF;
+  Set matchedU;
+
+  PWLMap rmap;
 };

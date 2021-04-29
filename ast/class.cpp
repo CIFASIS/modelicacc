@@ -193,6 +193,9 @@ Composition::Composition(
     : elements_(el), comp_elem_(comp_el)
 {
   if (ext) external_ = true;
+
+  else
+    external_ = false;
 }
 
 Name className(ClassType c)
