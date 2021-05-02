@@ -54,6 +54,9 @@ void MatchingGraphBuilder::addDims(size_t max_dim, size_t exp_dim, contNI2& cons
     for (size_t i = exp_dim; i < max_dim; i++) {
       constant_it = constant.insert(constant_it, 0);
       slope_it = slope.insert(slope_it, 0);
+
+      ++constant_it;
+      ++slope_it;
     }
   }
 }
@@ -199,12 +202,18 @@ MatchingGraphBuilder::MatchingMaps MatchingGraphBuilder::generatePWLMaps(Express
     constant_pwl_map_u_it = constant_pwl_map_u.insert(constant_pwl_map_u_it, map_first_value - set_vertex_offset);
     slope_pwl_map_u_it = slope_pwl_map_u.insert(slope_pwl_map_u_it, pwl_map_values.slope());
     min_elem++; 
+
+    ++constant_pwl_map_u_it;
+    ++slope_pwl_map_u_it;
   }
   if (indexes.empty()) { // Scalar variable.
     NI1 set_vertex_init = *min_elem -1;
     constant_pwl_map_u_it = constant_pwl_map_u.insert(constant_pwl_map_u_it, - map_offset + set_vertex_init);
     slope_pwl_map_u_it = slope_pwl_map_u.insert(slope_pwl_map_u_it, 1);
     addDims(max_dim, 1, constant_pwl_map_u, slope_pwl_map_u);
+
+    ++constant_pwl_map_u_it;
+    ++slope_pwl_map_u_it;
   } else { 
     addDims(max_dim, indexes.size(), constant_pwl_map_u, slope_pwl_map_u);
   }
@@ -212,6 +221,9 @@ MatchingGraphBuilder::MatchingMaps MatchingGraphBuilder::generatePWLMaps(Express
     NI1 set_vertex_init = init -1;
     constant_pwl_map_f_it = constant_pwl_map_f.insert(constant_pwl_map_f_it, -map_offset + set_vertex_init);
     slope_pwl_map_f_it = slope_pwl_map_f.insert(slope_pwl_map_f_it, 1);
+
+    ++constant_pwl_map_f_it;
+    ++slope_pwl_map_f_it;
   }
   addDims(max_dim, dom.minElem().size(), constant_pwl_map_f, slope_pwl_map_f);
   return make_pair(buildPWLMap(constant_pwl_map_f, slope_pwl_map_f, map_dom), buildPWLMap(constant_pwl_map_u, slope_pwl_map_u, map_dom));

@@ -1,5 +1,5 @@
 model advection2D
-  constant Integer N = 2;
+  constant Integer N = 3;
   parameter Real ax;
   parameter Real ay;
   parameter Real r;

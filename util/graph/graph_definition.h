@@ -1606,15 +1606,20 @@ struct PWLMapImp1 {
       SetImp diff2 = im2.diff(im1);
 
       SetImp pre1 = preImage(im1);
+      pre1 = pre1.cap(sas);
       SetImp pre2 = pw2.preImage(im2);
+      pre2 = pre2.cap(sas);
 
-      if (diff1.empty() && diff2.empty())
+      if (diff1.empty() && diff2.empty()) {
         res.insert(pre1.cup(pre2));
 
-      SetImp pre = pre1.cup(pre2);
-      //cout << "sas: " << sas << "\n";
-      //cout << "im: " << im1 << ", " << im2 << "\n";
-      //cout << "pre: " << pre << "\n";
+        /*
+        SetImp pre = pre1.cup(pre2);
+        cout << "sas: " << sas << "\n";
+        cout << "im: " << im1 << ", " << im2 << "\n";
+        cout << "pre: " << pre << "\n";
+        */
+      }
     }
 
     return res;

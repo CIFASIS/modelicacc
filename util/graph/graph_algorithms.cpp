@@ -205,6 +205,8 @@ Set MatchingStruct::widest()
   Set FIm = mapF.image(allEdges);
   Set unmatchedF = mapF.image(availableEdges);
 
+  PWLMap auxrmap = rmap.atomize();
+
   BOOST_FOREACH (SetVertexDesc vi, vertices(g)) {
     SetVertex v = g[vi];
     Set vs = v.vs_();
@@ -217,7 +219,6 @@ Set MatchingStruct::widest()
       if (!vs.empty()) {
         BOOST_FOREACH (Set part, split(vs)) {
           part = part.cap(availableEdges);
-
           int sz = part.size();
 
           if (sz > wmax) {
@@ -225,13 +226,22 @@ Set MatchingStruct::widest()
             wmax = sz;
           }
         }
- 
-        // Quit matching unknown from other equations
-        Set UIm = mapU.image(wide);
-        Set preU = mapU.preImage(UIm);
-        availableEdges = availableEdges.diff(preU);
 
-        res = res.cup(wide);
+        Set UIm = mapU.image(wide);
+
+        BOOST_FOREACH (Set dom, auxrmap.dom_()) {
+          Set domDiff = dom.diff(UIm);
+
+          if (!dom.empty() && domDiff.empty()) {
+            Set fpart = mapU.preImage(dom);
+            fpart = fpart.cap(wide);
+            res = res.cup(fpart);
+
+            // Quit matching unknown from other equations
+            Set preU = mapU.preImage(UIm);
+            availableEdges = availableEdges.diff(preU);
+          }
+        } 
       }
     }
   }
@@ -241,71 +251,70 @@ Set MatchingStruct::widest()
 
 void MatchingStruct::connectAlternating()
 {
-  Set connections;
-
-  BOOST_FOREACH (AtomSet as, unmatchedE.asets_()) {
+  BOOST_FOREACH (AtomSet as, matchedE.asets_()) {
     Set sas;
-    sas.addAtomSet(as);
+    sas.addAtomSet(as);  
 
-    Set matchedEF = mapF.image(sas);
-    matchedEF = matchedEF.cap(matchedF); 
-    Set matchedEU = mapU.image(sas);
-    matchedEU = matchedEU.cap(matchedU); 
+    Set matchedFas = mapF.image(sas);
+    Set connections = mapF.preImage(matchedFas);
+    connections = connections.cap(unmatchedE);
+    Set connectUIm = mapU.image(connections);
 
-    Set preF = mapF.preImage(matchedEF);
-    Set preU = mapU.preImage(matchedEU);
-    Set pre = preF.cap(preU);
-    pre = pre.cap(sas);
+    Set adjAlternate = mapU.image(connections);
+    adjAlternate = adjAlternate.cap(matchedU);
+    adjAlternate = adjAlternate.diff(connectUIm);
 
-    connections = connections.cup(pre);
-  } 
+    Set preAdjAlternate = mapU.preImage(adjAlternate);
+    connections = connections.cap(preAdjAlternate);
 
-  //cout << "conn: " << connections << "\n";
+    BOOST_FOREACH (AtomSet connect, connections.asets_()) {
+      Set connection;
+      connection.addAtomSet(connect);
 
-  PWLMap Frep = mapF.restrictMap(connections);
-  PWLMap connectFrep = rmap.compPW(Frep);
-  PWLMap Urep = mapU.restrictMap(connections);
-  PWLMap connectUrep = rmap.compPW(Urep);
+      PWLMap Frep = mapF.restrictMap(connection);
+      PWLMap connectFrep = rmap.compPW(Frep);
+      PWLMap Urep = mapU.restrictMap(connection);
+      PWLMap connectUrep = rmap.compPW(Urep);
 
-  PWLMap pw1 = minAdjMap(connectFrep, connectUrep);
-  PWLMap pw2 = minAdjMap(connectUrep, connectFrep);
-
-  pw1 = pw1.combine(rmap);
-  pw2 = pw2.combine(rmap);
-
-  PWLMap minpw = minMap(pw1, pw2);
-  rmap = minMap(rmap, minpw);
+      PWLMap pw = minAdjMap(connectFrep, connectUrep);
+      PWLMap auxrmap = pw.combine(rmap);
+      rmap = minMap(rmap, auxrmap);
+    }
+  }
 }
 
 void MatchingStruct::swapMatched(Set unmatchedPart) 
 {
   Set availableEdges = unmatchedPart.cup(matchedE);
-  //cout << "avail: " << availableEdges << "\n";
 
   PWLMap auxMapF = mapF.restrictMap(availableEdges);
   PWLMap auxMapU = mapU.restrictMap(availableEdges);
   PWLMap edgesFrep = rmap.compPW(mapF);
   PWLMap edgesUrep = rmap.compPW(mapU);
 
-  //cout << "\n";
-  //cout << "Frep: " << edgesFrep << "\n";
-  //cout << "Urep: " << edgesUrep << "\n";
-
   UnordCT<Set> edgesInPaths = edgesFrep.sameImage(edgesUrep);
 
-  //cout << "\n";
   BOOST_FOREACH (Set path, edgesInPaths) {
-    //cout << "path: " << path << "\n";
     path = path.cap(availableEdges);
-    //cout << "path: " << path << "\n";
     Set matchedEInPath = path.cap(matchedE);
     Set unmatchedEInPath = path.cap(unmatchedPart);
+    NI1 sz1 = matchedEInPath.asets_().size();
+    NI1 sz2 = unmatchedEInPath.asets_().size();
 
-    matchedE = matchedE.diff(matchedEInPath);
-    matchedE = matchedE.cup(unmatchedEInPath);
+    if (sz2 > sz1) {
+      matchedE = matchedE.diff(matchedEInPath);
+      matchedE = matchedE.cup(unmatchedEInPath);
 
-    matchedF = mapF.image(matchedE);
-    matchedU = mapU.image(matchedE);
+      matchedF = mapF.image(matchedE);
+      matchedU = mapU.image(matchedE);
+    }
+
+    else if (sz1 == 1 && sz2 == 1) {
+      matchedE = matchedE.cup(unmatchedEInPath);
+
+      matchedF = mapF.image(matchedE);
+      matchedU = mapU.image(matchedE);
+    }
   }
 }
 
@@ -331,12 +340,7 @@ void MatchingStruct::minReachable()
     Set diffU;
 
     do {
-      cout << "\n";
-      cout << "rmap before: " << rmap << "\n";
       Set unmatchedPart = widest();
-      cout << "matchedE: " << matchedE << "\n";
-      cout << "matchedU: " << matchedU << "\n";
-      //cout << "upart: " << unmatchedPart << "\n";
 
       PWLMap unmatchedMapU = mapU.restrictMap(unmatchedPart);
       PWLMap matchedMapU = mapU.restrictMap(matchedE);
@@ -368,7 +372,6 @@ void MatchingStruct::minReachable()
         connectAlternating();
 
         rmap = mapInf(rmap);
-        cout << "rmap after: " << rmap << "\n";
      
         lastMatched = matchedE;
         swapMatched(unmatchedPart);
@@ -390,7 +393,6 @@ void MatchingStruct::minReachable()
 
 Set MatchingStruct::SBGMatching()
 {
-  cout << "\n";
   BOOST_FOREACH (SetVertexDesc vi, vertices(g)) {
     SetVertex v = g[vi];
     Set vs = v.vs_();

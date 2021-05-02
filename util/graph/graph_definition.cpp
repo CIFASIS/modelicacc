@@ -704,14 +704,13 @@ PWLMap mapInf(PWLMap pw)
     }
 
     if (maxit == 0)
-      return res;
+      return res.compPW(res);
 
-    else
-      maxit = floor(log2(maxit)) + 1;
+    //else
+    //  maxit = floor(log2(maxit)) + 1;
 
-    for (int j = 0; j < maxit; ++j) {
+    for (int j = 0; j < maxit; ++j)
       res = res.compPW(res);
-    }
   }
 
   return res;
