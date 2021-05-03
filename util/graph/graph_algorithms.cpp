@@ -40,7 +40,8 @@
 
 // Connected components ---------------------------------------------------------------------------
 
-PWLMap connectedComponents(SBGraph g){
+PWLMap connectedComponents(SBGraph g)
+{
   PWLMap res;
 
   VertexIt vi_start, vi_end;
@@ -48,28 +49,27 @@ PWLMap connectedComponents(SBGraph g){
   EdgeIt ei_start, ei_end;
   boost::tie(ei_start, ei_end) = edges(g);
 
-  if(vi_start != vi_end /*&& ei_start != ei_end*/){
+  if (vi_start != vi_end /*&& ei_start != ei_end*/) {
     Set vss;
-    while(vi_start != vi_end){
+    while (vi_start != vi_end) {
       Set aux = (g[*vi_start]).vs_();
       vss = vss.cup(aux);
 
       ++vi_start;
     }
 
-    PWLMap auxres(vss); 
+    PWLMap auxres(vss);
     res = auxres;
 
-    if(ei_start == ei_end)
-      return res;
+    if (ei_start == ei_end) return res;
 
     PWLMap emap1 = (g[*ei_start]).es1_();
     PWLMap emap2 = (g[*ei_start]).es2_();
     ++ei_start;
 
-    while(ei_start != ei_end){
-      emap1 = (g[*ei_start]).es1_().combine(emap1); 
-      emap2 = (g[*ei_start]).es2_().combine(emap2); 
+    while (ei_start != ei_end) {
+      emap1 = (g[*ei_start]).es1_().combine(emap1);
+      emap2 = (g[*ei_start]).es2_().combine(emap2);
 
       ++ei_start;
     }
@@ -78,7 +78,7 @@ PWLMap connectedComponents(SBGraph g){
     Set newIm = vss;
     Set diffIm = vss;
 
-    while(!diffIm.empty()){
+    while (!diffIm.empty()) {
       PWLMap ermap1 = res.compPW(emap1);
       PWLMap ermap2 = res.compPW(emap2);
 
@@ -88,12 +88,12 @@ PWLMap connectedComponents(SBGraph g){
       rmap2 = rmap2.combine(res);
 
       PWLMap newRes = minMap(rmap1, rmap2);
- 
+
       lastIm = newIm;
       newIm = newRes.image(vss);
       diffIm = lastIm.diff(newIm);
 
-      if(!diffIm.empty()){
+      if (!diffIm.empty()) {
         res = newRes;
         res = mapInf(res);
         newIm = res.image(vss);
@@ -223,8 +223,8 @@ SetPath MatchingStruct::pathTo(Set var)
     if ((path_item % 2) == 1) {
       Set visited_node = wholeVertex(mapU.image(edge_set));
       if (visited_node.subseteq(whole_u)) {
-      break;
-  }
+        break;  
+      }
     }  
     ++path_item;
   }
@@ -248,7 +248,7 @@ UnordCT<Set> MatchingStruct::split(Set ftilde)
   // Find set-edges connected to the set-vertex
   OutEdgeIt ei_start, ei_end;
   boost::tie(ei_start, ei_end) = boost::out_edges(*vi_start, g);
- 
+
   Set aux = mapF.preImage(ftilde);
   for (; ei_start != ei_end; ++ei_start) {
     SetEdge e = g[*ei_start];
@@ -275,17 +275,16 @@ UnordCT<Set> MatchingStruct::split(Set ftilde)
   return res;
 }
 
-MatchingStruct::MatchingStruct(SBGraph garg){
-  g = garg; 
+MatchingStruct::MatchingStruct(SBGraph garg)
+{
+  g = garg;
 
   EdgeIt ei_start, ei_end;
   boost::tie(ei_start, ei_end) = edges(g);
 
-  for(; ei_start != ei_end; ++ei_start){
+  for (; ei_start != ei_end; ++ei_start) {
     PWLMap fmap = (g[*ei_start]).es1_();
     PWLMap umap = (g[*ei_start]).es2_();
-
-    cout << fmap << " | " << umap << "\n";
 
     mapF = mapF.concat(fmap);
     mapU = mapU.concat(umap);
@@ -299,11 +298,11 @@ MatchingStruct::MatchingStruct(SBGraph garg){
     Set im = fmap.image(wDom);
 
     Set scap = vs.cap(im);
-    if(!scap.empty()) // Edges are undirected, therefore source or target can be the left side
+    if (!scap.empty()) {  // Edges are undirected, therefore source or target can be the left side
       auxF.insert(vs);
-
-    else
+    } else {
       auxF.insert(ts);
+    }
   }
 
   wmax = 0;
@@ -329,18 +328,18 @@ SetPath MatchingStruct::waspf(Set ftilde)
   SetPath pmax;
 
   if (!ftilde.empty()) {
-    UnordCT<Set> etilde = split(ftilde); 
-
+    UnordCT<Set> etilde = split(ftilde);
+    
     SetPath widest_path_from_split;
     BOOST_FOREACH (Set eh, etilde) {
       Set uh = mapU.image(eh);
-      Set uhn = uh.diff(matchedU); 
+      Set uhn = uh.diff(matchedU);
 
       int sz = uhn.size();
       if (sz > wmax) {
         wmax = sz;
         widest_path_from_split.clear(); 
-
+        
 
         PWLMap mapUaux = mapU.restrictMap(eh);
         PWLMap auxinv = minInv(mapUaux, uhn);
@@ -355,7 +354,7 @@ SetPath MatchingStruct::waspf(Set ftilde)
 
     BOOST_FOREACH (Set eh, etilde) {
       Set uh = mapU.image(eh);
-      Set uhn = uh.diff(matchedU); 
+      Set uhn = uh.diff(matchedU);
       Set uhm = uh.cap(matchedU);
       bool completelyVisited = false;
       BOOST_FOREACH (Set svisited, visitedU) {
@@ -386,7 +385,7 @@ SetPath MatchingStruct::waspf(Set ftilde)
             Set p1 = *(phat.begin());
 
             if (p1.size() >= wmax) {
-              wmax = uhm.size(); 
+              wmax = uhm.size();
               Set imp1 = mapU.image(p1);
               PWLMap mapUaux = mapU.restrictMap(eh);
               PWLMap auxinv = minInv(mapUaux, imp1);
@@ -408,7 +407,7 @@ SetPath MatchingStruct::waspu(Set utilde)
   SetPath pmax;
 
   Set auxs1 = mapU.preImage(utilde);
-  Set auxs2 = auxs1.cap(matchedE); 
+  Set auxs2 = auxs1.cap(matchedE);
   Set Ftilde = mapF.image(auxs2);
 
   VertexIt vi_start, vi_end;
@@ -442,7 +441,7 @@ SetPath MatchingStruct::waspu(Set utilde)
             Set imp1 = mapF.image(p1);
             Set predom = mapF.preImage(imp1);
             Set matchedom = predom.cap(matchedE);
-            
+
             phat.insert(phat.begin(), matchedom);
             pmax = phat;
             updatePath(pmax);
@@ -501,7 +500,7 @@ Set MatchingStruct::SBGMatching()
         Set pn = *Pend;
         Set newUm = mapU.image(pn);
         Set Um = matchedU.cup(newUm);
-        matchedU = Um; 
+        matchedU = Um;
 
         int l = 1;
         BOOST_FOREACH (Set Pl, P) {
@@ -517,8 +516,8 @@ Set MatchingStruct::SBGMatching()
                 auxF.insert(fiDiff);
               } else {
                 auxF.erase(currentf);
-            } 
-          }
+              }
+            }
           } else {
             Set Em = matchedE.diff(Pl);
             matchedE = Em;
@@ -530,6 +529,6 @@ Set MatchingStruct::SBGMatching()
       }
     } while (!auxF.empty());
   }
-  
+
   return matchedE;
 }
