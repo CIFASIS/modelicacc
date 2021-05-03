@@ -455,23 +455,24 @@ SetPath MatchingStruct::waspu(Set utilde)
   return pmax;
 }
 
-Set MatchingStruct::SBGMatching(){
+Set MatchingStruct::SBGMatching()
+{
   VertexIt vi_start, vi_end;
   boost::tie(vi_start, vi_end) = vertices(g);
 
-  if(vi_start != vi_end){
+  if (vi_start != vi_end) {
     SetPath P;
     Set wholeF = mapF.wholeDom();
 
     UnordCT<Set> F = auxF;
 
-    do{
+    do {
       Set ftilde = *(auxF.begin());
       int maxcard = ftilde.size();
 
-      BOOST_FOREACH(Set auxFi, auxF){
+      BOOST_FOREACH (Set auxFi, auxF) {
         int cardi = auxFi.size();
-        if(cardi > maxcard){
+        if (cardi > maxcard) {
           maxcard = cardi;
           ftilde = auxFi;
         }
@@ -485,9 +486,11 @@ Set MatchingStruct::SBGMatching(){
       emptyUnordSet.insert(ftilde);
       currentF = emptyUnordSet;
 
+      SetPath emptyPath;
+      Pmax = emptyPath;
       P = waspf(ftilde);
 
-      if(!P.empty()){
+      if (!P.empty()) {
         Set p1 = *(P.begin());
         Set newFm = mapF.image(p1);
         Set Fm = matchedF.cup(newFm);
@@ -501,39 +504,31 @@ Set MatchingStruct::SBGMatching(){
         matchedU = Um; 
 
         int l = 1;
-        BOOST_FOREACH(Set Pl, P){
-          if((l % 2) == 1){
+        BOOST_FOREACH (Set Pl, P) {
+          if ((l % 2) == 1) {
             Set Em = matchedE.cup(Pl);
             matchedE = Em;
-
             Set currentf = mapF.image(Pl);
             UnordCT<Set> auxFaux = auxF;
-            BOOST_FOREACH(Set auxFi, auxFaux){
-              if(currentf.subset(auxFi)){
+            BOOST_FOREACH (Set auxFi, auxFaux) {
+              if (currentf.subset(auxFi)) {
                 auxF.erase(auxFi);
                 Set fiDiff = auxFi.diff(currentf);
                 auxF.insert(fiDiff);
-              }
-
-              else 
+              } else {
                 auxF.erase(currentf);
             } 
           }
-
-          else{
+          } else {
             Set Em = matchedE.diff(Pl);
             matchedE = Em;
           }
- 
           ++l;
         }
-      }
- 
-      else{
+      } else {
         auxF.erase(ftilde);
       }
-    }
-    while(!auxF.empty());
+    } while (!auxF.empty());
   }
   
   return matchedE;
