@@ -106,43 +106,165 @@ PWLMap connectedComponents(SBGraph g){
 
 // Matching ---------------------------------------------------------------------------------------
 
-UnordCT<Set> MatchingStruct::split(Set ftilde){
-  UnordCT<Set> res;
-
-  // Find the set-vertex where ftilde is included
+VertexIt MatchingStruct::findSetVertex(Set matched)
+{
+  // Find the set-vertex where matched subset is included
   VertexIt vi_start, vi_end;
   boost::tie(vi_start, vi_end) = vertices(g);
 
-  for(; vi_start != vi_end; ++vi_start){
+  for (; vi_start != vi_end; ++vi_start) {
     SetVertex v = g[*vi_start];
-
     Set vs = v.vs_();
-    Set inter = vs.cap(ftilde);
-    if(!inter.empty())
+    Set inter = vs.cap(matched);
+    if (!inter.empty()) {
+      return vi_start;
+    }
+  }
+  // A given subset should be included in one of the graph vertex, this should never happen.
+  assert(false);
+  return vi_start;
+}
+
+Set MatchingStruct::wholeVertex(Set matched_subset)
+{
+  Set whole_vertex;
+  // Find the set-vertex where the matched subset is included
+  VertexIt matched_vertex = findSetVertex(matched_subset);
+  SetVertex v = g[*matched_vertex];
+  return v.vs_();
+}
+
+Set MatchingStruct::wholeEdge(Set matched_subset)
+{
+  Set whole_edge_split;
+  // Find set-edges connected to the set-vertex
+  VertexIt vi_start, vi_end;
+  boost::tie(vi_start, vi_end) = vertices(g);
+
+  for (; vi_start != vi_end; ++vi_start) {
+    OutEdgeIt ei_start, ei_end;
+    boost::tie(ei_start, ei_end) = boost::out_edges(*vi_start, g);
+    for (; ei_start != ei_end; ++ei_start) {
+      SetEdge e = g[*ei_start];
+      PWLMap map_u = e.es2_();
+      OrdCT<Set> dom = map_u.dom_();
+
+      for (Set edge_dom : dom) {
+        Set inter = edge_dom.cap(matched_subset);
+        if (!inter.empty()) {
+          whole_edge_split = whole_edge_split.cup(edge_dom);
+        }
+      }
+      if (!whole_edge_split.empty()) {
+        return whole_edge_split;
+      }
+    }
+  }
+  return whole_edge_split;
+}
+
+Set MatchingStruct::matchedUVar(Set var)
+{
+  Set matched_u;
+  Set var_edges = mapU.preImage(var);
+  VertexIt matched_var = findSetVertex(var);
+
+  // Find set-edges connected to the set-vertex
+  OutEdgeIt ei_start, ei_end;
+  boost::tie(ei_start, ei_end) = boost::out_edges(*matched_var, g);
+  for (; ei_start != ei_end; ++ei_start) {
+    SetEdge e = g[*ei_start];
+    PWLMap map_u = e.es2_();
+    OrdCT<Set> map_u_dom = map_u.dom_();
+    for (Set edge_dom : map_u_dom) {
+      Set matched_dom_edges = edge_dom.cap(matchedE);
+      Set map_u_image = map_u.image(matched_dom_edges); 
+      matched_u = matched_u.cup(map_u_image);
+    }
+  }
+  return matched_u;
+}
+
+bool MatchingStruct::checkRecursion(Set candidate_u)
+{
+  int path_item = 1;
+  Set whole_u = wholeVertex(candidate_u);
+  for (Set edge_set : Pmax) {
+    if ((path_item % 2) == 1) {
+      Set visited_node = wholeVertex(mapU.image(edge_set));
+      if (visited_node.subseteq(whole_u)) {
+        return true;  
+      }
+    }  
+    ++path_item;
+  }
+  return false;
+}
+
+int MatchingStruct::pathWidth()
+{
+  return Pmax.front().size();
+}
+
+bool MatchingStruct::matchingLookAhead(Set matched_f, Set matched_u)
+{
+  Set possible_match = wholeEdge(matched_f); 
+  Set whole_matched_u = matchedUVar(wholeVertex(matched_u));
+  return (possible_match.size() + pathWidth()) > whole_matched_u.size();
+}
+
+SetPath MatchingStruct::pathTo(Set var)
+{
+  SetPath path_to;
+  int path_item = 1;
+  Set whole_u = wholeVertex(var);
+  for (Set edge_set : Pmax) {
+    path_to.insert(path_to.end(), edge_set);
+    if ((path_item % 2) == 1) {
+      Set visited_node = wholeVertex(mapU.image(edge_set));
+      if (visited_node.subseteq(whole_u)) {
       break;
   }
+    }  
+    ++path_item;
+  }
+  return path_to;
+}
+
+void MatchingStruct::updatePath(SetPath path)
+{
+  for(Set edges: path) {
+    Pmax.insert(Pmax.end(), edges);
+  }
+}
+
+UnordCT<Set> MatchingStruct::split(Set ftilde)
+{
+  UnordCT<Set> res;
+
+  // Find the set-vertex where ftilde is included
+  VertexIt vi_start = findSetVertex(ftilde);
 
   // Find set-edges connected to the set-vertex
   OutEdgeIt ei_start, ei_end;
   boost::tie(ei_start, ei_end) = boost::out_edges(*vi_start, g);
  
   Set aux = mapF.preImage(ftilde);
-  for(; ei_start != ei_end; ++ei_start){
+  for (; ei_start != ei_end; ++ei_start) {
     SetEdge e = g[*ei_start];
 
     PWLMap es2 = e.es2_();
     OrdCT<Set> dome2 = es2.dom_();
 
-    BOOST_FOREACH(Set d2, dome2){
+    BOOST_FOREACH (Set d2, dome2) {
       Set etildei = d2.diff(matchedE);
       Set etildej = etildei.cap(aux);
-      if(!etildej.empty())
-        res.insert(etildej);
+      if (!etildej.empty()) res.insert(etildej);
 
-      //int sze = etilde.size();
-      //int szf = ftilde.size();
+      // int sze = etilde.size();
+      // int szf = ftilde.size();
 
-      //if(sze != szf){
+      // if(sze != szf){
       //  std::cerr << "Assumption 1 not true\n";
       //  UnordCT<Set> emptyRes;
       //  return emptyRes;
