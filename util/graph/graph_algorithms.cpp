@@ -403,7 +403,8 @@ SetPath MatchingStruct::waspf(Set ftilde)
   return pmax;
 }
 
-SetPath MatchingStruct::waspu(Set utilde){
+SetPath MatchingStruct::waspu(Set utilde)
+{
   SetPath pmax;
 
   Set auxs1 = mapU.preImage(utilde);
@@ -413,30 +414,30 @@ SetPath MatchingStruct::waspu(Set utilde){
   VertexIt vi_start, vi_end;
   boost::tie(vi_start, vi_end) = vertices(g);
 
-  for(; vi_start != vi_end; ++vi_start){
+  for (; vi_start != vi_end; ++vi_start) {
     SetVertex v = g[*vi_start];
     Set vs = v.vs_();
 
     Set auxFi = vs.cap(Ftilde);
 
-    if(auxFi.size() > wmax){
+    if (auxFi.size() > wmax) {
       bool notinpath = true;
-      BOOST_FOREACH(Set auxs, currentF){
-        if(auxs == auxFi){
+      BOOST_FOREACH (Set auxs, currentF) {
+        if (auxs == auxFi) {
           notinpath = false;
           break;
         }
       }
 
-      if(notinpath){
+      if (notinpath) {
         currentF.insert(auxFi);
         SetPath phat = waspf(auxFi);
         currentF.erase(auxFi);
 
-        if(!phat.empty()){
+        if (!phat.empty()) {
           Set p1 = *(phat.begin());
           int sz = p1.size();
-          if(sz >= wmax){
+          if (sz >= wmax) {
             wmax = sz;
             Set imp1 = mapF.image(p1);
             Set predom = mapF.preImage(imp1);
@@ -444,6 +445,7 @@ SetPath MatchingStruct::waspu(Set utilde){
             
             phat.insert(phat.begin(), matchedom);
             pmax = phat;
+            updatePath(pmax);
           }
         }
       }
