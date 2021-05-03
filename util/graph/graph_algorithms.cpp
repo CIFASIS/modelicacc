@@ -324,53 +324,68 @@ MatchingStruct::MatchingStruct(SBGraph garg){
   Pmax = emptyPath;
 }
 
-SetPath MatchingStruct::waspf(Set ftilde){
+SetPath MatchingStruct::waspf(Set ftilde)
+{
   SetPath pmax;
 
-  if(!ftilde.empty()){
+  if (!ftilde.empty()) {
     UnordCT<Set> etilde = split(ftilde); 
 
-    BOOST_FOREACH(Set eh, etilde){
+    SetPath widest_path_from_split;
+    BOOST_FOREACH (Set eh, etilde) {
       Set uh = mapU.image(eh);
       Set uhn = uh.diff(matchedU); 
 
       int sz = uhn.size();
-      if(sz > wmax){
+      if (sz > wmax) {
         wmax = sz;
+        widest_path_from_split.clear(); 
 
-        SetPath auxp;
 
         PWLMap mapUaux = mapU.restrictMap(eh);
         PWLMap auxinv = minInv(mapUaux, uhn);
         Set auxinvim = auxinv.image(uhn);
 
-        auxp.insert(auxp.begin(), auxinvim); 
-        pmax = auxp;
-  
-        return pmax;
+        widest_path_from_split.insert(widest_path_from_split.begin(), auxinvim);
       }
     }
+    if (!widest_path_from_split.empty()) {
+      return widest_path_from_split;
+    }
 
-    BOOST_FOREACH(Set eh, etilde){
+    BOOST_FOREACH (Set eh, etilde) {
       Set uh = mapU.image(eh);
       Set uhn = uh.diff(matchedU); 
       Set uhm = uh.cap(matchedU);
-
       bool completelyVisited = false;
-      BOOST_FOREACH(Set svisited, visitedU){
-        if(uhm.subseteq(svisited))
-          completelyVisited = true;
+      BOOST_FOREACH (Set svisited, visitedU) {
+        if (uhm.subseteq(svisited)) completelyVisited = true;
       }
 
-      if(!completelyVisited){
-        if(uhm.size() > wmax){
+      if (!completelyVisited && uhm.size() > wmax) {
+        Pmax.insert(Pmax.end(), eh);
+        if (checkRecursion(uhm)) {
+          if (matchingLookAhead(ftilde, uhm)) {
+            Set whole_edge = wholeEdge(ftilde);
+            Set update_matching = matchedE.diff(whole_edge);
+            matchedE = update_matching;
+            PWLMap map_f = mapF.restrictMap(whole_edge);
+            Set matched_f = map_f.image(whole_edge);
+            auxF.insert(matched_f);
+            PWLMap map_u_var = mapU.restrictMap(whole_edge);
+            Set remove_matched_u = map_u_var.image(whole_edge);
+            Set update_matched_u = matchedU.diff(remove_matched_u);
+            matchedU = update_matched_u;
+            return pathTo(uhm); 
+          }
+        } else {
           visitedU.insert(uhm);
           SetPath phat = waspu(uhm);
 
-          if(!phat.empty()){
+          if (!phat.empty()) {
             Set p1 = *(phat.begin());
 
-            if(p1.size() >= wmax){
+            if (p1.size() >= wmax) {
               wmax = uhm.size(); 
               Set imp1 = mapU.image(p1);
               PWLMap mapUaux = mapU.restrictMap(eh);
@@ -385,7 +400,6 @@ SetPath MatchingStruct::waspf(Set ftilde){
       }
     }
   }
-
   return pmax;
 }
 
