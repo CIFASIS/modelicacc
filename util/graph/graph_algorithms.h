@@ -50,26 +50,28 @@ struct MatchingStruct{
 
   Set SBGMatching();
 
-  UnordCT<Set> split(Set ftilde);
-  Set widest();
-
-  void connectAlternating();
-  void swapMatched(Set unmatchedPart);
-  void minReachable();
+  void minReachable(Set E, PWLMap m_map, PWLMap map_D, PWLMap map_B);
+  //void recursion();
 
   private:
   SBGraph g;
+  Set F;
+  Set U;
+
+  Set allEdges;
+  Set allVertices;
 
   PWLMap mapF; // "Left" maps
   PWLMap mapU; // "Right" maps
+  PWLMap mapD; // Forward direction
+  PWLMap mapB; // Backward direction
 
-  Set allEdges;
-
+  Set matchedV;
   Set matchedE; 
-  Set unmatchedE; 
+  Set Ed;
 
-  Set matchedF;
-  Set matchedU;
+  PWLMap mmap;
 
-  PWLMap rmap;
+  PWLMap rmap; // Map of reachable vertices
+  //PWLMap smap; // Map of successors
 };

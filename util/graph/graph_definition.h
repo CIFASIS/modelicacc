@@ -230,6 +230,8 @@ struct IntervalImp1 {
   }
 
   int minElem() { return lo; }
+  
+  int maxElem() { return hi; }
 
   // Cardinality of interval
   int size()
@@ -489,6 +491,24 @@ struct MultiInterImp1 {
     return res;
   }
 
+  CT1<NumImp> maxElem()
+  {
+    CT1<NumImp> res;
+    typename CT1<NumImp>::iterator itres = res.begin();
+
+    BOOST_FOREACH (IntervalImp i, inters) {
+      if (i.empty_()) {
+        CT1<NumImp> aux;
+        return aux;
+      }
+
+      itres = res.insert(itres, i.maxElem());
+      ++itres;
+    }
+
+    return res;
+  }
+
   MultiInterImp1 replace(IntervalImp &i, int dim)
   {
     CT1<IntervalImp> auxRes;
@@ -621,6 +641,8 @@ struct AtomSetImp1 {
   AtomSetImp1 crossProd(AtomSetImp1 &aset2) { return AtomSetImp1(aset.crossProd(aset2.aset)); }
 
   CT1<NumImp> minElem() { return aset.minElem(); }
+
+  CT1<NumImp> maxElem() { return aset.maxElem(); }
 
   AtomSetImp1 replace(IntervalImp &i, int dim) { return AtomSetImp1(aset.replace(i, dim)); }
 
@@ -872,6 +894,21 @@ struct SetImp1 {
     return min.minElem();
   }
 
+  CT1<NumImp> maxElem()
+  {
+    CT1<NumImp> res;
+
+    if (empty()) return res;
+
+    ASetImp max = *(asets.begin());
+
+    BOOST_FOREACH (ASetImp as1, asets) {
+      if (max.minElem() < as1.aset_().maxElem()) max = as1;
+    }
+
+    return max.maxElem();
+  }
+
   int size()
   {
     int res = 0;
@@ -1082,6 +1119,35 @@ struct LMapImp1 {
       }
 
       ++ito1;
+    }
+
+    return LMapImp1(resg, reso);
+  }
+
+  LMapImp1 difflm(LMapImp1 &lm2) 
+  {
+    CTNum resg;
+    CTNumIt itresg = resg.begin();
+    CTNum reso;
+    CTNumIt itreso = reso.begin();
+
+    CTNum g2 = lm2.gain_();
+    CTNumIt itg2 = g2.begin();
+    CTNum o2 = lm2.off_();
+    CTNumIt ito2 = o2.begin();
+
+    BOOST_FOREACH (NumImp gi, gain) {
+      itresg = resg.insert(itresg, gi - *itg2);
+
+      ++itg2;
+      ++itresg;
+    }
+
+    BOOST_FOREACH (NumImp oi, offset) {
+      itreso = reso.insert(itreso, oi - *ito2);
+
+      ++ito2;
+      ++itreso;
     }
 
     return LMapImp1(resg, reso);
@@ -1313,7 +1379,7 @@ struct PWLMapImp1 {
 
     dom = d;
     lmap = lm;
-    ndim = 1;
+    ndim = s.ndim_();
   }
 
   CTSet dom_() { return dom; }
@@ -1588,43 +1654,6 @@ struct PWLMapImp1 {
     return res;
   }
 
-  CT2<SetImp> sameImage(PWLMapImp1 &pw2) 
-  {
-    CT2<SetImp> res;
-
-    SetImp dom1 = wholeDom();
-    SetImp dom2 = pw2.wholeDom();
-    SetImp newDom = dom1.cap(dom2);  
-
-    BOOST_FOREACH (ASetImp as, newDom.asets_()) {
-      SetImp sas;
-      sas.addAtomSet(as);
-
-      SetImp im1 = image(sas);
-      SetImp im2 = pw2.image(sas);
-      SetImp diff1 = im1.diff(im2);
-      SetImp diff2 = im2.diff(im1);
-
-      SetImp pre1 = preImage(im1);
-      pre1 = pre1.cap(sas);
-      SetImp pre2 = pw2.preImage(im2);
-      pre2 = pre2.cap(sas);
-
-      if (diff1.empty() && diff2.empty()) {
-        res.insert(pre1.cup(pre2));
-
-        /*
-        SetImp pre = pre1.cup(pre2);
-        cout << "sas: " << sas << "\n";
-        cout << "im: " << im1 << ", " << im2 << "\n";
-        cout << "pre: " << pre << "\n";
-        */
-      }
-    }
-
-    return res;
-  }
-
   PWLMapImp1 combine(PWLMapImp1 &pw2)
   {
     CTSet sres = dom;
@@ -1734,6 +1763,40 @@ struct PWLMapImp1 {
     return res;
   }
 
+  PWLMapImp1 diffMap(PWLMapImp1 &pw2) 
+  {
+    CTSet resdom;
+    CTSetIt itresdom = resdom.begin();
+    CTLMap reslm;
+    CTLMapIt itreslm = reslm.begin();
+
+    CTLMapIt itlm = lmap.begin();
+    CTLMap lm2 = pw2.lmap_();
+    CTLMapIt itlm2 = lm2.begin();
+
+    BOOST_FOREACH (SetImp si, dom) {
+      itlm2 = lm2.begin();
+
+      BOOST_FOREACH (SetImp si2, pw2.dom_()) {
+        SetImp capDom = si.cap(si2);
+
+        if (!capDom.empty()) {
+          itresdom = resdom.insert(itresdom, capDom);
+          itreslm = reslm.insert(itreslm, (*itlm).difflm(*itlm2));
+
+          ++itresdom;
+          ++itreslm;
+        }
+
+        ++itlm2;
+      }
+
+      ++itlm;
+    }
+
+    return PWLMapImp1(resdom, reslm);
+  }
+
   bool operator==(const PWLMapImp1 &other) const { return dom == other.dom && lmap == other.lmap; }
 };
 
@@ -1794,7 +1857,7 @@ ostream &operator<<(ostream &out, PWLMap &pw);
 
 // Function declarations ---------------------------------------------------------------------------
 
-PWLMap offsetPW(Set V, NI1 n);
+PWLMap offsetMap(OrdCT<NI1> &offElem, PWLMap &pw2);
 
 PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2);
 PWLMap minPW(Set &dom, LMap &lm1, LMap &lm2);
@@ -1803,10 +1866,11 @@ PWLMap minInv(PWLMap &pw, Set &s);
 
 PWLMap reduceMapN(PWLMap pw, int dim);
 
-PWLMap mapInf(PWLMap pw);
+PWLMap mapInf(PWLMap pw, NI2 (*f)(NI2));
 
-PWLMap minAdjCompMap(PWLMap pw2, PWLMap pw1);
+PWLMap minAdjCompMap(PWLMap pw3, PWLMap pw2, PWLMap pw1);
 
+PWLMap minAdjMap(PWLMap pw3, PWLMap pw2, PWLMap pw1);
 PWLMap minAdjMap(PWLMap pw2, PWLMap pw1);
 
 /*-----------------------------------------------------------------------------------------------*/
@@ -1840,6 +1904,8 @@ struct SetVertex {
   };
 
   Set vs_() { return vs; }
+
+  int id_() { return id; }
 
   bool operator==(const SetVertex &other) const { return id == other.id; }
 
