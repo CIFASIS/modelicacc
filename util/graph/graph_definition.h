@@ -222,7 +222,11 @@ struct IntervalImp1 {
   // Cardinality of interval
   int size()
   {
-    int res = (hi - lo) / step + 1;
+    int res = 0;
+
+    if (step != 0)
+      res = (hi - lo) / step + 1;
+
     return res;
   }
 
