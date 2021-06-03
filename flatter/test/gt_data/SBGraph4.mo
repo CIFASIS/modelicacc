@@ -14,17 +14,17 @@ Generated Connect Graph written to prueba.dot
 model Test
   Real N=100000;
   Real R_n_eff[2*N];
-  flow Real R_n_fl[2*N];
+  Real R_n_fl[2*N];
   Real R_p_eff[2*N];
-  flow Real R_p_fl[2*N];
+  Real R_p_fl[2*N];
   Real C1_n_eff[N];
-  flow Real C1_n_fl[N];
+  Real C1_n_fl[N];
   Real C1_p_eff[N];
-  flow Real C1_p_fl[N];
+  Real C1_p_fl[N];
   Real C2_n_eff[N];
-  flow Real C2_n_fl[N];
+  Real C2_n_fl[N];
   Real C2_p_eff[N];
-  flow Real C2_p_fl[N];
+  Real C2_p_fl[N];
 equation
   for i in 1:1:100000 loop
     C1_n_eff[i] = R_n_eff[2*i+0];
