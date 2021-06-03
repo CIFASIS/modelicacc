@@ -928,6 +928,19 @@ void Connectors::generateCode(PWLMap pw){
   }
   EquationSection eqres(false, oldeqs);
   mmoclass_.set_equations(eqres);
+
+  // Update flow variables and remove the prefix before generating code.
+  foreach_(Name nm, mmoclass_.variables()){
+    Option<VarInfo> ovi = mmoclass_.getVar(nm);
+    if(ovi){
+      VarInfo vi = *ovi;
+      Name ty = vi.type();
+      if(ty == "Real"){
+        vi.removePrefix(flow);
+        mmoclass_.addVar(nm, vi);
+      }
+    }
+  }
 }
 
 OrdCT<NI1> Connectors::getOff(MultiInterval mi){
