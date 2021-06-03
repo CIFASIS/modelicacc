@@ -18,21 +18,21 @@ model Test
   Real N=1000;
   Real M=1000;
   Real S_n_eff[1, 1];
-  flow Real S_n_fl[1, 1];
+  Real S_n_fl[1, 1];
   Real S_p_eff[1, 1];
-  flow Real S_p_fl[1, 1];
+  Real S_p_fl[1, 1];
   Real G_n_eff[1, 1];
-  flow Real G_n_fl[1, 1];
+  Real G_n_fl[1, 1];
   Real G_p_eff[1, 1];
-  flow Real G_p_fl[1, 1];
+  Real G_p_fl[1, 1];
   Real C_u_eff[N, M];
-  flow Real C_u_fl[N, M];
+  Real C_u_fl[N, M];
   Real C_d_eff[N, M];
-  flow Real C_d_fl[N, M];
+  Real C_d_fl[N, M];
   Real C_l_eff[N, M];
-  flow Real C_l_fl[N, M];
+  Real C_l_fl[N, M];
   Real C_r_eff[N, M];
-  flow Real C_r_fl[N, M];
+  Real C_r_fl[N, M];
 equation
   for i in 1:1:1,j in 1:1:1 loop
     G_p_eff = S_n_eff;
