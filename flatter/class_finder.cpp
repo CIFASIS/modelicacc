@@ -22,6 +22,7 @@
 #include <boost/variant/get.hpp>
 #include <iostream>
 #include <util/debug.h>
+#include <util/logger.h>
 
 using namespace std;
 using namespace Modelica;
@@ -63,7 +64,7 @@ void ClassFinder::expand(MMO_Class &up, MMO_Class &down)
         if (v.indices()) indexes += v.indices().get();
         if (indexes.size() > 0) v.set_indices(indexes);
         v.set_prefixes(v.prefixes() + get<0>(td));
-        //cout << "v2: " << v << "\n";
+        //LOG << "v2: " << v << "\n";
 
         if (is<Type::String>(t_final)) v.set_type("String");
         if (is<Type::Integer>(t_final)) v.set_type("Integer");
@@ -74,7 +75,7 @@ void ClassFinder::expand(MMO_Class &up, MMO_Class &down)
       }
 
     } else
-      std::cerr << "No encuentro la variable " << n << std::endl;
+      LOG << "No encuentro la variable " << n << std::endl;
   }
 
   foreach_(Import i, down.imports_ref()) up.imports_ref().push_back(i);
@@ -99,11 +100,11 @@ void ClassFinder::ExpandAll(MMO_Class &up)
         expand(up, d);
 
       } else {
-        std::cerr << "Error expandiendo. " << e.name() << " no es del tipo Class" << std::endl;
+        LOG << "Error expandiendo. " << e.name() << " no es del tipo Class" << std::endl;
         exit(-1);
       }
     } else {
-      std::cerr << "Error expandiendo. Clase no encontrada: " << e.name() << std::endl;
+      LOG << "Error expandiendo. Clase no encontrada: " << e.name() << std::endl;
       exit(-1);
     }
   }
@@ -190,7 +191,7 @@ OptTypeDefinition ClassFinder::resolveType(MMO_Class &c, Name t)
       index = get<2>(td);
       tpre = get<0>(td);
       if (!is<Type::Class>(t_final) && i != size && size > 1) {
-        std::cerr << "Error: " << t_final << " no es de tipo clase " << std::endl;
+        LOG << "Error: " << t_final << " no es de tipo clase " << std::endl;
         exit(-1);
         return OptTypeDefinition();
       } else if (is<Type::Class>(t_final)) {
@@ -199,7 +200,7 @@ OptTypeDefinition ClassFinder::resolveType(MMO_Class &c, Name t)
       }
       i++;
     } else {
-      std::cerr << "Error buscando el tipo " << name << " en " << t << std::endl;
+      LOG << "Error buscando el tipo " << name << " en " << t << std::endl;
       c.tyTable_ref().dump();
       exit(-1);
       return OptTypeDefinition();
@@ -262,7 +263,7 @@ void ClassFinder::applyArgument(MMO_Class &contex, MMO_Class &target, Argument m
         if (is<ModClass>(mm)) {
           ModClass mClass = boost::get<ModClass>(mm);
           if (is<ModAssign>(mToApply))
-            std::cout << "Modification incompatibles " << std::endl;
+            LOG << "Modification incompatibles " << std::endl;
           else if (is<ModEq>(mToApply)) {
             ModEq mEq = boost::get<ModEq>(mToApply);
             OptExp opEx = OptExp(mEq.exp());
@@ -294,7 +295,7 @@ void ClassFinder::applyArgument(MMO_Class &contex, MMO_Class &target, Argument m
       // target.syms_ref().erase(mod.name());
       target.syms_ref().insert(mod.name(), v);
     } else {
-      std::cout << "Error no encuentro variable: " << mod.name() << " en clase " << target.name() << std::endl;
+      LOG << "Error no encuentro variable: " << mod.name() << " en clase " << target.name() << std::endl;
       exit(-1);
     }
     return;
@@ -337,14 +338,14 @@ void ClassFinder::applyArgument(MMO_Class &contex, MMO_Class &target, Argument m
         // target.tyTable_ref().erase(shClass.name());
         target.tyTable_ref().insert(shClass.name(), tt);
       } else
-        std::cerr << "No se pudo definir el tipo" << std::endl;
+        LOG << "No se pudo definir el tipo" << std::endl;
     }
 
   } else if (is<Component1>(aux)) {  // Redeclare of Variables
     Component1 comp = boost::get<Component1>(aux);
     Option<VarInfo> opv = target.syms_ref()[comp.declaration().name()];
     if (!opv) {
-      std::cerr << "Variable no encontrada " << comp.declaration().name() << std::endl;
+      LOG << "Variable no encontrada " << comp.declaration().name() << std::endl;
       return;
     }
     VarInfo v = opv.get();
@@ -365,10 +366,10 @@ void ClassFinder::applyArgument(MMO_Class &contex, MMO_Class &target, Argument m
       v.set_indices(OptIndices);
       v.set_prefixes(preType);
       v.set_type(comp.type());
-      //cout << "v1: " << v << "\n";
+      //LOG << "v1: " << v << "\n";
       target.syms_ref().insert(comp.declaration().name(), v);
 
     } else
-      std::cerr << "No se pudo definir el tipo" << std::endl;
+      LOG << "No se pudo definir el tipo" << std::endl;
   }
 }

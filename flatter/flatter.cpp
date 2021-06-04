@@ -22,6 +22,7 @@
 #include <util/ast_visitors/partial_eval_expression.h>
 #include <boost/algorithm/string.hpp>
 #include <util/debug.h>
+#include <util/logger.h>
 
 #include <iostream>
 using namespace std;
@@ -93,7 +94,7 @@ void Flatter::Flat(MMO_Class &c, bool flatConnector, bool initial)
         c.variables_ref().push_back(n);
       }
     } else {
-      std::cerr << "No se pudo definir el tipo de la variable " << n << " en " << c.name() << std::endl;
+      LOG << "No se pudo definir el tipo de la variable " << n << " en " << c.name() << std::endl;
       exit(-1);
     }
   }

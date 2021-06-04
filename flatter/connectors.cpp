@@ -16,10 +16,10 @@
 #include <string>
 
 #include <flatter/connectors.h>
-
 #include <util/ast_visitors/contains_expression.h>
 #include <util/ast_visitors/eval_expression.h>
 #include <util/ast_visitors/eval_expression_flatter.h>
+#include <util/logger.h>
 
 using namespace std;
 using namespace Modelica;
@@ -56,7 +56,7 @@ void Connectors::debug(std::string filename){
   for(; vi != vi_end; ++vi){
     Name n = G[*vi].name;
     Set vs = G[*vi].vs_();
-    cout << n << ": " << vs << "\n";
+    LOG << n << ": " << vs << "\n";
   }
 
   EdgeIt ei, ei_end;
@@ -65,13 +65,13 @@ void Connectors::debug(std::string filename){
     Name n = G[*ei].name;
     PWLMap es1 = G[*ei].es1_();
     PWLMap es2 = G[*ei].es2_();
-    cout << n << ": " << es1 << ", " << es2 << "\n";
+    LOG << n << ": " << es1 << ", " << es2 << "\n";
   }
 
   GraphPrinter gp(G, -1);
 
   gp.printGraph(filename);
-  cout << "Generated Connect Graph written to " << filename << endl;
+  LOG << "Generated Connect Graph written to " << filename << endl;
 }
 
 /*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
@@ -105,13 +105,13 @@ void Connectors::solve(){
 
   EquationList eql;
 
-  //cout << "mmo:\n" << mmoclass_ << "\n\n";
+  //LOG << "mmo:\n" << mmoclass_ << "\n\n";
   bool ok = createGraph(mmoclass_.equations_ref().equations_ref());
   if(ok){
-    debug("prueba.dot");
+    debug(mmoclass_.name()+".dot");
 
     PWLMap res = connectedComponents(G);
-    cout << res << "\n\n";
+    LOG << res << "\n\n";
 
     foreach_(Name nm, mmoclass_.variables()){
       Option<VarInfo> ovi = mmoclass_.getVar(nm);
@@ -170,7 +170,7 @@ bool Connectors::createGraph(EquationList &eqs){
           ++itvars;
         }
         else 
-          cerr << "Should be defined\n";
+          LOG << "Should be defined\n";
       }
 
       EquationList el = feq.elements();
@@ -358,7 +358,7 @@ Pair<Name, ExpOptList> Connectors::separate(Expression e){
     if(is<Reference>(u.exp()))
       reference = boost::get<Reference>(u.exp());
     else
-      std::cerr << "ERROR: Deberia llegar una Reference" << std::endl;
+      LOG << "ERROR: Deberia llegar una Reference" << std::endl;
   } 
  
   else if (is<Reference>(e))
@@ -366,7 +366,7 @@ Pair<Name, ExpOptList> Connectors::separate(Expression e){
 
   Ref refs = reference.ref();
   if(refs.size() > 1) 
-    std::cerr << "ERROR: No deberia haber llamadas a miembros en connectors" << std::endl;
+    LOG << "ERROR: No deberia haber llamadas a miembros en connectors" << std::endl;
   RefTuple rf = refs.front();
   ExpOptList opti;
   if(get<1>(rf).size() > 0) 
@@ -510,7 +510,7 @@ bool Connectors::checkRanges(ExpOptList range1, ExpOptList range2){
       return true;
 
     else if(r1.size() != r2.size()){
-      cerr << "Unmatched dimensions in equation connect" << endl;
+      LOG << "Unmatched dimensions in equation connect" << endl;
       return false;
     }
 
@@ -528,7 +528,7 @@ bool Connectors::checkRanges(ExpOptList range1, ExpOptList range2){
 
           // This loop checks that there is only one variable at each subscript
           foreach_(Name n2, vars){
-            //cout << n1 << "; " << n2 << "; " << *it1 << "; " << *it2 << "\n";
+            //LOG << n1 << "; " << n2 << "; " << *it1 << "; " << *it2 << "\n";
             Reference r2(n2);
             Expression e2(r2);
             ContainsExpression co2(e2);
@@ -537,17 +537,17 @@ bool Connectors::checkRanges(ExpOptList range1, ExpOptList range2){
             bool cn22 = Apply(co2, *it2);
 
             if(((cn11 && cn12)) && (n1 != n2)){
-              cerr << "Only one variable permitted at subscript\n";
+              LOG << "Only one variable permitted at subscript\n";
               return false;
             }
 
             if(((cn21 && cn22)) && (n1 != n2)){
-              cerr << "Only one variable permitted at subscript\n";
+              LOG << "Only one variable permitted at subscript\n";
               return false;
             }
 
             if((cn11 && cn22) && (n1 != n2)){
-              cerr << "Arrays should use the same counter for the i-th dimension\n";
+              LOG << "Arrays should use the same counter for the i-th dimension\n";
               return false;
             }
           }
@@ -656,7 +656,7 @@ void Connectors::updateGraph(SetVertexDesc d1, SetVertexDesc d2,
       }
  
       else{ 
-        cerr << "Incompatible connect\n"; 
+        LOG << "Incompatible connect\n"; 
         newec = eCount1_;
         break;
       }
@@ -696,7 +696,7 @@ void Connectors::updateGraph(SetVertexDesc d1, SetVertexDesc d2,
   }
 
   else
-    cerr << "Incompatible connect\n";
+    LOG << "Incompatible connect\n";
 }
 
 void Connectors::generateCode(PWLMap pw){
