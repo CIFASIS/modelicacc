@@ -1030,6 +1030,32 @@ vector<Pair<Name, Name>> Connectors::getVars(vector<Name> vs, Set sauxi){
   return vars;
 }
 
+Expression Connectors::getSlopeExp(NI2 slope, Expression var)
+{
+  if (slope == 1) {
+    return var;
+  } else if (slope == 0) {
+    return Expression(0);
+  }
+  BinOp mult_op(slope, Mult, var);
+  return Expression(mult_op);
+}
+
+Expression Connectors::getLinearExp(Expression slope, NI2 constant)
+{
+  if (constant == 0) {
+    return slope;
+  }
+  if (constant < 0) {
+    Expression h(-1*constant);
+    return Expression(BinOp(slope, Sub, h));
+  } else {
+    Expression h(constant);
+    return Expression(BinOp(slope, Add, h));
+  }
+  return Expression();
+}
+
 Pair<ExpList, bool> Connectors::transMulti(MultiInterval mi1, MultiInterval mi2, 
                                            ExpList nms, bool forFlow){
   ExpList res;
@@ -1060,11 +1086,7 @@ Pair<ExpList, bool> Connectors::transMulti(MultiInterval mi1, MultiInterval mi2,
         m3 = (NI2) (*itmi2).step_() / i1.step_();
         h3 = (-m3) * i1.lo_() + (*itmi2).lo_();
 
-        BinOp multaux(m3, Mult, x);
-        Expression mult(multaux);
-        Expression h(h3);
-        BinOp linearaux(mult, Add, h);
-        Expression linear(linearaux);
+        Expression linear = getLinearExp(getSlopeExp(m3,x), h3);
 
         itres = res.insert(itres, linear);
         ++itres;

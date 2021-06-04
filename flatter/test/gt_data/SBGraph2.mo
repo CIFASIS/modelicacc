@@ -46,27 +46,27 @@ equation
     C_n_eff[i] = S_n_eff;
   end for;
   for i in 1:1:1 loop
-    S_n_fl+sum(C_n_fl[2:1:999])+C_n_fl[1*i+999]+C_n_fl[1*i+0]+G_p_fl = 0;
+    S_n_fl+sum(C_n_fl[2:1:999])+C_n_fl[i+999]+C_n_fl[i]+G_p_fl = 0;
   end for;
   for i in 1000:1:1000 loop
-    C_p_eff[i] = R_n_eff[1*i+0];
+    C_p_eff[i] = R_n_eff[i];
   end for;
   for i in 1000:1:1000 loop
-    C_p_fl[1*i+0]+R_n_fl[1*i+0] = 0;
+    C_p_fl[i]+R_n_fl[i] = 0;
   end for;
   for i in 1:1:999 loop
-    C_p_eff[i] = R_p_eff[1*i+1];
+    C_p_eff[i] = R_p_eff[i+1];
   end for;
   for i in 1:1:999 loop
-    R_n_eff[i] = R_p_eff[1*i+1];
+    R_n_eff[i] = R_p_eff[i+1];
   end for;
   for i in 2:1:1000 loop
-    R_n_fl[1*i+-1]+R_p_fl[1*i+0]+C_p_fl[1*i+-1] = 0;
+    R_n_fl[i-1]+R_p_fl[i]+C_p_fl[i-1] = 0;
   end for;
   for i in 1:1:1 loop
     R_p_eff[i] = S_p_eff;
   end for;
   for i in 1:1:1 loop
-    S_p_fl+R_p_fl[1*i+0] = 0;
+    S_p_fl+R_p_fl[i] = 0;
   end for;
 end Test;
