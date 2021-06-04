@@ -3,7 +3,7 @@
 MODEL=$1
 GT_MODEL="./gt_data/"${MODEL}
 TEST_MODEL="./test_data/"${MODEL}
-TEST_FILES=".mo"
+TEST_FILES=".mo .dot"
 
 test_results () 
 {
