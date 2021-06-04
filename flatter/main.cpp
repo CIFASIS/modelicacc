@@ -123,11 +123,10 @@ int main(int argc, char** argv)
           co.debug(str_class_name+".dot");
         } else {
           co.debug("flatter.dot");
-        }
-      } 
-
-      co.debug(filename);
-
+        }      
+      } else {
+        co.debug(filename);
+      }
       LOG << "Execution time: " << exect << "\n";
       LOG << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
     }
