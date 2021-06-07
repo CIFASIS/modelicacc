@@ -1,0 +1,19 @@
+digraph G{
+    ratio="fill"
+    node[shape="ellipse"]
+    S_p [label="{ S_p Dom: {{[1:1:1]}} }"]
+    R_p [label="{ R_p Dom: {{[2:1:1001]}} }"]
+    S_n [label="{ S_n Dom: {{[1002:1:1002]}} }"]
+    G_p [label="{ G_p Dom: {{[1003:1:1003]}} }"]
+    R_n [label="{ R_n Dom: {{[1004:1:2003]}} }"]
+    C_p [label="{ C_p Dom: {{[2004:1:3003]}} }"]
+    C_n [label="{ C_n Dom: {{[3004:1:4003]}} }"]
+    
+S_p -> R_p [label="{ E0 mapF: [({{[1:1:1]}}, [0 * x + 1])] mapU: [({{[1:1:1]}}, [0 * x + 2])] }", arrowhead="none"]
+    S_n -> G_p [label="{ E1 mapF: [({{[2:1:2]}}, [0 * x + 1002])] mapU: [({{[2:1:2]}}, [0 * x + 1003])] }", arrowhead="none"]
+    R_n -> R_p [label="{ E2 mapF: [({{[3:1:1001]}}, [1 * x + 1001])] mapU: [({{[3:1:1001]}}, [1 * x + 0])] }", arrowhead="none"]
+    C_p -> R_n [label="{ E3 mapF: [({{[1002:1:2001]}}, [1 * x + 1002])] mapU: [({{[1002:1:2001]}}, [1 * x + 2])] }", arrowhead="none"]
+    C_n -> G_p [label="{ E4 mapF: [({{[2002:1:3001]}}, [1 * x + 1002])] mapU: [({{[2002:1:3001]}}, [0 * x + 1003])] }", arrowhead="none"]
+    C_n -> C_n [label="{ E5 mapF: [({{[3002:1:4000]}}, [1 * x + 2])] mapU: [({{[3002:1:4000]}}, [1 * x + 3])] }", arrowhead="none"]
+    
+}

@@ -74,6 +74,10 @@ class Connectors {
   EquationList simplifyCode(EquationList &eql);
   // ExpList lmToExpList(LMap lm, ExpList vs);
 
+  protected:
+  Expression getSlopeExp(NI2 slope, Expression var);
+  Expression getLinearExp(Expression slope, NI2 constant);
+
   private:
   SBGraph G;
   member_(vector<NI1>, vCount);

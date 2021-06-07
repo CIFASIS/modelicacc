@@ -54,6 +54,24 @@ struct MatchingStruct{
   SetPath waspf(Set ftilde);
   SetPath waspu(Set utilde);
 
+  Set wholeVertex(Set matched_subset);
+
+  Set wholeEdge(Set matched_subset);
+
+  Set matchedUVar(Set var);
+
+  bool checkRecursion(Set candidate_u);
+
+  bool matchingLookAhead(Set matched_f, Set matched_u);
+
+  VertexIt findSetVertex(Set matched);
+
+  int pathWidth();
+
+  SetPath pathTo(Set var);
+
+  void updatePath(SetPath path);
+
   SBGraph g;
 
   PWLMap mapF; // "Left" maps
