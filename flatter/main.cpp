@@ -94,6 +94,7 @@ int main(int argc, char** argv)
     }
 
     f.Flat(mmo, false, true);
+    f.removeConnectorVar(mmo);
     if (debug) {
       std::cerr << "First Flatter: " << endl;
       std::cerr << mmo << std::endl;
@@ -119,8 +120,6 @@ int main(int argc, char** argv)
       std::cout << "Execution time: " << exect << "\n";
       std::cerr << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
     }
-
-    f.removeConnectorVar(mmo);
   }
 
   else

@@ -186,9 +186,11 @@ Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs){
       if(!ok)
         break;
 
-      ForEq forrec(feq.range().indexes(), get<1>(rec));
-      itNotConn = notConnect.insert(itNotConn, forrec);
-      ++itNotConn;
+      if (!get<1>(rec).empty()) {
+        ForEq forrec(feq.range().indexes(), get<1>(rec));
+        itNotConn = notConnect.insert(itNotConn, forrec);
+        ++itNotConn;
+      }
 
       foreach_(Name auxnm, auxvars){
         mmoclass_.rmVar(auxnm);
@@ -540,7 +542,6 @@ bool Connectors::checkRanges(ExpOptList range1, ExpOptList range2){
 
           // This loop checks that there is only one variable at each subscript
           foreach_(Name n2, vars){
-            //cout << n1 << "; " << n2 << "; " << *it1 << "; " << *it2 << "\n";
             Reference r2(n2);
             Expression e2(r2);
             ContainsExpression co2(e2);
@@ -793,8 +794,8 @@ void Connectors::generateCode(PWLMap pw){
             else
               ERROR("Should be a vertex");
 
-            if(mivar1.size() != 1)
-              auxnms1 = nms;
+            auxnms1 = nms;
+
 
             Reference ref1(get<0>(*itv1) + get<1>(*itv1), auxnms1); // Left of equality
             Expression l(ref1);
@@ -810,8 +811,8 @@ void Connectors::generateCode(PWLMap pw){
             else
               ERROR("Should be a vertex");
 
-            if(mivar2.size() != 1)
-              auxnms2 = inds1;
+            auxnms2 = inds1;
+
 
             Reference ref2(get<0>(*itv2) + get<1>(*itv2), auxnms2);
             Expression r(ref2);
@@ -883,8 +884,7 @@ void Connectors::generateCode(PWLMap pw){
         else
           ERROR("Should be a vertex");
 
-        if(mivar3.size() != 1)
-           auxnms3 = inds2;
+        auxnms3 = inds2;
 
         if(get<1>(tm2)){
           RefTuple rt(get<0>(*itv3) + get<1>(*itv3), auxnms3);
@@ -995,6 +995,8 @@ bool Connectors::isFlowVar(Name n){
   return false;
 }
 
+// Find the name of the variables represented by vertices of sauxi, that
+// belong to vs too
 vector<Pair<Name, Name>> Connectors::getVars(vector<Name> vs, Set sauxi){
   VertexIt vi, vi_end;
   boost::tie(vi, vi_end) = boost::vertices(G);
@@ -1007,7 +1009,7 @@ vector<Pair<Name, Name>> Connectors::getVars(vector<Name> vs, Set sauxi){
 
     if(!(v.cap(sauxi)).empty()){
       foreach_(Name n, vs){
-        if(n.length() == nm.length()){
+        if(n == nm){
           Name suffix;
           Pair<Name, Name> p(nm, suffix);
           itvars = vars.insert(itvars, p);

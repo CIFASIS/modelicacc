@@ -53,7 +53,8 @@ void Remove_Composition::LevelUp(MMO_Class &up, MMO_Class &down, Name nUp, VarIn
         if (is<ModEq>(mod)) {
           // get<ModEq>(mod).exp_ref() = Call("fill",ExpList(2,get<ModEq>(mod).exp(),iexp.front()));
           ExpList args(1, get<ModEq>(mod).exp());
-          args.push_back(iexp.front());
+          BOOST_FOREACH (Expression e, iexp)
+            args.push_back(e);
           get<ModEq>(mod).exp_ref() = Call("fill", args);
         } else if (is<ModClass>(mod)) {
           ModClass &mc = get<ModClass>(mod);
