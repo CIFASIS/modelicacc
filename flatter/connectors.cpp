@@ -186,9 +186,11 @@ Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs){
       if(!ok)
         break;
 
-      ForEq forrec(feq.range().indexes(), get<1>(rec));
-      itNotConn = notConnect.insert(itNotConn, forrec);
-      ++itNotConn;
+      if (!get<1>(rec).empty()) {
+        ForEq forrec(feq.range().indexes(), get<1>(rec));
+        itNotConn = notConnect.insert(itNotConn, forrec);
+        ++itNotConn;
+      }
 
       foreach_(Name auxnm, auxvars){
         mmoclass_.rmVar(auxnm);
