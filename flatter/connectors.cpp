@@ -84,7 +84,7 @@ EquationList eqlinit;
 EquationList Connectors::oldeqs = eqlinit;
 EquationList::iterator Connectors::itold = oldeqs.begin();
 
-void Connectors::solve(){
+void Connectors::solve(bool deb){
   int maxdim = 1;
   foreach_(Name n, mmoclass_.variables()){
     Option<VarInfo> ovi = mmoclass_.getVar(n);
@@ -106,9 +106,13 @@ void Connectors::solve(){
   EquationList eql;
 
   //LOG << "mmo:\n" << mmoclass_ << "\n\n";
-  bool ok = createGraph(mmoclass_.equations_ref().equations_ref());
-  if(ok){
-    debug(mmoclass_.name()+".dot");
+  Pair<bool, EquationList> gr = createGraph(mmoclass_.equations_ref().equations_ref());
+  if(get<0>(gr)){
+    oldeqs = get<1>(gr);
+    itold = oldeqs.end();
+
+    if (deb)
+      debug(mmoclass_.name()+".dot");
 
     PWLMap res = connectedComponents(G);
     LOG << res << "\n\n";
@@ -138,7 +142,9 @@ void Connectors::solve(){
   }
 }
 
-bool Connectors::createGraph(EquationList &eqs){
+Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs){
+  EquationList notConnect;
+  EquationList::iterator itNotConn = notConnect.begin();
   bool ok = true;
 
   BOOST_FOREACH(Equation eq, eqs){
@@ -174,23 +180,31 @@ bool Connectors::createGraph(EquationList &eqs){
       }
 
       EquationList el = feq.elements();
-      ok = createGraph(el);
+      Pair<bool, EquationList> rec = createGraph(el);
+      ok = get<0>(rec);
 
       if(!ok)
         break;
+
+      if (!get<1>(rec).empty()) {
+        ForEq forrec(feq.range().indexes(), get<1>(rec));
+        itNotConn = notConnect.insert(itNotConn, forrec);
+        ++itNotConn;
+      }
 
       foreach_(Name auxnm, auxvars){
         mmoclass_.rmVar(auxnm);
       }
     }
 
-    else{
-      itold = oldeqs.insert(itold, eq);
-      ++itold;
+    else {
+      itNotConn = notConnect.insert(itNotConn, eq);
+      ++itNotConn;
     }
   }
 
-  return ok;
+  Pair<bool, EquationList> res(ok, notConnect);
+  return res;
 }
 
 bool Connectors::connect(Connect co){
@@ -817,7 +831,7 @@ void Connectors::generateCode(PWLMap pw){
         }
       }
     }
- 
+
     // Flow vars
     IndexList ran2; 
     IndexList::iterator itran2 = ran2.begin();
