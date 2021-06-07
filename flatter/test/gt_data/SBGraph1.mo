@@ -18,13 +18,13 @@ model SBGraph1
   Real C_p_fl[N];
 equation
   for i in 1:1:1 loop
-    G_p_eff = S_n_eff;
+    G_p_eff[i] = S_n_eff[i];
   end for;
   for i in 1:1:1000 loop
-    C_n_eff[i] = S_n_eff;
+    C_n_eff[i] = S_n_eff[1];
   end for;
   for i in 1:1:1 loop
-    S_n_fl+sum(C_n_fl[1:1:1000])+G_p_fl = 0;
+    S_n_fl[i]+sum(C_n_fl[1:1:1000])+G_p_fl[i] = 0;
   end for;
   for i in 1000:1:1000 loop
     C_p_eff[i] = R_n_eff[i];
@@ -42,9 +42,9 @@ equation
     R_n_fl[i-1]+R_p_fl[i]+C_p_fl[i-1] = 0;
   end for;
   for i in 1:1:1 loop
-    R_p_eff[i] = S_p_eff;
+    R_p_eff[i] = S_p_eff[i];
   end for;
   for i in 1:1:1 loop
-    S_p_fl+R_p_fl[i] = 0;
+    S_p_fl[i]+R_p_fl[i] = 0;
   end for;
 end SBGraph1;
