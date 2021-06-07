@@ -1,38 +1,22 @@
-S_n: {{[1:1:1]x[1:1:1]}}
-G_p: {{[2:1:2]x[2:1:2]}}
-C_l: {{[3:1:1002]x[3:1:1002]}}
-C_r: {{[1003:1:2002]x[1003:1:2002]}}
-S_p: {{[2003:1:2003]x[2003:1:2003]}}
-C_u: {{[2004:1:3003]x[2004:1:3003]}}
-C_d: {{[3004:1:4003]x[3004:1:4003]}}
-E0: [({{[1:1:1]x[1:1:1]}}, [0 * x + 1, 0 * x + 1])], [({{[1:1:1]x[1:1:1]}}, [0 * x + 2, 0 * x + 2])]
-E1: [({{[2:1:1001]x[2:1:1000]}}, [1 * x + 1, 1 * x + 2])], [({{[2:1:1001]x[2:1:1000]}}, [1 * x + 1001, 1 * x + 1001])]
-E2: [({{[1002:1:1002]x[1001:1:2000]}}, [0 * x + 2003, 0 * x + 2003])], [({{[1002:1:1002]x[1001:1:2000]}}, [0 * x + 2004, 1 * x + 1003])]
-E3: [({{[1003:1:1003]x[2001:1:3000]}}, [0 * x + 4003, 1 * x + 1003])], [({{[1003:1:1003]x[2001:1:3000]}}, [0 * x + 2, 0 * x + 2])]
-E4: [({{[1004:1:2002]x[3001:1:4000]}}, [1 * x + 1001, 1 * x -997])], [({{[1004:1:2002]x[3001:1:4000]}}, [1 * x + 2000, 1 * x + 3])]
-E5: [({{[2003:1:3002]x[4001:1:4001]}}, [1 * x -2000, 0 * x + 3])], [({{[2003:1:3002]x[4001:1:4001]}}, [1 * x -1000, 0 * x + 2002])]
-Generated Connect Graph written to prueba.dot
-[({{[1003:1:2002]x[2002:1:2002]}}, [1 * x -1000, 0 * x + 3]) , ({{[3:1:1002]x[3:1:3]}}, [1 * x + 0, 1 * x + 0]), ({{[3004:1:4002]x[3004:1:4003]}}, [1 * x -999, 1 * x -1000]), ({{[2005:1:3003]x[2004:1:3003]}}, [1 * x + 0, 1 * x + 0]), ({{[2004:1:2004]x[2004:1:3003]}}, [0 * x + 2003, 0 * x + 2003]), ({{[2003:1:2003]x[2003:1:2003]}}, [1 * x + 0, 1 * x + 0]), ({{[1003:1:2002]x[1003:1:2001]}}, [1 * x -1000, 1 * x -999]), ({{[3:1:1002]x[4:1:1002]}}, [1 * x + 0, 1 * x + 0]), ({{[4003:1:4003]x[3004:1:4003]}}, [0 * x + 1, 0 * x + 1]), ({{[2:1:2]x[2:1:2]}}, [0 * x + 1, 0 * x + 1]), ({{[1:1:1]x[1:1:1]}}, [1 * x + 0, 1 * x + 0])]
-
-model Test
+model SBGraph3
   Real N=1000;
   Real M=1000;
   Real S_n_eff[1, 1];
-  flow Real S_n_fl[1, 1];
+  Real S_n_fl[1, 1];
   Real S_p_eff[1, 1];
-  flow Real S_p_fl[1, 1];
+  Real S_p_fl[1, 1];
   Real G_n_eff[1, 1];
-  flow Real G_n_fl[1, 1];
+  Real G_n_fl[1, 1];
   Real G_p_eff[1, 1];
-  flow Real G_p_fl[1, 1];
+  Real G_p_fl[1, 1];
   Real C_u_eff[N, M];
-  flow Real C_u_fl[N, M];
+  Real C_u_fl[N, M];
   Real C_d_eff[N, M];
-  flow Real C_d_fl[N, M];
+  Real C_d_fl[N, M];
   Real C_l_eff[N, M];
-  flow Real C_l_fl[N, M];
+  Real C_l_fl[N, M];
   Real C_r_eff[N, M];
-  flow Real C_r_fl[N, M];
+  Real C_r_fl[N, M];
 equation
   for i in 1:1:1,j in 1:1:1 loop
     G_p_eff = S_n_eff;
@@ -41,30 +25,30 @@ equation
     C_d_eff[i,j] = S_n_eff;
   end for;
   for i in 1:1:1,j in 1:1:1 loop
-    S_n_fl+sum(C_d_fl[1*i+999, 1:1:1000])+G_p_fl = 0;
+    S_n_fl+sum(C_d_fl[i+999, 1:1:1000])+G_p_fl = 0;
   end for;
   for i in 1:1:1000,j in 1:1:999 loop
-    C_r_eff[i,j] = C_l_eff[1*i+0,1*j+1];
+    C_r_eff[i,j] = C_l_eff[i,j+1];
   end for;
   for i in 1:1:1000,j in 2:1:1000 loop
-    C_r_fl[1*i+0,1*j+-1]+C_l_fl[1*i+0,1*j+0] = 0;
+    C_r_fl[i,j-1]+C_l_fl[i,j] = 0;
   end for;
   for i in 1:1:1,j in 1:1:1000 loop
     C_u_eff[i,j] = S_p_eff;
   end for;
   for i in 1:1:1,j in 1:1:1 loop
-    sum(C_u_fl[1*i+0, 1:1:1000])+S_p_fl = 0;
+    sum(C_u_fl[i, 1:1:1000])+S_p_fl = 0;
   end for;
   for i in 1:1:999,j in 1:1:1000 loop
-    C_d_eff[i,j] = C_u_eff[1*i+1,1*j+0];
+    C_d_eff[i,j] = C_u_eff[i+1,j];
   end for;
   for i in 2:1:1000,j in 1:1:1000 loop
-    C_d_fl[1*i+-1,1*j+0]+C_u_fl[1*i+0,1*j+0] = 0;
+    C_d_fl[i-1,j]+C_u_fl[i,j] = 0;
   end for;
   for i in 1:1:1000,j in 1000:1:1000 loop
-    C_r_eff[i,j] = C_l_eff[1*i+0,1*j+-999];
+    C_r_eff[i,j] = C_l_eff[i,j-999];
   end for;
   for i in 1:1:1000,j in 1:1:1 loop
-    C_r_fl[1*i+0,1*j+999]+C_l_fl[1*i+0,1*j+0] = 0;
+    C_r_fl[i,j+999]+C_l_fl[i,j] = 0;
   end for;
-end Test;
+end SBGraph3;

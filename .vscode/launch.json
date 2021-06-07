@@ -13,7 +13,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/causalize",
-            "args": ["/home/joaquin/work/modelicacc/test/mccprograms/causalize/rlc_loop.mo"],
+            "args": ["/home/joaquin/work/modelicacc/test/mccprograms/causalize/bad_advection.mo"],
             "cwd": "${workspaceFolder}/bin/",
             "environment": [],
             "MIMode": "gdb",
