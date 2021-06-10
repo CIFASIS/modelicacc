@@ -102,7 +102,7 @@ connect(S.n,G.p);
 for i in 1:N-1 loop
   connect(R[i].n, R[i+1].p);
 end for;
-for i in 1:N loop
+for i in 2:N loop
   connect(C[i].p, R[i].n);
   connect(C[i].n, G.p);
 end for;

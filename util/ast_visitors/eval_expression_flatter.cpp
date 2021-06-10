@@ -320,6 +320,7 @@ Interval EvalExpFlatter::operator()(Reference v) const{
     return i;
   }
 
+
   Option<VarInfo> vinfo = vtable[s];
   if (!vinfo) ERROR("EvalExpFlatter: Variable %s not found !", s.c_str());
   if (!vinfo.get().modification()) {

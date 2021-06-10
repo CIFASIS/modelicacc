@@ -26,1165 +26,899 @@ using namespace Modelica;
 using namespace Modelica::AST;
 using namespace SBG;
 
-#define NameToRef(X) Reference(Reference(), X, Option<ExpList>())
-#define RefIndex(X, Y) Reference(Reference(), X, Option<ExpList>(Y))
-#define PrintOpt(N) (N ? N.get() : "{}")
+// Initialization --------------------------------------------------------------------------------
 
-Connectors::Connectors(MMO_Class &c) 
- : mmoclass_(c), eCount2_(0){
-  SBGraph g;
-  G = g;
-}
-
-member_imp(Connectors, vector<int>, vCount);
-member_imp(Connectors, vector<int>, eCount1);
-member_imp(Connectors, int, eCount2);
 member_imp(Connectors, MMO_Class, mmoclass);
-member_imp(Connectors, VertexNameTable, vnmtable);
-member_imp(Connectors, NameVertexTable, nmvtable);
-//member_imp(Connectors, EquationList, oldeqs);
 
-/*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
-/*-----------------------------------------------------------------------------------------------*/
-// Debugging functions --------------------------------------------------------------------------//
-/*-----------------------------------------------------------------------------------------------*/
-/*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
+member_imp(Connectors, SBGraph, G)
+member_imp(Connectors, int, maxdim)
+member_imp(Connectors, vector<int>, vCount);
+member_imp(Connectors, vector<int>, eCount);
+member_imp(Connectors, int, ECount);
+member_imp(Connectors, PWLMap, ccG);
 
-void Connectors::debug(std::string filename){
-  VertexIt vi, vi_end;
-  boost::tie(vi, vi_end) = boost::vertices(G);
-  for(; vi != vi_end; ++vi){
-    Name n = G[*vi].name;
-    Set vs = G[*vi].vs_();
-    LOG << n << ": " << vs << "\n";
-  }
+member_imp(Connectors, EquationList, notConnectEqs);
+member_imp(Connectors, EquationList::iterator, itNotConn);
 
-  EdgeIt ei, ei_end;
-  boost::tie(ei, ei_end) = boost::edges(G);
-  for(; ei != ei_end; ++ei){
-    Name n = G[*ei].name;
-    PWLMap es1 = G[*ei].es1_();
-    PWLMap es2 = G[*ei].es2_();
-    LOG << n << ": " << es1 << ", " << es2 << "\n";
-  }
+member_imp(Connectors, UnordCT<Name>, varsNms);
+member_imp(Connectors, OrdCT<Name>, counters);
 
-  GraphPrinter gp(G, -1);
+Connectors::Connectors(MMO_Class &c) : mmoclass_(c), ECount_(0), maxdim_(1) {}
 
-  gp.printGraph(filename);
-  LOG << "Generated Connect Graph written to " << filename << endl;
-}
-
-/*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
-/*-----------------------------------------------------------------------------------------------*/
-// Create graph  --------------------------------------------------------------------------------//
-/*-----------------------------------------------------------------------------------------------*/
-/*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
-
-EquationList eqlinit;
-EquationList Connectors::oldeqs = eqlinit;
-EquationList::iterator Connectors::itold = oldeqs.begin();
-
-void Connectors::solve(bool deb){
-  int maxdim = 1;
-  foreach_(Name n, mmoclass_.variables()){
+void Connectors::init() 
+{
+  // Get "largest" number of dimensions from variables
+  foreach_ (Name n, mmoclass_.variables()) {
     Option<VarInfo> ovi = mmoclass_.getVar(n);
-    if(ovi){
+    if (ovi) {
       VarInfo vi = *ovi;
       Option<ExpList> oinds = vi.indices();
-      if(oinds){
+      if (oinds) {
         ExpList inds = *oinds;
-        NI1 aux = inds.size();
-        maxdim = max(maxdim, aux);
+        set_maxdim(max(maxdim_, (NI1) inds.size()));
       }
     }
   }  
 
-  vector<NI1> aux(maxdim, 1);
-  set_vCount(aux);
-  set_eCount1(aux);
+  vector<NI1> maxdimVector(maxdim_, 1);
+  set_vCount(maxdimVector);
+  set_eCount(maxdimVector);
 
-  EquationList eql;
+  // Intialize iterators
+  set_itNotConn(notConnectEqs_.begin());
 
-  //LOG << "mmo:\n" << mmoclass_ << "\n\n";
+  // Fill varsNms
+  std::pair<Name, VarInfo> aux;
+  UnordCT<Name> vars;
+
+  foreach_ (aux, mmoclass_.syms()) 
+    vars.insert(get<0>(aux));
+
+  set_varsNms(vars);
+}
+
+// Debugging -------------------------------------------------------------------------------------
+
+void Connectors::debug(std::string filename)
+{
+  LOG << "Connect Graph vertices & edges:" << endl << endl;
+
+  // Print vertices
+  foreach_ (SetVertexDesc vi, vertices(G_)) {
+    Name n = G_[vi].name;
+    Set vs = G_[vi].vs_();
+    LOG << n << ": " << vs << endl;
+  }
+
+  // Print edges
+  foreach_ (SetEdgeDesc ei, edges(G_)) {
+    Name n = G_[ei].name;
+    PWLMap es1 = G_[ei].es1_();
+    PWLMap es2 = G_[ei].es2_();
+    LOG << n << ": " << es1 << ", " << es2 << endl;
+  }
+
+  LOG << endl;
+
+  // Write debugging information to log file
+  GraphPrinter gp(G_, -1);
+
+  gp.printGraph(filename);
+  LOG << "Generated Connect Graph written to " << filename << endl << endl;
+
+  LOG << "Connected components of SBG: " << filename << endl; 
+  LOG << ccG_ << endl;
+}
+
+// Algorithm -------------------------------------------------------------------------------------
+
+// Given a model, construct the Connect Graph, apply the connected components algorithms, and
+// return a new flattenned model
+void Connectors::solve()
+{
+  init();
+
   Pair<bool, EquationList> gr = createGraph(mmoclass_.equations_ref().equations_ref());
   if(get<0>(gr)){
-    oldeqs = get<1>(gr);
-    itold = oldeqs.end();
+    notConnectEqs_ = get<1>(gr);
+    itNotConn_ = notConnectEqs_.end();
 
-    if (deb)
-      debug(mmoclass_.name()+".dot");
+    PWLMap res = connectedComponents(G_);
+    set_ccG(res);
 
-    PWLMap res = connectedComponents(G);
-    LOG << res << "\n\n";
-
-    foreach_(Name nm, mmoclass_.variables()){
+    foreach_ (Name nm, mmoclass_.variables()) {
       Option<VarInfo> ovi = mmoclass_.getVar(nm);
-      if(ovi){
+      if (ovi) {
         VarInfo vi = *ovi;
         Name ty = vi.type();
-        if(ty != "Real" && ty != "Integer"){
+        if (ty != "Real" && ty != "Integer") {
           mmoclass_.rmVar(nm);
         }
       }
     }
 
-    generateCode(res);
+    //generateCode(ccG_);
 
     cout << mmoclass_ << "\n";
   }
 
-  else{
-    SBGraph g;
-    G = g;
+  else {
+    SBGraph emptyG;
+    set_G(emptyG);
 
-    MMO_Class auxmmo;
-    set_mmoclass(auxmmo);
+    MMO_Class emptyMmo;
+    set_mmoclass(emptyMmo);
   }
 }
 
-Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs){
-  EquationList notConnect;
-  EquationList::iterator itNotConn = notConnect.begin();
-  bool ok = true;
+// Set-vertex creation ---------------------------------------------------------------------------
 
-  BOOST_FOREACH(Equation eq, eqs){
-    if(is<Connect>(eq)){
-      ok = connect(get<Connect>(eq));
+// Evaluate expression
+Real Connectors::getValue(Expression exp)
+{
+  VarSymbolTable symbols = mmoclass_.syms();
+  EvalExpression eval_exp(symbols);
+  return Apply(eval_exp, exp);
+}
 
-      if(!ok)
-        break;
+// Helper to write less
+Set Connectors::buildSet(MultiInterval mi)
+{
+  AtomSet as(mi);
+  Set s;
+  s.addAtomSet(as);
+
+  return s;
+}
+
+// Build a Set from a variable. All variables are updated to 
+// have the maximum number of dimensions according to the model.
+// To be used in createVertex
+Set Connectors::buildSet(VarInfo v)
+{
+  vector<NI1> newVCount;
+  vector<NI1>::iterator itNewVC = newVCount.begin();
+
+  Option<ExpList> dims = v.indices();
+  MultiInterval v_intervals;
+  ExpList inds; 
+  ExpList::iterator itinds = inds.begin();
+
+  // Multi-dimensional variable
+  if (dims) {
+    inds = *dims;
+    itinds = inds.begin();
+  }
+
+  const VarSymbolTable auxsyms = mmoclass_.syms();
+  EvalExpFlatter evexp(auxsyms);
+
+  // Fill dimensions if necessary
+  foreach_ (NI1 offset, vCount_) {
+    Interval i;
+
+    // Use declared dimensions for the variable
+    if (itinds != inds.end()) {
+      Interval auxi = Apply(evexp, *itinds);
+      i = Interval(offset, auxi.step_(), offset + auxi.lo_() - 1);
+
+      ++itinds;
     }
 
-    else if(is<ForEq>(eq)){
-      vector<Name> auxvars;
-      vector<Name>::iterator itvars = auxvars.begin();
-      ForEq feq = boost::get<ForEq>(eq);
-      foreach_(Index ind, feq.range().indexes()){
-        Name n = ind.name();
-        OptExp e = ind.exp();
-        if(e){
-          TypePrefixes tp;
-          Option<Comment> aux1;
-          Expression aux2 = *e;
-          ModAssign aux3(aux2);
-          Modification aux4(aux3);
-          Option<Modification> mod(aux4);
-          ExpOptList aux5;
-          VarInfo vi(tp, n, aux1, mod, aux5, false);
-          mmoclass_.addVar(n, vi);
-          itvars = auxvars.insert(itvars, n);
-          ++itvars;
-        }
-        else 
-          LOG << "Should be defined\n";
-      }
+    // Fill other dimensions
+    else
+      i = Interval(offset, 1, offset);
 
-      EquationList el = feq.elements();
-      Pair<bool, EquationList> rec = createGraph(el);
-      ok = get<0>(rec);
+    v_intervals.addInter(i);
 
-      if(!ok)
-        break;
+    itNewVC = newVCount.insert(itNewVC, i.hi_() + 1);
+    ++itNewVC;
+  }
 
-      if (!get<1>(rec).empty()) {
-        ForEq forrec(feq.range().indexes(), get<1>(rec));
-        itNotConn = notConnect.insert(itNotConn, forrec);
-        ++itNotConn;
-      }
+  set_vCount(newVCount);
+  return buildSet(v_intervals);
+}
 
-      foreach_(Name auxnm, auxvars){
-        mmoclass_.rmVar(auxnm);
-      }
+// Create a set vertex for each variable in a connect,
+// if it isn't already created. Variables which aren't
+// part of a connect are ignored.
+Option<SetVertexDesc> Connectors::createVertex(Name n)
+{
+  // Vertex already created
+  foreach_ (SetVertexDesc Vdesc, vertices(G_)) {
+    if (G_[Vdesc].name == n)
+      return Option<SetVertexDesc>(Vdesc);
+  }
+ 
+  // Vertex doesn't exist 
+  Option<VarInfo> ovi = mmoclass_.getVar(n);
+  if (ovi) {
+    VarInfo vi = *ovi;
+    Set s = buildSet(vi);
+
+    SetVertex V(n, s); 
+    SetVertexDesc Vdesc = boost::add_vertex(G_);
+    G_[Vdesc] = V;
+
+    return Option<SetVertexDesc>(Vdesc);
+  }
+
+  LOG << "ERROR: Variable " << n << " should be defined" << endl;
+  return Option<SetVertexDesc>();
+}
+
+// Set-edge creation -----------------------------------------------------------------------------
+
+// Build a Set from a variable. All counters will have the maximum dimension.
+// To be used in createEdgeDom
+MultiInterval Connectors::buildEdgeMultiInterval(VarInfo v, int offset)
+{
+  vector<NI1>::iterator itEC = eCount_.begin();
+  vector<NI1> newECount;
+  vector<NI1>::iterator itNewEC = newECount.begin();
+
+  Option<ExpList> dims = v.indices();
+  MultiInterval v_intervals;
+  ExpList inds; 
+  ExpList::iterator itinds = inds.begin();
+
+  // Previous dimensions remain the same
+  for (int i = 0; i < offset; ++i) {
+    itNewEC = newECount.insert(itNewEC, *itEC);
+
+    ++itEC;
+    ++itNewEC;
+  }
+
+  // Multi-dimensional variable
+  if (dims) {
+    inds = *dims;
+    itinds = inds.begin();
+  }
+
+  const VarSymbolTable auxsyms = mmoclass_.syms();
+  EvalExpFlatter evexp(auxsyms);
+
+  // Values of dimensions of interest
+  foreach_ (Expression e, inds) {
+    Interval i;
+    Interval auxi = Apply(evexp, *itinds);
+    i = Interval(*itEC + auxi.lo_() - 1, auxi.step_(), *itEC + auxi.hi_() - 1);
+
+    v_intervals.addInter(i);
+
+    itNewEC = newECount.insert(itNewEC, i.hi_() + 1);
+    ++itNewEC;
+    if (itEC != eCount_.end())
+      ++itEC;
+  }
+
+  // Convert it to maximum dimension
+  while (itEC != eCount_.end()) {
+    itNewEC = newECount.insert(itNewEC, *itEC);
+
+    ++itNewEC;
+    ++itEC;
+  }
+
+  set_eCount(newECount);
+  return v_intervals;
+}
+
+// Given a subscript list r, traverse it to find in which
+// dimension nm is used.
+int Connectors::locateCounterDimension(ExpOptList r, Name nm) 
+{
+  int dim = 0;
+
+  if (r) {
+    foreach_ (Expression ri, *r) {
+      Reference r(nm);
+      Expression e(r);
+      ContainsExpression co(e);
+
+      if (Apply(co, ri))
+        return dim;
+
+      ++dim;
+    }
+  }
+
+  return -1;
+}
+
+// Given a multi-interval whose dimension isn't the maxdim_,
+// complete it to have the maximum dimension in the model
+MultiInterval Connectors::fillDims(MultiInterval mi, int olddim, int dim) 
+{
+  vector<NI1> newECount;
+  vector<NI1>::iterator itNewEC = newECount.begin();
+  int i = 0;
+  foreach_ (NI1 ei, eCount_) {
+    if (i < olddim || i > dim) {
+      Interval idim(ei, 1, ei);
+      MultiInterval midim;
+      midim.addInter(idim); 
+
+      if (i < olddim)
+        mi = midim.crossProd(mi);
+
+      else
+        mi = mi.crossProd(midim);
+
+      itNewEC = newECount.insert(itNewEC, ei + 1);
+      ++itNewEC;
     }
 
     else {
-      itNotConn = notConnect.insert(itNotConn, eq);
-      ++itNotConn;
+      itNewEC = newECount.insert(itNewEC, ei);
+      ++itNewEC;
+    }
+
+    ++i;
+  }
+
+  set_eCount(newECount);
+  return mi;
+}
+
+// Create dom for PWLMaps that represent set-edges.
+// It creates a new Set which values are the ones
+// of the current counters
+// ENHANCEMENT: simplify this code, lulz
+Set Connectors::createEdgeDom(ExpOptList r) 
+{
+  MultiInterval miCounters;
+
+
+  // Connect out of any loop
+  if (counters_.size() == 0) {
+    vector<NI1> newECount;
+    vector<NI1>::iterator itNewEC = newECount.begin();
+
+    foreach_ (NI1 eci, eCount_) {
+      miCounters.addInter(Interval(eci, 1, eci));
+      itNewEC = newECount.insert(itNewEC, eci + 1);
+
+      ++itNewEC;
+    }
+
+    set_eCount(newECount);
+  }
+
+  else {
+    // Connect is inside some loop
+    int olddim = locateCounterDimension(r, *(counters_.begin()));
+    foreach_ (Name count, counters_) {
+      int dim = locateCounterDimension(r, count);
+      // Variable is declared in the loop, but it isn't used in the connect
+      // This is considered an error in this compiler
+      if (dim < 0) {
+        MultiInterval emptyMI;
+        miCounters = emptyMI;
+        break;
+      }
+
+      else {
+        Option<VarInfo> ovi = mmoclass_.syms()[count];
+        if (ovi) {
+          VarInfo vi = *ovi;
+          MultiInterval mi = buildEdgeMultiInterval(vi, dim);
+          miCounters = miCounters.crossProd(mi);
+        }
+
+        // At this point the counters should be defined
+        else {
+          LOG << "MCC ERROR: Counter " << count << " should be defined" << endl;
+          Set emptySet;
+          return emptySet;
+        }
+      }
+
+      // Complete remaining dimensions
+      if ((int) counters_.size() != maxdim_)
+        miCounters = fillDims(miCounters, olddim, dim);
+
+      olddim = dim;
     }
   }
 
-  Pair<bool, EquationList> res(ok, notConnect);
+  return buildSet(miCounters);
+}
+
+// Returns a linear map lm, for which im(lm, i1) = i2
+// In each dimension, they should have the same number of elements
+// (if not, they aren't related by a linear function)
+// ENHANCEMENT: support discontinuidades
+LMap Connectors::createLM(MultiInterval mi1, MultiInterval mi2)
+{
+  OrdCT<NI2> resg;
+  OrdCT<NI2>::iterator itresg = resg.begin();
+  OrdCT<NI2> reso;
+  OrdCT<NI2>::iterator itreso = reso.begin();
+
+  OrdCT<Interval> miinters1 = mi1.inters_();
+  OrdCT<Interval>::iterator itmi1 = miinters1.begin();
+  OrdCT<Interval> miinters2 = mi2.inters_();
+  OrdCT<Interval>::iterator itmi2 = miinters2.begin();
+  // Traverse dimensions
+  while (itmi1 != miinters1.end()) {
+    if ((*itmi2).size() == 1) {
+      NI2 newg = 0;
+      NI2 newo = (*itmi2).lo_(); 
+
+      itresg = resg.insert(itresg, newg);
+      itreso = reso.insert(itreso, newo);
+
+      ++itresg;
+      ++itreso;
+    }
+
+    else if ((*itmi1).size() == (*itmi2).size()) {
+      NI2 newg = (*itmi2).step_() / (*itmi1).step_();
+      NI2 newo = (*itmi2).lo_() - newg * (*itmi1).lo_(); 
+
+      itresg = resg.insert(itresg, newg);
+      itreso = reso.insert(itreso, newo);
+
+      ++itresg;
+      ++itreso;
+    }
+
+    else {
+      LOG << "ERROR: Check connect subscripts" << endl;
+      LMap emptyLM;
+      return emptyLM;
+    }
+
+    ++itmi1;
+    ++itmi2;
+  }
+
+  return LMap(resg, reso);
+}
+
+// Returns a multi-interval with the corresponding subscripts
+// applied
+MultiInterval Connectors::subscriptMI(MultiInterval mi, ExpOptList r) 
+{
+  OrdCT<Interval> mires;
+  OrdCT<Interval>::iterator itmires = mires.begin();
+  OrdCT<Interval> miinters = mi.inters_();
+  OrdCT<Interval>::iterator itmi = miinters.begin();
+
+  const VarSymbolTable auxsyms = mmoclass_.syms();
+  EvalExpFlatter evexp(auxsyms);
+
+  if (r) {
+    foreach_ (Expression ri, *r) {
+      Interval ndim = Apply(evexp, ri);
+      int offset = (*itmi).lo_();
+      Interval res(ndim.lo_() + offset - 1, ndim.step_(), ndim.hi_() + offset - 1);
+      itmires = mires.insert(itmires, (*itmi).cap(res));
+
+      ++itmires;
+      ++itmi;
+    }
+  }
+
+  else
+    mires = miinters;
+
+  //MultiInterval aux(mires);
+  //cout << "aux: " << aux << "\n";
+  return MultiInterval(mires);
+}
+
+// Create left and right maps
+PWLMap Connectors::createEdgeMap(Set dom, Set im, ExpOptList r) 
+{
+  PWLMap res;
+
+  // In the current implementation, dom and im have only one atomic set
+  // Check buildSet and createEdgeDom
+  if (dom.asets_().size() != 1 || im.asets_().size() != 1) {
+    LOG << "COMPILER ERROR: dom and im should have only one atomic set" << endl;
+    return res;
+  }
+
+  else {
+    AtomSet domas = *(dom.asets_().begin());
+    AtomSet imas = *(im.asets_().begin());
+
+    MultiInterval dommi = domas.aset_();
+    MultiInterval immi = imas.aset_();
+
+    LMap lm = createLM(dommi, subscriptMI(immi, r));
+    res.addSetLM(dom, lm);
+  }
+
   return res;
 }
 
-bool Connectors::connect(Connect co){
-  Expression eleft = co.left(), eright = co.right();
-  
-  Pair<Name, ExpOptList> left = separate(eleft);
-  Pair<Name, ExpOptList> right = separate(eright);
+// Check if edge is already created
+bool Connectors::existsEdge(string nm)
+{
+  foreach_ (SetEdgeDesc ei, edges(G_)) {
+    string nmi = G_[ei].name_();
 
-  Name v1 = get<0>(left);
-  Name v2 = get<0>(right);
-
-  OrdCT<Interval> miv1 = createVertex(v1).inters_();
-  OrdCT<Interval>::iterator itmiv1 = miv1.begin(); 
-  OrdCT<Interval> miv2 = createVertex(v2).inters_();
-  OrdCT<Interval>::iterator itmiv2 = miv2.begin();
-
-  ExpOptList range1 = get<1>(left);
-  ExpOptList range2 = get<1>(right);
-
-  if(checkRanges(range1, range2)){
-    OrdCT<Interval> mi11;
-    OrdCT<Interval>::iterator itmi11 = mi11.begin();
-    int dim = 0;
-    const VarSymbolTable aux = mmoclass_.syms();
-    EvalExpFlatter evexp(aux);
-    if(range1){
-      foreach_(Expression e1, range1.get()){
-        if(is<SubAll>(e1)){
-          Option<VarInfo> ovi = mmoclass_.getVar(v1);
-          if(ovi){
-            VarInfo vi = *ovi;
-            ExpOptList oinds = vi.indices();
-            if(oinds){
-              ExpList inds = *oinds;
-              ExpList::iterator itinds = inds.begin();
-
-              for(int i = 0; i < dim; ++i)
-                ++itinds;
-
-              e1 = *itinds;
-            }
-          }
-
-          else
-            return false;
-        }
-
-        Interval ll = Apply(evexp, e1);
-        NI1 auxlo = (*itmiv1).lo_() - 1;
-        Interval l(auxlo + ll.lo_(), ll.step_(), auxlo + ll.hi_());
-        ++itmiv1;
-      
-        if(!l.empty_()){
-          itmi11 = mi11.insert(itmi11, l);
-          ++itmi11;
-          ++dim;
-        }
-
-        else{
-          OrdCT<Interval> aux;
-          mi11 = aux;
-          break;
-        }
-      }
-    }
-
-    else{
-      itmi11 = mi11.begin();
-      foreach_(Interval i1, miv1){
-        NI1 auxlo = i1.lo_();
-        Interval l(auxlo, 1, auxlo);
-        itmi11 = mi11.insert(itmi11, l);
-        ++itmi11;
-      }
-    }
-
-    MultiInterval mi1(mi11);
-
-    OrdCT<Interval> mi22;
-    OrdCT<Interval>::iterator itmi22 = mi22.begin();
-    dim = 0;
-    if(range2){
-      foreach_(Expression e2, range2.get()){
-        if(is<SubAll>(e2)){
-          Option<VarInfo> ovi = mmoclass_.getVar(v2);
-          if(ovi){
-            VarInfo vi = *ovi;
-            ExpOptList oinds = vi.indices();
-            if(oinds){
-              ExpList inds = *oinds;
-              ExpList::iterator itinds = inds.begin();
-
-              for(int i = 0; i < dim; ++i)
-                ++itinds;
-
-              e2 = *itinds;
-            }
-          }
-
-          else
-            return false;
-        }
-
-        Interval rr = Apply(evexp, e2);
-        NI1 auxlo = (*itmiv2).lo_() - 1;
-        Interval r(auxlo + rr.lo_(), rr.step_(), auxlo + rr.hi_());
-        ++itmiv2;
-
-        if(!r.empty_()){
-          itmi22 = mi22.insert(itmi22, r);
-          ++itmi22;
-          ++dim;
-        }
-
-        else{
-          OrdCT<Interval> aux;
-          mi22 = aux;
-          break;
-        }
-      }
-    }
-
-    else{
-      itmi22 = mi22.begin();
-      foreach_(Interval i2, miv2){
-        NI1 auxlo = i2.lo_();
-        Interval r(auxlo, 1, auxlo);
-        itmi22 = mi22.insert(itmi22, r);
-        ++itmi22;
-      }
-    }
-
-    MultiInterval mi2(mi22);
-
-    VertexIt vi1, vi2, vi_end1, vi_end2;
-    boost::tie(vi1, vi_end1) = boost::vertices(G);
-    SetVertexDesc d1 = *vi1, d2 = *vi2;
-
-    for(; vi1 != vi_end1; ++vi1){
-      boost::tie(vi2, vi_end2) = boost::vertices(G);
-      Name aux1 = G[*vi1].name;
-
-      for(; vi2 != vi_end2; ++vi2){
-        Name aux2 = G[*vi2].name;
-        if(aux1 == v1 && aux2 == v2){
-          d1 = *vi1;
-          d2 = *vi2;
-          updateGraph(d1, d2, mi1, mi2);
-        }
-      }
-    }
-
-    return true;
+    if (nmi == nm)
+      return true;
   }
 
   return false;
 }
 
-// Get expression and range
-Pair<Name, ExpOptList> Connectors::separate(Expression e){
-  Reference reference;
+// Create a set-edge if it doesn't exist, or update it
+void Connectors::createEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc Vdesc1, SetVertexDesc Vdesc2) 
+{
+  SetVertex V1 = G_[Vdesc1];
+  SetVertex V2 = G_[Vdesc2];
 
-  if(is<UnaryOp>(e)){
-    UnaryOp u = boost::get<UnaryOp>(e);
-    if(is<Reference>(u.exp()))
-      reference = boost::get<Reference>(u.exp());
-    else
-      LOG << "ERROR: Deberia llegar una Reference" << std::endl;
-  } 
- 
+  string nm = "E_" + V1.name_() + "_" + V2.name_();
+
+  if (!existsEdge(nm)) {
+    Set dom = createEdgeDom(r1);
+    if (dom.empty()) {
+      LOG << "ERROR: Check connects" << endl;
+      return;
+    }
+    PWLMap pw1 = createEdgeMap(dom, V1.vs_(), r1);
+    PWLMap pw2 = createEdgeMap(dom, V2.vs_(), r2);
+    SetEdge E(nm, pw1, pw2);
+    cout << V1 << V2 << E << "\n";
+
+    /*
+    SetEdgeDesc Edesc;
+    bool b;
+    boost::tie(Edesc, b) = boost::add_edge(Vdesc1, Vdesc2, G_);
+    G_[Edesc] = E;
+    */
+  }
+
+  else {
+    //TODO
+  }
+}
+
+// Subscripts checks -----------------------------------------------------------------------------
+
+bool Connectors::checkLinearBase(Expression e)
+{
+  if (is<Integer>(e)) 
+    return true;
+
   else if (is<Reference>(e))
-    reference = boost::get<Reference>(e);
+    return true;
 
-  Ref refs = reference.ref();
-  if(refs.size() > 1) 
-    LOG << "ERROR: No deberia haber llamadas a miembros en connectors" << std::endl;
-  RefTuple rf = refs.front();
-  ExpOptList opti;
-  if(get<1>(rf).size() > 0) 
-    opti = Option<ExpList>(get<1>(rf));
-  Name r = get<0>(rf);
-  return Pair<Name, ExpOptList>(r, opti);
+  return false;
 }
 
-MultiInterval Connectors::createVertex(Name n){
-  MultiInterval mires; 
-
-  VertexIt vi, vi_end;
-  boost::tie(vi, vi_end) = boost::vertices(G);
-  bool exists = false;
-  for(; vi != vi_end; ++vi){
-    Name aux = G[*vi].name;
-    if(aux == n){
-      exists = true;
-      AtomSet auxas = *(G[*vi].vs_().asets_().begin()); 
-      mires = auxas.aset_(); 
-    }
-  }
-  
-  if(!exists){
-    Option<VarInfo> ovi = mmoclass_.getVar(n);
-    if(ovi){
-      VarInfo vi = *ovi;
-      ExpOptList oinds = vi.indices();
-      // Multi dimensional variable
-      if(oinds){
-        ExpList inds = *oinds;
-  
-        OrdCT<Interval> mi1;
-        OrdCT<Interval>::iterator itmi1 = mi1.begin();
-        int dim = 0;
-        vector<NI1>::iterator itvc = vCount_.begin();
-        vector<NI1> newvc;
-        vector<NI1>::iterator itnew = newvc.begin();
-   
-        const VarSymbolTable auxt = mmoclass_.syms();
-        EvalExpression evexp(auxt);
-  
-        foreach_(Expression e, inds){
-          if(is<SubAll>(e) || is<Range>(e))
-            ERROR("Ill-defined array");
-   
-          Real res = Apply(evexp, e);
-          Interval i(*itvc, 1, *itvc + res - 1);
-          if(!i.empty_()){
-            itmi1 = mi1.insert(itmi1, i);
-            ++itmi1;
-            itnew = newvc.insert(itnew, *itvc + res);
-            ++itnew;
-
-            ++dim;
-            ++itvc;
-          }
-          else{
-            OrdCT<Interval> aux;
-            mi1 = aux;
-            break;
-          }
-        }
-  
-        MultiInterval mi(mi1);
-
-        if(!mi1.empty()){
-          for(; itvc != vCount_.end(); ++itvc){
-            itnew = newvc.insert(itnew, *itvc);
-            ++itnew;
-          }
-          set_vCount(newvc);
-        }
-
-        AtomSet as(mi);
-        Set s;
-        s.addAtomSet(as);
-  
-        SetVertex V(n, s);
-        SetVertexDesc v = boost::add_vertex(G);
-  
-        G[v] = V;
-        mires = mi;
-      }
-  
-      // Uni dimensional variable
-      else{
-        vector<NI1>::iterator itvc = vCount_.begin();
-        NI1 auxvc = *itvc;
-        Interval i(auxvc, 1, auxvc);
-        vector<NI1> newvc;
-        vector<NI1>::iterator itnew = newvc.begin();        
-        itnew = newvc.insert(itnew, auxvc + 1);
-        ++itnew;
-        ++itvc;
-
-        while(itvc != vCount_.end()){
-          itnew = newvc.insert(itnew, *itvc);
-          ++itnew;
-
-          ++itvc;
-        }
-        set_vCount(newvc);
-
-        MultiInterval mi;
-        mi.addInter(i);
-        AtomSet as(mi);
-        Set s;
-        s.addAtomSet(as);
-  
-        SetVertex V(n, s);
-        SetVertexDesc v = boost::add_vertex(G);
- 
-        G[v] = V;
-        mires = mi;
-      }
-    }
+// Check if a given expression is linear
+// For the time being only a * x + b is allowed
+// e.g. a * x + b - c is rejected
+// ENHANCEMENT: generalize to arbitrary linear expressions
+bool Connectors::checkLinear(Expression e) 
+{
+  if (is<UnaryOp>(e)) {
+    UnaryOp u = boost::get<UnaryOp>(e);
+    return checkLinearBase(u.exp());
   }
 
-  vnmtable_.insert(mires, n);
-  nmvtable_.insert(n, mires);
-  return mires;
+  else if (is<BinOp>(e)) {
+    BinOp b = boost::get<BinOp>(e);
+    Expression l = b.left();
+    Expression r = b.right();
+
+    if (b.op() == Add || b.op() == Sub) 
+      return checkLinear(l) && checkLinear(r);
+
+    else if (b.op() == Mult) 
+      return (is<Integer>(l) && checkLinearBase(r)) || (is<Integer>(r) && checkLinearBase(l)); 
+
+    else if (b.op() == Div)
+      return is<Integer>(r) && checkLinearBase(l);
+
+    else if (b.op() == Exp)
+      return is<Integer>(l) && is<Integer>(r);
+
+    return false;
+  }
+
+  return checkLinearBase(e);
 }
 
-// Check if only one variable is used at each subscript
-bool Connectors::checkRanges(ExpOptList range1, ExpOptList range2){
-  std::vector<Name> vars;
-  std::vector<Name>::iterator itvars = vars.begin();
-  std::pair<Name, VarInfo> aux;
-
-  BOOST_FOREACH(aux, mmoclass_.syms()){
-    itvars = vars.insert(itvars, get<0>(aux));
-    ++itvars;
-  }
-
-  if(range1 && range2){
-    ExpList r1 = range1.get();
-    ExpList r2 = range2.get();
- 
-    if(r1.size() == 0 || r2.size() == 0)
-      return true;
-
-    else if(r1.size() != r2.size()){
-      LOG << "Unmatched dimensions in equation connect" << endl;
+// Check that all expressions in an expression list are linear
+bool Connectors::checkLinearList(ExpList expl) 
+{
+  foreach_ (Expression e, expl) {
+    if (!checkLinear(e)) {
+      LOG << "ERROR: Subscript " << e << " should be linear" << endl;
       return false;
-    }
-
-    else{
-      ExpList::iterator it1 = r1.begin(), it2 = r2.begin();
-
-      while(it1 != r1.end()){
-        foreach_(Name n1, vars){
-          Reference r1(n1);
-          Expression e1(r1);
-          ContainsExpression co1(e1);
- 
-          bool cn11 = Apply(co1, *it1);
-          bool cn21 = Apply(co1, *it2);
-
-          // This loop checks that there is only one variable at each subscript
-          foreach_(Name n2, vars){
-            //LOG << n1 << "; " << n2 << "; " << *it1 << "; " << *it2 << "\n";
-            Reference r2(n2);
-            Expression e2(r2);
-            ContainsExpression co2(e2);
-
-            bool cn12 = Apply(co2, *it1);
-            bool cn22 = Apply(co2, *it2);
-
-            if(((cn11 && cn12)) && (n1 != n2)){
-              LOG << "Only one variable permitted at subscript\n";
-              return false;
-            }
-
-            if(((cn21 && cn22)) && (n1 != n2)){
-              LOG << "Only one variable permitted at subscript\n";
-              return false;
-            }
-
-            if((cn11 && cn22) && (n1 != n2)){
-              LOG << "Arrays should use the same counter for the i-th dimension\n";
-              return false;
-            }
-          }
-        }
-
-        ++it1;
-        ++it2;
-      }
     }
   }
 
   return true;
 }
 
-Option<SetEdgeDesc> Connectors::existsEdge(SetVertexDesc d1, SetVertexDesc d2){
-  EdgeIt ei, ei_end;
-  boost::tie(ei, ei_end) = boost::edges(G);
+// Check that arrays in connect use the same subscripts in the
+// same order, and also, that en each dimension a single variable
+// is used (to ensure it is linear)
+bool Connectors::checkCounters(ExpList l1, ExpList l2)
+{
+  ExpList::iterator itl1 = l1.begin();
+  ExpList::iterator itl2 = l2.begin();
 
-  for(; ei != ei_end; ++ei){
-    SetVertexDesc v1 = boost::source(*ei, G);
-    SetVertexDesc v2 = boost::target(*ei, G);
-    Option<SetEdgeDesc> e(*ei);
+  while (itl1 != l1.end() && itl2 != l2.end()) {
+    foreach_ (Name nm1, varsNms_) {
+      Reference r1(nm1);
+      Expression e1(r1);
+      ContainsExpression co1(e1);
 
-    if(v1 == d1 && v2 == d2)
-      return e;
+      bool coNm11 = Apply(co1, *itl1);
+      bool coNm12 = Apply(co1, *itl2);
 
-    if(v1 == d2 && v2 == d1)
-      return e;
-  }
+      foreach_ (Name nm2, varsNms_) {
+        Reference r2(nm2);
+        Expression e2(r2);
+        ContainsExpression co2(e2);
 
-  Option<SetEdgeDesc> e;
-  return e;
-}
+        if (nm1 != nm2) {
+          bool coNm21 = Apply(co2, *itl1);
+          bool coNm22 = Apply(co2, *itl2);
 
-void Connectors::updateGraph(SetVertexDesc d1, SetVertexDesc d2, 
-                             MultiInterval mi1, MultiInterval mi2){
-  OrdCT<Interval> ints1 = mi1.inters_();
-  OrdCT<Interval>::iterator itints1 = ints1.begin();
-  OrdCT<Interval> ints2 = mi2.inters_();
-  OrdCT<Interval>::iterator itints2 = ints2.begin();
+          // l1 is non linear in some dimension 
+          if (coNm11 && coNm21) {
+            LOG << "ERROR: Subscript " << *itl1 << " should be linear" << endl;
+            return false;
+          }
 
-  NI1 misz1 = mi1.size();
-  NI1 misz2 = mi2.size();
+          // l2 is non linear in some dimension
+          if (coNm12 && coNm22) {
+            LOG << "ERROR: Subscript " << *itl2 << " should be linear" << endl;
+            return false;
+          }
 
-  if((mi1.ndim_() == mi2.ndim_()) || misz1 == 1  || misz2 == 1){
-    OrdCT<NI2> g1;
-    OrdCT<NI2>::iterator itg1 = g1.begin();
-    OrdCT<NI2> o1;
-    OrdCT<NI2>::iterator ito1 = o1.begin();
-    OrdCT<NI2> g2;
-    OrdCT<NI2>::iterator itg2 = g2.begin();
-    OrdCT<NI2> o2;
-    OrdCT<NI2>::iterator ito2 = o2.begin();
-    OrdCT<Interval> mi;
-    OrdCT<Interval>::iterator itmi = mi.begin(); 
-
-    vector<NI1>::iterator itec = eCount1_.begin(); 
-    vector<NI1> newec;
-    vector<NI1>::iterator itnew = newec.begin();
-
-    while(itints1 != ints1.end()){
-      NI1 sz1 = (*itints1).size();
-      NI1 sz2 = (*itints2).size();
-
-      if(sz1 == sz2 || sz1 == 1 || sz2 == 1){
-        NI1 count = max(sz1, sz2);
-        NI1 auxec = *itec;
-        Interval i(auxec, 1, auxec + count - 1);
-        itmi = mi.insert(itmi, i);
-        ++itmi;
-
-        NI2 g1i = (*itints1).step_();
-        NI2 o1i = (-g1i) * auxec + (*itints1).lo_();
-
-        NI2 g2i = (*itints2).step_();
-        NI2 o2i = (-g2i) * auxec + (*itints2).lo_();
-
-        if(sz1 == 1){
-          itg1 = g1.insert(itg1, 0);
-          ito1 = o1.insert(ito1, (*itints1).lo_());
-        }
-
-        else{
-          itg1 = g1.insert(itg1, g1i);
-          ito1 = o1.insert(ito1, o1i);
-        }
-
-        if(sz2 == 1){
-          itg2 = g2.insert(itg2, 0);
-          ito2 = o2.insert(ito2, (*itints2).lo_());
-        }
-
-        else{
-          itg2 = g2.insert(itg2, g2i);
-          ito2 = o2.insert(ito2, o2i);
-        }
- 
-        itnew = newec.insert(itnew, auxec + count);
-        ++itnew;
-
-        ++itg1;
-        ++ito1;
-        ++itg2;
-        ++ito2;
-        ++itec;
-      }
- 
-      else{ 
-        LOG << "Incompatible connect\n"; 
-        newec = eCount1_;
-        break;
-      }
-
-      ++itints1;
-      ++itints2;
-    }
-
-    set_eCount1(newec);
-
-    AtomSet as(mi);
-    Set s;
-    s.addAtomSet(as); 
-
-    LMap lm1(g1, o1);
-    LMap lm2(g2, o2);
- 
-    OrdCT<Set> cts1;
-    cts1.insert(cts1.end(), s);
-    OrdCT<LMap> ctlm1;
-    ctlm1.insert(ctlm1.end(), lm1); 
-    PWLMap e1(cts1, ctlm1);
-
-    OrdCT<Set> cts2;
-    cts2.insert(cts2.end(), s);
-    OrdCT<LMap> ctlm2;
-    ctlm2.insert(ctlm2.end(), lm2); 
-    PWLMap e2(cts2, ctlm2);
-
-    string enm = "E" + to_string(eCount2_);
-    SetEdge E(enm, e1, e2);
-    SetEdgeDesc e;
-    bool b;
-    boost::tie(e, b) = boost::add_edge(d1, d2, G);
-    G[e] = E;
-    ++eCount2_;
-  }
-
-  else
-    LOG << "Incompatible connect\n";
-}
-
-void Connectors::generateCode(PWLMap pw){
-  EquationList res;
-  EquationList::iterator itres = res.begin();
-
-  Set vcdom = pw.wholeDom();
-  Set vcim = pw.image(vcdom);
-
-  ExpList nms;
-  ExpList::iterator itnms = nms.begin();
-  int ascii = 0;
-  for(unsigned int i = 0; i < vCount_.size(); ++i){
-    string s(1, 105 + ascii);
-    Expression nm(s);
-    itnms = nms.insert(itnms, nm);
-    ++itnms;
-    ++ascii;
-  }
-
-  foreach_(AtomSet as, vcim.asets_()){
-    Set auxs;
-    auxs.addAtomSet(as);
-    Set vcdomi = pw.preImage(auxs);
-    Set vcdomiaux = vcdomi.diff(auxs);
-
-    // Variables of equality in the ForEq
-    Pair<vector<Name>, vector<Name>> p = separateVars();
-
-    foreach_(AtomSet auxi, vcdomiaux.asets_()){
-      MultiInterval mi = auxi.aset_();
-
-      // Effort vars
-      IndexList ran1;
-      IndexList::iterator itran1 = ran1.begin(); 
-      OrdCT<NI1> off1 = getOff(mi);
-      MultiInterval mirange1 = applyOff(mi, off1);
-      itnms = nms.begin();
-      // Range of ForEq
-      foreach_(Interval i, mirange1.inters_()){
-        Expression elo(i.lo_());
-        Expression est(i.step_());
-        Expression ehi(i.hi_());
-        Range auxr(elo, est, ehi);
-        Expression auxer(auxr);
-        Option<Expression> r(auxer); 
-
-        Name s = get<Name>(*itnms);
-        Index ind(s, r);
-        itran1 = ran1.insert(itran1, ind);
-        ++itran1;
-        ++itnms;
-      }
-      Indexes range1(ran1);
-
-      Set sauxi;
-      sauxi.addAtomSet(auxi);
-      vector<Name> effvars = get<0>(p);
-      vector<Pair<Name, Name>> vars1 = getVars(effvars, sauxi);
-      vector<Pair<Name, Name>>::iterator itv1 = vars1.begin();
-
-      vector<Pair<Name, Name>> vars2 = getVars(effvars, auxs);
-      vector<Pair<Name, Name>>::iterator itv2 = vars2.begin();
-
-      itnms = nms.begin();
-      OrdCT<NI1> off2 = getOff(as.aset_());
-      MultiInterval auxmi1 = applyOff(as.aset_(), off2);
-      Pair<ExpList, bool> tm1 = transMulti(mirange1, auxmi1, nms, false);
-      ExpList inds1 = get<0>(tm1);
-
-      for(; itv1 != vars1.end(); ++itv1){
-        for(; itv2 != vars2.end(); ++itv2){
-          if(get<1>(*itv1) == get<1>(*itv2)){
-            ExpList auxnms1;
-
-            const Name nm1 = get<0>(*itv1);
-            Option<MultiInterval> omivar1 = nmvtable_[nm1];
-            MultiInterval mivar1;
-            if(omivar1)
-              mivar1 = *omivar1;
-
-            else
-              ERROR("Should be a vertex");
-
-            auxnms1 = nms;
-
-
-            Reference ref1(get<0>(*itv1) + get<1>(*itv1), auxnms1); // Left of equality
-            Expression l(ref1);
-
-            ExpList auxnms2;
-
-            const Name nm2 = get<0>(*itv2);
-            Option<MultiInterval> omivar2 = nmvtable_[nm2];
-            MultiInterval mivar2;
-            if(omivar2)
-              mivar2 = *omivar2;
-
-            else
-              ERROR("Should be a vertex");
-
-            auxnms2 = inds1;
-
-
-            Reference ref2(get<0>(*itv2) + get<1>(*itv2), auxnms2);
-            Expression r(ref2);
-
-            Equality eq1(l, r);
-
-            EquationList auxeqlist1;
-            auxeqlist1.insert(auxeqlist1.begin(), eq1);
-
-            ForEq feq1(range1, auxeqlist1);
-
-            itres = res.insert(itres, feq1);
-            ++itres;
+          // Different counters for same dimension
+          if (coNm11 && coNm22) {
+            LOG << "ERROR: Subscripts " << *itl1 << " and " << *itl2 << "should use the same variable" << endl;
+            return false;
           }
         }
       }
     }
 
-    // Flow vars
-    IndexList ran2; 
-    IndexList::iterator itran2 = ran2.begin();
-    itnms = nms.begin();
-    OrdCT<NI1> off3 = getOff(as.aset_());
-    MultiInterval mirange2 = applyOff(as.aset_(), off3); 
-    //Range of ForEq of flow vars
-    foreach_(Interval i, mirange2.inters_()){
-      Expression elo(i.lo_());
-      Expression est(i.step_());
-      Expression ehi(i.hi_());
-      Range auxr(elo, est, ehi);
-      Expression auxer(auxr);
-      Option<Expression> r(auxer); 
-
-      string auxvar = boost::get<Name>(*itnms);
-      Index ind(auxvar, r);
-      itran2 = ran2.insert(itran2, ind);
-      ++itran2;
-      ++itnms;
-    }
-    Indexes range2(ran2);
-
-    vector<Name> flowvars = get<1>(p);
-
-    ExpList exps;
-    ExpList::iterator itexps = exps.begin();
-
-    foreach_(AtomSet auxi, vcdomi.asets_()){
-      OrdCT<NI1> off4 = getOff(auxi.aset_());
-      MultiInterval auxmi2 = applyOff(auxi.aset_(), off4); 
-      Pair<ExpList, bool> tm2 = transMulti(mirange2, auxmi2, nms, true);
-      ExpList inds2 = get<0>(tm2);
-
-      Set sauxi;
-      sauxi.addAtomSet(auxi);
-      vector<Pair<Name, Name>> vars3 = getVars(flowvars, sauxi);
-      vector<Pair<Name, Name>>::iterator itv3 = vars3.begin();
-
-      for(; itv3 != vars3.end(); ++itv3){
-        Expression auxexp;
-
-        ExpList auxnms3;
-
-        const Name nm3 = get<0>(*itv3);
-        Option<MultiInterval> omivar3 = nmvtable_[nm3];
-        MultiInterval mivar3;
-        if(omivar3)
-          mivar3 = *omivar3;
-
-        else
-          ERROR("Should be a vertex");
-
-        auxnms3 = inds2;
-
-        if(get<1>(tm2)){
-          RefTuple rt(get<0>(*itv3) + get<1>(*itv3), auxnms3);
-          AddAll aa(rt);
-          Expression eaa(aa);
-          auxexp = eaa; 
-        }
-
-        else{
-          Reference ref3(get<0>(*itv3) + get<1>(*itv3), auxnms3); 
-          Expression eref3(ref3);
-          auxexp = eref3;
-        }
-
-        itexps = exps.insert(itexps, auxexp); 
-        ++itexps;
-      }
-    }
-
-    Expression flowexp;
-
-    if(exps.size() != 0){
-      itexps = exps.begin();
-      flowexp = *itexps;
-      ++itexps;
-      // Add all flow vars
-      for(; itexps != exps.end(); ++itexps){
-        BinOp bop(flowexp, Add, *itexps);
-        Expression ebop(bop);
-        flowexp = ebop;
-      }
-    }
-
-    Expression zero(0);
-
-    Equality eq2(flowexp, zero);
-
-    EquationList auxeqlist2;
-    auxeqlist2.insert(auxeqlist2.begin(), eq2);
-
-    ForEq feq2(range2, auxeqlist2);
-
-    itres = res.insert(itres, feq2);
-    ++itres;
-  }    
-
-  EquationList eql = simplifyCode(res); // Remove repeated equations
-  // Add new equations of connects. Keep non-connect equations
-  // as they were
-  foreach_(Equation eqi, eql){
-    itold = oldeqs.insert(itold, eqi);
-    ++itold;
+    ++itl1; 
+    ++itl2;
   }
-  EquationSection eqres(false, oldeqs);
-  mmoclass_.set_equations(eqres);
 
-  // Update flow variables and remove the prefix before generating code.
-  foreach_(Name nm, mmoclass_.variables()){
-    Option<VarInfo> ovi = mmoclass_.getVar(nm);
-    if(ovi){
-      VarInfo vi = *ovi;
-      Name ty = vi.type();
-      if(ty == "Real"){
-        vi.removePrefix(flow);
-        mmoclass_.addVar(nm, vi);
-      }
-    }
-  }
+  return true;
 }
 
-OrdCT<NI1> Connectors::getOff(MultiInterval mi){
-  OrdCT<NI1> res;
-  typename std::map<Name, MultiInterval>::iterator it;
-
-  for(it = nmvtable_.begin(); it != nmvtable_.end(); ++it){
-    MultiInterval aux = mi.cap(it->second);
-    if(!aux.empty())
-      res = (it->second).minElem();
-  }
-
-  return res;
-}
-
-Pair<vector<Name>, vector<Name>> Connectors::separateVars(){
-  vector<Name> vars1;
-  vector<Name>::iterator itvars1 = vars1.begin();
-  vector<Name> vars2;
-  vector<Name>::iterator itvars2 = vars2.begin();
-
-  foreach_(Name n, mmoclass_.variables()){
-    if(!isFlowVar(n)){
-      itvars1 = vars1.insert(itvars1, n);
-      ++itvars1;
-    }
+// Check that subscripts in the arrays comply with the restrictions
+// as described in the paper
+bool Connectors::checkSubscripts(ExpOptList range1, ExpOptList range2)
+{
+  if (range1 && range2) {
+    ExpList r1 = range1.get();
+    ExpList r2 = range2.get();
  
-    else{
-      itvars2 = vars2.insert(itvars2, n);
-      ++itvars2;
+    if (r1.size() == 0 || r2.size() == 0)
+      return true;
+
+    else if (r1.size() != r2.size()) {
+      LOG << "MCC ERROR: Unmatched dimensions in connect equation" << endl;
+      return false;
+    }
+
+    else {
+      if (!checkLinearList(r1))
+        return false;
+
+      else if (!checkLinearList(r2))
+        return false;
+
+      else if (!checkCounters(r1, r2)) 
+        return false;
     }
   }
 
-  Pair<vector<Name>, vector<Name>> p(vars1, vars2);
-  return p;
-} 
+  return true;
+}
 
-bool Connectors::isFlowVar(Name n){
-  Option<VarInfo> ovi = mmoclass_.syms_ref()[n];
-  if(ovi){
-    VarInfo vi = *ovi;
-    TypePrefixes::iterator ittp = vi.prefixes_ref().begin(); 
-    for(; ittp != vi.prefixes_ref().end(); ++ittp){
-      Option<TypePrefix> otp = *ittp;
-      if(otp){
-        TypePrefix tp = *otp;
-        if(tp == flow)
-          return true;
-      }
+// Connects --------------------------------------------------------------------------------------
+
+// Returns a pair containing a variable in the first
+// component, and its subscripts in the second component
+Pair<Name, ExpOptList> Connectors::separate(Expression e)
+{
+  Reference reference;
+
+  if (is<UnaryOp>(e)) {
+    UnaryOp u = boost::get<UnaryOp>(e);
+    if (is<Reference>(u.exp()))
+      reference = boost::get<Reference>(u.exp());
+    else
+      LOG << "ERROR: It should be a Reference" << std::endl;
+  } 
+ 
+  else if (is<Reference>(e))
+    reference = boost::get<Reference>(e);
+
+  Ref refs = reference.ref();
+  if (refs.size() > 1) 
+    LOG << "ERROR: There shouldn't be calls to members in connectores" << std::endl;
+  RefTuple rf = refs.front();
+  ExpOptList opti;
+  if (get<1>(rf).size() > 0) 
+    opti = Option<ExpList>(get<1>(rf));
+  Name r = get<0>(rf);
+
+  return Pair<Name, ExpOptList>(r, opti);
+}
+
+// Create set-vertices and set-edges for variables in connect equations
+bool Connectors::connect(Connect co)
+{
+  Expression eleft = co.left(), eright = co.right();
+  
+  Pair<Name, ExpOptList> left = separate(eleft);
+  Pair<Name, ExpOptList> right = separate(eright);
+  ExpOptList range1 = get<1>(left);
+  ExpOptList range2 = get<1>(right);
+
+  if (checkSubscripts(range1, range2)) {
+    Name v1 = get<0>(left);
+    Name v2 = get<0>(right);
+
+    Option<SetVertexDesc> V1 = createVertex(v1);
+    Option<SetVertexDesc> V2 = createVertex(v2);
+
+    if (V1 && V2) {
+      createEdge(range1, range2, *V1, *V2);
+      return true;
     }
+
+    else
+      return false; 
   }
 
   return false;
 }
 
-// Find the name of the variables represented by vertices of sauxi, that
-// belong to vs too
-vector<Pair<Name, Name>> Connectors::getVars(vector<Name> vs, Set sauxi){
-  VertexIt vi, vi_end;
-  boost::tie(vi, vi_end) = boost::vertices(G);
-  vector<Pair<Name, Name>> vars;
-  vector<Pair<Name, Name>>::iterator itvars = vars.begin();
+// Graph creation --------------------------------------------------------------------------------
 
-  for(; vi != vi_end; ++vi){
-    Set v = (G[*vi]).vs_();
-    Name nm = (G[*vi]).name;
+// Check if expression e uses another variable apart from n
+// (If a counter does so in its declaration, they aren't independent)
+bool Connectors::checkIndependentCounters(Name n, Expression e)
+{
+  foreach_ (Name nm, counters_) {
+    Reference rnm(nm);
+    Expression enm(rnm);
+    ContainsExpression co(enm);
+    
+    if (Apply(co, e) && nm != n) {
+      LOG << "ERROR: Counters aren't independent in " << e << endl;
+      return false;
+    }
+  }
 
-    if(!(v.cap(sauxi)).empty()){
-      foreach_(Name n, vs){
-        if(n == nm){
-          Name suffix;
-          Pair<Name, Name> p(nm, suffix);
-          itvars = vars.insert(itvars, p);
+  return true;
+}
+
+// Construct Connect Graph, treating connects.
+// If the model doesn't satisfy the restrictions described in 
+// the paper, an empty model will be returned.
+Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs)
+{
+  EquationList emptyEqs;
+
+  EquationList notConnect;
+  EquationList::iterator itNC = notConnect.begin();
+  bool ok = true;
+
+  foreach_(Equation eq, eqs) {
+    // Connect equation
+    if (is<Connect>(eq)) {
+      ok = connect(get<Connect>(eq));
+
+      if (!ok) {
+        LOG << "ERROR: Ill-formed connect equation " << eq << endl;
+        break;
+      }
+    }
+
+    // Traverse ForEqs to find connects
+    else if(is<ForEq>(eq)) {
+      // Save information of counters
+      UnordCT<Name> prevVarsNms = varsNms_;
+      UnordCT<Name> auxVarsNms = varsNms_;
+      OrdCT<Name> prevCounters = counters_;
+      OrdCT<Name> auxCounters = counters_;
+      OrdCT<Name>::iterator itaux = auxCounters.begin();
+      
+      vector<Name> auxvars;
+      vector<Name>::iterator itvars = auxvars.begin();
+      ForEq feq = boost::get<ForEq>(eq);
+      foreach_ (Index ind, feq.range().indexes()) {
+        Name n = ind.name();
+        OptExp e = ind.exp();
+        if (e) {
+          VarInfo vi(TypePrefixes(), n, Option<Comment>(), 
+                     Option<Modification>(Modification(ModAssign(*e))), 
+                     ExpOptList(ExpList(1, *e)), false);
+          mmoclass_.addVar(n, vi);
+
+          auxVarsNms.insert(n);
+          itaux = auxCounters.insert(itaux, n);
+          ++itaux;
+
+          itvars = auxvars.insert(itvars, n);
           ++itvars;
         }
 
-        else if(n.length() > nm.length()){
-          if(n.substr(0, nm.length()) == nm && n.substr(nm.length(), 1) == "_"){
-            Name suffix = n.substr(nm.length());
-            Pair<Name, Name> p(nm, suffix);
-            itvars = vars.insert(itvars, p);
-            ++itvars;
-          }
+        else { 
+          ok = false;
+          LOG << "ERROR: Counter " << n << " should have bounds" << endl;
+          break;
         }
       }
+
+      set_varsNms(auxVarsNms);
+      set_counters(auxCounters);
+
+      // Traverse recursively inside the for
+      EquationList eql = feq.elements();
+      Pair<bool, EquationList> rec = createGraph(eql);
+      ok = get<0>(rec);
+      EquationList recNotConnEql = get<1>(rec);
+
+      if (!ok)
+        break;
+
+      // Check that for with connect equations have independent counters
+      if (eql.size() > 0 && eql.size() != recNotConnEql.size()) {
+        foreach_ (Index ind, feq.range().indexes()) {
+          Name n = ind.name();
+          OptExp e = ind.exp();
+       
+          if (e) {
+            bool indep = checkIndependentCounters(n, *e); 
+
+            if (!indep) {
+              ok = false;
+              LOG << "ERROR: Counters aren't independent in " << *e << endl;
+              break;
+            }
+          }
+
+          else
+            LOG << "COMPILER ERROR" << endl;
+        }
+      } 
+
+      // If there are "non-connect" equations, put them in a new for
+      if (!recNotConnEql.empty()) {
+        ForEq forrec(feq.range().indexes(), recNotConnEql);
+        itNC = notConnect.insert(itNC, forrec);
+        ++itNC;
+      }
+
+      // Remove information of counters
+      foreach_ (Name auxnm, auxvars)
+        mmoclass_.rmVar(auxnm);
+
+      set_varsNms(prevVarsNms);
+      set_counters(prevCounters);
+    }
+
+    // Other equations
+    else {
+      itNC = notConnect.insert(itNC, eq);
+      ++itNC;
     }
   }
 
-  return vars;
-}
-
-Expression Connectors::getSlopeExp(NI2 slope, Expression var)
-{
-  if (slope == 1) {
-    return var;
-  } else if (slope == 0) {
-    return Expression(0);
-  }
-  BinOp mult_op(slope, Mult, var);
-  return Expression(mult_op);
-}
-
-Expression Connectors::getLinearExp(Expression slope, NI2 constant)
-{
-  if (constant == 0) {
-    return slope;
-  }
-  if (constant < 0) {
-    Expression h(-1*constant);
-    return Expression(BinOp(slope, Sub, h));
-  } else {
-    Expression h(constant);
-    return Expression(BinOp(slope, Add, h));
-  }
-  return Expression();
-}
-
-Pair<ExpList, bool> Connectors::transMulti(MultiInterval mi1, MultiInterval mi2, 
-                                           ExpList nms, bool forFlow){
-  ExpList res;
-  ExpList::iterator itres = res.begin();
-  bool bres = false;
-
-  ExpList::iterator itnms = nms.begin();
-  OrdCT<Interval> mi22 = mi2.inters_();
-  OrdCT<Interval>::iterator itmi2 = mi22.begin(); 
-
-  if(mi1.ndim_() == mi2.ndim_()){
-    foreach_(Interval i1, mi1.inters_()){
-      NI2 m3;
-      NI2 h3;
-
-      Expression x;
-      if(is<Name>(*itnms))
-        x = *itnms;
-
-      else{
-        ERROR("Should be a name");
-        ExpList auxres;
-        Pair<ExpList, bool> pres(auxres, false);
-        return pres;
-      }
-
-      if(i1.size() == (*itmi2).size()){
-        m3 = (NI2) (*itmi2).step_() / i1.step_();
-        h3 = (-m3) * i1.lo_() + (*itmi2).lo_();
-
-        Expression linear = getLinearExp(getSlopeExp(m3,x), h3);
-
-        itres = res.insert(itres, linear);
-        ++itres;
-      }
-
-      else if((*itmi2).size() == 1 && !forFlow){
-        m3 = 0;
-        h3 = (*itmi2).lo_();
-
-        Expression linear(h3);
-
-        itres = res.insert(itres, linear);
-        ++itres;
-      }
-
-      else if(i1.size() == 1 && forFlow){
-        Expression lo((*itmi2).lo_());
-        Expression st((*itmi2).step_());
-        Expression hi((*itmi2).hi_());
-        Range r(lo, st, hi);
-        Expression er(r);
-
-        itres = res.insert(itres, er);
-        ++itres;
-
-        bres = true;
-      }
-
-      else{
-        ERROR("Operation not allowed");
-        ExpList auxres;
-        Pair<ExpList, bool> pres(auxres, false);
-        return pres;
-      }
-
-      ++itmi2; 
-      ++itnms;
-    }
-  }
-
-  Pair<ExpList, bool> pres(res, bres);
-  return pres;
-}
-
-MultiInterval Connectors::applyOff(MultiInterval mi, OrdCT<NI1> off){
-  OrdCT<Interval> res;
-  OrdCT<Interval>::iterator itres = res.begin();
-
-  OrdCT<NI1>::iterator itoff = off.begin();
-
-  if(mi.ndim_() == (int) off.size()){
-    foreach_(Interval i, mi.inters_()){
-      Interval iaux(i.lo_() - (*itoff) + 1, i.step_(), i.hi_() - (*itoff) + 1);
-
-      itres = res.insert(itres, iaux);
-      ++itres;
- 
-      ++itoff;
-    }
-  }
-
-  MultiInterval mires(res);
-  return mires;
-}
-
-EquationList Connectors::simplifyCode(EquationList &eql){
-  EquationList res;
-  EquationList::iterator itres = res.begin();
-
-  foreach_(Equation eq1, eql){
-    bool found = false;
-    foreach_(Equation eq2, res){
-      if(eq1 == eq2)
-        found = true;
-    }
-    
-    if(!found){
-      itres = res.insert(itres, eq1);
-      ++itres;
-    }
-  } 
-
+  Pair<bool, EquationList> res(ok, notConnect);
   return res;
 }
-
-

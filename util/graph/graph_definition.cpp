@@ -180,6 +180,47 @@ ostream &operator<<(ostream &out, PWLMap &pw)
   return out;
 }
 
+ostream &operator<<(ostream &out, SetVertex &V)
+{
+  string Vnm = V.name_();
+  Set Vvs = V.vs_();
+
+  out << Vnm << ": " << Vvs << "\n";
+
+  return out;
+}
+
+ostream &operator<<(ostream &out, SetEdge &E)
+{
+  string Enm = E.name_();
+  OrdCT<Set> dom = E.es1_().dom_();
+  OrdCT<Set>::iterator itdom = dom.begin();
+
+  out << Enm << " dom: ";
+  out << "[";
+  for (; next(itdom, 1) != dom.end(); ++itdom)
+    out << *itdom << ", ";
+  out << *itdom << "]\n";
+
+  OrdCT<LMap> lmleft = E.es1_().lmap_();
+  OrdCT<LMap>::iterator itleft = lmleft.begin();
+  OrdCT<LMap> lmright = E.es2_().lmap_();
+  OrdCT<LMap>::iterator itright = lmright.begin();
+
+  out << Enm << " left | right: ";
+  out << "[";
+  for (; next(itleft, 1) != lmleft.end(); ++itleft)
+    out << *itleft << ", ";
+  out << *itleft << "] | ";
+
+  out << "[";
+  for (; next(itright, 1) != lmright.end(); ++itright)
+    out << *itright << ", ";
+  out << *itright << "]\n";
+
+  return out;
+}
+
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 // Map operations

@@ -111,7 +111,7 @@ int main(int argc, char** argv)
     clock_t start, end;
     start = clock();
 
-    co.solve(debug);
+    co.solve();
 
     end = clock();
     double exect = double(end - start) / double(CLOCKS_PER_SEC);

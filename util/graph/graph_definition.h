@@ -1727,6 +1727,8 @@ struct SetVertex {
 
   Set vs_() { return vs; }
 
+  string name_() { return name; }
+
   bool operator==(const SetVertex &other) const { return id == other.id; }
 
   size_t hash() { return id; }
@@ -1744,6 +1746,8 @@ struct SetVertex {
 };
 
 size_t hash_value(SetVertex v);
+
+ostream &operator<<(ostream &out, SetVertex &V);
 
 struct SetEdge {
   SetEdge()
@@ -1778,6 +1782,8 @@ struct SetEdge {
 
   int id_() { return id; }
 
+  string name_() { return name; }
+
   string name;
 
   private:
@@ -1786,6 +1792,8 @@ struct SetEdge {
   PWLMap es2;
   int index;
 };
+
+ostream &operator<<(ostream &out, SetEdge &E);
 
 typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, SetVertex, SetEdge> SBGraph;
 typedef SBGraph::vertex_descriptor SetVertexDesc;
