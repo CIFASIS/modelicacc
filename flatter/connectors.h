@@ -42,13 +42,10 @@ using namespace SBG;
 
 typedef Option<ExpList> ExpOptList;
 
-struct VertexNameTable : public SymbolTable<MultiInterval, Name> {
-  VertexNameTable() {}
+struct VarsDimsTable : public SymbolTable<Name, int> {
+  VarsDimsTable() {}
 };
 
-struct NameVertexTable : public SymbolTable<Name, MultiInterval> {
-  NameVertexTable() {}
-};
 
 class Connectors {
   public:
@@ -59,6 +56,7 @@ class Connectors {
   void solve();
 
   protected:
+  bool isFlowVar(Name v);
   void init();
 
   Real getValue(Expression exp);
@@ -74,6 +72,7 @@ class Connectors {
   MultiInterval subscriptMI(MultiInterval mi, ExpOptList r);
   PWLMap createEdgeMap(Set dom, Set im, ExpOptList r);
   bool existsEdge(Name nm);
+  void updateEdge(string nm);
   void createEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc V1, SetVertexDesc V2);
 
   bool checkLinearBase(Expression e);
@@ -85,16 +84,34 @@ class Connectors {
   Pair<Name, ExpOptList> separate(Expression e);
   bool connect(Connect co);
 
-  bool checkIndependentCounters(Name n, Expression e);
+  bool checkIndependentCounters(ForEq feq);
   Pair<bool, EquationList> createGraph(EquationList &eqs);
 
-  member_(PWLMap, ccG); // Connected components of SBG G
+  Name getName(AtomSet as);
+  AtomSet getAtomSet(AtomSet as);
+  bool isIdMap(LMap lm);
+  Indexes buildIndex(Set connected);
+  vector<Name> getEffVars(Set connector);
+  vector<Name> getFlowVars(Set connector);
+  Set getRepd(AtomSet atomRept);
+  ExpList buildSubscripts(Indexes indexes, AtomSet original, AtomSet as, int dims);
+  ExpList buildRanges(AtomSet original, AtomSet as);
+  ExpList buildLoopExpr(Indexes indexes, AtomSet as, vector<Name> vars);
+  ExpList buildAddExpr(AtomSet atomRept, AtomSet as);
+  EquationList createLoop(Indexes indexes, EquationList eqs);
+
+  EquationList createEffEquations(Indexes indexes, AtomSet atomRept, Set repd);
+
+  EquationList createFlowEquations(Indexes indexes, AtomSet atomRept, Set repd);
+
+  EquationList generateCode();
 
   private:
   member_(MMO_Class, mmoclass); // Micro Modelica model
 
   member_(SBGraph, G); // Connect Graph. Variables and edges are labeled with variables names
-  member_(int, maxdim);
+  member_(PWLMap, ccG); // Connected components of SBG G
+  member_(int, maxdim); // Number of dimensions of the variable with maximum dimension in the model
   member_(vector<NI1>, vCount); // Vertices count in each dimension
   member_(vector<NI1>, eCount); // Edges count in each dimension
   member_(int, ECount); // Set-edges count. Used to name set edges 
@@ -103,7 +120,15 @@ class Connectors {
   member_(EquationList::iterator, itNotConn);
 
   member_(UnordCT<Name>, varsNms); // All var names in the mmoclass
+  member_(UnordCT<Name>, effVars); // Names of effort variables
+  member_(UnordCT<Name>, flowVars); // Names of flow variables
+
   member_(OrdCT<Name>, counters); // Helper that saves counters
+  member_(ExpList, countersCG); // Helper that saves counters names for code generation
+
+  member_(VarsDimsTable, varsDims); // Save number of dimensions of each variable
+
+  //member_(EdgeRangeTable, edgeSubscripts);
 };
 
 #endif

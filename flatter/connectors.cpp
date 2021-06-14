@@ -41,9 +41,32 @@ member_imp(Connectors, EquationList, notConnectEqs);
 member_imp(Connectors, EquationList::iterator, itNotConn);
 
 member_imp(Connectors, UnordCT<Name>, varsNms);
+member_imp(Connectors, UnordCT<Name>, flowVars);
+member_imp(Connectors, UnordCT<Name>, effVars);
+
 member_imp(Connectors, OrdCT<Name>, counters);
+member_imp(Connectors, ExpList, countersCG);
+
+member_imp(Connectors, VarsDimsTable, varsDims);
 
 Connectors::Connectors(MMO_Class &c) : mmoclass_(c), ECount_(0), maxdim_(1) {}
+
+bool Connectors::isFlowVar(Name v) 
+{
+  Option<VarInfo> vi = mmoclass_.syms()[v];
+  if (vi) {
+    TypePrefixes tps = (*vi).prefixes_;
+
+    foreach_ (Option<TypePrefix> tp, tps) {
+      if (tp) {
+        if (*tp == flow)
+          return true;
+      }
+    }
+  }
+
+  return false;
+}
 
 void Connectors::init() 
 {
@@ -67,14 +90,54 @@ void Connectors::init()
   // Intialize iterators
   set_itNotConn(notConnectEqs_.begin());
 
-  // Fill varsNms
+  // Fill varsNms, flowVars and effVars
   std::pair<Name, VarInfo> aux;
   UnordCT<Name> vars;
+  UnordCT<Name> eff;
+  UnordCT<Name> flow;
 
-  foreach_ (aux, mmoclass_.syms()) 
-    vars.insert(get<0>(aux));
+  foreach_ (Name aux, mmoclass_.variables()) { 
+    Name auxnm = aux;
+    vars.insert(auxnm);
+
+    if (!isFlowVar(auxnm))
+      eff.insert(auxnm);
+
+    else
+      flow.insert(auxnm);
+  }
 
   set_varsNms(vars);
+  set_effVars(eff);
+  set_flowVars(flow);
+
+  // Fill countersCG
+  ExpList newCG;
+  ExpList::iterator itNewCG = newCG.begin();
+  for(unsigned int i = 0; (int) i < maxdim_; ++i){
+    string nm(1, 105 + i);
+    itNewCG = newCG.insert(itNewCG, Expression(nm));
+    ++itNewCG;
+  }
+
+  set_countersCG(newCG);
+
+  // Fill varsDims
+  VarsDimsTable vdt;
+  foreach_ (Name v, varsNms_) {
+    int dims = 0;
+    Option<VarInfo> vinfo = mmoclass_.syms()[v];
+    if (vinfo) {
+      Option<ExpList> vinds = (*vinfo).indices_;
+      if (vinds)
+        dims = (*vinds).size();
+    }
+
+    Option<int> odims(dims);
+    vdt.insert(v, dims); 
+  }
+
+  set_varsDims(vdt);
 }
 
 // Debugging -------------------------------------------------------------------------------------
@@ -119,9 +182,25 @@ void Connectors::solve()
   init();
 
   Pair<bool, EquationList> gr = createGraph(mmoclass_.equations_ref().equations_ref());
+  // Create vertices for non connected connectors (for flow equations)
+  foreach_ (Name n, flowVars_) { 
+    int i = n.length();
+    while (n[i] != '_')
+      i--;
+
+    createVertex(n.substr(0, i));
+  }
   if(get<0>(gr)){
+    EquationList allEqs;
+    EquationList::iterator itAll = allEqs.begin();
+
     notConnectEqs_ = get<1>(gr);
     itNotConn_ = notConnectEqs_.end();
+
+    foreach_(Equation e, notConnectEqs_) {
+      itAll = allEqs.insert(itAll, e);
+      ++itAll;
+    }
 
     PWLMap res = connectedComponents(G_);
     set_ccG(res);
@@ -137,7 +216,13 @@ void Connectors::solve()
       }
     }
 
-    //generateCode(ccG_);
+    EquationList connEqs = generateCode();
+    foreach_(Equation e, connEqs) {
+      itAll = allEqs.insert(itAll, e);
+      ++itAll;
+    }
+
+    mmoclass_.set_equations(EquationSection(false, allEqs));
 
     cout << mmoclass_ << "\n";
   }
@@ -549,36 +634,49 @@ bool Connectors::existsEdge(string nm)
   return false;
 }
 
-// Create a set-edge if it doesn't exist, or update it
+// edgenm should be the name of an existing set-edge in G_
+/*
+void Connectors::updateEdge(string edgenm) 
+{
+  foreach_ (SetEdgeDesc ei, edges(G_)) {
+    if (G_[ei].name_() == edgenm) {
+      PWLMap pw1 = G_[ei].es1_();
+      PWLMap pw2 = G_[ei].es2_();
+    }
+  } 
+}
+*/
+
+// Create a set-edges. Current implementation might create several edges to connect
+// the same vertices. This doesn't impact on the cost of the algorithm
+// ENHANCEMENT: update edges insted of creeating, if set-edge exists
 void Connectors::createEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc Vdesc1, SetVertexDesc Vdesc2) 
 {
   SetVertex V1 = G_[Vdesc1];
   SetVertex V2 = G_[Vdesc2];
 
-  string nm = "E_" + V1.name_() + "_" + V2.name_();
+  string nm = "E_";
 
-  if (!existsEdge(nm)) {
-    Set dom = createEdgeDom(r1);
-    if (dom.empty()) {
-      LOG << "ERROR: Check connects" << endl;
-      return;
-    }
-    PWLMap pw1 = createEdgeMap(dom, V1.vs_(), r1);
-    PWLMap pw2 = createEdgeMap(dom, V2.vs_(), r2);
-    SetEdge E(nm, pw1, pw2);
-    cout << V1 << V2 << E << "\n";
+  if (V1.name_() < V2.name_())
+    nm = nm + V1.name_() + "_" + V2.name_();
 
-    /*
-    SetEdgeDesc Edesc;
-    bool b;
-    boost::tie(Edesc, b) = boost::add_edge(Vdesc1, Vdesc2, G_);
-    G_[Edesc] = E;
-    */
+  else
+    nm = nm + V2.name_() + "_" + V1.name_();
+
+  // Create new set-edge
+  Set dom = createEdgeDom(r1);
+  if (dom.empty()) {
+    LOG << "ERROR: Check connects" << endl;
+    return;
   }
+  PWLMap pw1 = createEdgeMap(dom, V1.vs_(), r1);
+  PWLMap pw2 = createEdgeMap(dom, V2.vs_(), r2);
+  SetEdge E(nm, pw1, pw2);
 
-  else {
-    //TODO
-  }
+  SetEdgeDesc Edesc;
+  bool b;
+  boost::tie(Edesc, b) = boost::add_edge(Vdesc1, Vdesc2, G_);
+  G_[Edesc] = E;
 }
 
 // Subscripts checks -----------------------------------------------------------------------------
@@ -790,17 +888,27 @@ bool Connectors::connect(Connect co)
 
 // Check if expression e uses another variable apart from n
 // (If a counter does so in its declaration, they aren't independent)
-bool Connectors::checkIndependentCounters(Name n, Expression e)
+bool Connectors::checkIndependentCounters(ForEq feq)
 {
-  foreach_ (Name nm, counters_) {
-    Reference rnm(nm);
-    Expression enm(rnm);
-    ContainsExpression co(enm);
-    
-    if (Apply(co, e) && nm != n) {
-      LOG << "ERROR: Counters aren't independent in " << e << endl;
-      return false;
+  foreach_ (Index ind, feq.range().indexes()) {
+    Name n = ind.name();
+    OptExp e = ind.exp();
+
+    if (e) {
+      foreach_ (Name nm, counters_) {
+        Reference rnm(nm);
+        Expression enm(rnm);
+        ContainsExpression co(enm);
+      
+        if (Apply(co, *e) && nm != n) {
+          LOG << "ERROR: Counters aren't independent in " << e << endl;
+          return false;
+        }
+      }
     }
+
+    else
+      LOG << "ERROR: Empty counter range" << endl;
   }
 
   return true;
@@ -877,25 +985,11 @@ Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs)
         break;
 
       // Check that for with connect equations have independent counters
-      if (eql.size() > 0 && eql.size() != recNotConnEql.size()) {
-        foreach_ (Index ind, feq.range().indexes()) {
-          Name n = ind.name();
-          OptExp e = ind.exp();
-       
-          if (e) {
-            bool indep = checkIndependentCounters(n, *e); 
+      if (eql.size() > 0 && eql.size() != recNotConnEql.size()) 
+        ok = checkIndependentCounters(feq);
 
-            if (!indep) {
-              ok = false;
-              LOG << "ERROR: Counters aren't independent in " << *e << endl;
-              break;
-            }
-          }
-
-          else
-            LOG << "COMPILER ERROR" << endl;
-        }
-      } 
+      if (!ok)
+        break;
 
       // If there are "non-connect" equations, put them in a new for
       if (!recNotConnEql.empty()) {
@@ -920,5 +1014,606 @@ Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs)
   }
 
   Pair<bool, EquationList> res(ok, notConnect);
+  return res;
+}
+
+// Code generation helpers -----------------------------------------------------------------------
+
+// Given a set-vertex, returns its name
+Name Connectors::getName(AtomSet as)
+{
+  Name nm;
+
+  Set auxas;
+  auxas.addAtomSet(as);
+
+  foreach_ (SetVertexDesc vi, vertices(G_)) {
+    Set vs = G_[vi].vs_();
+
+    if (!auxas.cap(vs).empty()) 
+      nm = G_[vi].name_();
+  }
+
+  return nm;
+}
+
+// Given a subset of a set-vertex, returns the set which contains
+// all the vertices in the set-vertex
+AtomSet Connectors::getAtomSet(AtomSet as) 
+{
+  AtomSet res;
+
+  Set auxas;
+  auxas.addAtomSet(as);
+
+  foreach_ (SetVertexDesc vi, vertices(G_)) {
+    Set vs = G_[vi].vs_();
+
+    if (!auxas.cap(vs).empty()) 
+      res = *(vs.asets_().begin());
+  }
+
+  return res;
+}
+
+// Determine if a map is the identity
+bool Connectors::isIdMap(LMap lm) 
+{
+  bool cond = true;
+
+  foreach_ (NI2 g, lm.gain_())
+    if (g != 1)
+      cond = false;
+
+  foreach_ (NI2 o, lm.off_())
+    if (o != 0)
+      cond = false;
+
+  return cond;
+}
+
+// Given a set that represents a connector,
+// get variable names of the connector, that are effort variables
+vector<Name> Connectors::getEffVars(Set connector)
+{
+  vector<Name> res;
+  vector<Name>::iterator itres = res.begin();
+
+  // Get connector name
+  foreach_ (SetVertexDesc vi, vertices(G_)) {
+    Set vs = G_[vi].vs_();
+    Name vinm = G_[vi].name_();
+
+    if (!connector.cap(vs).empty()) {
+      // Search effort vars in the connector
+      foreach_ (Name e, effVars_) {
+        Name aux = e.substr(0, vinm.length()); 
+        if (e.size() > vinm.size()) {
+          Name end = e.substr(vinm.length(), 1);
+          if (aux == vinm && end == "_") {
+            itres = res.insert(itres, e);
+            ++itres;
+          }
+        }
+      }
+    }
+  }
+
+  sort(res.begin(), res.end());
+ 
+  return res;
+}
+
+// Given a set that represents a connector,
+// get variable names of the connector, that are flow variables
+vector<Name> Connectors::getFlowVars(Set connector)
+{
+  vector<Name> res;
+  vector<Name>::iterator itres = res.begin();
+
+  // Get connector name
+  foreach_ (SetVertexDesc vi, vertices(G_)) {
+    Set vs = G_[vi].vs_();
+    Name vinm = G_[vi].name_();
+
+    if (!connector.cap(vs).empty()) {
+      // Search flow vars in the connector
+      foreach_ (Name e, flowVars_) {
+        Name aux = e.substr(0, vinm.length()); 
+        if (e.size() > vinm.size()) {
+          Name end = e.substr(vinm.length(), 1);
+          if (aux == vinm && end == "_") {
+            itres = res.insert(itres, e);
+            ++itres;
+          }
+        }
+      }
+    }
+  }
+
+  return res;
+}
+
+// Given a representant of a connected component, build the loop indexes 
+// that will be used to write the flattened equations.
+// In each dimension the counter will set its bounds according to
+// the maximum number of elements of a variable, in that dimension.
+Indexes Connectors::buildIndex(Set connected)
+{
+  IndexList indexes;
+  IndexList::iterator itinds = indexes.begin();
+
+  ExpList::iterator itCG = countersCG_.begin();
+
+  OrdCT<NI1> nElems; // Maximum number of elements in each dimension
+  foreach_ (AtomSet c, connected.asets_()) {
+    // Traverse dimensions
+    OrdCT<NI1>::iterator itElems = nElems.begin();
+    OrdCT<NI1> nElemsAux;
+    OrdCT<NI1>::iterator itAux = nElemsAux.begin();
+    foreach_ (Interval i, c.aset_().inters_()) {
+      int elems = i.size();
+      if (*itElems)
+        elems = max(*itElems, elems);
+
+      itAux = nElemsAux.insert(itAux, elems);
+      ++itAux;
+      ++itElems;
+    }
+
+    nElems = nElemsAux;
+  }
+
+  // Traverse dimensions
+  foreach_ (NI1 n, nElems) {
+    Range r(Expression(1), Expression(1), Expression(n));
+    Expression er(r);
+    Option<Expression> oer(er);
+
+    Name nm = get<Name>(*itCG);
+    Index index(nm, oer);
+
+    itinds = indexes.insert(itinds, index);
+    ++itinds;
+    ++itCG;
+  }
+
+  Indexes res(indexes);
+  return res;
+}
+
+// Get atom sets that are in the dom of ccG_, and whose image
+// is equal to atomRept
+Set Connectors::getRepd(AtomSet atomRept) 
+{
+  UnordCT<AtomSet> atomRes;
+
+  Set rept(atomRept);
+  Set pre = ccG_.preImage(rept);
+  Set diff = pre.diff(rept);
+
+  if (diff.empty())
+    return rept;
+
+  OrdCT<LMap> lm = ccG_.lmap_();
+  OrdCT<LMap>::iterator itlm = lm.begin();
+
+  foreach_ (Set d, ccG_.dom_()) {
+    AtomSet atomD = *(d.asets_().begin()); // ccG_ is atomized 
+    PWAtomLMap atomPW(atomD, *itlm);
+
+    diff = d.diff(rept);
+    if (atomPW.image(atomD) == atomRept && !diff.empty())
+      atomRes.insert(atomD);
+
+    ++itlm;
+  }
+
+  return Set(atomRes);
+}
+
+// The sub-set "as" of a connector will be part of some equations in a loop
+// with counters described by indexes. Therefore, this function creates the
+// necessary subscripts
+// e.g.: as describes the array v[2:N], but the counter used is i in 1:N-1
+// Therefore, buildSubscripts will return [i+1], and so the loop will be:
+// for i in 1:N-1
+// ...
+// v[i+1] = ...
+// ...
+// end for;
+ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet as, int dims)
+{
+  ExpList res;
+  ExpList::iterator itres = res.begin();
+
+  OrdCT<Interval> miori = original.aset_().inters_();
+  OrdCT<Interval>::iterator itmiori = miori.begin();
+  OrdCT<Interval> mias = as.aset_().inters_();
+  OrdCT<Interval>::iterator itmias = mias.begin();
+
+  const VarSymbolTable auxsyms = mmoclass_.syms();
+  EvalExpFlatter evexp(auxsyms);
+
+  ExpList::iterator itCG = countersCG_.begin();
+
+  // Not an array, doesn't need subscripts
+  if (dims == 0)
+    return res;
+
+  // Traverse counters, creating subscripts
+  int dim = 0;
+  foreach_ (Index ind, indexes.indexes_) {
+    // Complete subscripts up to variable dimension
+    if (dim < dims) {
+      OptExp oe = ind.exp_;
+      if (oe) {
+        int loInd = Apply(evexp, *oe).lo_();
+
+        // Constant value in dimension, don't use counter
+        if ((*itmias).size() == 1) {
+          int off = (*itmias).lo_() - (*itmiori).lo_() + 1; 
+
+          Expression eoff(off);
+          itres = res.insert(itres, eoff);
+        }
+
+        // Use counter
+        else {
+          int off = ((*itmias).lo_() - (*itmiori).lo_() + 1) - loInd; 
+
+          if (off == 0) 
+            itres = res.insert(itres, *itCG);
+
+          else if (off > 0) {
+            Expression eoff(off);
+            BinOp bop(*itCG, Add, eoff);
+            itres = res.insert(itres, bop);
+          }
+
+          else 
+            LOG << "MCC ERROR: Check buildSubscripts" << endl;
+        }
+
+        ++itres;
+      }
+
+      ++itmiori;
+      ++itmias;
+    }
+
+    ++itCG;
+    ++dim;
+  }
+
+  return res;
+}
+
+// Build ranges for sums in flow equations
+ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
+{
+  ExpList res;
+  ExpList::iterator itres = res.begin();
+
+  OrdCT<Interval> intersas = as.aset_().inters_();
+  OrdCT<Interval>::iterator itas = intersas.begin();
+
+  // A range is needed in the sum
+  if (as.size() != 1) {
+    foreach_(Interval iori, original.aset_().inters_()) {
+      NI1 lo = (*itas).lo_() - iori.lo_() + 1;
+      NI1 st = (*itas).step_();
+      NI1 hi = (*itas).hi_() - iori.lo_() + 1;
+      Expression elo(lo);
+      Expression est(st);
+      Expression ehi(hi);
+      Range r(elo, est, ehi);
+      Expression expr(r);
+
+      itres = res.insert(itres, expr);
+      ++itres;
+              
+      ++itas;
+    }
+  }
+
+  // No need of range, just a constant
+  else {
+    foreach_(Interval iori, original.aset_().inters_()) {
+      NI1 lo = (*itas).lo_() - iori.lo_() + 1;
+      Expression expr(lo);
+
+      itres = res.insert(itres, expr);
+      ++itres;
+              
+      ++itas;
+    }
+  }
+
+  return res;
+}
+
+// Build expressions for effort equations
+ExpList Connectors::buildLoopExpr(Indexes indexes, AtomSet as, vector<Name> vars) 
+{
+  ExpList res;
+  ExpList::iterator itres = res.begin();
+
+  Set auxas;
+  auxas.addAtomSet(as);
+
+  foreach_ (Name nmas, vars) {
+    Option<int> dims = varsDims_[nmas];
+    ExpList subs = buildSubscripts(indexes, getAtomSet(as), as, *dims);
+    Reference rrept(nmas, subs);
+    itres = res.insert(itres, rrept);
+    ++itres;
+  }
+
+  return res;
+}
+
+ExpList Connectors::buildAddExpr(AtomSet atomRept, AtomSet as) 
+{
+  ExpList res;
+  ExpList::iterator itres = res.begin();
+
+  Set auxas;
+  auxas.addAtomSet(as);
+
+  foreach_ (Name nmas, getFlowVars(auxas)) {
+    // A sum is needed
+    if (atomRept.size() != as.size()) {
+      ExpList range = buildRanges(getAtomSet(as), as);
+      RefTuple rrept(nmas, range);
+      AddAll add(rrept);
+      itres = res.insert(itres, add);
+    }
+
+    else {
+      AtomSet original = getAtomSet(as);
+
+      // No need of subscript
+      if (original.size() == 1) {
+        Reference ref(nmas);
+        itres = res.insert(itres, ref);
+      }
+
+      // A subscript is needed
+      else {
+        OrdCT<NI1> minOriginal = original.minElem();
+        OrdCT<NI1> minAs = as.minElem();
+        OrdCT<NI1>::iterator itMinAs = minAs.begin();
+
+        ExpList subs;
+        ExpList::iterator itsubs = subs.begin();
+
+        foreach_ (NI1 lo, minOriginal) {
+          itsubs = subs.insert(itsubs, *itMinAs - lo + 1);
+          ++itsubs;
+          ++itMinAs;
+        }
+
+        Reference ref(nmas, subs);
+        itres = res.insert(itres, ref);
+      }
+    }
+
+    ++itres;
+  }
+
+  return res;
+}
+
+// Given the indexes and list of equations, create a loop if it's necessary
+EquationList Connectors::createLoop(Indexes indexes, EquationList eqs)
+{
+  const VarSymbolTable auxsyms = mmoclass_.syms();
+  EvalExpFlatter evexp(auxsyms);
+
+  int elems = 1;
+  // Traverse dimensions
+  foreach_ (Index ind, indexes.indexes_) {
+    OptExp oe = ind.exp_;
+    if (oe) {
+      int indSZ = Apply(evexp, *oe).size();
+      elems = elems * indSZ;
+    }
+  }
+
+  // A loop is needed
+  if (elems > 1) {
+    EquationList res;
+    res.insert(res.begin(), ForEq(indexes, eqs));
+    return res;
+  }
+  
+  return eqs;
+}
+
+// Effort ----------------------------------------------------------------------------------------
+
+// Create effort equations for a given representant
+EquationList Connectors::createEffEquations(Indexes indexes, AtomSet atomRept, Set repd) 
+{
+  EquationList effEqs;
+  EquationList::iterator itEffEqs = effEqs.begin();
+
+  Set rept(atomRept);
+  Set diff1 = rept.diff(repd);
+  Set diff2 = repd.diff(rept);
+
+  if (diff1.empty() && diff2.empty())
+    return effEqs;
+   
+  // Representant subscripts 
+  ExpList effRept = buildLoopExpr(indexes, atomRept, getEffVars(Set(atomRept)));
+  Expression left = *(effRept.begin());
+
+  // Other effort variables in the representant
+  foreach_ (Expression expRept, effRept) {
+    if (left != expRept) {
+      Equality eq(left, expRept);
+      itEffEqs = effEqs.insert(itEffEqs, eq);
+      ++itEffEqs;
+    }
+  }
+
+  // Traverse represented connectors
+  foreach_ (AtomSet atomRepd, repd.asets_()) {
+    ExpList effRepd = buildLoopExpr(indexes, atomRepd, getEffVars(Set(atomRepd)));
+    // Represented variables in connector
+    foreach_ (Expression eRepd, effRepd) {
+      Equality eq(left, eRepd);
+      itEffEqs = effEqs.insert(itEffEqs, eq);
+      ++itEffEqs;
+    }
+  }
+
+  effEqs = createLoop(indexes, effEqs);
+
+  return effEqs;
+}
+
+// Flow ------------------------------------------------------------------------------------------
+
+// Create effort equations for a given representant
+EquationList Connectors::createFlowEquations(Indexes indexes, AtomSet atomRept, Set repd) 
+{
+  EquationList res;
+
+  Expression right(0);
+
+  Set rept(atomRept);
+  Set diff = repd.diff(rept);
+
+  if(repd.empty())
+    return res;
+
+  if (diff.empty()) {
+    Set emptySet;
+    repd = emptySet;
+  }
+
+  // A loop is needed
+  if (atomRept.size() > 1) {
+    EquationList eqsLoop;
+
+    // Representant subscripts 
+    ExpList flowRept = buildLoopExpr(indexes, atomRept, getFlowVars(Set(atomRept)));
+    Expression left = *(flowRept.begin());
+
+    // Other flow variables in the representant
+    foreach_ (Expression expRept, flowRept) {
+      if (left != expRept) 
+        left = BinOp(left, Add, expRept);
+    }
+
+    // Traverse represented connectors
+    foreach_ (AtomSet atomRepd, repd.asets_()) {
+      ExpList flowRepd = buildLoopExpr(indexes, atomRepd, getFlowVars(Set(atomRepd)));
+      // Represented variables in connector
+      foreach_ (Expression expRepd, flowRepd) {
+        left = BinOp(left, Add, expRepd);
+      }
+    }
+
+    Equality eq(left, right);
+    eqsLoop.insert(eqsLoop.begin(), eq);
+    res = createLoop(indexes, eqsLoop);
+  }
+
+  // No need for a loop, sums will be used if needed
+  else {
+    ExpList rept = buildAddExpr(atomRept, atomRept);
+    Expression left = *(rept.begin());
+
+    foreach_ (Expression e, rept) {
+      if (e != *(rept.begin()))
+        left = BinOp(left, Add, e);
+    }
+
+    // Traverse represented connectors
+    foreach_ (AtomSet atomRepd, repd.asets_()) {
+      ExpList add = buildAddExpr(atomRept, atomRepd);
+
+      foreach_ (Expression e, add) 
+        left = BinOp(left, Add, e);
+    }
+
+    Equality eq(left, right);
+    res.insert(res.begin(), eq);
+  }
+
+  return res;
+}
+
+// Code generation -------------------------------------------------------------------------------
+
+// Update mmoclass_ with connect's equations
+EquationList Connectors::generateCode() 
+{
+  EquationList res;
+  EquationList::iterator itres = res.begin();
+
+  set_ccG(ccG_.atomize());
+  OrdCT<LMap> lmapccG = ccG_.lmap_();
+  OrdCT<LMap>::iterator itLMapccG = lmapccG.begin();
+
+  Set flowVertices; // Flow variables already in an equation
+
+  // Traverse connected components
+  foreach_ (Set repd, ccG_.dom_()) {
+    AtomSet atomRepd = *(repd.asets_().begin());
+    PWAtomLMap atomMap(atomRepd, *itLMapccG);
+    AtomSet atomRept = atomMap.image(atomRepd);
+    Set rept;
+    rept.addAtomSet(atomRept);
+
+    Indexes indexes = buildIndex(rept.cup(repd));
+    cout << "rept: " << atomRept << "\n";
+    cout << "repd1: " << repd << "\n";
+
+    if (!isIdMap(*itLMapccG)) {
+      // Effort equations
+      EquationList effEqs = createEffEquations(indexes, atomRept, repd);
+
+      foreach_ (Equation e, effEqs) {
+        cout << "eff: " << e << "\n";
+        itres = res.insert(itres, e);
+        ++itres;
+      }
+    }
+
+    // Flow equations
+    repd = getRepd(atomRept).diff(flowVertices);
+    cout << "repd2: " << repd << "\n";
+    EquationList flowEqs = createFlowEquations(indexes, atomRept, repd);
+
+    foreach_ (Equation e, flowEqs) {
+      cout << "flow: " << e << "\n";
+      itres = res.insert(itres, e);
+      ++itres;
+    }
+    cout << "\n";
+
+    flowVertices = flowVertices.cup(repd);
+
+    ++itLMapccG;
+  }
+
+  // Update flow variables and remove the prefix before generating code.
+  foreach_(Name nm, mmoclass_.variables()){
+    Option<VarInfo> ovi = mmoclass_.getVar(nm);
+    if(ovi){
+      VarInfo vi = *ovi;
+      Name ty = vi.type();
+      if(ty == "Real"){
+        vi.removePrefix(flow);
+        mmoclass_.addVar(nm, vi);
+      }
+    }
+  }
+
   return res;
 }

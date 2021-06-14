@@ -634,6 +634,11 @@ struct SetImp1 {
     asets = aux;
     ndim = 0;
   }
+  SetImp1(ASetImp as)
+  {
+    asets.insert(as);
+    ndim = as.ndim_();
+  }
   SetImp1(SetType ss)
   {
     ASetImp aux2;
