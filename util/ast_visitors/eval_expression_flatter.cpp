@@ -235,8 +235,10 @@ Interval EvalExpFlatter::operator()(Range v) const{
   NI1 newStep = auxStep;
   NI1 newHi = auxHi;
 
-  Interval i(newLo, newStep, newHi);
-  return i;
+  if (newLo <= newHi)
+    return Interval(newLo, newStep, newHi);
+
+  return Interval(true);
 }
 
 Interval EvalExpFlatter::operator()(Brace v) const{

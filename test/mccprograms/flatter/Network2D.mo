@@ -103,15 +103,15 @@ equation
   connect(resistor.n, capacitor.p);
   connect(resistor1.n, capacitor1.p);
   connect(resistor1.n, capacitor.p);
-  connect(l, resistor.p);
+  connect(resistor.p, l);
   connect(capacitor.n, r);
   connect(resistor1.p, u);
   connect(capacitor1.n, d);
 end RCcell;
 
 model network2D
-constant Integer N=4;
-constant Integer M=5;
+constant Integer N=2;
+constant Integer M=2;
 RCcell Cell[N,M];
 ConstantVoltage S;
 Ground G;
@@ -119,6 +119,12 @@ equation
 for i in 1:N-1,j in 1:M-1 loop
   connect(Cell[i,j].r, Cell[i,j+1].l);
   connect(Cell[i,j].d, Cell[i+1,j].u);
+end for;
+for j in 1:M-1 loop
+  connect(Cell[N,j].r, Cell[N,j+1].l);
+end for;
+for i in 1:N-1 loop
+  connect(Cell[i, M].d, Cell[i+1, M].u);
 end for;
 for i in 1:N loop
   connect(Cell[i,M].r, Cell[i,1].l);

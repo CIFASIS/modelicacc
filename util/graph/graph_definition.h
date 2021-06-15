@@ -848,7 +848,17 @@ struct SetImp1 {
     return res;
   }
 
-  bool operator==(const SetImp1 &other) const { return asets == other.asets; }
+  bool operator==(const SetImp1 &other) const { 
+    SetImp1 aux1 = *this;
+    SetImp1 aux2 = other;
+    SetImp1 diff1 = aux1.diff(aux2);
+    SetImp1 diff2 = aux2.diff(aux1);
+
+    if (diff1.empty() && diff2.empty())
+      return true;
+
+    return false; 
+  }
 
   bool operator!=(const SetImp1 &other) const { return asets != other.asets; }
 
@@ -1686,6 +1696,8 @@ ostream &auxSetLMap(ostream &out, Set &s, LMap &lm);
 ostream &operator<<(ostream &out, PWLMap &pw);
 
 // Function declarations ---------------------------------------------------------------------------
+
+bool equivalentPW(PWLMap pw1, PWLMap pw2);
 
 PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2);
 PWLMap minPW(Set &dom, LMap &lm1, LMap &lm2);

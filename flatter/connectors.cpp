@@ -455,7 +455,6 @@ Set Connectors::createEdgeDom(ExpOptList r)
 {
   MultiInterval miCounters;
 
-
   // Connect out of any loop
   if (counters_.size() == 0) {
     vector<NI1> newECount;
@@ -471,8 +470,8 @@ Set Connectors::createEdgeDom(ExpOptList r)
     set_eCount(newECount);
   }
 
-  else {
-    // Connect is inside some loop
+  // Connect is inside some loop
+  else if (r) {
     int olddim = locateCounterDimension(r, *(counters_.begin()));
     foreach_ (Name count, counters_) {
       int dim = locateCounterDimension(r, count);
@@ -551,7 +550,7 @@ LMap Connectors::createLM(MultiInterval mi1, MultiInterval mi2)
     }
 
     else {
-      LOG << "ERROR: Check connect subscripts" << endl;
+      LOG << "ERROR: Check connect subscripts " << mi1 << " | " << mi2 << endl;
       LMap emptyLM;
       return emptyLM;
     }
@@ -590,8 +589,6 @@ MultiInterval Connectors::subscriptMI(MultiInterval mi, ExpOptList r)
   else
     mires = miinters;
 
-  //MultiInterval aux(mires);
-  //cout << "aux: " << aux << "\n";
   return MultiInterval(mires);
 }
 
@@ -634,19 +631,6 @@ bool Connectors::existsEdge(string nm)
   return false;
 }
 
-// edgenm should be the name of an existing set-edge in G_
-/*
-void Connectors::updateEdge(string edgenm) 
-{
-  foreach_ (SetEdgeDesc ei, edges(G_)) {
-    if (G_[ei].name_() == edgenm) {
-      PWLMap pw1 = G_[ei].es1_();
-      PWLMap pw2 = G_[ei].es2_();
-    }
-  } 
-}
-*/
-
 // Create a set-edges. Current implementation might create several edges to connect
 // the same vertices. This doesn't impact on the cost of the algorithm
 // ENHANCEMENT: update edges insted of creeating, if set-edge exists
@@ -664,11 +648,15 @@ void Connectors::createEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc Vdesc1, 
     nm = nm + V2.name_() + "_" + V1.name_();
 
   // Create new set-edge
-  Set dom = createEdgeDom(r1);
-  if (dom.empty()) {
-    LOG << "ERROR: Check connects" << endl;
+  Set dom1 = createEdgeDom(r1);
+  Set dom2 = createEdgeDom(r2);
+  if (dom1.empty() && dom2.empty()) {
+    LOG << "ERROR: Check connects " << V1.name_() << ", " << V2.name_() << endl;
     return;
   }
+  Set dom = dom1;
+  if (dom2.size() > dom1.size())
+    dom = dom2;
   PWLMap pw1 = createEdgeMap(dom, V1.vs_(), r1);
   PWLMap pw2 = createEdgeMap(dom, V2.vs_(), r2);
   SetEdge E(nm, pw1, pw2);
@@ -925,6 +913,9 @@ Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs)
   EquationList::iterator itNC = notConnect.begin();
   bool ok = true;
 
+  const VarSymbolTable auxsyms = mmoclass_.syms();
+  EvalExpFlatter evexp(auxsyms);
+
   foreach_(Equation eq, eqs) {
     // Connect equation
     if (is<Connect>(eq)) {
@@ -952,17 +943,20 @@ Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs)
         Name n = ind.name();
         OptExp e = ind.exp();
         if (e) {
-          VarInfo vi(TypePrefixes(), n, Option<Comment>(), 
-                     Option<Modification>(Modification(ModAssign(*e))), 
-                     ExpOptList(ExpList(1, *e)), false);
-          mmoclass_.addVar(n, vi);
+          Interval i = Apply(evexp, *e);
+          if (!i.empty_()) {
+            VarInfo vi(TypePrefixes(), n, Option<Comment>(), 
+                       Option<Modification>(Modification(ModAssign(*e))), 
+                       ExpOptList(ExpList(1, *e)), false);
+            mmoclass_.addVar(n, vi);
 
-          auxVarsNms.insert(n);
-          itaux = auxCounters.insert(itaux, n);
-          ++itaux;
+            auxVarsNms.insert(n);
+              itaux = auxCounters.insert(itaux, n);
+              ++itaux;
 
-          itvars = auxvars.insert(itvars, n);
-          ++itvars;
+            itvars = auxvars.insert(itvars, n);
+            ++itvars;
+          }
         }
 
         else { 
@@ -1131,6 +1125,8 @@ vector<Name> Connectors::getFlowVars(Set connector)
     }
   }
 
+  sort(res.begin(), res.end());
+
   return res;
 }
 
@@ -1203,7 +1199,7 @@ Set Connectors::getRepd(AtomSet atomRept)
     PWAtomLMap atomPW(atomD, *itlm);
 
     diff = d.diff(rept);
-    if (atomPW.image(atomD) == atomRept && !diff.empty())
+    if (atomPW.image(atomD) == atomRept && !diff.empty() && atomD != atomRept)
       atomRes.insert(atomD);
 
     ++itlm;
@@ -1560,42 +1556,45 @@ EquationList Connectors::generateCode()
   OrdCT<LMap> lmapccG = ccG_.lmap_();
   OrdCT<LMap>::iterator itLMapccG = lmapccG.begin();
 
+  Set wDom = ccG_.wholeDom();
+  Set im = ccG_.image(wDom);
+
   Set flowVertices; // Flow variables already in an equation
+  Set effReps;
 
   // Traverse connected components
   foreach_ (Set repd, ccG_.dom_()) {
     AtomSet atomRepd = *(repd.asets_().begin());
     PWAtomLMap atomMap(atomRepd, *itLMapccG);
     AtomSet atomRept = atomMap.image(atomRepd);
-    Set rept;
-    rept.addAtomSet(atomRept);
+    Set rept(atomRept);
+    repd = ccG_.preImage(rept);
 
-    Indexes indexes = buildIndex(rept.cup(repd));
-    cout << "rept: " << atomRept << "\n";
-    cout << "repd1: " << repd << "\n";
+    Indexes indexes = buildIndex(repd);
 
+    repd = getRepd(atomRept);
     if (!isIdMap(*itLMapccG)) {
       // Effort equations
+      //cout << "rept: " << atomRept << "\n";
+      //cout << "repd: " << repd << "\n";
       EquationList effEqs = createEffEquations(indexes, atomRept, repd);
 
       foreach_ (Equation e, effEqs) {
-        cout << "eff: " << e << "\n";
         itres = res.insert(itres, e);
         ++itres;
+        //cout << e << "\n";
       }
+      //cout << "\n";
     }
 
     // Flow equations
-    repd = getRepd(atomRept).diff(flowVertices);
-    cout << "repd2: " << repd << "\n";
+    //repd = getRepd(atomRept).diff(flowVertices);
     EquationList flowEqs = createFlowEquations(indexes, atomRept, repd);
 
     foreach_ (Equation e, flowEqs) {
-      cout << "flow: " << e << "\n";
       itres = res.insert(itres, e);
       ++itres;
     }
-    cout << "\n";
 
     flowVertices = flowVertices.cup(repd);
 
@@ -1612,6 +1611,62 @@ EquationList Connectors::generateCode()
         vi.removePrefix(flow);
         mmoclass_.addVar(nm, vi);
       }
+    }
+  }
+
+  res = simplifyCode(res);
+
+  return res;
+}
+
+// Delete duplicate, trivial or equations
+EquationList Connectors::simplifyCode(EquationList eql)
+{
+  EquationList res;
+  EquationList::iterator itres = res.begin();
+
+  foreach_ (Equation eq1, eql) {
+    bool trivial = false;
+    bool found = false;
+   
+    if (is<ForEq>(eq1)) {
+      EquationList newl;
+      EquationList::iterator itnewl = newl.begin();
+
+      ForEq feq = boost::get<ForEq>(eq1);
+      foreach_ (Equation eq, feq.elements()) {
+        if (is<Equality>(eq)) {
+          Equality eqty = boost::get<Equality>(eq);
+          if (eqty.left() != eqty.right()) {
+            itnewl = newl.insert(itnewl, eqty);
+            ++itnewl;
+          }
+        }
+
+        else {
+          itnewl = newl.insert(itnewl, eq);
+          ++itnewl;
+        }
+      }
+
+      ForEq newFeq(feq.range().indexes(), newl);
+      eq1 = newFeq;
+    }
+
+    else if (is<Equality>(eq1)) { 
+      Equality eqty = boost::get<Equality>(eq1);
+      if (eqty.left() == eqty.right())
+        trivial = true;
+    }
+
+    foreach_ (Equation eq2, res) {
+      if (eq1 == eq2)
+        found = true;
+    }
+
+    if (!found && !trivial) {
+      itres = res.insert(itres, eq1);
+      ++itres;
     }
   }
 

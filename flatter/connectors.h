@@ -105,6 +105,7 @@ class Connectors {
   EquationList createFlowEquations(Indexes indexes, AtomSet atomRept, Set repd);
 
   EquationList generateCode();
+  EquationList simplifyCode(EquationList eql);
 
   private:
   member_(MMO_Class, mmoclass); // Micro Modelica model

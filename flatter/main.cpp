@@ -99,12 +99,12 @@ int main(int argc, char** argv)
     }
 
     f.Flat(mmo, false, true);
-    f.removeConnectorVar(mmo);
     if (debug) {
       LOG << "First Flatter: " << endl;
       LOG << mmo << std::endl;
       LOG << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl << std::endl;
     }
+    f.removeConnectorVar(mmo);
 
     Connectors co(mmo);
 
