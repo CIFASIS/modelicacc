@@ -38,13 +38,12 @@ member_imp(Connectors, int, ECount);
 member_imp(Connectors, PWLMap, ccG);
 
 member_imp(Connectors, EquationList, notConnectEqs);
-member_imp(Connectors, EquationList::iterator, itNotConn);
 
-member_imp(Connectors, UnordCT<Name>, varsNms);
-member_imp(Connectors, UnordCT<Name>, flowVars);
-member_imp(Connectors, UnordCT<Name>, effVars);
+member_imp(Connectors, set<Name>, varsNms);
+member_imp(Connectors, set<Name>, flowVars);
+member_imp(Connectors, set<Name>, effVars);
 
-member_imp(Connectors, OrdCT<Name>, counters);
+member_imp(Connectors, vector<Name>, counters);
 member_imp(Connectors, ExpList, countersCG);
 
 member_imp(Connectors, VarsDimsTable, varsDims);
@@ -53,6 +52,9 @@ Connectors::Connectors(MMO_Class &c) : mmoclass_(c), ECount_(0), maxdim_(1) {}
 
 bool Connectors::isFlowVar(Name v) 
 {
+  if (v[0] == '-')
+    v = v.substr(1, v.length() - 1);
+
   Option<VarInfo> vi = mmoclass_.syms()[v];
   if (vi) {
     TypePrefixes tps = (*vi).prefixes_;
@@ -68,7 +70,69 @@ bool Connectors::isFlowVar(Name v)
   return false;
 }
 
-void Connectors::init() 
+set<Name> Connectors::getByPrefix(Name n) 
+{
+  set<Name> res;
+
+  if (n[0] == '-')
+    n = n.substr(1, n.length() - 1);
+
+  foreach_ (Name nm, varsNms_) {
+    if (nm.length() > n.length()) {
+      Name auxnm = nm.substr(0, n.length());
+      Name end = nm.substr(n.length(), 1);
+
+      if (n == auxnm && end[0] == '_') {
+        if (n[0] == '-')
+          nm = '-' + nm;
+
+        res.insert(nm);
+      }
+    }
+  }
+
+  return res;
+}
+
+// Add var to different containers of Connectors
+void Connectors::addVar(Name n, VarInfo vi) {
+  set<Name> vars;
+  vars.insert(n);
+
+  // Negative vars
+  if (n[0] == '-') {
+    vars = getByPrefix(n);
+    vars.insert(n.substr(1, n.length() - 1));
+  }
+
+  foreach_ (Name nm, vars) {
+    if (n[0] == '-') 
+      nm = '-' + nm;
+
+    mmoclass_.addVar(nm, vi);
+
+    // Fill variables, effort and flow names
+    varsNms_.insert(nm);
+
+    if (!isFlowVar(nm))
+      effVars_.insert(nm);
+
+    else
+      flowVars_.insert(nm);
+
+    // Fill varsDims
+    int dims = 0;
+    Option<ExpList> vinds = vi.indices_;
+    if (vinds)
+      dims = (*vinds).size();
+
+    Option<int> odims(dims);
+    varsDims_.insert(nm, dims); 
+  }
+}
+
+// Initialization
+bool Connectors::init() 
 {
   // Get "largest" number of dimensions from variables
   foreach_ (Name n, mmoclass_.variables()) {
@@ -81,35 +145,29 @@ void Connectors::init()
         set_maxdim(max(maxdim_, (NI1) inds.size()));
       }
     }
+
+    else {
+      LOG << "Variable " << n << " without information" << endl;
+      return false;
+    }
   }  
 
   vector<NI1> maxdimVector(maxdim_, 1);
   set_vCount(maxdimVector);
   set_eCount(maxdimVector);
 
-  // Intialize iterators
-  set_itNotConn(notConnectEqs_.begin());
+  // Fill all variable related info
+  foreach_ (Name n, mmoclass_.variables()) {
+    Option<VarInfo> vinfo = mmoclass_.syms()[n];
 
-  // Fill varsNms, flowVars and effVars
-  std::pair<Name, VarInfo> aux;
-  UnordCT<Name> vars;
-  UnordCT<Name> eff;
-  UnordCT<Name> flow;
+    if (vinfo)
+      addVar(n, *vinfo);
 
-  foreach_ (Name aux, mmoclass_.variables()) { 
-    Name auxnm = aux;
-    vars.insert(auxnm);
-
-    if (!isFlowVar(auxnm))
-      eff.insert(auxnm);
-
-    else
-      flow.insert(auxnm);
+    else {
+      LOG << "Variable " << n << " without information" << endl;
+      return false;
+    }
   }
-
-  set_varsNms(vars);
-  set_effVars(eff);
-  set_flowVars(flow);
 
   // Fill countersCG
   ExpList newCG;
@@ -122,22 +180,7 @@ void Connectors::init()
 
   set_countersCG(newCG);
 
-  // Fill varsDims
-  VarsDimsTable vdt;
-  foreach_ (Name v, varsNms_) {
-    int dims = 0;
-    Option<VarInfo> vinfo = mmoclass_.syms()[v];
-    if (vinfo) {
-      Option<ExpList> vinds = (*vinfo).indices_;
-      if (vinds)
-        dims = (*vinds).size();
-    }
-
-    Option<int> odims(dims);
-    vdt.insert(v, dims); 
-  }
-
-  set_varsDims(vdt);
+  return true;
 }
 
 // Debugging -------------------------------------------------------------------------------------
@@ -179,52 +222,45 @@ void Connectors::debug(std::string filename)
 // return a new flattenned model
 void Connectors::solve()
 {
-  init();
+  bool okinit = init();
 
-  Pair<bool, EquationList> gr = createGraph(mmoclass_.equations_ref().equations_ref());
-  // Create vertices for non connected connectors (for flow equations)
-  foreach_ (Name n, flowVars_) { 
-    int i = n.length();
-    while (n[i] != '_')
-      i--;
+  if (okinit) {
+    Pair<bool, EquationList> gr = buildGraph(mmoclass_.equations_ref().equations_ref());
+    if (get<0>(gr)) {
+      EquationList allEqs;
+      EquationList::iterator itAll = allEqs.begin();
 
-    createVertex(n.substr(0, i));
-  }
-  if(get<0>(gr)){
-    EquationList allEqs;
-    EquationList::iterator itAll = allEqs.begin();
+      notConnectEqs_ = get<1>(gr);
 
-    notConnectEqs_ = get<1>(gr);
-    itNotConn_ = notConnectEqs_.end();
+      foreach_(Equation e, notConnectEqs_) {
+        itAll = allEqs.insert(itAll, e);
+        ++itAll;
+      }
 
-    foreach_(Equation e, notConnectEqs_) {
-      itAll = allEqs.insert(itAll, e);
-      ++itAll;
-    }
+      PWLMap res = connectedComponents(G_);
+      set_ccG(res);
 
-    PWLMap res = connectedComponents(G_);
-    set_ccG(res);
-
-    foreach_ (Name nm, mmoclass_.variables()) {
-      Option<VarInfo> ovi = mmoclass_.getVar(nm);
-      if (ovi) {
-        VarInfo vi = *ovi;
-        Name ty = vi.type();
-        if (ty != "Real" && ty != "Integer") {
-          mmoclass_.rmVar(nm);
+      foreach_ (Name nm, mmoclass_.variables()) {
+        Option<VarInfo> ovi = mmoclass_.getVar(nm);
+        if (ovi) {
+          VarInfo vi = *ovi;
+          Name ty = vi.type();
+          if (ty != "Real" && ty != "Integer") {
+            mmoclass_.rmVar(nm);
+          }
         }
       }
+
+      EquationList connEqs = generateCode();
+      foreach_(Equation e, connEqs) {
+        itAll = allEqs.insert(itAll, e);
+        ++itAll;
+      }
+
+      mmoclass_.set_equations(EquationSection(false, allEqs));
+
+      cout << mmoclass_ << "\n";
     }
-
-    EquationList connEqs = generateCode();
-    foreach_(Equation e, connEqs) {
-      itAll = allEqs.insert(itAll, e);
-      ++itAll;
-    }
-
-    mmoclass_.set_equations(EquationSection(false, allEqs));
-
-    cout << mmoclass_ << "\n";
   }
 
   else {
@@ -258,7 +294,7 @@ Set Connectors::buildSet(MultiInterval mi)
 
 // Build a Set from a variable. All variables are updated to 
 // have the maximum number of dimensions according to the model.
-// To be used in createVertex
+// To be used in buildVertex
 Set Connectors::buildSet(VarInfo v)
 {
   vector<NI1> newVCount;
@@ -307,8 +343,24 @@ Set Connectors::buildSet(VarInfo v)
 // Create a set vertex for each variable in a connect,
 // if it isn't already created. Variables which aren't
 // part of a connect are ignored.
-Option<SetVertexDesc> Connectors::createVertex(Name n)
+Option<SetVertexDesc> Connectors::buildVertex(Name n)
 {
+  Name auxn = n;
+  Option<VarInfo> ovi;
+
+  if (n[0] == '-')
+    auxn = auxn.substr(1, n.length() - 1);
+
+  ovi = mmoclass_.getVar(auxn);
+
+  if (ovi)
+    addVar(n, *ovi);
+    
+  else {
+    LOG << "ERROR: Variable " << n << " should be defined" << endl;
+    return Option<SetVertexDesc>();
+  }
+
   // Vertex already created
   foreach_ (SetVertexDesc Vdesc, vertices(G_)) {
     if (G_[Vdesc].name == n)
@@ -316,7 +368,6 @@ Option<SetVertexDesc> Connectors::createVertex(Name n)
   }
  
   // Vertex doesn't exist 
-  Option<VarInfo> ovi = mmoclass_.getVar(n);
   if (ovi) {
     VarInfo vi = *ovi;
     Set s = buildSet(vi);
@@ -335,7 +386,7 @@ Option<SetVertexDesc> Connectors::createVertex(Name n)
 // Set-edge creation -----------------------------------------------------------------------------
 
 // Build a Set from a variable. All counters will have the maximum dimension.
-// To be used in createEdgeDom
+// To be used in buildEdgeDom
 MultiInterval Connectors::buildEdgeMultiInterval(VarInfo v, int offset)
 {
   vector<NI1>::iterator itEC = eCount_.begin();
@@ -451,7 +502,7 @@ MultiInterval Connectors::fillDims(MultiInterval mi, int olddim, int dim)
 // It creates a new Set which values are the ones
 // of the current counters
 // ENHANCEMENT: simplify this code, lulz
-Set Connectors::createEdgeDom(ExpOptList r) 
+Set Connectors::buildEdgeDom(ExpOptList r) 
 {
   MultiInterval miCounters;
 
@@ -514,7 +565,7 @@ Set Connectors::createEdgeDom(ExpOptList r)
 // In each dimension, they should have the same number of elements
 // (if not, they aren't related by a linear function)
 // ENHANCEMENT: support discontinuidades
-LMap Connectors::createLM(MultiInterval mi1, MultiInterval mi2)
+LMap Connectors::buildLM(MultiInterval mi1, MultiInterval mi2)
 {
   OrdCT<NI2> resg;
   OrdCT<NI2>::iterator itresg = resg.begin();
@@ -593,12 +644,12 @@ MultiInterval Connectors::subscriptMI(MultiInterval mi, ExpOptList r)
 }
 
 // Create left and right maps
-PWLMap Connectors::createEdgeMap(Set dom, Set im, ExpOptList r) 
+PWLMap Connectors::buildEdgeMap(Set dom, Set im, ExpOptList r) 
 {
   PWLMap res;
 
   // In the current implementation, dom and im have only one atomic set
-  // Check buildSet and createEdgeDom
+  // Check buildSet and buildEdgeDom
   if (dom.asets_().size() != 1 || im.asets_().size() != 1) {
     LOG << "COMPILER ERROR: dom and im should have only one atomic set" << endl;
     return res;
@@ -611,7 +662,7 @@ PWLMap Connectors::createEdgeMap(Set dom, Set im, ExpOptList r)
     MultiInterval dommi = domas.aset_();
     MultiInterval immi = imas.aset_();
 
-    LMap lm = createLM(dommi, subscriptMI(immi, r));
+    LMap lm = buildLM(dommi, subscriptMI(immi, r));
     res.addSetLM(dom, lm);
   }
 
@@ -634,7 +685,7 @@ bool Connectors::existsEdge(string nm)
 // Create a set-edges. Current implementation might create several edges to connect
 // the same vertices. This doesn't impact on the cost of the algorithm
 // ENHANCEMENT: update edges insted of creeating, if set-edge exists
-void Connectors::createEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc Vdesc1, SetVertexDesc Vdesc2) 
+void Connectors::buildEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc Vdesc1, SetVertexDesc Vdesc2) 
 {
   SetVertex V1 = G_[Vdesc1];
   SetVertex V2 = G_[Vdesc2];
@@ -648,8 +699,8 @@ void Connectors::createEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc Vdesc1, 
     nm = nm + V2.name_() + "_" + V1.name_();
 
   // Create new set-edge
-  Set dom1 = createEdgeDom(r1);
-  Set dom2 = createEdgeDom(r2);
+  Set dom1 = buildEdgeDom(r1);
+  Set dom2 = buildEdgeDom(r2);
   if (dom1.empty() && dom2.empty()) {
     LOG << "ERROR: Check connects " << V1.name_() << ", " << V2.name_() << endl;
     return;
@@ -657,8 +708,8 @@ void Connectors::createEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc Vdesc1, 
   Set dom = dom1;
   if (dom2.size() > dom1.size())
     dom = dom2;
-  PWLMap pw1 = createEdgeMap(dom, V1.vs_(), r1);
-  PWLMap pw2 = createEdgeMap(dom, V2.vs_(), r2);
+  PWLMap pw1 = buildEdgeMap(dom, V1.vs_(), r1);
+  PWLMap pw2 = buildEdgeMap(dom, V2.vs_(), r2);
   SetEdge E(nm, pw1, pw2);
 
   SetEdgeDesc Edesc;
@@ -857,11 +908,23 @@ bool Connectors::connect(Connect co)
     Name v1 = get<0>(left);
     Name v2 = get<0>(right);
 
-    Option<SetVertexDesc> V1 = createVertex(v1);
-    Option<SetVertexDesc> V2 = createVertex(v2);
+    if (is<UnaryOp>(eleft)) {
+      UnaryOp uop = boost::get<UnaryOp>(eleft);
+      if (uop.op_ == Minus) 
+        v1 = "-" + v1;
+    }
+
+    if (is<UnaryOp>(eright)) {
+      UnaryOp uop = boost::get<UnaryOp>(eright);
+      if (uop.op_ == Minus)
+        v2 = "-" + v2;
+    }
+
+    Option<SetVertexDesc> V1 = buildVertex(v1);
+    Option<SetVertexDesc> V2 = buildVertex(v2);
 
     if (V1 && V2) {
-      createEdge(range1, range2, *V1, *V2);
+      buildEdge(range1, range2, *V1, *V2);
       return true;
     }
 
@@ -902,10 +965,22 @@ bool Connectors::checkIndependentCounters(ForEq feq)
   return true;
 }
 
+// Create vertices for non connected connectors (for flow equations)
+void Connectors::buildDisconnected()
+{
+  foreach_ (Name n, flowVars_) { 
+    int i = n.length();
+    while (n[i] != '_')
+      i--;
+
+    buildVertex(n.substr(0, i));
+  }
+}
+
 // Construct Connect Graph, treating connects.
 // If the model doesn't satisfy the restrictions described in 
 // the paper, an empty model will be returned.
-Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs)
+Pair<bool, EquationList> Connectors::buildConnects(EquationList &eqs)
 {
   EquationList emptyEqs;
 
@@ -930,11 +1005,11 @@ Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs)
     // Traverse ForEqs to find connects
     else if(is<ForEq>(eq)) {
       // Save information of counters
-      UnordCT<Name> prevVarsNms = varsNms_;
-      UnordCT<Name> auxVarsNms = varsNms_;
-      OrdCT<Name> prevCounters = counters_;
-      OrdCT<Name> auxCounters = counters_;
-      OrdCT<Name>::iterator itaux = auxCounters.begin();
+      set<Name> prevVarsNms = varsNms_;
+      set<Name> auxVarsNms = varsNms_;
+      vector<Name> prevCounters = counters_;
+      vector<Name> auxCounters = counters_;
+      vector<Name>::iterator itaux = auxCounters.begin();
       
       vector<Name> auxvars;
       vector<Name>::iterator itvars = auxvars.begin();
@@ -971,7 +1046,7 @@ Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs)
 
       // Traverse recursively inside the for
       EquationList eql = feq.elements();
-      Pair<bool, EquationList> rec = createGraph(eql);
+      Pair<bool, EquationList> rec = buildConnects(eql);
       ok = get<0>(rec);
       EquationList recNotConnEql = get<1>(rec);
 
@@ -1009,6 +1084,12 @@ Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs)
 
   Pair<bool, EquationList> res(ok, notConnect);
   return res;
+}
+
+Pair<bool, EquationList> Connectors::buildGraph(EquationList &eqs)
+{
+  buildDisconnected();
+  return buildConnects(eqs); 
 }
 
 // Code generation helpers -----------------------------------------------------------------------
@@ -1082,8 +1163,10 @@ vector<Name> Connectors::getEffVars(Set connector)
       // Search effort vars in the connector
       foreach_ (Name e, effVars_) {
         Name aux = e.substr(0, vinm.length()); 
+
         if (e.size() > vinm.size()) {
           Name end = e.substr(vinm.length(), 1);
+
           if (aux == vinm && end == "_") {
             itres = res.insert(itres, e);
             ++itres;
@@ -1094,7 +1177,11 @@ vector<Name> Connectors::getEffVars(Set connector)
   }
 
   sort(res.begin(), res.end());
- 
+
+  cout << connector << "\n";
+  foreach_ (Name n, res)
+    cout << n << "\n";
+
   return res;
 }
 
@@ -1402,7 +1489,7 @@ ExpList Connectors::buildAddExpr(AtomSet atomRept, AtomSet as)
 }
 
 // Given the indexes and list of equations, create a loop if it's necessary
-EquationList Connectors::createLoop(Indexes indexes, EquationList eqs)
+EquationList Connectors::buildLoop(Indexes indexes, EquationList eqs)
 {
   const VarSymbolTable auxsyms = mmoclass_.syms();
   EvalExpFlatter evexp(auxsyms);
@@ -1430,7 +1517,7 @@ EquationList Connectors::createLoop(Indexes indexes, EquationList eqs)
 // Effort ----------------------------------------------------------------------------------------
 
 // Create effort equations for a given representant
-EquationList Connectors::createEffEquations(Indexes indexes, AtomSet atomRept, Set repd) 
+EquationList Connectors::buildEffEquations(Indexes indexes, AtomSet atomRept, Set repd) 
 {
   EquationList effEqs;
   EquationList::iterator itEffEqs = effEqs.begin();
@@ -1457,6 +1544,11 @@ EquationList Connectors::createEffEquations(Indexes indexes, AtomSet atomRept, S
 
   // Traverse represented connectors
   foreach_ (AtomSet atomRepd, repd.asets_()) {
+          /*
+    vector<Name> aux = getEffVars(Set(atomRepd));
+    foreach_ (Name n, aux)
+      cout << "effrepd: " << n << "\n";
+      */
     ExpList effRepd = buildLoopExpr(indexes, atomRepd, getEffVars(Set(atomRepd)));
     // Represented variables in connector
     foreach_ (Expression eRepd, effRepd) {
@@ -1466,7 +1558,8 @@ EquationList Connectors::createEffEquations(Indexes indexes, AtomSet atomRept, S
     }
   }
 
-  effEqs = createLoop(indexes, effEqs);
+  if (!effEqs.size() == 0)
+    effEqs = buildLoop(indexes, effEqs);
 
   return effEqs;
 }
@@ -1474,7 +1567,7 @@ EquationList Connectors::createEffEquations(Indexes indexes, AtomSet atomRept, S
 // Flow ------------------------------------------------------------------------------------------
 
 // Create effort equations for a given representant
-EquationList Connectors::createFlowEquations(Indexes indexes, AtomSet atomRept, Set repd) 
+EquationList Connectors::buildFlowEquations(Indexes indexes, AtomSet atomRept, Set repd) 
 {
   EquationList res;
 
@@ -1516,7 +1609,8 @@ EquationList Connectors::createFlowEquations(Indexes indexes, AtomSet atomRept, 
 
     Equality eq(left, right);
     eqsLoop.insert(eqsLoop.begin(), eq);
-    res = createLoop(indexes, eqsLoop);
+    if (!eqsLoop.size() == 0)
+      res = buildLoop(indexes, eqsLoop);
   }
 
   // No need for a loop, sums will be used if needed
@@ -1559,6 +1653,9 @@ EquationList Connectors::generateCode()
   Set wDom = ccG_.wholeDom();
   Set im = ccG_.image(wDom);
 
+  foreach_ (Name n, effVars_)
+    cout << n << "\n";
+
   Set flowVertices; // Flow variables already in an equation
   Set effReps;
 
@@ -1575,21 +1672,21 @@ EquationList Connectors::generateCode()
     repd = getRepd(atomRept);
     if (!isIdMap(*itLMapccG)) {
       // Effort equations
-      //cout << "rept: " << atomRept << "\n";
-      //cout << "repd: " << repd << "\n";
-      EquationList effEqs = createEffEquations(indexes, atomRept, repd);
+      cout << "rept: " << atomRept << "\n";
+      cout << "repd: " << repd << "\n";
+      EquationList effEqs = buildEffEquations(indexes, atomRept, repd);
 
       foreach_ (Equation e, effEqs) {
         itres = res.insert(itres, e);
         ++itres;
-        //cout << e << "\n";
+        cout << e << "\n";
       }
-      //cout << "\n";
+      cout << "\n";
     }
 
     // Flow equations
     //repd = getRepd(atomRept).diff(flowVertices);
-    EquationList flowEqs = createFlowEquations(indexes, atomRept, repd);
+    EquationList flowEqs = buildFlowEquations(indexes, atomRept, repd);
 
     foreach_ (Equation e, flowEqs) {
       itres = res.insert(itres, e);

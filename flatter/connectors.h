@@ -56,37 +56,47 @@ class Connectors {
   void solve();
 
   protected:
+  // Initialization
   bool isFlowVar(Name v);
-  void init();
+  set<Name> getByPrefix(Name n);
+  void addVar(Name n, VarInfo vi);
+  bool init();
 
+  // Set-vertex creation
   Real getValue(Expression exp);
   Set buildSet(MultiInterval mi);
   Set buildSet(VarInfo v);
-  Option<SetVertexDesc> createVertex(Name n);
+  Option<SetVertexDesc> buildVertex(Name n);
 
+  // Set-edge creation
   MultiInterval buildEdgeMultiInterval(VarInfo v, int offset);
   MultiInterval fillDims(MultiInterval mi, int olddim, int dim);
   int locateCounterDimension(ExpOptList r, Name nm);
-  Set createEdgeDom(ExpOptList r);
-  LMap createLM(MultiInterval mi1, MultiInterval mi2);
+  Set buildEdgeDom(ExpOptList r);
+  LMap buildLM(MultiInterval mi1, MultiInterval mi2);
   MultiInterval subscriptMI(MultiInterval mi, ExpOptList r);
-  PWLMap createEdgeMap(Set dom, Set im, ExpOptList r);
+  PWLMap buildEdgeMap(Set dom, Set im, ExpOptList r);
   bool existsEdge(Name nm);
-  void updateEdge(string nm);
-  void createEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc V1, SetVertexDesc V2);
+  void buildEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc V1, SetVertexDesc V2);
 
+  // Check subscripts restrictions
   bool checkLinearBase(Expression e);
   bool checkLinear(Expression e);
   bool checkLinearList(ExpList expl);
   bool checkCounters(ExpList l1, ExpList l2);
   bool checkSubscripts(ExpOptList range1, ExpOptList range2);
 
+  // Deal with connectos
   Pair<Name, ExpOptList> separate(Expression e);
   bool connect(Connect co);
 
+  // Graph creation
   bool checkIndependentCounters(ForEq feq);
-  Pair<bool, EquationList> createGraph(EquationList &eqs);
+  void buildDisconnected();
+  Pair<bool, EquationList> buildConnects(EquationList &eqs);
+  Pair<bool, EquationList> buildGraph(EquationList &eqs);
 
+  // Code generation helpers
   Name getName(AtomSet as);
   AtomSet getAtomSet(AtomSet as);
   bool isIdMap(LMap lm);
@@ -98,12 +108,13 @@ class Connectors {
   ExpList buildRanges(AtomSet original, AtomSet as);
   ExpList buildLoopExpr(Indexes indexes, AtomSet as, vector<Name> vars);
   ExpList buildAddExpr(AtomSet atomRept, AtomSet as);
-  EquationList createLoop(Indexes indexes, EquationList eqs);
+  EquationList buildLoop(Indexes indexes, EquationList eqs);
 
-  EquationList createEffEquations(Indexes indexes, AtomSet atomRept, Set repd);
+  // Effort and flow equations
+  EquationList buildEffEquations(Indexes indexes, AtomSet atomRept, Set repd);
+  EquationList buildFlowEquations(Indexes indexes, AtomSet atomRept, Set repd);
 
-  EquationList createFlowEquations(Indexes indexes, AtomSet atomRept, Set repd);
-
+  // Code generation
   EquationList generateCode();
   EquationList simplifyCode(EquationList eql);
 
@@ -118,18 +129,16 @@ class Connectors {
   member_(int, ECount); // Set-edges count. Used to name set edges 
 
   member_(EquationList, notConnectEqs); // List "non-connect" equations
-  member_(EquationList::iterator, itNotConn);
 
-  member_(UnordCT<Name>, varsNms); // All var names in the mmoclass
-  member_(UnordCT<Name>, effVars); // Names of effort variables
-  member_(UnordCT<Name>, flowVars); // Names of flow variables
+  member_(set<Name>, varsNms); // All var names in the mmoclass
+  member_(set<Name>, negVars); // Connectors in a connect whose sign is negative
+  member_(set<Name>, effVars); // Names of effort variables
+  member_(set<Name>, flowVars); // Names of flow variables
 
-  member_(OrdCT<Name>, counters); // Helper that saves counters
+  member_(vector<Name>, counters); // Helper that saves counters
   member_(ExpList, countersCG); // Helper that saves counters names for code generation
 
   member_(VarsDimsTable, varsDims); // Save number of dimensions of each variable
-
-  //member_(EdgeRangeTable, edgeSubscripts);
 };
 
 #endif
