@@ -63,6 +63,7 @@ class Connectors {
   bool init();
 
   // Set-vertex creation
+  Option<VarInfo> addConnectorVars(Name n);
   Real getValue(Expression exp);
   Set buildSet(MultiInterval mi);
   Set buildSet(VarInfo v);

@@ -110,8 +110,8 @@ equation
 end RCcell;
 
 model network2D
-constant Integer N=2;
-constant Integer M=2;
+constant Integer N=4;
+constant Integer M=5;
 RCcell Cell[N,M];
 ConstantVoltage S;
 Ground G;

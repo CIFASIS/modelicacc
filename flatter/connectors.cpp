@@ -50,6 +50,7 @@ member_imp(Connectors, VarsDimsTable, varsDims);
 
 Connectors::Connectors(MMO_Class &c) : mmoclass_(c), ECount_(0), maxdim_(1) {}
 
+// Determine if variable is a flow variable
 bool Connectors::isFlowVar(Name v) 
 {
   if (v[0] == '-')
@@ -70,66 +71,29 @@ bool Connectors::isFlowVar(Name v)
   return false;
 }
 
-set<Name> Connectors::getByPrefix(Name n) 
-{
-  set<Name> res;
-
-  if (n[0] == '-')
-    n = n.substr(1, n.length() - 1);
-
-  foreach_ (Name nm, varsNms_) {
-    if (nm.length() > n.length()) {
-      Name auxnm = nm.substr(0, n.length());
-      Name end = nm.substr(n.length(), 1);
-
-      if (n == auxnm && end[0] == '_') {
-        if (n[0] == '-')
-          nm = '-' + nm;
-
-        res.insert(nm);
-      }
-    }
-  }
-
-  return res;
-}
-
 // Add var to different containers of Connectors
 void Connectors::addVar(Name n, VarInfo vi) {
-  set<Name> vars;
-  vars.insert(n);
+  mmoclass_.addVar(n, vi);
 
-  // Negative vars
-  if (n[0] == '-') {
-    vars = getByPrefix(n);
-    vars.insert(n.substr(1, n.length() - 1));
-  }
+  // Fill variables, effort and flow names
+  varsNms_.insert(n);
 
-  foreach_ (Name nm, vars) {
-    if (n[0] == '-') 
-      nm = '-' + nm;
+  if (!isFlowVar(n))
+    effVars_.insert(n);
 
-    mmoclass_.addVar(nm, vi);
+  else
+    flowVars_.insert(n);
 
-    // Fill variables, effort and flow names
-    varsNms_.insert(nm);
+  // Fill varsDims
+  int dims = 0;
+  Option<ExpList> vinds = vi.indices_;
+  if (vinds)
+    dims = (*vinds).size();
 
-    if (!isFlowVar(nm))
-      effVars_.insert(nm);
-
-    else
-      flowVars_.insert(nm);
-
-    // Fill varsDims
-    int dims = 0;
-    Option<ExpList> vinds = vi.indices_;
-    if (vinds)
-      dims = (*vinds).size();
-
-    Option<int> odims(dims);
-    varsDims_.insert(nm, dims); 
-  }
+  Option<int> odims(dims);
+  varsDims_.insert(n, dims); 
 }
+
 
 // Initialization
 bool Connectors::init() 
@@ -274,6 +238,57 @@ void Connectors::solve()
 
 // Set-vertex creation ---------------------------------------------------------------------------
 
+// Given a connector name, get variables of the connector
+// Is used in the case in which the operator '-' is applied
+// to a connector, to add new negative variables of the connector
+set<Name> Connectors::getByPrefix(Name n) 
+{
+  set<Name> res;
+
+  if (n[0] == '-')
+    n = n.substr(1, n.length() - 1);
+
+  foreach_ (Name nm, varsNms_) {
+    if (nm.length() > n.length()) {
+      Name auxnm = nm.substr(0, n.length());
+      Name end = nm.substr(n.length(), 1);
+
+      if (n == auxnm && end[0] == '_') {
+        if (n[0] == '-')
+          nm = '-' + nm;
+
+        res.insert(nm);
+      }
+    }
+  }
+
+  return res;
+}
+
+// Add "negative" connectors vars to different containers of Connectors
+// The name n should be the name of a connector
+// This function should be only called by buildVertex
+Option<VarInfo> Connectors::addConnectorVars(Name n) 
+{
+  Option<VarInfo> ovi = mmoclass_.getVar(n);
+
+  if (n[0] == '-') {
+    ovi = mmoclass_.getVar(n.substr(1, n.length() - 1));
+
+    if (ovi) {
+      foreach_ (Name nm, getByPrefix(n))
+        addVar('-' + nm, *ovi);
+    }
+
+    else {
+      LOG << "ERROR: Variable " << n << " should be defined" << endl;
+      return Option<VarInfo>();
+    }
+  }
+
+  return ovi;
+}
+
 // Evaluate expression
 Real Connectors::getValue(Expression exp)
 {
@@ -346,20 +361,7 @@ Set Connectors::buildSet(VarInfo v)
 Option<SetVertexDesc> Connectors::buildVertex(Name n)
 {
   Name auxn = n;
-  Option<VarInfo> ovi;
-
-  if (n[0] == '-')
-    auxn = auxn.substr(1, n.length() - 1);
-
-  ovi = mmoclass_.getVar(auxn);
-
-  if (ovi)
-    addVar(n, *ovi);
-    
-  else {
-    LOG << "ERROR: Variable " << n << " should be defined" << endl;
-    return Option<SetVertexDesc>();
-  }
+  Option<VarInfo> ovi = addConnectorVars(n);
 
   // Vertex already created
   foreach_ (SetVertexDesc Vdesc, vertices(G_)) {
@@ -1148,7 +1150,7 @@ bool Connectors::isIdMap(LMap lm)
 }
 
 // Given a set that represents a connector,
-// get variable names of the connector, that are effort variables
+// get variables names of the connector, that are effort variables
 vector<Name> Connectors::getEffVars(Set connector)
 {
   vector<Name> res;
@@ -1178,15 +1180,11 @@ vector<Name> Connectors::getEffVars(Set connector)
 
   sort(res.begin(), res.end());
 
-  cout << connector << "\n";
-  foreach_ (Name n, res)
-    cout << n << "\n";
-
   return res;
 }
 
 // Given a set that represents a connector,
-// get variable names of the connector, that are flow variables
+// get variables names of the connector, that are flow variables
 vector<Name> Connectors::getFlowVars(Set connector)
 {
   vector<Name> res;
@@ -1220,7 +1218,7 @@ vector<Name> Connectors::getFlowVars(Set connector)
 // Given a representant of a connected component, build the loop indexes 
 // that will be used to write the flattened equations.
 // In each dimension the counter will set its bounds according to
-// the maximum number of elements of a variable, in that dimension.
+// the maximum number of elements in that dimension in all subsets of set-vertices.
 Indexes Connectors::buildIndex(Set connected)
 {
   IndexList indexes;
@@ -1266,7 +1264,7 @@ Indexes Connectors::buildIndex(Set connected)
 }
 
 // Get atom sets that are in the dom of ccG_, and whose image
-// is equal to atomRept
+// is equal to atomRept (represented vertices)
 Set Connectors::getRepd(AtomSet atomRept) 
 {
   UnordCT<AtomSet> atomRes;
@@ -1372,6 +1370,32 @@ ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet a
   return res;
 }
 
+// Build expressions for variables used in equations in a loop
+ExpList Connectors::buildLoopExpr(Indexes indexes, AtomSet as, vector<Name> vars) 
+{
+  ExpList res;
+  ExpList::iterator itres = res.begin();
+
+  Set auxas;
+  auxas.addAtomSet(as);
+
+  foreach_ (Name nmas, vars) {
+    Option<int> dims = varsDims_[nmas];
+    ExpList subs = buildSubscripts(indexes, getAtomSet(as), as, *dims);
+    Reference rrept(nmas, subs);
+    Expression e = rrept;
+    if (nmas[0] == '-') {
+      rrept = Reference(nmas.substr(1, nmas.length() - 1), subs);
+      UnaryOp uop(rrept, Minus);  
+      e = uop;
+    }
+    itres = res.insert(itres, e);
+    ++itres;
+  }
+
+  return res;
+}
+
 // Build ranges for sums in flow equations
 ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
 {
@@ -1416,26 +1440,7 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
   return res;
 }
 
-// Build expressions for effort equations
-ExpList Connectors::buildLoopExpr(Indexes indexes, AtomSet as, vector<Name> vars) 
-{
-  ExpList res;
-  ExpList::iterator itres = res.begin();
-
-  Set auxas;
-  auxas.addAtomSet(as);
-
-  foreach_ (Name nmas, vars) {
-    Option<int> dims = varsDims_[nmas];
-    ExpList subs = buildSubscripts(indexes, getAtomSet(as), as, *dims);
-    Reference rrept(nmas, subs);
-    itres = res.insert(itres, rrept);
-    ++itres;
-  }
-
-  return res;
-}
-
+// Build the sums needed for a flow equation
 ExpList Connectors::buildAddExpr(AtomSet atomRept, AtomSet as) 
 {
   ExpList res;
@@ -1544,11 +1549,6 @@ EquationList Connectors::buildEffEquations(Indexes indexes, AtomSet atomRept, Se
 
   // Traverse represented connectors
   foreach_ (AtomSet atomRepd, repd.asets_()) {
-          /*
-    vector<Name> aux = getEffVars(Set(atomRepd));
-    foreach_ (Name n, aux)
-      cout << "effrepd: " << n << "\n";
-      */
     ExpList effRepd = buildLoopExpr(indexes, atomRepd, getEffVars(Set(atomRepd)));
     // Represented variables in connector
     foreach_ (Expression eRepd, effRepd) {
@@ -1653,9 +1653,6 @@ EquationList Connectors::generateCode()
   Set wDom = ccG_.wholeDom();
   Set im = ccG_.image(wDom);
 
-  foreach_ (Name n, effVars_)
-    cout << n << "\n";
-
   Set flowVertices; // Flow variables already in an equation
   Set effReps;
 
@@ -1672,16 +1669,12 @@ EquationList Connectors::generateCode()
     repd = getRepd(atomRept);
     if (!isIdMap(*itLMapccG)) {
       // Effort equations
-      cout << "rept: " << atomRept << "\n";
-      cout << "repd: " << repd << "\n";
       EquationList effEqs = buildEffEquations(indexes, atomRept, repd);
 
       foreach_ (Equation e, effEqs) {
         itres = res.insert(itres, e);
         ++itres;
-        cout << e << "\n";
       }
-      cout << "\n";
     }
 
     // Flow equations
