@@ -17,6 +17,7 @@
 
 #include <flatter/connectors.h>
 #include <util/ast_visitors/contains_expression.h>
+#include <util/ast_visitors/contains_expression_flatter.h>
 #include <util/ast_visitors/eval_expression.h>
 #include <util/ast_visitors/eval_expression_flatter.h>
 #include <util/logger.h>
@@ -1371,6 +1372,7 @@ ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet a
 }
 
 // Build expressions for variables used in equations in a loop
+// The third argument is to restrict use to either effort or flow variables
 ExpList Connectors::buildLoopExpr(Indexes indexes, AtomSet as, vector<Name> vars) 
 {
   ExpList res;
@@ -1379,16 +1381,23 @@ ExpList Connectors::buildLoopExpr(Indexes indexes, AtomSet as, vector<Name> vars
   Set auxas;
   auxas.addAtomSet(as);
 
+  // Traverse variables in the loop
   foreach_ (Name nmas, vars) {
     Option<int> dims = varsDims_[nmas];
     ExpList subs = buildSubscripts(indexes, getAtomSet(as), as, *dims);
     Reference rrept(nmas, subs);
     Expression e = rrept;
+
     if (nmas[0] == '-') {
       rrept = Reference(nmas.substr(1, nmas.length() - 1), subs);
-      UnaryOp uop(rrept, Minus);  
-      e = uop;
+
+      if (isFlowVar(nmas)) 
+        e = UnaryOp(rrept, Minus);
+
+      else 
+        e = rrept;
     }
+
     itres = res.insert(itres, e);
     ++itres;
   }
@@ -1496,27 +1505,54 @@ ExpList Connectors::buildAddExpr(AtomSet atomRept, AtomSet as)
 // Given the indexes and list of equations, create a loop if it's necessary
 EquationList Connectors::buildLoop(Indexes indexes, EquationList eqs)
 {
-  const VarSymbolTable auxsyms = mmoclass_.syms();
-  EvalExpFlatter evexp(auxsyms);
+  EquationList res;
+  EquationList::iterator itres = res.begin();
+  EquationList loopeqs;
+  EquationList::iterator itloop = loopeqs.begin();
+  EquationList constanteqs;
+  EquationList::iterator itcon = constanteqs.begin();
 
-  int elems = 1;
-  // Traverse dimensions
-  foreach_ (Index ind, indexes.indexes_) {
-    OptExp oe = ind.exp_;
-    if (oe) {
-      int indSZ = Apply(evexp, *oe).size();
-      elems = elems * indSZ;
+  set<Name> indexesNms;
+
+  foreach_ (Index i, indexes.indexes_) 
+    indexesNms.insert(i.name_);
+
+  // Traverse equations
+  foreach_ (Equation eq, eqs) {
+    if (is<Equality>(eq)) {
+      Equality eqty = boost::get<Equality>(eq);
+      Expression left = eqty.left_, right = eqty.right_;
+
+      // Traverse dimensions
+      foreach_ (Name i, indexesNms) {
+        Reference refi(i);
+        Expression ei(refi);
+        ContainsExpressionFlatter co(ei);
+
+        // Equation uses counter, it should go in a loop
+        if (Apply(co, left) || Apply(co, right)) {
+          itloop = loopeqs.insert(itloop, eq);
+          ++itloop;
+        }
+
+        else {
+          itcon = constanteqs.insert(itcon, eq);
+          ++itcon;
+        }
+      }
     }
   }
 
-  // A loop is needed
-  if (elems > 1) {
-    EquationList res;
-    res.insert(res.begin(), ForEq(indexes, eqs));
-    return res;
+  // Insert constant equations
+  foreach_ (Equation eq, constanteqs) {
+    itres = res.insert(itres, eq);
+    ++itres;
   }
-  
-  return eqs;
+
+  // Create loops, and add the to result
+  res.insert(itres, ForEq(indexes, loopeqs));
+
+  return res;
 }
 
 // Effort ----------------------------------------------------------------------------------------
