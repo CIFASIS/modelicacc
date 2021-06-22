@@ -1509,8 +1509,6 @@ EquationList Connectors::buildLoop(Indexes indexes, EquationList eqs)
   EquationList::iterator itres = res.begin();
   EquationList loopeqs;
   EquationList::iterator itloop = loopeqs.begin();
-  EquationList constanteqs;
-  EquationList::iterator itcon = constanteqs.begin();
 
   set<Name> indexesNms;
 
@@ -1523,6 +1521,8 @@ EquationList Connectors::buildLoop(Indexes indexes, EquationList eqs)
       Equality eqty = boost::get<Equality>(eq);
       Expression left = eqty.left_, right = eqty.right_;
 
+      bool usesCounters = false;
+
       // Traverse dimensions
       foreach_ (Name i, indexesNms) {
         Reference refi(i);
@@ -1530,27 +1530,27 @@ EquationList Connectors::buildLoop(Indexes indexes, EquationList eqs)
         ContainsExpressionFlatter co(ei);
 
         // Equation uses counter, it should go in a loop
-        if (Apply(co, left) || Apply(co, right)) {
-          itloop = loopeqs.insert(itloop, eq);
-          ++itloop;
-        }
+        if (Apply(co, left) || Apply(co, right)) 
+          usesCounters = true;
+      }
 
-        else {
-          itcon = constanteqs.insert(itcon, eq);
-          ++itcon;
-        }
+      if (usesCounters) {
+        itloop = loopeqs.insert(itloop, eq);
+        ++itloop;
+      }
+
+      else {
+        itres = res.insert(itres, eq);
+        ++itres;
       }
     }
   }
 
-  // Insert constant equations
-  foreach_ (Equation eq, constanteqs) {
-    itres = res.insert(itres, eq);
-    ++itres;
-  }
-
   // Create loops, and add the to result
-  res.insert(itres, ForEq(indexes, loopeqs));
+  if (loopeqs.size() != 0) { 
+    ForEq feq(indexes, loopeqs);
+    res.insert(itres, feq);
+  }
 
   return res;
 }

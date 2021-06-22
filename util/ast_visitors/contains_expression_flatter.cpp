@@ -43,7 +43,7 @@ bool ContainsExpressionFlatter::operator()(AddAll v) const
 
   return false;
 }
-bool ContainsExpressionFlatter::operator()(Name v) const { return exp == Expression(v); }
+bool ContainsExpressionFlatter::operator()(Name v) const { return exp == Expression(Reference(v)); }
 bool ContainsExpressionFlatter::operator()(Real v) const { return exp == Expression(v); }
 bool ContainsExpressionFlatter::operator()(SubEnd v) const { return exp == Expression(v); }
 bool ContainsExpressionFlatter::operator()(SubAll v) const { return exp == Expression(v); }
@@ -134,8 +134,9 @@ bool ContainsExpressionFlatter::operator()(Reference v) const
     // Check variable subscripts
     foreach_ (RefTuple r, v.ref()) {
       foreach_ (Expression e, get<1>(r)) {
-        if (ApplyThis(e))
+        if (ApplyThis(e)) {
           return true;
+        }
       }
     }
   }
