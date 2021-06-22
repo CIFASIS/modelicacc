@@ -1342,19 +1342,48 @@ ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet a
 
         // Use counter
         else {
-          int off = ((*itmias).lo_() - (*itmiori).lo_() + 1) - loInd; 
+          Real step = (*itmias).step_(); 
+          Real off = (((*itmias).lo_() - (*itmiori).lo_() + 1)) - (step * loInd); 
 
-          if (off == 0) 
-            itres = res.insert(itres, *itCG);
+          if (step == 0)
+            itres = res.insert(itres, Expression(off));
 
-          else if (off > 0) {
-            Expression eoff(off);
-            BinOp bop(*itCG, Add, eoff);
-            itres = res.insert(itres, bop);
+          else if (step == 1) {
+            if (off == 0) 
+              itres = res.insert(itres, *itCG);
+
+            else if (off > 0) {
+              Expression eoff(off);
+              BinOp bop(*itCG, Add, eoff);
+              itres = res.insert(itres, bop);
+            }
+
+            else {
+              Expression eoff(-off);
+              BinOp bop(*itCG, Sub, eoff);
+              itres = res.insert(itres, bop);
+            }
           }
 
-          else 
-            LOG << "MCC ERROR: Check buildSubscripts" << endl;
+          else {
+            Expression estep(step);
+            BinOp bop(estep, Mult, *itCG);
+
+            if (off == 0) 
+              itres = res.insert(itres, bop);
+
+            else if (off > 0) {
+              Expression eoff(off);
+              BinOp linearbop(bop, Add, eoff);
+              itres = res.insert(itres, linearbop);
+            }
+
+            else {
+              Expression eoff(-off);
+              BinOp linearbop(bop, Sub, eoff);
+              itres = res.insert(itres, linearbop);
+            }
+          }
         }
 
         ++itres;
