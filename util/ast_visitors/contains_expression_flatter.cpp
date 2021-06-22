@@ -133,7 +133,7 @@ bool ContainsExpressionFlatter::operator()(Reference v) const
 
     // Check variable subscripts
     foreach_ (RefTuple r, v.ref()) {
-      foreach_ (Expression e, get<1>(r))
+      foreach_ (Expression e, get<1>(r)) {
         if (ApplyThis(e))
           return true;
       }
