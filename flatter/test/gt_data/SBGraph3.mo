@@ -1,14 +1,14 @@
 model SBGraph3
   Real N=1000;
   Real M=1000;
-  Real S_n_eff[1, 1];
-  Real S_n_fl[1, 1];
-  Real S_p_eff[1, 1];
-  Real S_p_fl[1, 1];
-  Real G_n_eff[1, 1];
-  Real G_n_fl[1, 1];
-  Real G_p_eff[1, 1];
-  Real G_p_fl[1, 1];
+  Real S_n_eff;
+  Real S_n_fl;
+  Real S_p_eff;
+  Real S_p_fl;
+  Real G_n_eff;
+  Real G_n_fl;
+  Real G_p_eff;
+  Real G_p_fl;
   Real C_u_eff[N, M];
   Real C_u_fl[N, M];
   Real C_d_eff[N, M];
@@ -21,8 +21,8 @@ equation
   for i in 1:1:1000,j in 1:1:999 loop
     C_l_fl[i,j+1]+C_r_fl[i,j] = 0;
   end for;
-  C_d_eff[1000,1] = G_p_eff[1,1];
-  C_d_eff[1000,1] = S_n_eff[1,1];
+  C_d_eff[1000,1] = G_p_eff;
+  C_d_eff[1000,1] = S_n_eff;
   for i in 1:1:1,j in 1:1:999 loop
     C_d_eff[1000,1] = C_d_eff[1000,j+1];
   end for;
@@ -33,7 +33,7 @@ equation
   for i in 1:1:1000,j in 1:1:1 loop
     C_l_fl[i,1]+C_r_fl[i,1000] = 0;
   end for;
-  C_u_eff[1,1] = S_p_eff[1,1];
+  C_u_eff[1,1] = S_p_eff;
   for i in 1:1:1,j in 1:1:999 loop
     C_u_eff[1,1] = C_u_eff[1,j+1];
   end for;

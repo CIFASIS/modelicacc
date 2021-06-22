@@ -88,7 +88,7 @@ void Connectors::addVar(Name n, VarInfo vi) {
   // Fill varsDims
   int dims = 0;
   Option<ExpList> vinds = vi.indices_;
-  if (vinds)
+  if (vinds) 
     dims = (*vinds).size();
 
   Option<int> odims(dims);
@@ -1500,7 +1500,7 @@ ExpList Connectors::buildAddExpr(AtomSet atomRept, AtomSet as)
       AtomSet original = getAtomSet(as);
 
       // No need of subscript
-      if (original.size() == 1) {
+      if (varsDims_[nmas] == 0) {
         Reference ref(nmas);
         itres = res.insert(itres, ref);
       }
