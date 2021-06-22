@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#ifndef AST_VISITOR_CONTAINS
-#define AST_VISITOR_CONTAINS
+#pragma once
+
 #include <boost/variant/static_visitor.hpp>
 #include <ast/expression.h>
 
@@ -53,4 +53,3 @@ class ContainsExpressionFlatter : public boost::static_visitor<bool> {
   Expression exp;
 };
 }  // namespace Modelica
-#endif
