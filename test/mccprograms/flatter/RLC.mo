@@ -13,81 +13,57 @@ connector NegativePin
   flow Real i;
 end NegativePin;
 
-model Ground
-  Pin p;  
+class Ground
+  Pin p;
 equation
   p.v = 0;
 end Ground;
 
-model OnePort
+class Resistor
+  parameter Real R(start = 1.0);
+  parameter Real T_ref = 300.15;
+  parameter Real alpha = 0.0;
   Real v;
   Real i;
   PositivePin p;
   NegativePin n;
-equation
-  v = p.v - n.v;
-  0 = p.i + n.i;
-  i = p.i;
-end OnePort;
-
-model ConditionalHeatPort
-  parameter Real T=293.15;
   Real LossPower;
-  Real T_heatPort;
-equation
-     T_heatPort = T;
-end ConditionalHeatPort;
-
-model Resistor
-  parameter Real R(start=1);
-  parameter Real T_ref=300.15;
-  parameter Real alpha=0;
-  Real v;
-  Real i;
-  PositivePin p;
-  NegativePin n;
+  Real T_heatPort(start = 288.15);
   Real R_actual;
-  Real LossPower;
-  Real T_heatPort;
-
 equation
+  R_actual = R * (1.0 + alpha * (T_heatPort - T_ref));
+  v = R_actual * i;
+  LossPower = v * i;
   T_heatPort = T_ref;
   v = p.v - n.v;
-  0 = p.i + n.i;
+  0.0 = p.i + n.i;
   i = p.i;
-  R_actual = R*(1 + alpha*(T_heatPort - T_ref));
-  v = R_actual*i;
-  LossPower = v*i;
 end Resistor;
 
-model Capacitor
-  parameter Real C(start=1);
-  Real v;
+class Capacitor 
+  Real v(start = 0.0);
   Real i;
   PositivePin p;
   NegativePin n;
-
-initial algorithm
-  v := 0;
-
+  parameter Real C(start = 1.0);
 equation
+  i = C * der(v);
   v = p.v - n.v;
-  0 = p.i + n.i;
+  0.0 = p.i + n.i;
   i = p.i;
-  i = C*der(v);
 end Capacitor;
 
-model ConstantVoltage
-  parameter Real V(start=1);
+class ConstantVoltage
+  parameter Real V(start = 1.0);
   Real v;
   Real i;
   PositivePin p;
   NegativePin n;
 equation
-  v = p.v - n.v;
-  0 = p.i + n.i;
-  i = p.i;
   v = V;
+  v = p.v - n.v;
+  0.0 = p.i + n.i;
+  i = p.i;
 end ConstantVoltage;
 
 model RLC
@@ -102,7 +78,7 @@ connect(S.n,G.p);
 for i in 1:N-1 loop
   connect(R[i].n, R[i+1].p);
 end for;
-for i in 2:N loop
+for i in 1:N loop
   connect(C[i].p, R[i].n);
   connect(C[i].n, G.p);
 end for;
