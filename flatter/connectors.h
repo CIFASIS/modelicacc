@@ -42,13 +42,10 @@ using namespace SBG;
 
 typedef Option<ExpList> ExpOptList;
 
-struct VertexNameTable : public SymbolTable<MultiInterval, Name> {
-  VertexNameTable() {}
+struct VarsDimsTable : public SymbolTable<Name, int> {
+  VarsDimsTable() {}
 };
 
-struct NameVertexTable : public SymbolTable<Name, MultiInterval> {
-  NameVertexTable() {}
-};
 
 class Connectors {
   public:
@@ -56,39 +53,93 @@ class Connectors {
 
   void debug(std::string filename);
 
-  void solve(bool deb);
-  Pair<bool, EquationList> createGraph(EquationList &eqs);
-  bool connect(Connect co);
-  Pair<Name, ExpOptList> separate(Expression e);
-  MultiInterval createVertex(Name n);
-  bool checkRanges(ExpOptList range1, ExpOptList range2);
-  Option<SetEdgeDesc> existsEdge(SetVertexDesc d1, SetVertexDesc d2);
-  void updateGraph(SetVertexDesc d1, SetVertexDesc d2, MultiInterval mi1, MultiInterval mi2);
-  void generateCode(PWLMap pw);
-  OrdCT<NI1> getOff(MultiInterval mi);
-  Pair<vector<Name>, vector<Name>> separateVars();
-  bool isFlowVar(Name n);
-  vector<Pair<Name, Name>> getVars(vector<Name> vs, Set sauxi);
-  Pair<ExpList, bool> transMulti(MultiInterval mi1, MultiInterval mi2, ExpList nms, bool forFlow);
-  MultiInterval applyOff(MultiInterval mi, OrdCT<NI1> off);
-  EquationList simplifyCode(EquationList &eql);
-  // ExpList lmToExpList(LMap lm, ExpList vs);
+  void solve();
 
   protected:
-  Expression getSlopeExp(NI2 slope, Expression var);
-  Expression getLinearExp(Expression slope, NI2 constant);
+  // Initialization
+  bool isFlowVar(Name v);
+  set<Name> getByPrefix(Name n);
+  void addVar(Name n, VarInfo vi);
+  bool init();
+
+  // Set-vertex creation
+  Option<VarInfo> addConnectorVars(Name n);
+  Real getValue(Expression exp);
+  Set buildSet(MultiInterval mi);
+  Set buildSet(VarInfo v);
+  Option<SetVertexDesc> buildVertex(Name n);
+
+  // Set-edge creation
+  MultiInterval buildEdgeMultiInterval(VarInfo v, int offset);
+  MultiInterval fillDims(MultiInterval mi, int olddim, int dim);
+  int locateCounterDimension(ExpOptList r, Name nm);
+  Set buildEdgeDom(ExpOptList r);
+  LMap buildLM(MultiInterval mi1, MultiInterval mi2);
+  MultiInterval subscriptMI(MultiInterval mi, ExpOptList r);
+  PWLMap buildEdgeMap(Set dom, Set im, ExpOptList r);
+  bool existsEdge(Name nm);
+  void buildEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc V1, SetVertexDesc V2);
+
+  // Check subscripts restrictions
+  bool checkLinearBase(Expression e);
+  bool checkLinear(Expression e);
+  bool checkLinearList(ExpList expl);
+  bool checkCounters(ExpList l1, ExpList l2);
+  bool checkSubscripts(ExpOptList range1, ExpOptList range2);
+
+  // Deal with connectos
+  Pair<Name, ExpOptList> separate(Expression e);
+  bool connect(Connect co);
+
+  // Graph creation
+  bool checkIndependentCounters(ForEq feq);
+  void buildDisconnected();
+  Pair<bool, EquationList> buildConnects(EquationList &eqs);
+  Pair<bool, EquationList> buildGraph(EquationList &eqs);
+
+  // Code generation helpers
+  Name getName(AtomSet as);
+  AtomSet getAtomSet(AtomSet as);
+  bool isIdMap(LMap lm);
+  Indexes buildIndex(Set connected);
+  vector<Name> getEffVars(Set connector);
+  vector<Name> getFlowVars(Set connector);
+  Set getRepd(AtomSet atomRept);
+  ExpList buildSubscripts(Indexes indexes, AtomSet original, AtomSet as, int dims);
+  ExpList buildRanges(AtomSet original, AtomSet as);
+  ExpList buildLoopExpr(Indexes indexes, AtomSet as, vector<Name> vars);
+  ExpList buildAddExpr(AtomSet atomRept, AtomSet as);
+  EquationList buildLoop(Indexes indexes, EquationList eqs);
+
+  // Effort and flow equations
+  EquationList buildEffEquations(Indexes indexes, AtomSet atomRept, Set repd);
+  EquationList buildFlowEquations(Indexes indexes, AtomSet atomRept, Set repd);
+
+  // Code generation
+  EquationList generateCode();
+  EquationList simplifyCode(EquationList eql);
 
   private:
-  SBGraph G;
-  member_(vector<NI1>, vCount);
-  member_(vector<NI1>, eCount1);
-  member_(int, eCount2);
-  member_(MMO_Class, mmoclass);
-  member_(VertexNameTable, vnmtable);
-  member_(NameVertexTable, nmvtable);
-  // member_(EquationList, oldeqs);
-  static EquationList oldeqs;
-  static EquationList::iterator itold;
+  member_(MMO_Class, mmoclass); // Micro Modelica model
+
+  member_(SBGraph, G); // Connect Graph. Variables and edges are labeled with variables names
+  member_(PWLMap, ccG); // Connected components of SBG G
+  member_(int, maxdim); // Number of dimensions of the variable with maximum dimension in the model
+  member_(vector<NI1>, vCount); // Vertices count in each dimension
+  member_(vector<NI1>, eCount); // Edges count in each dimension
+  member_(int, ECount); // Set-edges count. Used to name set edges 
+
+  member_(EquationList, notConnectEqs); // List "non-connect" equations
+
+  member_(set<Name>, varsNms); // All var names in the mmoclass
+  member_(set<Name>, negVars); // Connectors in a connect whose sign is negative
+  member_(set<Name>, effVars); // Names of effort variables
+  member_(set<Name>, flowVars); // Names of flow variables
+
+  member_(vector<Name>, counters); // Helper that saves counters
+  member_(ExpList, countersCG); // Helper that saves counters names for code generation
+
+  member_(VarsDimsTable, varsDims); // Save number of dimensions of each variable
 };
 
 #endif

@@ -125,13 +125,14 @@ void GraphPrinter::printEdges(stringstream &stri)
   }
 }
 
-std::string GraphPrinter::vPrinter(SetVertex v) { return v.name; }
+std::string GraphPrinter::vPrinter(SetVertex v) { return v.name_(); }
 
 std::string GraphPrinter::vLabelPrinter(SetVertex v)
 {
   std::stringstream label;
+  string nm = v.name_();
   SBG::Set dom = v.vs_();
-  label << "{ " << v.name << " Dom: " << dom << " }";
+  label << "{ " << nm << " Dom: " << dom << " }";
   return label.str();
 }
 

@@ -14,8 +14,8 @@ model SBGraph3
 
   Real N = 1000;
   Real M = 1000;
-  Obj S[1, 1];
-  Obj G[1, 1];
+  Obj S;
+  Obj G;
   Cell C[N, M];
 equation
   connect(S.n, G.p);

@@ -634,6 +634,11 @@ struct SetImp1 {
     asets = aux;
     ndim = 0;
   }
+  SetImp1(ASetImp as)
+  {
+    asets.insert(as);
+    ndim = as.ndim_();
+  }
   SetImp1(SetType ss)
   {
     ASetImp aux2;
@@ -843,7 +848,17 @@ struct SetImp1 {
     return res;
   }
 
-  bool operator==(const SetImp1 &other) const { return asets == other.asets; }
+  bool operator==(const SetImp1 &other) const { 
+    SetImp1 aux1 = *this;
+    SetImp1 aux2 = other;
+    SetImp1 diff1 = aux1.diff(aux2);
+    SetImp1 diff2 = aux2.diff(aux1);
+
+    if (diff1.empty() && diff2.empty())
+      return true;
+
+    return false; 
+  }
 
   bool operator!=(const SetImp1 &other) const { return asets != other.asets; }
 
@@ -1682,6 +1697,8 @@ ostream &operator<<(ostream &out, PWLMap &pw);
 
 // Function declarations ---------------------------------------------------------------------------
 
+bool equivalentPW(PWLMap pw1, PWLMap pw2);
+
 PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2);
 PWLMap minPW(Set &dom, LMap &lm1, LMap &lm2);
 PWLMap minMap(PWLMap &pw1, PWLMap &pw2);
@@ -1727,6 +1744,8 @@ struct SetVertex {
 
   Set vs_() { return vs; }
 
+  string name_() { return name; }
+
   bool operator==(const SetVertex &other) const { return id == other.id; }
 
   size_t hash() { return id; }
@@ -1744,6 +1763,8 @@ struct SetVertex {
 };
 
 size_t hash_value(SetVertex v);
+
+ostream &operator<<(ostream &out, SetVertex &V);
 
 struct SetEdge {
   SetEdge()
@@ -1778,6 +1799,8 @@ struct SetEdge {
 
   int id_() { return id; }
 
+  string name_() { return name; }
+
   string name;
 
   private:
@@ -1786,6 +1809,8 @@ struct SetEdge {
   PWLMap es2;
   int index;
 };
+
+ostream &operator<<(ostream &out, SetEdge &E);
 
 typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, SetVertex, SetEdge> SBGraph;
 typedef SBGraph::vertex_descriptor SetVertexDesc;
