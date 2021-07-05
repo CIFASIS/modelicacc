@@ -1,4 +1,4 @@
-model Test
+model SBGraph3
   connector Electrical
     Real eff;
     flow Real fl;
@@ -36,4 +36,4 @@ equation
   for i in 1:N loop
     connect(C[i, 1].l, C[i, M].r);
   end for;
-end Test;
+end SBGraph3;

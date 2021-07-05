@@ -40,7 +40,8 @@
 
 // Connected components ---------------------------------------------------------------------------
 
-PWLMap connectedComponents(SBGraph g){
+PWLMap connectedComponents(SBGraph g)
+{
   PWLMap res;
 
   VertexIt vi_start, vi_end;
@@ -50,26 +51,25 @@ PWLMap connectedComponents(SBGraph g){
 
   if(vi_start != vi_end){
     Set vss;
-    while(vi_start != vi_end){
+    while (vi_start != vi_end) {
       Set aux = (g[*vi_start]).vs_();
       vss = vss.cup(aux);
 
       ++vi_start;
     }
 
-    PWLMap auxres(vss); 
+    PWLMap auxres(vss);
     res = auxres;
 
-    if(ei_start == ei_end)
-      return res;
+    if (ei_start == ei_end) return res;
 
     PWLMap emap1 = (g[*ei_start]).es1_();
     PWLMap emap2 = (g[*ei_start]).es2_();
     ++ei_start;
 
-    while(ei_start != ei_end){
-      emap1 = (g[*ei_start]).es1_().combine(emap1); 
-      emap2 = (g[*ei_start]).es2_().combine(emap2); 
+    while (ei_start != ei_end) {
+      emap1 = (g[*ei_start]).es1_().combine(emap1);
+      emap2 = (g[*ei_start]).es2_().combine(emap2);
 
       ++ei_start;
     }
@@ -78,7 +78,7 @@ PWLMap connectedComponents(SBGraph g){
     Set newIm = vss;
     Set diffIm = vss;
 
-    while(!diffIm.empty()){
+    while (!diffIm.empty()) {
       PWLMap ermap1 = res.compPW(emap1);
       PWLMap ermap2 = res.compPW(emap2);
 
@@ -88,12 +88,12 @@ PWLMap connectedComponents(SBGraph g){
       rmap2 = rmap2.combine(res);
 
       PWLMap newRes = minMap(rmap1, rmap2);
- 
+
       lastIm = newIm;
       newIm = newRes.image(vss);
       diffIm = lastIm.diff(newIm);
 
-      if(!diffIm.empty()){
+      if (!diffIm.empty()) {
         res = newRes;
         res = mapInf(res, std::log2);
         newIm = res.image(vss);
@@ -134,7 +134,7 @@ MatchingStruct::MatchingStruct(SBGraph garg)
 
   PWLMap emptyMap;
   rmap = emptyMap;
-  //smap = emptyMap;
+  smap = emptyMap;
 
   PWLMap idMap(allVertices);
   mmap = idMap;
@@ -158,7 +158,7 @@ void MatchingStruct::minReachable(Set E, PWLMap m_map, PWLMap map_D, PWLMap map_
 
   PWLMap tildeVid(tildeV);
   rmap = tildeVid;
-  //smap = tildeVid;
+  smap = tildeVid;
 
   PWLMap oldrmap = rmap;
 

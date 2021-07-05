@@ -1,4 +1,4 @@
-model advection
+model bad_advection
   parameter Real alpha=0.5,mu=1000;
   constant Integer N = 200;
   Real u[N];
@@ -15,7 +15,7 @@ model advection
 	annotation(
 
 	experiment(
-		MMO_Description="Advection",
+		MMO_Description="Fake Advection model taht produces an expanded matching if recusrion is not handled",
 		MMO_Solver=LIQSS2,
 		MMO_PartitionMethod=Scotch,
 		MMO_LPS=2,
@@ -29,4 +29,4 @@ model advection
 		Tolerance={1e-3},
 		AbsTolerance={1e-3}
 	));
-end advection;
+end bad_advection;

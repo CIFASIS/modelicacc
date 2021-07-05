@@ -56,8 +56,8 @@ class Connectors {
 
   void debug(std::string filename);
 
-  void solve();
-  bool createGraph(EquationList &eqs);
+  void solve(bool deb);
+  Pair<bool, EquationList> createGraph(EquationList &eqs);
   bool connect(Connect co);
   Pair<Name, ExpOptList> separate(Expression e);
   MultiInterval createVertex(Name n);
@@ -73,6 +73,10 @@ class Connectors {
   MultiInterval applyOff(MultiInterval mi, OrdCT<NI1> off);
   EquationList simplifyCode(EquationList &eql);
   // ExpList lmToExpList(LMap lm, ExpList vs);
+
+  protected:
+  Expression getSlopeExp(NI2 slope, Expression var);
+  Expression getLinearExp(Expression slope, NI2 constant);
 
   private:
   SBGraph G;

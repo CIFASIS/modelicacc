@@ -73,5 +73,5 @@ struct MatchingStruct{
   PWLMap mmap;
 
   PWLMap rmap; // Map of reachable vertices
-  //PWLMap smap; // Map of successors
+  PWLMap smap; // Map of successors
 };

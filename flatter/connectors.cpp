@@ -16,10 +16,10 @@
 #include <string>
 
 #include <flatter/connectors.h>
-
 #include <util/ast_visitors/contains_expression.h>
 #include <util/ast_visitors/eval_expression.h>
 #include <util/ast_visitors/eval_expression_flatter.h>
+#include <util/logger.h>
 
 using namespace std;
 using namespace Modelica;
@@ -56,7 +56,7 @@ void Connectors::debug(std::string filename){
   for(; vi != vi_end; ++vi){
     Name n = G[*vi].name;
     Set vs = G[*vi].vs_();
-    cout << n << ": " << vs << "\n";
+    LOG << n << ": " << vs << "\n";
   }
 
   EdgeIt ei, ei_end;
@@ -65,13 +65,13 @@ void Connectors::debug(std::string filename){
     Name n = G[*ei].name;
     PWLMap es1 = G[*ei].es1_();
     PWLMap es2 = G[*ei].es2_();
-    cout << n << ": " << es1 << ", " << es2 << "\n";
+    LOG << n << ": " << es1 << ", " << es2 << "\n";
   }
 
   GraphPrinter gp(G, -1);
 
   gp.printGraph(filename);
-  cout << "Generated Connect Graph written to " << filename << endl;
+  LOG << "Generated Connect Graph written to " << filename << endl;
 }
 
 /*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
@@ -84,7 +84,7 @@ EquationList eqlinit;
 EquationList Connectors::oldeqs = eqlinit;
 EquationList::iterator Connectors::itold = oldeqs.begin();
 
-void Connectors::solve(){
+void Connectors::solve(bool deb){
   int maxdim = 1;
   foreach_(Name n, mmoclass_.variables()){
     Option<VarInfo> ovi = mmoclass_.getVar(n);
@@ -105,13 +105,17 @@ void Connectors::solve(){
 
   EquationList eql;
 
-  //cout << "mmo:\n" << mmoclass_ << "\n\n";
-  bool ok = createGraph(mmoclass_.equations_ref().equations_ref());
-  if(ok){
-    debug("prueba.dot");
+  //LOG << "mmo:\n" << mmoclass_ << "\n\n";
+  Pair<bool, EquationList> gr = createGraph(mmoclass_.equations_ref().equations_ref());
+  if(get<0>(gr)){
+    oldeqs = get<1>(gr);
+    itold = oldeqs.end();
+
+    if (deb)
+      debug(mmoclass_.name()+".dot");
 
     PWLMap res = connectedComponents(G);
-    cout << res << "\n\n";
+    LOG << res << "\n\n";
 
     foreach_(Name nm, mmoclass_.variables()){
       Option<VarInfo> ovi = mmoclass_.getVar(nm);
@@ -138,7 +142,9 @@ void Connectors::solve(){
   }
 }
 
-bool Connectors::createGraph(EquationList &eqs){
+Pair<bool, EquationList> Connectors::createGraph(EquationList &eqs){
+  EquationList notConnect;
+  EquationList::iterator itNotConn = notConnect.begin();
   bool ok = true;
 
   BOOST_FOREACH(Equation eq, eqs){
@@ -170,27 +176,35 @@ bool Connectors::createGraph(EquationList &eqs){
           ++itvars;
         }
         else 
-          cerr << "Should be defined\n";
+          LOG << "Should be defined\n";
       }
 
       EquationList el = feq.elements();
-      ok = createGraph(el);
+      Pair<bool, EquationList> rec = createGraph(el);
+      ok = get<0>(rec);
 
       if(!ok)
         break;
+
+      if (!get<1>(rec).empty()) {
+        ForEq forrec(feq.range().indexes(), get<1>(rec));
+        itNotConn = notConnect.insert(itNotConn, forrec);
+        ++itNotConn;
+      }
 
       foreach_(Name auxnm, auxvars){
         mmoclass_.rmVar(auxnm);
       }
     }
 
-    else{
-      itold = oldeqs.insert(itold, eq);
-      ++itold;
+    else {
+      itNotConn = notConnect.insert(itNotConn, eq);
+      ++itNotConn;
     }
   }
 
-  return ok;
+  Pair<bool, EquationList> res(ok, notConnect);
+  return res;
 }
 
 bool Connectors::connect(Connect co){
@@ -358,7 +372,7 @@ Pair<Name, ExpOptList> Connectors::separate(Expression e){
     if(is<Reference>(u.exp()))
       reference = boost::get<Reference>(u.exp());
     else
-      std::cerr << "ERROR: Deberia llegar una Reference" << std::endl;
+      LOG << "ERROR: Deberia llegar una Reference" << std::endl;
   } 
  
   else if (is<Reference>(e))
@@ -366,7 +380,7 @@ Pair<Name, ExpOptList> Connectors::separate(Expression e){
 
   Ref refs = reference.ref();
   if(refs.size() > 1) 
-    std::cerr << "ERROR: No deberia haber llamadas a miembros en connectors" << std::endl;
+    LOG << "ERROR: No deberia haber llamadas a miembros en connectors" << std::endl;
   RefTuple rf = refs.front();
   ExpOptList opti;
   if(get<1>(rf).size() > 0) 
@@ -510,7 +524,7 @@ bool Connectors::checkRanges(ExpOptList range1, ExpOptList range2){
       return true;
 
     else if(r1.size() != r2.size()){
-      cerr << "Unmatched dimensions in equation connect" << endl;
+      LOG << "Unmatched dimensions in equation connect" << endl;
       return false;
     }
 
@@ -528,7 +542,7 @@ bool Connectors::checkRanges(ExpOptList range1, ExpOptList range2){
 
           // This loop checks that there is only one variable at each subscript
           foreach_(Name n2, vars){
-            //cout << n1 << "; " << n2 << "; " << *it1 << "; " << *it2 << "\n";
+            //LOG << n1 << "; " << n2 << "; " << *it1 << "; " << *it2 << "\n";
             Reference r2(n2);
             Expression e2(r2);
             ContainsExpression co2(e2);
@@ -537,17 +551,17 @@ bool Connectors::checkRanges(ExpOptList range1, ExpOptList range2){
             bool cn22 = Apply(co2, *it2);
 
             if(((cn11 && cn12)) && (n1 != n2)){
-              cerr << "Only one variable permitted at subscript\n";
+              LOG << "Only one variable permitted at subscript\n";
               return false;
             }
 
             if(((cn21 && cn22)) && (n1 != n2)){
-              cerr << "Only one variable permitted at subscript\n";
+              LOG << "Only one variable permitted at subscript\n";
               return false;
             }
 
             if((cn11 && cn22) && (n1 != n2)){
-              cerr << "Arrays should use the same counter for the i-th dimension\n";
+              LOG << "Arrays should use the same counter for the i-th dimension\n";
               return false;
             }
           }
@@ -656,7 +670,7 @@ void Connectors::updateGraph(SetVertexDesc d1, SetVertexDesc d2,
       }
  
       else{ 
-        cerr << "Incompatible connect\n"; 
+        LOG << "Incompatible connect\n"; 
         newec = eCount1_;
         break;
       }
@@ -696,7 +710,7 @@ void Connectors::updateGraph(SetVertexDesc d1, SetVertexDesc d2,
   }
 
   else
-    cerr << "Incompatible connect\n";
+    LOG << "Incompatible connect\n";
 }
 
 void Connectors::generateCode(PWLMap pw){
@@ -781,8 +795,8 @@ void Connectors::generateCode(PWLMap pw){
             else
               ERROR("Should be a vertex");
 
-            if(mivar1.size() != 1)
-              auxnms1 = nms;
+            auxnms1 = nms;
+
 
             Reference ref1(get<0>(*itv1) + get<1>(*itv1), auxnms1); // Left of equality
             Expression l(ref1);
@@ -798,8 +812,8 @@ void Connectors::generateCode(PWLMap pw){
             else
               ERROR("Should be a vertex");
 
-            if(mivar2.size() != 1)
-              auxnms2 = inds1;
+            auxnms2 = inds1;
+
 
             Reference ref2(get<0>(*itv2) + get<1>(*itv2), auxnms2);
             Expression r(ref2);
@@ -817,7 +831,7 @@ void Connectors::generateCode(PWLMap pw){
         }
       }
     }
- 
+
     // Flow vars
     IndexList ran2; 
     IndexList::iterator itran2 = ran2.begin();
@@ -871,8 +885,7 @@ void Connectors::generateCode(PWLMap pw){
         else
           ERROR("Should be a vertex");
 
-        if(mivar3.size() != 1)
-           auxnms3 = inds2;
+        auxnms3 = inds2;
 
         if(get<1>(tm2)){
           RefTuple rt(get<0>(*itv3) + get<1>(*itv3), auxnms3);
@@ -928,6 +941,19 @@ void Connectors::generateCode(PWLMap pw){
   }
   EquationSection eqres(false, oldeqs);
   mmoclass_.set_equations(eqres);
+
+  // Update flow variables and remove the prefix before generating code.
+  foreach_(Name nm, mmoclass_.variables()){
+    Option<VarInfo> ovi = mmoclass_.getVar(nm);
+    if(ovi){
+      VarInfo vi = *ovi;
+      Name ty = vi.type();
+      if(ty == "Real"){
+        vi.removePrefix(flow);
+        mmoclass_.addVar(nm, vi);
+      }
+    }
+  }
 }
 
 OrdCT<NI1> Connectors::getOff(MultiInterval mi){
@@ -983,6 +1009,8 @@ bool Connectors::isFlowVar(Name n){
   return false;
 }
 
+// Find the name of the variables represented by vertices of sauxi, that
+// belong to vs too
 vector<Pair<Name, Name>> Connectors::getVars(vector<Name> vs, Set sauxi){
   VertexIt vi, vi_end;
   boost::tie(vi, vi_end) = boost::vertices(G);
@@ -995,7 +1023,7 @@ vector<Pair<Name, Name>> Connectors::getVars(vector<Name> vs, Set sauxi){
 
     if(!(v.cap(sauxi)).empty()){
       foreach_(Name n, vs){
-        if(n.length() == nm.length()){
+        if(n == nm){
           Name suffix;
           Pair<Name, Name> p(nm, suffix);
           itvars = vars.insert(itvars, p);
@@ -1015,6 +1043,32 @@ vector<Pair<Name, Name>> Connectors::getVars(vector<Name> vs, Set sauxi){
   }
 
   return vars;
+}
+
+Expression Connectors::getSlopeExp(NI2 slope, Expression var)
+{
+  if (slope == 1) {
+    return var;
+  } else if (slope == 0) {
+    return Expression(0);
+  }
+  BinOp mult_op(slope, Mult, var);
+  return Expression(mult_op);
+}
+
+Expression Connectors::getLinearExp(Expression slope, NI2 constant)
+{
+  if (constant == 0) {
+    return slope;
+  }
+  if (constant < 0) {
+    Expression h(-1*constant);
+    return Expression(BinOp(slope, Sub, h));
+  } else {
+    Expression h(constant);
+    return Expression(BinOp(slope, Add, h));
+  }
+  return Expression();
 }
 
 Pair<ExpList, bool> Connectors::transMulti(MultiInterval mi1, MultiInterval mi2, 
@@ -1047,11 +1101,7 @@ Pair<ExpList, bool> Connectors::transMulti(MultiInterval mi1, MultiInterval mi2,
         m3 = (NI2) (*itmi2).step_() / i1.step_();
         h3 = (-m3) * i1.lo_() + (*itmi2).lo_();
 
-        BinOp multaux(m3, Mult, x);
-        Expression mult(multaux);
-        Expression h(h3);
-        BinOp linearaux(mult, Add, h);
-        Expression linear(linearaux);
+        Expression linear = getLinearExp(getSlopeExp(m3,x), h3);
 
         itres = res.insert(itres, linear);
         ++itres;
@@ -1136,5 +1186,3 @@ EquationList Connectors::simplifyCode(EquationList &eql){
 
   return res;
 }
-
-

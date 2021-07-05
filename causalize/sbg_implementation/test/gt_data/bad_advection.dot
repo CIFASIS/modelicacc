@@ -1,0 +1,12 @@
+digraph G{
+    ratio="fill"
+    node[shape="ellipse"]
+    u [label="{ u Dom: {{[1:1:200]}} }"]
+    eq_1 [label="{ eq_1 Dom: {{[201:1:201]}} }"]
+    eq_2 [label="{ eq_2 Dom: {{[202:1:400]}} }"]
+    
+eq_1 -> u [label="{ E_1 mapF: [({{[1:1:1]}}, [1 * x + 200])] mapU: [({{[1:1:1]}}, [1 * x + 0])] }", arrowhead="none"]
+    eq_2 -> u [label="{ E_2 mapF: [({{[2:1:200]}}, [1 * x + 200])] mapU: [({{[2:1:200]}}, [1 * x + 0])] }", arrowhead="none"]
+    eq_2 -> u [label="{ E_3 mapF: [({{[201:1:399]}}, [1 * x + 1])] mapU: [({{[201:1:399]}}, [1 * x -200])] }", arrowhead="none"]
+    
+}
