@@ -180,6 +180,47 @@ ostream &operator<<(ostream &out, PWLMap &pw)
   return out;
 }
 
+ostream &operator<<(ostream &out, SetVertex &V)
+{
+  string Vnm = V.name_();
+  Set Vvs = V.vs_();
+
+  out << Vnm << ": " << Vvs << "\n";
+
+  return out;
+}
+
+ostream &operator<<(ostream &out, SetEdge &E)
+{
+  string Enm = E.name_();
+  OrdCT<Set> dom = E.es1_().dom_();
+  OrdCT<Set>::iterator itdom = dom.begin();
+
+  out << Enm << " dom: ";
+  out << "[";
+  for (; next(itdom, 1) != dom.end(); ++itdom)
+    out << *itdom << ", ";
+  out << *itdom << "]\n";
+
+  OrdCT<LMap> lmleft = E.es1_().lmap_();
+  OrdCT<LMap>::iterator itleft = lmleft.begin();
+  OrdCT<LMap> lmright = E.es2_().lmap_();
+  OrdCT<LMap>::iterator itright = lmright.begin();
+
+  out << Enm << " left | right: ";
+  out << "[";
+  for (; next(itleft, 1) != lmleft.end(); ++itleft)
+    out << *itleft << ", ";
+  out << *itleft << "] | ";
+
+  out << "[";
+  for (; next(itright, 1) != lmright.end(); ++itright)
+    out << *itright << ", ";
+  out << *itright << "]\n";
+
+  return out;
+}
+
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 // Map operations
@@ -222,6 +263,37 @@ PWLMap offsetMap(OrdCT<NI1> &offElem, PWLMap &pw)
   }
 
   return PWLMap(pw.dom_(), reslm);
+}
+
+// This function calculates if pw1 and pw2 are equivalent
+// (have the same whole dom, and the image of each dom is
+// the same)
+// e.g. [({1:1:10}, [1 * x + 0])] and 
+//      [({1:1:3}, [1 * x + 0]), ({4:1:10}, [1 * x + 0])]
+//      are equivalent
+// but [({1:1:10}, [1 * x + 0])] and
+//     [({1:1:10}, [0 * x + 1])]
+//     aren't equivalent
+bool equivalentPW(PWLMap pw1, PWLMap pw2)
+{
+  bool eq = true;
+
+  Set dom1 = pw1.wholeDom();
+  Set dom2 = pw2.wholeDom();
+
+  if (dom1 == dom2) {
+    foreach_ (Set d, pw1.dom_()) {
+      Set im1 = pw1.image(d);
+      Set im2 = pw2.image(d);
+
+      if (im1 != im2)
+        eq = false;
+    }
+
+    return eq;
+  }
+
+  return false;
 }
 
 PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2)
@@ -913,6 +985,15 @@ PWLMap minAdjMap(PWLMap pw2, PWLMap pw1)
       ++itlm2;
     }
   }
+
+  /*
+  cout << "pw1:\n";
+  cout << pw1 << "\n";
+  cout << "pw2:\n";
+  cout << pw2 << "\n";
+  cout << "res:\n";
+  cout << res << "\n\n";
+  */
 
   return res;
 }

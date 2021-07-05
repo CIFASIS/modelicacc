@@ -74,11 +74,9 @@ PWLMap connectedComponents(SBGraph g)
       ++ei_start;
     }
 
-    Set lastIm;
-    Set newIm = vss;
-    Set diffIm = vss;
+    PWLMap oldres;
 
-    while (!diffIm.empty()) {
+    while (!equivalentPW(oldres, res)) {
       PWLMap ermap1 = res.compPW(emap1);
       PWLMap ermap2 = res.compPW(emap2);
 
@@ -88,15 +86,12 @@ PWLMap connectedComponents(SBGraph g)
       rmap2 = rmap2.combine(res);
 
       PWLMap newRes = minMap(rmap1, rmap2);
+      oldres = res;
+      res = minMap(newRes, res);
 
-      lastIm = newIm;
-      newIm = newRes.image(vss);
-      diffIm = lastIm.diff(newIm);
-
-      if (!diffIm.empty()) {
+      if (!equivalentPW(oldres, res)) {
         res = newRes;
-        res = mapInf(res, std::log2);
-        newIm = res.image(vss);
+        res = mapInf(res);
       }
     }
   }
