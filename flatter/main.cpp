@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 
     clock_t start, end;
     start = clock();
-
+    
     co.solve();
 
     end = clock();

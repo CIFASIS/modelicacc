@@ -1886,7 +1886,7 @@ PWLMap minInv(PWLMap &pw, Set &s);
 
 PWLMap reduceMapN(PWLMap pw, int dim);
 
-PWLMap mapInf(PWLMap pw, NI2 (*f)(NI2));
+PWLMap mapInf(PWLMap pw);
 
 PWLMap minAdjCompMap(PWLMap pw3, PWLMap pw2, PWLMap pw1);
 

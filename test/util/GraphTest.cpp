@@ -3332,7 +3332,7 @@ void TestMapInf1()
   pw1.addSetLM(s1, lm1);
   pw1.addSetLM(s2, lm2);
 
-  PWLMap res1 = mapInf(pw1, log2);
+  PWLMap res1 = mapInf(pw1);
 
   PWLMap res2;
 
@@ -3389,7 +3389,7 @@ void TestMapInf2()
   pw1.addSetLM(s1, lm1);
   pw1.addSetLM(s2, lm2);
 
-  PWLMap res1 = mapInf(pw1, log2);
+  PWLMap res1 = mapInf(pw1);
 
   PWLMap res2 = pw1;
 
@@ -3446,7 +3446,7 @@ void TestMapInf3()
   pw1.addSetLM(s1, lm1);
   pw1.addSetLM(s2, lm2);
 
-  PWLMap res1 = mapInf(pw1, log2);
+  PWLMap res1 = mapInf(pw1);
 
   PWLMap res2;
   res2.addSetLM(s1, lm1);
@@ -3500,7 +3500,7 @@ void TestMapInf4()
   pw1.addSetLM(s2, lm2);
   pw1.addSetLM(s3, lm3);
 
-  PWLMap res1 = mapInf(pw1, log2);
+  PWLMap res1 = mapInf(pw1);
 
   BOOST_CHECK(res1 == pw1);
 }
@@ -3537,7 +3537,7 @@ void TestMapInf5()
   pw1.addSetLM(s1, lm1);
   pw1.addSetLM(s2, lm2);
 
-  PWLMap res1 = mapInf(pw1, log2);
+  PWLMap res1 = mapInf(pw1);
 
   Interval i3(2499, 1, 2499);
 

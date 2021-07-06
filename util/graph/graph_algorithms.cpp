@@ -49,13 +49,11 @@ PWLMap connectedComponents(SBGraph g)
   EdgeIt ei_start, ei_end;
   boost::tie(ei_start, ei_end) = edges(g);
 
-  if(vi_start != vi_end){
+  if (vi_start != vi_end) {
     Set vss;
-    while (vi_start != vi_end) {
-      Set aux = (g[*vi_start]).vs_();
+    foreach_ (SetVertexDesc vi, vertices(g)) {
+      Set aux = (g[vi]).vs_();
       vss = vss.cup(aux);
-
-      ++vi_start;
     }
 
     PWLMap auxres(vss);
@@ -135,11 +133,6 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   mmap = idMap;
 }
 
-NI2 linear(NI2 arg) 
-{
-  return arg;
-}
-
 void MatchingStruct::minReachable(Set E, PWLMap m_map, PWLMap map_D, PWLMap map_B)
 {
   cout << "E: " << E << "\n";
@@ -173,7 +166,7 @@ void MatchingStruct::minReachable(Set E, PWLMap m_map, PWLMap map_D, PWLMap map_
     tildermap = minMap(tildermap, rmap);
 
     oldrmap = rmap;
-    rmap = mapInf(tildermap, linear);
+    rmap = mapInf(tildermap);
     //smap = minAdjMap(map_D, map_B, rmap);
     cout << "iter: " << rmap << "\n";
    
@@ -215,6 +208,7 @@ Set MatchingStruct::SBGMatching()
   Set zero;
   zero.addAtomSet(as);
 
+  /*
   Interval i2(2, 1, 500);
   MultiInterval mi2;
   mi2.addInter(i2);
@@ -251,6 +245,7 @@ Set MatchingStruct::SBGMatching()
   PWLMap auxmmap = mmap.restrictMap(matchedV);
   auxmmap = offsetMap(maxAux, auxmmap);
   mmap = auxmmap.combine(mmap);
+  */
 
   cout << "\n";
   do {

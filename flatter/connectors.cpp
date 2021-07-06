@@ -197,7 +197,7 @@ void Connectors::solve()
 
       notConnectEqs_ = get<1>(gr);
 
-      foreach_(Equation e, notConnectEqs_) {
+      foreach_ (Equation e, notConnectEqs_) {
         itAll = allEqs.insert(itAll, e);
         ++itAll;
       }
