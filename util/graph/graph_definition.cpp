@@ -227,7 +227,43 @@ ostream &operator<<(ostream &out, SetEdge &E)
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 
-// This operations are implemented here to simplificate the implementation.
+// This operations are implemented here to simplify the implementation.
+
+PWLMap offsetMap(OrdCT<NI1> &offElem, PWLMap &pw) 
+{
+  OrdCT<LMap> reslm;
+  OrdCT<LMap>::iterator itreslm = reslm.begin();
+
+  OrdCT<NI1>::iterator itelem;
+
+  if ((int) offElem.size() == pw.ndim_()) {
+    itelem = offElem.begin();
+
+    BOOST_FOREACH (LMap lm, pw.lmap_()) {
+      OrdCT<NI2> resg;
+      OrdCT<NI2>::iterator itresg = resg.begin();
+      OrdCT<NI2> reso;
+      OrdCT<NI2>::iterator itreso = reso.begin();
+
+      BOOST_FOREACH (NI2 gi, lm.gain_()) {
+        itresg = resg.insert(itresg, gi);
+
+        ++itresg;
+      }
+
+      BOOST_FOREACH (NI2 oi, lm.off_()) {
+        itreso = reso.insert(itreso, oi + (NI2) *itelem);
+
+        ++itreso; 
+        ++itelem;
+      }
+
+      itreslm = reslm.insert(itreslm, LMap(resg, reso));
+    }
+  }
+
+  return PWLMap(pw.dom_(), reslm);
+}
 
 // This function calculates if pw1 and pw2 are equivalent
 // (have the same whole dom, and the image of each dom is
@@ -240,21 +276,38 @@ ostream &operator<<(ostream &out, SetEdge &E)
 //     aren't equivalent
 bool equivalentPW(PWLMap pw1, PWLMap pw2)
 {
-  bool eq = true;
-
   Set dom1 = pw1.wholeDom();
   Set dom2 = pw2.wholeDom();
 
   if (dom1 == dom2) {
-    foreach_ (Set d, pw1.dom_()) {
-      Set im1 = pw1.image(d);
-      Set im2 = pw2.image(d);
+    OrdCT<LMap> lm1 = pw1.lmap_();
+    OrdCT<LMap>::iterator itlm1 = lm1.begin();
 
-      if (im1 != im2)
-        eq = false;
+    foreach_ (Set d1, pw1.dom_()) {
+      OrdCT<LMap> lm2 = pw2.lmap_();
+      OrdCT<LMap>::iterator itlm2 = lm2.begin();
+
+      foreach_ (Set d2, pw2.dom_()) { 
+        Set domcap = d1.cap(d2);
+
+        PWLMap auxpw1;
+        auxpw1.addSetLM(domcap, *itlm1);
+        PWLMap auxpw2;
+        auxpw2.addSetLM(domcap, *itlm2);
+
+        Set im1 = auxpw1.image(domcap);
+        Set im2 = auxpw2.image(domcap);
+
+        if (im1 != im2)
+          return false;
+
+        ++itlm2;
+      }
+
+      ++itlm1;
     }
 
-    return eq;
+    return true;
   }
 
   return false;
@@ -787,15 +840,23 @@ PWLMap mapInf(PWLMap pw)
   return res;
 }
 
-PWLMap minAdjCompMap(PWLMap pw2, PWLMap pw1)
+// pw3, pw2, pw1 are such that:
+//   pw3 : A -> B, and is a compact map
+//   pw2 : A -> C
+//   pw1 : C -> D
+PWLMap minAdjCompMap(PWLMap pw3, PWLMap pw2, PWLMap pw1)
 {
   PWLMap res;
 
-  OrdCT<Set> auxd = pw2.dom_();
+  OrdCT<Set> auxd = pw3.dom_();
   int auxsize = auxd.size();
   if (auxsize == 1) {
-    Set dominv = pw2.image(*(pw2.dom_().begin()));
-    LMap lminv = (*(pw2.lmap_().begin())).invLMap();
+    Set dom = *(pw3.dom_().begin());
+    LMap lm = *(pw3.lmap_().begin());
+
+    Set dominv = pw3.image(dom);
+    LMap lminv = lm.invLMap();
+    OrdCT<NI2> lminvo = lminv.off_();
 
     PWLMap invpw;
     invpw.addSetLM(dominv, lminv);
@@ -807,157 +868,225 @@ PWLMap minAdjCompMap(PWLMap pw2, PWLMap pw1)
       ming = min(ming, gi);
     }
 
+    // Bijective map, therefore, it's invertible
     if (maxg < Inf) {
-      res = pw1.compPW(invpw);
+      res = pw2.compPW(invpw);
     }
 
+    // Constant map
     else if (ming == Inf) {
-      if (!pw2.empty()) {
-        Set aux = pw1.image(*(pw2.dom_().begin()));
-        OrdCT<NI1> minaux = aux.minElem();
-        OrdCT<NI1>::iterator itminaux = minaux.begin();
-        OrdCT<NI2> minaux2;
-        OrdCT<NI2>::iterator itminaux2 = minaux2.begin();
+      if (!pw3.empty()) {
+        Set im2 = pw2.image(dom);
+        Set compim12 = pw1.image(im2);
 
+        // Get vertices in image of pw2 with minimum image in pw1
+        OrdCT<NI1> mincomp = compim12.minElem();
+        MultiInterval micomp;
+        BOOST_FOREACH (NI1 mincompi, mincomp) {
+          Interval i(mincompi, 1, mincompi);
+          micomp.addInter(i);
+        }
+        AtomSet ascomp(micomp);
+        Set scomp;
+        scomp.addAtomSet(ascomp);
+        Set mins2 = pw1.preImage(scomp);
+
+        // Choose minimum in mins2, and assign dom(pw1) this element as image
+        OrdCT<NI1> min2 = mins2.minElem();
+        OrdCT<NI1>::iterator itmin2 = min2.begin();
+
+        OrdCT<NI2> reso;
+        OrdCT<NI2>::iterator itreso = reso.begin();
         OrdCT<NI2> resg;
         OrdCT<NI2>::iterator itresg = resg.begin();
-        for (unsigned int i = 0; i < minaux.size(); ++i) {
+        for (int i = 0; i < dominv.ndim_(); ++i) {
           itresg = resg.insert(itresg, 0);
           ++itresg;
-          itminaux2 = minaux2.insert(itminaux2, (NI2)(*itminaux));
-          ++itminaux2;
+          itreso = reso.insert(itreso, (NI2)(*itmin2));
+          ++itreso;
 
-          ++itminaux;
+          ++itmin2;
         }
 
-        LMap auxlm(resg, minaux2);
-        res.addSetLM(dominv, auxlm);
+        res.addSetLM(dominv, LMap(resg, reso));
       }
     }
 
+    // Bijective in some dimensions, and constant in others
     else {
-      Set aux1 = pw1.image(*(pw2.dom_().begin()));
-      OrdCT<NI1> minaux1 = aux1.minElem();
-      OrdCT<NI1> minaux2 = (*(pw2.dom_().begin())).minElem();
-      OrdCT<NI1>::iterator it2 = minaux2.begin();
+      OrdCT<NI2>::iterator itinvo = lminvo.begin();
+      OrdCT<NI2> newinvg;
+      OrdCT<NI2>::iterator itnewinvg = newinvg.begin();
+      OrdCT<NI2> newinvo;
+      OrdCT<NI2>::iterator itnewinvo = newinvo.begin();
+      OrdCT<NI1> mindom = dom.minElem();
+      OrdCT<NI1>::iterator itmindom = mindom.begin();
 
-      OrdCT<NI2> oi = lminv.off_();
-      OrdCT<NI2>::iterator itoi = oi.begin();
-
-      OrdCT<NI2> resg;
-      OrdCT<NI2>::iterator itresg = resg.begin();
-      OrdCT<NI2> reso;
-      OrdCT<NI2>::iterator itreso = reso.begin();
-      BOOST_FOREACH (NI2 gi, lminv.gain_()) {
-        if (gi == Inf) {
-          itresg = resg.insert(itresg, 0);
-          itreso = reso.insert(itreso, (NI2)(*it2));
+      // Replace inverse of constant maps for composition (with a dummy value)
+      BOOST_FOREACH (NI2 invgi, lminv.gain_()) {
+        if (invgi >= Inf) {
+          itnewinvg = newinvg.insert(itnewinvg, 0);
+          itnewinvo = newinvo.insert(itnewinvo, (NI2) (*itmindom));
         }
 
         else {
-          itresg = resg.insert(itresg, gi);
-          itreso = reso.insert(itreso, *itoi);
+          itnewinvg = newinvg.insert(itnewinvg, invgi);
+          itnewinvo = newinvo.insert(itnewinvo, *itinvo);
         }
 
-        ++itresg;
-        ++itreso;
-        ++it2;
-        ++itoi;
+        ++itinvo;
+        ++itnewinvg;
+        ++itnewinvo;
+        ++itmindom;
       }
 
-      LMap auxlm1(resg, reso);
-      PWLMap auxinv;
-      auxinv.addSetLM(dominv, auxlm1);
+      LMap newinvlm(newinvg, newinvo);
+      PWLMap newinvpw;
+      newinvpw.addSetLM(dominv, newinvlm);
 
-      PWLMap auxres = pw1.compPW(auxinv);
-      if (!auxres.empty()) {
-        Set domres = *(auxres.dom_().begin());
-        LMap lmres = *(auxres.lmap_().begin());
-        OrdCT<NI2> gres = lmres.gain_();
-        OrdCT<NI2>::iterator itgres = gres.begin();
-        oi = lmres.off_();
-        itoi = oi.begin();
+      // Compose
+      PWLMap auxres = pw2.compPW(newinvpw);
 
-        OrdCT<NI2> resg2;
-        OrdCT<NI2>::iterator itresg2 = resg2.begin();
-        OrdCT<NI2> reso2;
-        OrdCT<NI2>::iterator itreso2 = reso2.begin();
-        OrdCT<NI1>::iterator it1 = minaux1.begin();
-        BOOST_FOREACH (NI2 gi, lminv.gain_()) {
-          if (gi == Inf) {
-            itresg2 = resg2.insert(itresg2, 0);
-            itreso2 = reso2.insert(itreso2, (NI2)(*it1));
+      OrdCT<Set> domaux = auxres.dom_();
+      OrdCT<LMap> lmaux = auxres.lmap_();
+      OrdCT<LMap>::iterator itlmaux = lmaux.begin();
+
+      OrdCT<LMap> lmres;
+      OrdCT<LMap>::iterator itlmres = lmres.begin();
+
+      // Replace values of constant maps with the desired value
+      Set im2 = pw2.image(dom);
+      Set compim12 = pw1.image(im2);
+
+      // Get vertices in image of pw2 with minimum image in pw1
+      OrdCT<NI1> mincomp = compim12.minElem();
+      MultiInterval micomp;
+      BOOST_FOREACH (NI1 mincompi, mincomp) {
+        Interval i(mincompi, 1, mincompi);
+        micomp.addInter(i);
+      }
+      AtomSet ascomp(micomp);
+      Set scomp;
+      scomp.addAtomSet(ascomp);
+      Set mins2 = pw1.preImage(scomp);
+
+      // Choose minimum in min2
+      // Assign dom(pw1) this element as image
+      OrdCT<NI1> min2 = mins2.minElem();
+      OrdCT<NI1>::iterator itmin2 = min2.begin();
+
+      foreach_ (Set domauxi, domaux) {
+        OrdCT<NI2> replaceg;
+        OrdCT<NI2>::iterator itrepg = replaceg.begin();
+        OrdCT<NI2> replaceo;
+        OrdCT<NI2>::iterator itrepo = replaceo.begin();
+
+        OrdCT<NI2> auxg = (*itlmaux).gain_();
+        OrdCT<NI2>::iterator itauxg = auxg.begin();
+        OrdCT<NI2> auxo = (*itlmaux).off_();
+        OrdCT<NI2>::iterator itauxo = auxo.begin();
+
+        BOOST_FOREACH (NI2 invgi, lminv.gain_()) {
+          // i-th dimension constant
+          if (invgi >= Inf) {
+            itrepg = replaceg.insert(itrepg, 0);
+            itrepo = replaceo.insert(itrepo, (NI2)(*itmin2));
           }
 
+          // i-th dimension bijective
           else {
-            itresg2 = resg2.insert(itresg2, *itgres);
-            itreso2 = reso2.insert(itreso2, *itoi);
+            itrepg = replaceg.insert(itrepg, *itauxg);
+            itrepo = replaceo.insert(itrepo, *itauxo);
           }
 
-          ++itresg2;
-          ++itreso2;
-          ++it1;
-          ++itgres;
-          ++itoi;
+          ++itauxg;
+          ++itauxo;
+          ++itrepg;
+          ++itrepo;
+          ++itmin2;
         }
 
-        LMap auxlm2(resg2, reso2);
-        res.addSetLM(domres, auxlm2);
+        itlmres = lmres.insert(itlmres, LMap(replaceg, replaceo));
+        LMap den(replaceg, replaceo);
+
+        ++itlmaux;
+        ++itlmres;
       }
+
+      PWLMap replacedpw(auxres.dom_(), lmres);
+      res = replacedpw;
     }
   }
-
-  // else
-  // WARNING("There should be only one pair in the map");
 
   return res;
 }
 
-PWLMap minAdjMap(PWLMap pw2, PWLMap pw1)
+// pw2, pw1 are such that:
+//   pw2 : A -> B, and is a compact map
+//   pw1 : A -> C
+PWLMap minAdjCompMap(PWLMap pw2, PWLMap pw1)
+{
+  Set dom1 = pw1.wholeDom();
+  Set im1 = pw1.image(dom1);
+  PWLMap idmap(im1);
+
+  return minAdjCompMap(pw2, pw1, idmap);
+}
+
+PWLMap minAdjMap(PWLMap pw3, PWLMap pw2, PWLMap pw1)
 {
   PWLMap res;
 
-  if (!pw2.empty()) {
-    OrdCT<Set> dom2 = pw2.dom_();
-    OrdCT<Set>::iterator itdom2 = dom2.begin();
-    OrdCT<LMap> lm2 = pw2.lmap_();
-    OrdCT<LMap>::iterator itlm2 = lm2.begin();
+  if (!pw3.empty()) {
+    OrdCT<Set> dom = pw3.dom_();
+    OrdCT<Set>::iterator itdom = dom.begin();
+    OrdCT<LMap> lm = pw3.lmap_();
+    OrdCT<LMap>::iterator itlm = lm.begin();
 
-    Set auxdom = *itdom2;
-    LMap auxlm = *itlm2;
+    Set auxdom = *itdom;
+    LMap auxlm = *itlm;
 
-    PWLMap map1;
-    map1.addSetLM(auxdom, auxlm);
+    PWLMap map31;
+    map31.addSetLM(auxdom, auxlm);
 
-    res = minAdjCompMap(map1, pw1);
+    res = minAdjCompMap(map31, pw2, pw1);
+    ++itdom;
+    ++itlm;
 
     PWLMap minAdj;
     PWLMap minM;
-    while (itdom2 != dom2.end()) {
-      PWLMap mapi;
-      mapi.addSetLM(*itdom2, *itlm2);
-      minAdj = minAdjCompMap(mapi, pw1);
+    while (itdom != dom.end()) {
+      PWLMap map3i;
+      map3i.addSetLM(*itdom, *itlm);
+      minAdj = minAdjCompMap(map3i, pw2, pw1);
       minM = minMap(res, minAdj);
 
       res = minAdj.combine(res);
 
       if (!minM.empty()) res = minM.combine(res);
 
-      ++itdom2;
-      ++itlm2;
+      ++itdom;
+      ++itlm;
     }
   }
 
+  return res;
+}
+
+PWLMap minAdjMap(PWLMap pw2, PWLMap pw1)
+{
   /*
-  cout << "pw1:\n";
-  cout << pw1 << "\n";
-  cout << "pw2:\n";
-  cout << pw2 << "\n";
-  cout << "res:\n";
-  cout << res << "\n\n";
+  BOOST_FOREACH(Set domi, pw1.dom_()) {
+    PWLMap pwi(domi);
+    idmap = idmap.concat(pwi);
+  }
   */
 
-  return res;
+  Set dom1 = pw1.wholeDom();
+  Set im1 = pw1.image(dom1);
+  PWLMap idmap(im1);
+
+  return minAdjMap(pw2, pw1, idmap);
 }
 
 SetEdge restrictEdge(SetEdge e, Set dom)

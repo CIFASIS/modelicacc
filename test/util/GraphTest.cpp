@@ -4163,8 +4163,11 @@ void TestMinAdj1()
 
   PWLMap res2;
   res2.addSetLM(s5, lm5);
-  res2.addSetLM(s7, lm4);
   res2.addSetLM(s6, lm3);
+  res2.addSetLM(s7, lm4);
+
+  cout << res1 << "\n";
+  cout << res2 << "\n";
 
   BOOST_CHECK(res1 == res2);
 }

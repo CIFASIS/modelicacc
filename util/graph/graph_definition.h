@@ -1708,8 +1708,10 @@ PWLMap reduceMapN(PWLMap pw, int dim);
 
 PWLMap mapInf(PWLMap pw);
 
+PWLMap minAdjCompMap(PWLMap pw3, PWLMap pw2, PWLMap pw1);
 PWLMap minAdjCompMap(PWLMap pw2, PWLMap pw1);
 
+PWLMap minAdjMap(PWLMap pw3, PWLMap pw2, PWLMap pw1);
 PWLMap minAdjMap(PWLMap pw2, PWLMap pw1);
 
 /*-----------------------------------------------------------------------------------------------*/
