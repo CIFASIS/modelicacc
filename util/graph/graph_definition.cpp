@@ -35,15 +35,215 @@
 namespace SBG {
 size_t hash_value(SetVertex v) { return v.hash(); }
 
+#define member_imp_temp(T, C, X, Y)  \
+  T                                  \
+  X C::Y() const { return Y##_; }    \
+  T                                  \
+  void C::set_##Y(X x) { Y##_ = x; } \
+  T                                  \
+  X &C::Y##_ref() { return Y##_; } 
+
+/*-----------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------------------------*/
+// Data definition
+/*-----------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------------------------*/
+
+INTER_TEMPLATE
+IntervalAbs1<CT>::IntervalAbs1(){};
+
+INTER_TEMPLATE
+IntervalAbs1<CT>::IntervalAbs1(bool isEmpty) : lo_(-1), step_(-1), hi_(-1), empty_(isEmpty) {};
+
+INTER_TEMPLATE
+IntervalAbs1<CT>::IntervalAbs1(int vlo, int vstep, int vhi)
+{
+  if (vlo >= 0 && vstep > 0 && vhi >= 0) {
+    empty = false;
+    lo = vlo;
+    step = vstep;
+
+    if (vlo <= vhi && vhi < Inf) {
+      int rem = std::fmod(vhi - vlo, vstep);
+      hi = vhi - rem;
+    }
+
+    else if (vlo <= vhi && vhi == Inf) {
+      hi = Inf;
+    }
+
+    else {
+      // WARNING("Wrong values for subscript (check low <= hi)");
+      empty = true;
+    }
+  }
+
+  else if (vlo >= 0 && vstep == 0 && vhi == vlo) {
+    empty = false;
+    lo = vlo;
+    hi = vhi;
+    step = 1;
+  }
+
+  else {
+    // WARNING("Subscripts should be positive");
+    lo = -1;
+    step = -1;
+    hi = -1;
+    empty = true;
+  }
+};
+
+member_imp_temp(INTER_TEMPLATE, IntervalAbs1<CT>, int, lo);
+member_imp_temp(INTER_TEMPLATE, IntervalAbs1<CT>, int, step);
+member_imp_temp(INTER_TEMPLATE, IntervalAbs1<CT>, int, hi);
+member_imp_temp(INTER_TEMPLATE, IntervalAbs1<CT>, bool, empty);
+
+INTER_TEMPLATE
+int IntervalAbs1<CT>::gcd(int a, int b)
+{
+  int c;
+
+  do {
+    c = a % b;
+    if (c > 0) {
+      a = b;
+      b = c;
+    }
+  } while (c != 0);
+
+  return b;
+}
+
+INTER_TEMPLATE
+int IntervalAbs1<CT>::lcm(int a, int b)
+{
+  if (a < 0 || b < 0) return -1;
+
+  return (a * b) / gcd(a, b);
+}
+
+INTER_TEMPLATE
+bool IntervalAbs1<CT>::isIn(int x)
+{
+  if (x < lo || x > hi || empty) return false;
+
+  float aux = fmod(x - lo, step);
+  if (aux == 0) return true;
+
+  return false;
+}
+
+INTER_TEMPLATE
+int IntervalAbs1<CT>::card() 
+{
+  int res = 0;
+
+  if (step != 0)
+    res = (hi - lo) / step + 1;
+
+  return res;
+}
+
+INTER_TEMPLATE
+IntervalAbs1<CT> IntervalAbs1<CT>::offset(int off)
+{
+  int newLo = lo + off;
+  int newHi = hi + off;
+
+  if (!empty)
+    return IntervalAbs1(newLo, step, newHi);
+
+  else
+    return IntervalAbs1(true);
+}
+
+INTER_TEMPLATE
+IntervalAbs1<CT> IntervalAbs1<CT>::cap(IntervalAbs1<CT> i2)
+{
+  int maxLo = max(lo, i2.lo), newLo = -1;
+  int newStep = lcm(step, i2.step);
+  int newEnd = min(hi, i2.hi);
+
+  if (!empty && !i2.empty)
+    for (int i = 0; i < newStep; i++) {
+      int res1 = maxLo + i;
+
+      if (isIn(res1) && i2.isIn(res1)) {
+        newLo = res1;
+        break;
+      }
+    }
+
+  else
+    return IntervalAbs1(true);
+
+  if (newLo < 0) return IntervalAbs1(true);
+
+  return IntervalAbs1(newLo, newStep, newEnd);
+}
+
+INTER_TEMPLATE
+CT<IntervalAbs1<CT>> IntervalAbs1<CT>::diff(IntervalAbs1<CT> i2)
+{
+  CT<IntervalAbs1> res;
+  IntervalAbs1 capres = cap(i2);
+
+  if (capres.empty) {
+    res.insert(*this);
+    return res;
+  }
+
+  if (capres == *this) return res;
+
+  // "Before" intersection
+  if (lo < capres.lo) {
+    IntervalAbs1 aux = IntervalAbs1(lo, 1, capres.lo - 1);
+    IntervalAbs1 left = cap(aux);
+    res.insert(left);
+  }
+
+  // "During" intersection
+  if (capres.step <= (capres.hi - capres.lo)) {
+    int nInters = capres.step / step;
+    for (int i = 1; i < nInters; i++) {
+      IntervalAbs1 aux = IntervalAbs1(capres.lo + i * step, capres.step, capres.hi);
+      res.insert(aux);
+    }
+  }
+
+  // "After" intersection
+  if (hi > capres.hi) {
+    IntervalAbs1 aux = IntervalAbs1(capres.hi + 1, 1, hi);
+    IntervalAbs1 right = cap(aux);
+    res.insert(right);
+  }
+
+  return res;
+}
+
+INTER_TEMPLATE
+int IntervalAbs1<CT>::minElem() { return lo_; }
+
+INTER_TEMPLATE
+int IntervalAbs1<CT>::maxElem() { return hi_; }
+
+INTER_TEMPLATE
+size_t IntervalAbs1<CT>::hash() { return lo_; }
+
+INTER_TEMPLATE
+size_t hash_value(IntervalAbs1<CT> inter) { return inter.hash(); }
+
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 // Printing instances
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 
-ostream &operator<<(ostream &out, Interval &i)
+INTER_TEMPLATE
+ostream &operator<<(ostream &out, const IntervalAbs1<CT> &i)
 {
-  out << "[" << i.lo_() << ":" << i.step_() << ":" << i.hi_() << "]";
+  out << "[" << i.lo() << ":" << i.step() << ":" << i.hi() << "]";
   return out;
 }
 
@@ -276,24 +476,39 @@ PWLMap offsetMap(OrdCT<NI1> &offElem, PWLMap &pw)
 //     aren't equivalent
 bool equivalentPW(PWLMap pw1, PWLMap pw2)
 {
-  bool eq = true;
-
   Set dom1 = pw1.wholeDom();
   Set dom2 = pw2.wholeDom();
 
   if (dom1 == dom2) {
-    foreach_ (Set d, pw1.dom_()) {
-      Set im1 = pw1.image(d);
-      Set im2 = pw2.image(d);
+    OrdCT<LMap> lm1 = pw1.lmap_();
+    OrdCT<LMap>::iterator itlm1 = lm1.begin();
 
-      if (im1 != im2)
-        eq = false;
+    foreach_ (Set d1, pw1.dom_()) {
+      OrdCT<LMap> lm2 = pw2.lmap_();
+      OrdCT<LMap>::iterator itlm2 = lm2.begin();
+
+      foreach_ (Set d2, pw2.dom_()) { 
+        Set domcap = d1.cap(d2);
+
+        PWLMap auxpw1;
+        auxpw1.addSetLM(domcap, *itlm1);
+        PWLMap auxpw2;
+        auxpw2.addSetLM(domcap, *itlm2);
+
+        Set im1 = auxpw1.image(domcap);
+        Set im2 = auxpw2.image(domcap);
+
+        if (im1 != im2)
+          return false;
+
+        ++itlm2;
+      }
+
+      ++itlm1;
     }
-
-    return eq;
   }
 
-  return false;
+  return true;
 }
 
 PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2)

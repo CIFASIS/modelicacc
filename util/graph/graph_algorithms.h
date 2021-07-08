@@ -50,7 +50,8 @@ struct MatchingStruct{
 
   Set SBGMatching();
 
-  void minReachable(Set E, PWLMap m_map, PWLMap map_D, PWLMap map_B);
+  Set recursion(PWLMap smap, int iters, Set E);
+  void minReachable(PWLMap m_map, PWLMap map_D, PWLMap map_B, Set E);
   //void recursion();
 
   private:

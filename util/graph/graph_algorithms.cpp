@@ -133,14 +133,63 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   mmap = idMap;
 }
 
-void MatchingStruct::minReachable(Set E, PWLMap m_map, PWLMap map_D, PWLMap map_B)
+Set MatchingStruct::recursion(PWLMap smap, int iters, Set E)
 {
-  cout << "E: " << E << "\n";
-  map_D = map_D.restrictMap(E);
-  map_B = map_B.restrictMap(E);
+  PWLMap tildesmap = smap;
+  
+  for (int i = 0; i < iters; i++) {
+    set<SetVertexDesc> visited;
 
+    foreach_ (SetVertexDesc vdi, vertices(g)) {
+      Set vi = g[vdi].vs_();
+      Set pres = tildesmap.preImage(vi);
+      Set vis = vi.cap(pres);
+
+      if (!vis.empty())
+        visited.insert(vdi);
+    }
+
+    Set edgesRec;
+    foreach_ (SetEdgeDesc edi, edges(g)) {
+      SetVertexDesc v1 = source(edi, g);
+      SetVertexDesc v2 = target(edi, g);
+
+      set<SetVertexDesc>::iterator it1 = visited.find(v1);
+      set<SetVertexDesc>::iterator it2 = visited.find(v2);
+
+      Set dom;
+      foreach_ (Set domi, g[edi].es1_().dom_())
+        dom = dom.cup(domi);
+
+      if (it1 != visited.end() && it2 != visited.end())
+        edgesRec = edgesRec.cup(dom); 
+    }
+    Set edgesRecM = edgesRec.cap(matchedE);
+
+    Set vertsRecMD = mapD.image(edgesRecM);
+    Set vertsRecMB = mapB.image(edgesRecM);
+    Set vertsRecM = vertsRecMD.cup(vertsRecMB);
+    PWLMap idRecM(vertsRecM);
+    rmap = idRecM.combine(rmap);
+
+    E = E.diff(edgesRecM);
+    PWLMap mapDE = mapD.restrictMap(E);
+    PWLMap mapBE = mapB.restrictMap(E);
+    mapD = mapBE.combine(mapD);
+    mapB = mapDE.combine(mapB);
+
+    tildesmap = tildesmap.compPW(smap);
+  }
+
+  return E;
+}
+
+void MatchingStruct::minReachable(PWLMap m_map, PWLMap map_D, PWLMap map_B, Set E)
+{
   Set tildeV = m_map.image(allVertices);
 
+  map_D = map_D.restrictMap(E);
+  map_B = map_B.restrictMap(E);
   PWLMap tildeD = m_map.compPW(map_D);
   PWLMap tildeB = m_map.compPW(map_B);
 
@@ -150,14 +199,20 @@ void MatchingStruct::minReachable(Set E, PWLMap m_map, PWLMap map_D, PWLMap map_
 
   PWLMap oldrmap = rmap;
 
+  int iters = 1;
+
   Set m_mapDom = m_map.wholeDom();
   Set m_mapImage = m_map.image(m_mapDom);
   PWLMap m_mapInv = minInv(m_map, m_mapImage);
 
-  Set diffIm;
   Set dom = rmap.wholeDom();
 
   do {
+    map_D = map_D.restrictMap(E);
+    map_B = map_B.restrictMap(E);
+    tildeD = m_map.compPW(map_D);
+    tildeB = m_map.compPW(map_B);
+  
     PWLMap dr = rmap.compPW(tildeD);
     PWLMap br = rmap.compPW(tildeB);
 
@@ -167,20 +222,17 @@ void MatchingStruct::minReachable(Set E, PWLMap m_map, PWLMap map_D, PWLMap map_
 
     oldrmap = rmap;
     rmap = mapInf(tildermap);
-    //smap = minAdjMap(map_D, map_B, rmap);
-    cout << "iter: " << rmap << "\n";
-   
-    Set oldIm = oldrmap.image(dom);
-    Set newIm = rmap.image(dom);
-    diffIm = oldIm.diff(newIm);
+    if (!equivalentPW(oldrmap, rmap)) {
+      smap = minAdjMap(map_D, map_B, rmap);
+      E = recursion(smap, iters, E);
+    }
+
+    iters++;
   }
-  while (!diffIm.empty());
+  while (!equivalentPW(oldrmap, rmap));
 
   rmap = rmap.compPW(m_map);
   rmap = m_mapInv.compPW(rmap);
-  cout << "rmap: " << rmap << "\n";
-  //smap = smap.compPW(mmap);
-  //smap = mmapInv.compPW(smap);
 }
 
 Set MatchingStruct::SBGMatching()
@@ -260,7 +312,7 @@ Set MatchingStruct::SBGMatching()
     auxD = offsetMap(maxV, auxD);
     PWLMap mmapD = auxD.combine(mmap);
     
-    minReachable(Ed, mmapD, mapB, mapD);
+    minReachable(mmapD, mapB, mapD, Ed);
     PWLMap rmapD = rmap;
 
     Set tildeV = rmapD.preImage(F);
@@ -280,7 +332,7 @@ Set MatchingStruct::SBGMatching()
     auxB = offsetMap(maxV, auxB);
     PWLMap mmapB = auxB.combine(mmap);
     
-    minReachable(tildeEd, mmapB, mapD, mapB);
+    minReachable(mmapB, mapD, mapB, tildeEd);
     PWLMap rmapB = rmap;
 
     tildeV = rmapB.preImage(U);
