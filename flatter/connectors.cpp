@@ -575,9 +575,9 @@ LMap Connectors::buildLM(MultiInterval mi1, MultiInterval mi2)
   OrdCT<NI2> reso;
   OrdCT<NI2>::iterator itreso = reso.begin();
 
-  OrdCT<Interval> miinters1 = mi1.inters_();
+  OrdCT<Interval> miinters1 = mi1.inters();
   OrdCT<Interval>::iterator itmi1 = miinters1.begin();
-  OrdCT<Interval> miinters2 = mi2.inters_();
+  OrdCT<Interval> miinters2 = mi2.inters();
   OrdCT<Interval>::iterator itmi2 = miinters2.begin();
   // Traverse dimensions
   while (itmi1 != miinters1.end()) {
@@ -622,7 +622,7 @@ MultiInterval Connectors::subscriptMI(MultiInterval mi, ExpOptList r)
 {
   OrdCT<Interval> mires;
   OrdCT<Interval>::iterator itmires = mires.begin();
-  OrdCT<Interval> miinters = mi.inters_();
+  OrdCT<Interval> miinters = mi.inters();
   OrdCT<Interval>::iterator itmi = miinters.begin();
 
   const VarSymbolTable auxsyms = mmoclass_.syms();
@@ -1233,7 +1233,7 @@ Indexes Connectors::buildIndex(Set connected)
     OrdCT<NI1>::iterator itElems = nElems.begin();
     OrdCT<NI1> nElemsAux;
     OrdCT<NI1>::iterator itAux = nElemsAux.begin();
-    foreach_ (Interval i, c.aset_().inters_()) {
+    foreach_ (Interval i, c.aset_().inters()) {
       int elems = i.card();
       if (*itElems)
         elems = max(*itElems, elems);
@@ -1309,9 +1309,9 @@ ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet a
   ExpList res;
   ExpList::iterator itres = res.begin();
 
-  OrdCT<Interval> miori = original.aset_().inters_();
+  OrdCT<Interval> miori = original.aset_().inters();
   OrdCT<Interval>::iterator itmiori = miori.begin();
-  OrdCT<Interval> mias = as.aset_().inters_();
+  OrdCT<Interval> mias = as.aset_().inters();
   OrdCT<Interval>::iterator itmias = mias.begin();
 
   const VarSymbolTable auxsyms = mmoclass_.syms();
@@ -1440,12 +1440,12 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
   ExpList res;
   ExpList::iterator itres = res.begin();
 
-  OrdCT<Interval> intersas = as.aset_().inters_();
+  OrdCT<Interval> intersas = as.aset_().inters();
   OrdCT<Interval>::iterator itas = intersas.begin();
 
   // A range is needed in the sum
   if (as.size() != 1) {
-    foreach_(Interval iori, original.aset_().inters_()) {
+    foreach_(Interval iori, original.aset_().inters()) {
       NI1 lo = (*itas).lo() - iori.lo() + 1;
       NI1 st = (*itas).step();
       NI1 hi = (*itas).hi() - iori.lo() + 1;
@@ -1464,7 +1464,7 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
 
   // No need of range, just a constant
   else {
-    foreach_(Interval iori, original.aset_().inters_()) {
+    foreach_(Interval iori, original.aset_().inters()) {
       NI1 lo = (*itas).lo() - iori.lo() + 1;
       Expression expr(lo);
 

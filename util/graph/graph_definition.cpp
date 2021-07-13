@@ -35,28 +35,22 @@
 namespace SBG {
 size_t hash_value(SetVertex v) { return v.hash(); }
 
-#define member_imp_temp(T, C, X, Y)  \
-  T                                  \
-  X C::Y() const { return Y##_; }    \
-  T                                  \
-  void C::set_##Y(X x) { Y##_ = x; } \
-  T                                  \
-  X &C::Y##_ref() { return Y##_; }
+/*-----------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------------------------*/
+// Data implementation
+/*-----------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------------------------*/
-// Data definition
-/*-----------------------------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------------------------*/
+// Intervals --------------------------------------------------------------------------------------
 
 INTER_TEMPLATE
-IntervalImp1<CT>::IntervalImp1(){};
+INTER_TEMP_TYPE::IntervalImp1(){};
 
 INTER_TEMPLATE
-IntervalImp1<CT>::IntervalImp1(bool isEmpty) : lo_(-1), step_(-1), hi_(-1), empty_(isEmpty) {};
+INTER_TEMP_TYPE::IntervalImp1(bool isEmpty) : lo_(-1), step_(-1), hi_(-1), empty_(isEmpty) {};
 
 INTER_TEMPLATE
-IntervalImp1<CT>::IntervalImp1(int vlo, int vstep, int vhi)
+INTER_TEMP_TYPE::IntervalImp1(int vlo, int vstep, int vhi)
 {
   if (vlo >= 0 && vstep > 0 && vhi >= 0) {
     empty_ = false;
@@ -94,13 +88,13 @@ IntervalImp1<CT>::IntervalImp1(int vlo, int vstep, int vhi)
   }
 };
 
-member_imp_temp(INTER_TEMPLATE, IntervalImp1<CT>, int, lo);
-member_imp_temp(INTER_TEMPLATE, IntervalImp1<CT>, int, step);
-member_imp_temp(INTER_TEMPLATE, IntervalImp1<CT>, int, hi);
-member_imp_temp(INTER_TEMPLATE, IntervalImp1<CT>, bool, empty);
+member_imp_temp(INTER_TEMPLATE, INTER_TEMP_TYPE, int, lo);
+member_imp_temp(INTER_TEMPLATE, INTER_TEMP_TYPE, int, step);
+member_imp_temp(INTER_TEMPLATE, INTER_TEMP_TYPE, int, hi);
+member_imp_temp(INTER_TEMPLATE, INTER_TEMP_TYPE, bool, empty);
 
 INTER_TEMPLATE
-int IntervalImp1<CT>::gcd(int a, int b)
+int INTER_TEMP_TYPE::gcd(int a, int b)
 {
   int c;
 
@@ -116,7 +110,7 @@ int IntervalImp1<CT>::gcd(int a, int b)
 }
 
 INTER_TEMPLATE
-int IntervalImp1<CT>::lcm(int a, int b)
+int INTER_TEMP_TYPE::lcm(int a, int b)
 {
   if (a < 0 || b < 0) return -1;
 
@@ -124,7 +118,7 @@ int IntervalImp1<CT>::lcm(int a, int b)
 }
 
 INTER_TEMPLATE
-bool IntervalImp1<CT>::isIn(int x)
+bool INTER_TEMP_TYPE::isIn(int x)
 {
   if (x < lo() || x > hi() || empty()) return false;
 
@@ -135,7 +129,7 @@ bool IntervalImp1<CT>::isIn(int x)
 }
 
 INTER_TEMPLATE
-int IntervalImp1<CT>::card() 
+int INTER_TEMP_TYPE::card() 
 {
   int res = 0;
 
@@ -146,7 +140,7 @@ int IntervalImp1<CT>::card()
 }
 
 INTER_TEMPLATE
-IntervalImp1<CT> IntervalImp1<CT>::offset(int off)
+INTER_TEMP_TYPE INTER_TEMP_TYPE::offset(int off)
 {
   int newLo = lo() + off;
   int newHi = hi() + off;
@@ -159,7 +153,7 @@ IntervalImp1<CT> IntervalImp1<CT>::offset(int off)
 }
 
 INTER_TEMPLATE
-IntervalImp1<CT> IntervalImp1<CT>::cap(IntervalImp1<CT> i2)
+INTER_TEMP_TYPE INTER_TEMP_TYPE::cap(INTER_TEMP_TYPE i2)
 {
   int maxLo = max(lo(), i2.lo()), newLo = -1;
   int newStep = lcm(step(), i2.step());
@@ -184,9 +178,9 @@ IntervalImp1<CT> IntervalImp1<CT>::cap(IntervalImp1<CT> i2)
 }
 
 INTER_TEMPLATE
-CT<IntervalImp1<CT>> IntervalImp1<CT>::diff(IntervalImp1<CT> i2)
+UNORD_CT<INTER_TEMP_TYPE> INTER_TEMP_TYPE::diff(INTER_TEMP_TYPE i2)
 {
-  CT<IntervalImp1> res;
+  UNORD_CT<IntervalImp1> res;
   IntervalImp1 capres = cap(i2);
 
   if (capres.empty()) {
@@ -223,22 +217,19 @@ CT<IntervalImp1<CT>> IntervalImp1<CT>::diff(IntervalImp1<CT> i2)
 }
 
 INTER_TEMPLATE
-int IntervalImp1<CT>::minElem() { return lo(); }
+int INTER_TEMP_TYPE::minElem() { return lo(); }
 
 INTER_TEMPLATE
-int IntervalImp1<CT>::maxElem() { return hi(); }
-
-//INTER_TEMPLATE
-//size_t IntervalImp1<CT>::hash() const { return lo(); }
+int INTER_TEMP_TYPE::maxElem() { return hi(); }
 
 INTER_TEMPLATE
-bool IntervalImp1<CT>::operator==(const IntervalImp1<CT> &other) const 
+bool INTER_TEMP_TYPE::operator==(const INTER_TEMP_TYPE &other) const 
 {
   return (lo() == other.lo()) && (step() == other.step()) && (hi() == other.hi()) && (empty() == other.empty());
 }
 
 INTER_TEMPLATE
-bool IntervalImp1<CT>::operator!=(const IntervalImp1<CT> &other) const
+bool INTER_TEMP_TYPE::operator!=(const INTER_TEMP_TYPE &other) const
 {
   return !(*this == other);
 }
@@ -268,15 +259,291 @@ ostream &operator<<(ostream &out, const Interval &i)
 //
 // Then modify hash_value and operator<< implementation for Interval 
 
-/*-----------------------------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------------------------*/
-// Printing instances
-/*-----------------------------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------------------------*/
+// Multi intervals --------------------------------------------------------------------------------
 
-ostream &operator<<(ostream &out, MultiInterval &mi)
+#define INTER_TYPE                  \
+   typename MI_TEMP_TYPE::Intervals
+
+MI_TEMPLATE
+MI_TEMP_TYPE::MultiInterImp1() : ndim_(0)
 {
-  OrdCT<Interval> is = mi.inters_();
+  Intervals emptyRes;
+  inters_ = emptyRes;
+};
+
+MI_TEMPLATE
+MI_TEMP_TYPE::MultiInterImp1(INTER_TYPE is)
+{
+  IntervalsIt it = is.begin();
+  bool areEmptys = false;
+
+  while (it != is.end()) {
+   if ((*it).empty()) areEmptys = true;
+
+    ++it;
+  }
+
+  if (areEmptys) {
+    Intervals aux;
+    inters_ = aux;
+    ndim_ = 0;
+  }
+
+  else {
+    inters_ = is;
+    ndim_ = is.size();
+  }
+}
+
+member_imp_temp(MI_TEMPLATE, MI_TEMP_TYPE, INTER_TYPE, inters);
+member_imp_temp(MI_TEMPLATE, MI_TEMP_TYPE, int, ndim);
+
+MI_TEMPLATE
+void MI_TEMP_TYPE::addInter(INTER_IMP i)
+{
+  if (!i.empty()) {
+    inters_.insert(inters_.end(), i);
+    ++ndim_;
+  }
+}
+
+MI_TEMPLATE
+bool MI_TEMP_TYPE::empty()
+{
+  if (inters().empty()) return true;
+
+  return false;
+}
+
+MI_TEMPLATE
+bool MI_TEMP_TYPE::isIn(ORD_CT<NUMERIC_IMP> elem)
+{
+  IntervalsIt it2 = inters_ref().begin();
+
+  if ((int)elem.size() != ndim()) return false;
+
+  BOOST_FOREACH (NUMERIC_IMP n, elem) {
+    if (!(*it2).isIn(n)) return false;
+
+    ++it2;
+  }
+
+  return true;
+}
+
+MI_TEMPLATE
+MI_TEMP_TYPE MI_TEMP_TYPE::cap(MI_TEMP_TYPE mi2)
+{
+  Intervals res;
+  IntervalsIt itres = res.begin();
+
+  IntervalsIt it2 = mi2.inters_ref().begin();
+  if (ndim() == mi2.ndim()) {
+    BOOST_FOREACH (INTER_IMP i1, inters()) {
+      INTER_IMP capres = i1.cap(*it2);
+
+      if (capres.empty()) {
+        Intervals aux;
+        return MultiInterImp1(aux);
+      }
+
+      itres = res.insert(itres, capres);
+      ++itres;
+
+      ++it2;
+    }
+  }
+
+  return MultiInterImp1(res);
+}
+
+MI_TEMPLATE
+UNORD_CT<MI_TEMP_TYPE> MI_TEMP_TYPE::diff(MI_TEMP_TYPE mi2)
+{
+  MultiInterImp1 capres = cap(mi2);
+
+  UNORD_CT<MultiInterImp1> resmi;
+
+  if (inters_ref().empty()) return resmi;
+
+  if (ndim() != mi2.ndim()) {
+    return resmi;
+  }
+
+  if (capres.empty()) {
+    resmi.insert(*this);
+    return resmi;
+  }
+
+  if (inters() == capres.inters()) return resmi;
+
+  IntervalsIt itcap = capres.inters_ref().begin();
+  ORD_CT<UNORD_CT<INTER_IMP>> diffs;
+  typename ORD_CT<UNORD_CT<INTER_IMP>>::iterator itdiffs = diffs.begin();
+
+  BOOST_FOREACH (INTER_IMP i, inters()) {
+    itdiffs = diffs.insert(itdiffs, i.diff(*itcap));
+
+    ++itcap;
+    ++itdiffs;
+  }
+
+  IntervalsIt it1 = inters_ref().begin();
+  ++it1;
+  itdiffs = diffs.begin();
+
+  int count = 0;
+  BOOST_FOREACH (UNORD_CT<INTER_IMP> vdiff, diffs) {
+    BOOST_FOREACH (INTER_IMP i, vdiff) {
+      if (!i.empty()) {
+        Intervals resi;
+        IntervalsIt itresi = resi.begin();
+
+        itcap = capres.inters_ref().begin();
+
+        if (count > 0) {
+          for (int j = 0; j < count; j++) {
+            itresi = resi.insert(itresi, *itcap);
+            ++itresi;
+
+            ++itcap;
+          }
+        }
+
+        itresi = resi.insert(itresi, i);
+        ++itresi;
+
+        IntervalsIt auxit1 = it1;
+        while (auxit1 != inters_ref().end()) {
+          itresi = resi.insert(itresi, *auxit1);
+          ++itresi;
+
+          ++auxit1;
+        }
+
+        resmi.insert(MultiInterImp1(resi));
+      }
+    }
+
+    ++count;
+    ++it1;
+  }
+
+  return resmi;
+}
+
+MI_TEMPLATE
+MI_TEMP_TYPE MI_TEMP_TYPE::crossProd(MI_TEMP_TYPE mi2)
+{
+  Intervals res;
+  IntervalsIt itres = res.begin();
+
+  BOOST_FOREACH (INTER_IMP i, inters()) {
+    itres = res.insert(itres, i);
+    ++itres;
+  }
+
+  BOOST_FOREACH (INTER_IMP i, mi2.inters()) {
+    itres = res.insert(itres, i);
+    ++itres;
+  }
+
+  return MultiInterImp1(res);
+}
+
+MI_TEMPLATE
+ORD_CT<NUMERIC_IMP> MI_TEMP_TYPE::minElem()
+{
+    ORD_CT<NUMERIC_IMP> res;
+    typename ORD_CT<NUMERIC_IMP>::iterator itres = res.begin();
+
+    BOOST_FOREACH (INTER_IMP i, inters()) {
+      if (i.empty()) {
+        ORD_CT<NUMERIC_IMP> aux;
+        return aux;
+      }
+
+      itres = res.insert(itres, i.minElem());
+      ++itres;
+    }
+
+    return res;
+}
+
+MI_TEMPLATE
+MI_TEMP_TYPE MI_TEMP_TYPE::replace(INTER_IMP i, int dim)
+{
+  Intervals auxRes;
+  IntervalsIt itAux = auxRes.begin();
+  int count = 1;
+
+  BOOST_FOREACH (INTER_IMP ii, inters()) {
+    if (dim == count)
+      itAux = auxRes.insert(itAux, i);
+     else
+       itAux = auxRes.insert(itAux, ii);
+
+    ++itAux;
+
+    ++count;
+  }
+
+  return MultiInterImp1(auxRes);
+}
+
+MI_TEMPLATE
+int MI_TEMP_TYPE::card()
+{
+  int res = 1;
+
+  BOOST_FOREACH (INTER_IMP i, inters()) {
+     res *= i.card();
+ }
+
+  if (inters().empty()) res = 0;
+
+  return res;
+}
+
+MI_TEMPLATE
+bool MI_TEMP_TYPE::operator==(const MI_TEMP_TYPE &other) const { return inters() == other.inters(); } 
+
+MI_TEMPLATE
+bool MI_TEMP_TYPE::operator!=(const MI_TEMP_TYPE &other) const { return inters() != other.inters(); } 
+
+MI_TEMPLATE
+bool MI_TEMP_TYPE::operator<(const MI_TEMP_TYPE &other) const 
+{
+  typename Intervals::const_iterator iti2 = other.inters().begin();
+
+  BOOST_FOREACH (INTER_IMP i1, inters()) {
+    INTER_IMP aux = *iti2;
+    if (i1.minElem() < aux.minElem()) return true;
+
+    ++iti2;
+  }
+
+  return false;
+}
+
+MI_TEMPLATE
+size_t MI_TEMP_TYPE::hash()
+{
+  size_t seed = 0;
+  boost::hash_combine(seed, card());
+  return seed; 
+}
+
+template struct MultiInterImp1<OrdCT, UnordCT, Interval, NI1>;
+
+size_t hash_value(const MultiInterval &mi) { 
+  MultiInterval aux = mi;
+  return aux.hash(); 
+}
+
+ostream &operator<<(ostream &out, const MultiInterval &mi)
+{
+  OrdCT<Interval> is = mi.inters();
   OrdCT<Interval>::iterator it = is.begin();
 
   if (is.size() == 0) return out;
@@ -296,6 +563,12 @@ ostream &operator<<(ostream &out, MultiInterval &mi)
 
   return out;
 }
+
+/*-----------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------------------------*/
+// Printing instances
+/*-----------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------------------------*/
 
 ostream &operator<<(ostream &out, AtomSet &as)
 {
@@ -510,11 +783,11 @@ bool equivalentPW(PWLMap pw1, PWLMap pw2)
     OrdCT<LMap> lm1 = pw1.lmap_();
     OrdCT<LMap>::iterator itlm1 = lm1.begin();
 
-    foreach_ (Set d1, pw1.dom_()) {
+    BOOST_FOREACH (Set d1, pw1.dom_()) {
       OrdCT<LMap> lm2 = pw2.lmap_();
       OrdCT<LMap>::iterator itlm2 = lm2.begin();
 
-      foreach_ (Set d2, pw2.dom_()) { 
+      BOOST_FOREACH (Set d2, pw2.dom_()) { 
         Set domcap = d1.cap(d2);
 
         PWLMap auxpw1;
@@ -549,7 +822,7 @@ PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2)
   OrdCT<NI2>::iterator itg2 = g2.begin();
   OrdCT<NI2> o2 = lm2.off_();
   OrdCT<NI2>::iterator ito2 = o2.begin();
-  OrdCT<Interval> ints = dom.aset_().inters_();
+  OrdCT<Interval> ints = dom.aset_().inters();
   OrdCT<Interval>::iterator itints = ints.begin();
 
   AtomSet asAux = dom;
@@ -798,7 +1071,6 @@ PWLMap minInv(PWLMap &pw, Set &s)
       ++itlm;
     }
 
-    // cout << "pw2: " << pw2 << "\n";
     return pw2;
   }
 
@@ -836,7 +1108,7 @@ PWLMap reduceMapN(PWLMap pw, int dim)
 
       BOOST_FOREACH (AtomSet adom, di.asets_()) {
         MultiInterval mi = adom.aset_();
-        OrdCT<Interval> inters = mi.inters_();
+        OrdCT<Interval> inters = mi.inters();
         OrdCT<Interval>::iterator itints = inters.begin();
 
         int count2 = 1;
@@ -1030,7 +1302,7 @@ PWLMap mapInf(PWLMap pw)
           if (*itg == 1 && *ito != 0) {
             BOOST_FOREACH (AtomSet asi, (*itdoms).asets_()) {
               MultiInterval mii = asi.aset_();
-              OrdCT<Interval> ii = mii.inters_();
+              OrdCT<Interval> ii = mii.inters();
               OrdCT<Interval>::iterator itii = ii.begin();
 
               for (int count = 0; count < dim; ++count) ++itii;
@@ -1202,7 +1474,7 @@ PWLMap minAdjCompMap(PWLMap pw3, PWLMap pw2, PWLMap pw1)
       OrdCT<NI1> min2 = mins2.minElem();
       OrdCT<NI1>::iterator itmin2 = min2.begin();
 
-      foreach_ (Set domauxi, domaux) {
+      BOOST_FOREACH (Set domauxi, domaux) {
         OrdCT<NI2> replaceg;
         OrdCT<NI2>::iterator itrepg = replaceg.begin();
         OrdCT<NI2> replaceo;
