@@ -35,17 +35,244 @@
 namespace SBG {
 size_t hash_value(SetVertex v) { return v.hash(); }
 
+#define member_imp_temp(T, C, X, Y)  \
+  T                                  \
+  X C::Y() const { return Y##_; }    \
+  T                                  \
+  void C::set_##Y(X x) { Y##_ = x; } \
+  T                                  \
+  X &C::Y##_ref() { return Y##_; }
+
+/*-----------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------------------------*/
+// Data definition
+/*-----------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------------------------*/
+
+INTER_TEMPLATE
+IntervalImp1<CT>::IntervalImp1(){};
+
+INTER_TEMPLATE
+IntervalImp1<CT>::IntervalImp1(bool isEmpty) : lo_(-1), step_(-1), hi_(-1), empty_(isEmpty) {};
+
+INTER_TEMPLATE
+IntervalImp1<CT>::IntervalImp1(int vlo, int vstep, int vhi)
+{
+  if (vlo >= 0 && vstep > 0 && vhi >= 0) {
+    empty_ = false;
+    lo_ = vlo;
+    step_ = vstep;
+
+    if (vlo <= vhi && vhi < Inf) {
+      int rem = std::fmod(vhi - vlo, vstep);
+      hi_ = vhi - rem;
+    }
+
+    else if (vlo <= vhi && vhi == Inf) {
+      hi_ = Inf;
+    }
+
+    else {
+      // WARNING("Wrong values for subscript (check low <= hi)");
+      empty_ = true;
+    }
+  }
+
+  else if (vlo >= 0 && vstep == 0 && vhi == vlo) {
+    empty_ = false;
+    lo_ = vlo;
+    hi_ = vhi;
+    step_ = 1;
+  }
+
+  else {
+    // WARNING("Subscripts should be positive");
+    lo_ = -1;
+    step_ = -1;
+    hi_ = -1;
+    empty_ = true;
+  }
+};
+
+member_imp_temp(INTER_TEMPLATE, IntervalImp1<CT>, int, lo);
+member_imp_temp(INTER_TEMPLATE, IntervalImp1<CT>, int, step);
+member_imp_temp(INTER_TEMPLATE, IntervalImp1<CT>, int, hi);
+member_imp_temp(INTER_TEMPLATE, IntervalImp1<CT>, bool, empty);
+
+INTER_TEMPLATE
+int IntervalImp1<CT>::gcd(int a, int b)
+{
+  int c;
+
+  do {
+    c = a % b;
+    if (c > 0) {
+      a = b;
+      b = c;
+    }
+  } while (c != 0);
+
+  return b;
+}
+
+INTER_TEMPLATE
+int IntervalImp1<CT>::lcm(int a, int b)
+{
+  if (a < 0 || b < 0) return -1;
+
+  return (a * b) / gcd(a, b);
+}
+
+INTER_TEMPLATE
+bool IntervalImp1<CT>::isIn(int x)
+{
+  if (x < lo() || x > hi() || empty()) return false;
+
+  float aux = fmod(x - lo(), step());
+  if (aux == 0) return true;
+
+  return false;
+}
+
+INTER_TEMPLATE
+int IntervalImp1<CT>::card() 
+{
+  int res = 0;
+
+  if (step() != 0)
+    res = (hi() - lo()) / step() + 1;
+
+  return res;
+}
+
+INTER_TEMPLATE
+IntervalImp1<CT> IntervalImp1<CT>::offset(int off)
+{
+  int newLo = lo() + off;
+  int newHi = hi() + off;
+
+  if (!empty())
+    return IntervalImp1(newLo, step(), newHi);
+
+  else
+    return IntervalImp1(true);
+}
+
+INTER_TEMPLATE
+IntervalImp1<CT> IntervalImp1<CT>::cap(IntervalImp1<CT> i2)
+{
+  int maxLo = max(lo(), i2.lo()), newLo = -1;
+  int newStep = lcm(step(), i2.step());
+  int newEnd = min(hi(), i2.hi());
+
+  if (!empty() && !i2.empty())
+    for (int i = 0; i < newStep; i++) {
+      int res1 = maxLo + i;
+
+      if (isIn(res1) && i2.isIn(res1)) {
+        newLo = res1;
+        break;
+      }
+    }
+
+  else
+    return IntervalImp1(true);
+
+  if (newLo < 0) return IntervalImp1(true);
+
+  return IntervalImp1(newLo, newStep, newEnd);
+}
+
+INTER_TEMPLATE
+CT<IntervalImp1<CT>> IntervalImp1<CT>::diff(IntervalImp1<CT> i2)
+{
+  CT<IntervalImp1> res;
+  IntervalImp1 capres = cap(i2);
+
+  if (capres.empty()) {
+    res.insert(*this);
+    return res;
+  }
+
+  if (capres == *this) return res;
+
+  // "Before" intersection
+  if (lo() < capres.lo()) {
+    IntervalImp1 aux = IntervalImp1(lo(), 1, capres.lo() - 1);
+    IntervalImp1 left = cap(aux);
+    res.insert(left);
+  }
+
+  // "During" intersection
+  if (capres.step() <= (capres.hi() - capres.lo())) {
+    int nInters = capres.step() / step();
+    for (int i = 1; i < nInters; i++) {
+      IntervalImp1 aux = IntervalImp1(capres.lo() + i * step(), capres.step(), capres.hi());
+      res.insert(aux);
+    }
+  }
+
+  // "After" intersection
+  if (hi() > capres.hi()) {
+    IntervalImp1 aux = IntervalImp1(capres.hi() + 1, 1, hi());
+    IntervalImp1 right = cap(aux);
+    res.insert(right);
+  }
+
+  return res;
+}
+
+INTER_TEMPLATE
+int IntervalImp1<CT>::minElem() { return lo(); }
+
+INTER_TEMPLATE
+int IntervalImp1<CT>::maxElem() { return hi(); }
+
+//INTER_TEMPLATE
+//size_t IntervalImp1<CT>::hash() const { return lo(); }
+
+INTER_TEMPLATE
+bool IntervalImp1<CT>::operator==(const IntervalImp1<CT> &other) const 
+{
+  return (lo() == other.lo()) && (step() == other.step()) && (hi() == other.hi()) && (empty() == other.empty());
+}
+
+INTER_TEMPLATE
+bool IntervalImp1<CT>::operator!=(const IntervalImp1<CT> &other) const
+{
+  return !(*this == other);
+}
+
+template struct IntervalImp1<UnordCT>;
+
+size_t hash_value(const Interval &inter) 
+{ 
+  size_t seed = 0;
+  boost::hash_combine(seed, inter.lo());
+  return seed; 
+}
+
+ostream &operator<<(ostream &out, const Interval &i)
+{
+  out << "[" << i.lo() << ":" << i.step() << ":" << i.hi() << "]";
+  return out;
+}
+
+// >>>>> To add new implementation, add new methods:
+// X IntervalImp2::func1() { ... }
+// X IntervalImp2::func2() { ... }
+// ...
+// ...
+//
+// template struct IntervalImp2<UnordCT>; --- If it is a template class
+//
+// Then modify hash_value and operator<< implementation for Interval 
+
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 // Printing instances
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
-
-ostream &operator<<(ostream &out, Interval &i)
-{
-  out << "[" << i.lo_() << ":" << i.step_() << ":" << i.hi_() << "]";
-  return out;
-}
 
 ostream &operator<<(ostream &out, MultiInterval &mi)
 {
@@ -340,7 +567,7 @@ PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2)
         NI2 xinter = (*ito2 - *ito1) / (g1i - *itg2);
 
         // Intersection before domain
-        if (xinter <= (*itints).lo_()) {
+        if (xinter <= (*itints).lo()) {
           if (*itg2 < g1i) lmAux = lm2;
 
           Set sAux;
@@ -351,7 +578,7 @@ PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2)
         }
 
         // Intersection after domain
-        else if (xinter >= (*itints).hi_()) {
+        else if (xinter >= (*itints).hi()) {
           if (*itg2 > g1i) lmAux = lm2;
 
           Set sAux;
@@ -363,8 +590,8 @@ PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2)
 
         // Intersection in domain
         else {
-          Interval i1((*itints).lo_(), (*itints).step_(), floor(xinter));
-          Interval i2(i1.hi_() + i1.step_(), (*itints).step_(), (*itints).hi_());
+          Interval i1((*itints).lo(), (*itints).step(), floor(xinter));
+          Interval i2(i1.hi() + i1.step(), (*itints).step(), (*itints).hi());
 
           AtomSet as1 = asAux.replace(i1, count);
           AtomSet as2 = asAux.replace(i2, count);
@@ -618,8 +845,8 @@ PWLMap reduceMapN(PWLMap pw, int dim)
           ++count2;
         }
 
-        NI1 loint = (*itints).lo_();
-        NI1 hiint = (*itints).hi_();
+        NI1 loint = (*itints).lo();
+        NI1 hiint = (*itints).hi();
 
         if ((hiint - loint) > (off * off)) {
           OrdCT<Set> news;
@@ -808,7 +1035,7 @@ PWLMap mapInf(PWLMap pw)
 
               for (int count = 0; count < dim; ++count) ++itii;
 
-              its = max(its, ceil(((*itii).hi_() - (*itii).lo_()) / abs(*ito)));
+              its = max(its, ceil(((*itii).hi() - (*itii).lo()) / abs(*ito)));
             }
           }
 

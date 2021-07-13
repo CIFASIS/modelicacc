@@ -121,9 +121,9 @@ Interval EvalExpFlatter::operator()(BinOp v) const{
   Interval ll = ApplyThis(l), rr = ApplyThis(r); 
 
   // Operations using constants
-  if(ll.size() == 1 && rr.size() == 1){
-    Real nl = ll.lo_();
-    Real nr = rr.lo_();
+  if(ll.card() == 1 && rr.card() == 1){
+    Real nl = ll.lo();
+    Real nr = rr.lo();
     BinOp bop(nl, v.op(), nr);
     Expression e(bop);
     EvalExpression evexp(vtable);
@@ -133,27 +133,27 @@ Interval EvalExpFlatter::operator()(BinOp v) const{
     return i;
   }
 
-  else if(ll.size() == 1){
+  else if(ll.card() == 1){
     switch(v.op()){
       case Add:
         {
-          Interval i(ll.lo_() + rr.lo_(), 
-                     rr.step_(), 
-                     ll.hi_() + rr.hi_());
+          Interval i(ll.lo() + rr.lo(), 
+                     rr.step(), 
+                     ll.hi() + rr.hi());
           return i;
         }
       case Sub:
         {
-          Interval i(ll.lo_() - rr.lo_(), 
-                    rr.step_(), 
-                    ll.hi_() - rr.hi_());
+          Interval i(ll.lo() - rr.lo(), 
+                    rr.step(), 
+                    ll.hi() - rr.hi());
           return i;
         }
       case Mult:
         {
-          Interval i(ll.lo_() * rr.lo_(), 
-                     ll.lo_() * rr.step_(), 
-                     ll.hi_() * rr.hi_());
+          Interval i(ll.lo() * rr.lo(), 
+                     ll.lo() * rr.step(), 
+                     ll.hi() * rr.hi());
           return i;
         }
       default:
@@ -165,27 +165,27 @@ Interval EvalExpFlatter::operator()(BinOp v) const{
     }
   }
 
-  else if(rr.size() == 1){
+  else if(rr.card() == 1){
     switch(v.op()){
       case Add:
         {
-          Interval i(ll.lo_() + rr.lo_(), 
-                     ll.step_(), 
-                     ll.hi_() + rr.hi_());
+          Interval i(ll.lo() + rr.lo(), 
+                     ll.step(), 
+                     ll.hi() + rr.hi());
           return i;
         }
       case Sub:
         {
-          Interval i(ll.lo_() - rr.lo_(), 
-                     ll.step_(), 
-                     ll.hi_() - rr.hi_());
+          Interval i(ll.lo() - rr.lo(), 
+                     ll.step(), 
+                     ll.hi() - rr.hi());
           return i;
         }
       case Mult:
         {
-          Interval i(ll.lo_() * rr.lo_(), 
-                     ll.lo_() * rr.step_(), 
-                     ll.hi_() * rr.hi_());
+          Interval i(ll.lo() * rr.lo(), 
+                     ll.lo() * rr.step(), 
+                     ll.hi() * rr.hi());
           return i;
         }
       default:

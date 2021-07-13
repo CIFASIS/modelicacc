@@ -337,7 +337,7 @@ Set Connectors::buildSet(VarInfo v)
     // Use declared dimensions for the variable
     if (itinds != inds.end()) {
       Interval auxi = Apply(evexp, *itinds);
-      i = Interval(offset, auxi.step_(), offset + auxi.lo_() - 1);
+      i = Interval(offset, auxi.step(), offset + auxi.lo() - 1);
 
       ++itinds;
     }
@@ -348,7 +348,7 @@ Set Connectors::buildSet(VarInfo v)
 
     v_intervals.addInter(i);
 
-    itNewVC = newVCount.insert(itNewVC, i.hi_() + 1);
+    itNewVC = newVCount.insert(itNewVC, i.hi() + 1);
     ++itNewVC;
   }
 
@@ -422,11 +422,11 @@ MultiInterval Connectors::buildEdgeMultiInterval(VarInfo v, int offset)
   foreach_ (Expression e, inds) {
     Interval i;
     Interval auxi = Apply(evexp, *itinds);
-    i = Interval(*itEC + auxi.lo_() - 1, auxi.step_(), *itEC + auxi.hi_() - 1);
+    i = Interval(*itEC + auxi.lo() - 1, auxi.step(), *itEC + auxi.hi() - 1);
 
     v_intervals.addInter(i);
 
-    itNewEC = newECount.insert(itNewEC, i.hi_() + 1);
+    itNewEC = newECount.insert(itNewEC, i.hi() + 1);
     ++itNewEC;
     if (itEC != eCount_.end())
       ++itEC;
@@ -581,9 +581,9 @@ LMap Connectors::buildLM(MultiInterval mi1, MultiInterval mi2)
   OrdCT<Interval>::iterator itmi2 = miinters2.begin();
   // Traverse dimensions
   while (itmi1 != miinters1.end()) {
-    if ((*itmi2).size() == 1) {
+    if ((*itmi2).card() == 1) {
       NI2 newg = 0;
-      NI2 newo = (*itmi2).lo_(); 
+      NI2 newo = (*itmi2).lo(); 
 
       itresg = resg.insert(itresg, newg);
       itreso = reso.insert(itreso, newo);
@@ -592,9 +592,9 @@ LMap Connectors::buildLM(MultiInterval mi1, MultiInterval mi2)
       ++itreso;
     }
 
-    else if ((*itmi1).size() == (*itmi2).size()) {
-      NI2 newg = (*itmi2).step_() / (*itmi1).step_();
-      NI2 newo = (*itmi2).lo_() - newg * (*itmi1).lo_(); 
+    else if ((*itmi1).card() == (*itmi2).card()) {
+      NI2 newg = (*itmi2).step() / (*itmi1).step();
+      NI2 newo = (*itmi2).lo() - newg * (*itmi1).lo(); 
 
       itresg = resg.insert(itresg, newg);
       itreso = reso.insert(itreso, newo);
@@ -631,8 +631,8 @@ MultiInterval Connectors::subscriptMI(MultiInterval mi, ExpOptList r)
   if (r) {
     foreach_ (Expression ri, *r) {
       Interval ndim = Apply(evexp, ri);
-      int offset = (*itmi).lo_();
-      Interval res(ndim.lo_() + offset - 1, ndim.step_(), ndim.hi_() + offset - 1);
+      int offset = (*itmi).lo();
+      Interval res(ndim.lo() + offset - 1, ndim.step(), ndim.hi() + offset - 1);
       itmires = mires.insert(itmires, (*itmi).cap(res));
 
       ++itmires;
@@ -1022,7 +1022,7 @@ Pair<bool, EquationList> Connectors::buildConnects(EquationList &eqs)
         OptExp e = ind.exp();
         if (e) {
           Interval i = Apply(evexp, *e);
-          if (!i.empty_()) {
+          if (!i.empty()) {
             VarInfo vi(TypePrefixes(), n, Option<Comment>(), 
                        Option<Modification>(Modification(ModAssign(*e))), 
                        ExpOptList(ExpList(1, *e)), false);
@@ -1234,7 +1234,7 @@ Indexes Connectors::buildIndex(Set connected)
     OrdCT<NI1> nElemsAux;
     OrdCT<NI1>::iterator itAux = nElemsAux.begin();
     foreach_ (Interval i, c.aset_().inters_()) {
-      int elems = i.size();
+      int elems = i.card();
       if (*itElems)
         elems = max(*itElems, elems);
 
@@ -1330,11 +1330,11 @@ ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet a
     if (dim < dims) {
       OptExp oe = ind.exp_;
       if (oe) {
-        int loInd = Apply(evexp, *oe).lo_();
+        int loInd = Apply(evexp, *oe).lo();
 
         // Constant value in dimension, don't use counter
-        if ((*itmias).size() == 1) {
-          int off = (*itmias).lo_() - (*itmiori).lo_() + 1; 
+        if ((*itmias).card() == 1) {
+          int off = (*itmias).lo() - (*itmiori).lo() + 1; 
 
           Expression eoff(off);
           itres = res.insert(itres, eoff);
@@ -1342,8 +1342,8 @@ ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet a
 
         // Use counter
         else {
-          Real step = (*itmias).step_(); 
-          Real off = (((*itmias).lo_() - (*itmiori).lo_() + 1)) - (step * loInd); 
+          Real step = (*itmias).step(); 
+          Real off = (((*itmias).lo() - (*itmiori).lo() + 1)) - (step * loInd); 
 
           if (step == 0)
             itres = res.insert(itres, Expression(off));
@@ -1446,9 +1446,9 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
   // A range is needed in the sum
   if (as.size() != 1) {
     foreach_(Interval iori, original.aset_().inters_()) {
-      NI1 lo = (*itas).lo_() - iori.lo_() + 1;
-      NI1 st = (*itas).step_();
-      NI1 hi = (*itas).hi_() - iori.lo_() + 1;
+      NI1 lo = (*itas).lo() - iori.lo() + 1;
+      NI1 st = (*itas).step();
+      NI1 hi = (*itas).hi() - iori.lo() + 1;
       Expression elo(lo);
       Expression est(st);
       Expression ehi(hi);
@@ -1465,7 +1465,7 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
   // No need of range, just a constant
   else {
     foreach_(Interval iori, original.aset_().inters_()) {
-      NI1 lo = (*itas).lo_() - iori.lo_() + 1;
+      NI1 lo = (*itas).lo() - iori.lo() + 1;
       Expression expr(lo);
 
       itres = res.insert(itres, expr);

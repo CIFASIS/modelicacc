@@ -52,28 +52,28 @@ void TestIntCreation1()
 {
   Interval i(10, 3, 3);
 
-  BOOST_CHECK(i.empty_() == true);
+  BOOST_CHECK(i.empty() == true);
 }
 
 void TestIntCreation2()
 {
   Interval i(10, 20, 15);
 
-  BOOST_CHECK(i.hi_() == 10);
+  BOOST_CHECK(i.hi() == 10);
 }
 
 void TestIntCreation3()
 {
   Interval i(10, 5, 23);
 
-  BOOST_CHECK(i.hi_() == 20);
+  BOOST_CHECK(i.hi() == 20);
 }
 
 void TestIntCreation4()
 {
   Interval i(10, 1, Inf);
 
-  BOOST_CHECK(i.hi_() == Inf);
+  BOOST_CHECK(i.hi() == Inf);
 }
 
 void TestIntQuery1()

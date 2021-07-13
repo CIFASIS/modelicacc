@@ -129,8 +129,8 @@ SBG::Set MatchingGraphBuilder::generateMapDom(SBG::Set dom, SBG::Set unk_dom, in
   foreach_(AtomSet atom_set, atom_sets) {
     MultiInterval dom_intervals = atom_set.aset_();
     foreach_(Interval inter, dom_intervals.inters_()) {
-      Real end = inter.size() + offset - 1;
-      edge_set_intervals.addInter(Interval(offset, inter.step_(), end));
+      Real end = inter.card() + offset - 1;
+      edge_set_intervals.addInter(Interval(offset, inter.step(), end));
     }
     addDims(max_dim, dom_intervals.inters_().size(), edge_set_intervals, offset);
   }

@@ -29,6 +29,8 @@
  *   Through typename template the abstract class uses
  *   the new concrete implementation, therefore, requiring
  *   little change appart from concrete class implementation.
+ *
+ *   An example will be commented for intervals.
  */
 
 #ifndef GRAPH_DEFINITION_
@@ -60,196 +62,59 @@ using namespace std;
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 
-template <template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
-                    typename Alloc = std::allocator<Value>>
-          class CT>
+#define comparable_neg(X) bool operator!=(const X &other) const;
+
+#define printable_temp(T, X)                                    \
+  T                                                             \
+  friend std::ostream &operator<<(std::ostream &out, const X &);
+
+// Intervals --------------------------------------------------------------------------------------
+
+#define INTER_TEMPLATE                                                    \
+  template <template <typename Value,                                     \
+                      typename Hash = boost::hash<Value>,                 \
+                      typename Pred = std::equal_to<Value>,               \
+                      typename Alloc = std::allocator<Value>>             \
+            class CT>
+
+#define INTER_TEMPLATE_PRINT                                              \
+  template <template <typename Value,                                     \
+                      typename Hash = boost::hash<Value>,                 \
+                      typename Pred = std::equal_to<Value>,               \
+                      typename Alloc = std::allocator<Value>>             \
+            class CT_PRINT>
+
+INTER_TEMPLATE
 struct IntervalImp1 {
-  int lo;
-  int step;
-  int hi;
-  bool empty;
+  IntervalImp1();
+  IntervalImp1(bool isEmpty);
+  IntervalImp1(int vlo, int vstep, int vhi);
 
-  int gcd(int a, int b)
-  {
-    int c;
+  int gcd(int a, int b);
+  int lcm(int a, int b);
 
-    do {
-      c = a % b;
-      if (c > 0) {
-        a = b;
-        b = c;
-      }
-    } while (c != 0);
+  bool isIn(int x);
+  int card();
+  IntervalImp1 cap(IntervalImp1 i2);
+  CT<IntervalImp1> diff(IntervalImp1 i2);
 
-    return b;
-  }
+  IntervalImp1 offset(int off);
 
-  int lcm(int a, int b)
-  {
-    if (a < 0 || b < 0) return -1;
+  int minElem();
+  int maxElem();
 
-    return (a * b) / gcd(a, b);
-  }
+  comparable(IntervalImp1);
+  comparable_neg(IntervalImp1);
+  printable_temp(INTER_TEMPLATE_PRINT, IntervalImp1);
 
-  IntervalImp1(){};
-  IntervalImp1(bool isEmpty)
-  {
-    lo = -1;
-    step = -1;
-    hi = -1;
-    empty = isEmpty;
-  };
-  IntervalImp1(int vlo, int vstep, int vhi)
-  {
-    if (vlo >= 0 && vstep > 0 && vhi >= 0) {
-      empty = false;
-      lo = vlo;
-      step = vstep;
-
-      if (vlo <= vhi && vhi < Inf) {
-        int rem = std::fmod(vhi - vlo, vstep);
-        hi = vhi - rem;
-      }
-
-      else if (vlo <= vhi && vhi == Inf) {
-        hi = Inf;
-      }
-
-      else {
-        // WARNING("Wrong values for subscript (check low <= hi)");
-        empty = true;
-      }
-    }
-
-    else if (vlo >= 0 && vstep == 0 && vhi == vlo) {
-      empty = false;
-      lo = vlo;
-      hi = vhi;
-      step = 1;
-    }
-
-    else {
-      // WARNING("Subscripts should be positive");
-      lo = -1;
-      step = -1;
-      hi = -1;
-      empty = true;
-    }
-  }
-
-  int lo_() { return lo; }
-
-  int step_() { return step; }
-
-  int hi_() { return hi; }
-
-  bool empty_() const { return empty; }
-
-  bool isIn(int x)
-  {
-    if (x < lo || x > hi || empty) return false;
-
-    float aux = fmod(x - lo, step);
-    if (aux == 0) return true;
-
-    return false;
-  }
-
-  IntervalImp1 cap(IntervalImp1 &inter2)
-  {
-    int maxLo = max(lo, inter2.lo), newLo = -1;
-    int newStep = lcm(step, inter2.step);
-    int newEnd = min(hi, inter2.hi);
-
-    if (!empty && !inter2.empty)
-      for (int i = 0; i < newStep; i++) {
-        int res1 = maxLo + i;
-
-        if (isIn(res1) && inter2.isIn(res1)) {
-          newLo = res1;
-          break;
-        }
-      }
-
-    else
-      return IntervalImp1(true);
-
-    if (newLo < 0) return IntervalImp1(true);
-
-    return IntervalImp1(newLo, newStep, newEnd);
-  }
-
-  CT<IntervalImp1> diff(IntervalImp1 &i2)
-  {
-    CT<IntervalImp1> res;
-    IntervalImp1 capres = cap(i2);
-
-    if (capres.empty) {
-      res.insert(*this);
-      return res;
-    }
-
-    if (capres == *this) return res;
-
-    // "Before" intersection
-    if (lo < capres.lo) {
-      IntervalImp1 aux = IntervalImp1(lo, 1, capres.lo - 1);
-      IntervalImp1 left = cap(aux);
-      res.insert(left);
-    }
-
-    // "During" intersection
-    if (capres.step <= (capres.hi - capres.lo)) {
-      int nInters = capres.step / step;
-      for (int i = 1; i < nInters; i++) {
-        IntervalImp1 aux = IntervalImp1(capres.lo + i * step, capres.step, capres.hi);
-        res.insert(aux);
-      }
-    }
-
-    // "After" intersection
-    if (hi > capres.hi) {
-      IntervalImp1 aux = IntervalImp1(capres.hi + 1, 1, hi);
-      IntervalImp1 right = cap(aux);
-      res.insert(right);
-    }
-
-    return res;
-  }
-
-  int minElem() { return lo; }
-
-  // Cardinality of interval
-  int size()
-  {
-    int res = 0;
-
-    if (step != 0)
-      res = (hi - lo) / step + 1;
-
-    return res;
-  }
-
-  bool operator==(const IntervalImp1 &other) const
-  {
-    return (lo == other.lo) && (step == other.step) && (hi == other.hi) && (empty == other.empty);
-  }
-
-  bool operator!=(const IntervalImp1 &other) const
-  {
-    return (lo != other.lo) || (step != other.step) || (hi != other.hi) || (empty != other.empty);
-  }
-
-  size_t hash() { return lo; }
+  member_(int, lo);
+  member_(int, step);
+  member_(int, hi);
+  member_(bool, empty);
 };
 
-template <template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
-                    typename Alloc = std::allocator<Value>>
-          class CT>
-size_t hash_value(IntervalImp1<CT> inter)
-{
-  return inter.hash();
-}
+// >>>>> To add new implementation, add:
+// struct IntervalImp2 { ... }
 
 // MultiIntervals ---------------------------------------------------------------------------------
 
@@ -276,7 +141,7 @@ struct MultiInterImp1 {
     bool areEmptys = false;
 
     while (it != is.end()) {
-      if ((*it).empty_()) areEmptys = true;
+      if ((*it).empty()) areEmptys = true;
 
       ++it;
     }
@@ -301,7 +166,7 @@ struct MultiInterImp1 {
 
   void addInter(IntervalImp i)
   {
-    if (!i.empty_()) {
+    if (!i.empty()) {
       inters.insert(inters.end(), i);
       ++ndim;
     }
@@ -339,7 +204,7 @@ struct MultiInterImp1 {
       BOOST_FOREACH (IntervalImp i1, inters) {
         IntervalImp capres = i1.cap(*it2);
 
-        if (capres.empty_()) {
+        if (capres.empty()) {
           CT1<IntervalImp> aux;
           return MultiInterImp1(aux);
         }
@@ -378,7 +243,7 @@ struct MultiInterImp1 {
     CT1<CT2<IntervalImp>> diffs;
     typename CT1<CT2<IntervalImp>>::iterator itdiffs = diffs.begin();
 
-    BOOST_FOREACH (IntervalImp i, inters) {
+    foreach_ (IntervalImp i, inters) {
       itdiffs = diffs.insert(itdiffs, i.diff(*itcap));
 
       ++itcap;
@@ -390,9 +255,9 @@ struct MultiInterImp1 {
     itdiffs = diffs.begin();
 
     int count = 0;
-    BOOST_FOREACH (CT2<IntervalImp> vdiff, diffs) {
-      BOOST_FOREACH (IntervalImp i, vdiff) {
-        if (!i.empty_()) {
+    foreach_ (CT2<IntervalImp> vdiff, diffs) {
+      foreach_ (IntervalImp i, vdiff) {
+        if (!i.empty()) {
           CT1<IntervalImp> resi;
           IntImpIt itresi = resi.begin();
 
@@ -454,7 +319,7 @@ struct MultiInterImp1 {
     typename CT1<NumImp>::iterator itres = res.begin();
 
     BOOST_FOREACH (IntervalImp i, inters) {
-      if (i.empty_()) {
+      if (i.empty()) {
         CT1<NumImp> aux;
         return aux;
       }
@@ -491,7 +356,7 @@ struct MultiInterImp1 {
     int res = 1;
 
     BOOST_FOREACH (IntervalImp i, inters) {
-      res *= i.size();
+      res *= i.card();
     }
 
     if (inters.empty()) res = 0;
@@ -1075,22 +940,22 @@ struct PWAtomLMapImp1 {
       CT<IntervalImp> auxdom;
 
       BOOST_FOREACH (IntervalImp i, ints) {
-        NumImp2 auxLo = i.lo_() * (*itg) + (*ito);
-        NumImp2 auxStep = i.step_() * (*itg);
-        NumImp2 auxHi = i.hi_() * (*itg) + (*ito);
+        NumImp2 auxLo = i.lo() * (*itg) + (*ito);
+        NumImp2 auxStep = i.step() * (*itg);
+        NumImp2 auxHi = i.hi() * (*itg) + (*ito);
 
         if (*itg < Inf) {
-          if (auxLo != (int)auxLo && i.lo_()) {
+          if (auxLo != (int)auxLo && i.lo()) {
             // WARNING("Incompatible map");
             incompatible = true;
           }
 
-          if (auxStep != (int)auxStep && i.step_()) {
+          if (auxStep != (int)auxStep && i.step()) {
             // WARNING("Incompatible map");
             incompatible = true;
           }
 
-          if (auxHi != (int)auxHi && i.hi_()) {
+          if (auxHi != (int)auxHi && i.hi()) {
             // WARNING("Incompatible map");
             incompatible = true;
           }
@@ -1139,9 +1004,9 @@ struct PWAtomLMapImp1 {
       NumImp1 newStep;
       NumImp1 newHi;
 
-      NumImp2 auxLo = capi.lo_() * (*itg) + (*ito);
-      NumImp2 auxStep = capi.step_() * (*itg);
-      NumImp2 auxHi = capi.hi_() * (*itg) + (*ito);
+      NumImp2 auxLo = capi.lo() * (*itg) + (*ito);
+      NumImp2 auxStep = capi.step() * (*itg);
+      NumImp2 auxHi = capi.hi() * (*itg) + (*ito);
 
       if (*itg < Inf) {
         if (auxLo >= Inf)
@@ -1655,11 +1520,15 @@ typedef OrdCT<NI1> contNI1;
 typedef OrdCT<NI2> contNI2;
 
 typedef IntervalImp1<UnordCT> Interval;
+size_t hash_value(const Interval &inter);
+
+// >>>>> To change implementation of Interval:
+// typedef IntervalImp2 Interval;
+
+ostream &operator<<(ostream &out, const Interval &i);
 
 typedef UnordCT<Interval> contInt1;
 typedef OrdCT<Interval> contInt2;
-
-ostream &operator<<(ostream &out, Interval &i);
 
 typedef MultiInterImp1<OrdCT, UnordCT, Interval, NI1> MultiInterval;
 
