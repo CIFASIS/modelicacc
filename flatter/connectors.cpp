@@ -1743,7 +1743,6 @@ EquationList Connectors::generateCode()
     }
 
     // Flow equations
-    //repd = getRepd(atomRept).diff(flowVertices);
     EquationList flowEqs = buildFlowEquations(indexes, atomRept, repd);
 
     foreach_ (Equation e, flowEqs) {
