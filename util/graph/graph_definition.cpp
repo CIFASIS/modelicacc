@@ -564,20 +564,112 @@ ostream &operator<<(ostream &out, const MultiInterval &mi)
   return out;
 }
 
-/*-----------------------------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------------------------*/
-// Printing instances
-/*-----------------------------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------------------------*/
+// Atomic sets ------------------------------------------------------------------------------------
 
-ostream &operator<<(ostream &out, AtomSet &as)
+AS_TEMPLATE
+AS_TEMP_TYPE::AtomSetImp1() 
 {
-  MultiInterval mi = as.aset_();
+  MI_IMP emptyRes;
+  aset_ = emptyRes;
+  ndim_ = 0;
+}
+
+AS_TEMPLATE
+AS_TEMP_TYPE::AtomSetImp1(MI_IMP as)
+{
+  aset_ = as;
+  ndim_ = as.ndim();
+}
+
+member_imp_temp(AS_TEMPLATE, AS_TEMP_TYPE, MI_IMP, aset);
+member_imp_temp(AS_TEMPLATE, AS_TEMP_TYPE, int, ndim);
+
+AS_TEMPLATE
+bool AS_TEMP_TYPE::empty() { return aset_ref().empty(); }
+
+AS_TEMPLATE
+bool AS_TEMP_TYPE::isIn(ORD_CT<NUMERIC_IMP> elem) { return aset_ref().isIn(elem); }
+
+AS_TEMPLATE
+int AS_TEMP_TYPE::card() { return aset_ref().card(); }
+
+AS_TEMPLATE
+AS_TEMP_TYPE AS_TEMP_TYPE::cap(AS_TEMP_TYPE aset2) 
+{
+  AS_TEMP_TYPE res(aset_ref().cap(aset2.aset()));
+  return res;
+}
+
+AS_TEMPLATE
+UNORD_CT<AS_TEMP_TYPE> AS_TEMP_TYPE::diff(AS_TEMP_TYPE aset2)
+{
+  UNORD_CT<AtomSetImp1> res;
+
+  UNORD_CT<MI_IMP> atomicDiff = aset_ref().diff(aset2.aset());
+
+  if (atomicDiff.empty()) {
+    UNORD_CT<AtomSetImp1> emptyRes;
+    return emptyRes;
+  }
+
+  else {
+    BOOST_FOREACH (MI_IMP mi, atomicDiff) 
+      res.insert(AtomSetImp1(mi));
+  }
+
+  return res;
+}
+
+AS_TEMPLATE
+ORD_CT<NUMERIC_IMP> AS_TEMP_TYPE::minElem() { return aset_ref().minElem(); }
+
+AS_TEMPLATE
+AS_TEMP_TYPE AS_TEMP_TYPE::crossProd(AS_TEMP_TYPE aset2) 
+{ 
+  return AtomSetImp1(aset_ref().crossProd(aset2.aset()));
+}
+
+AS_TEMPLATE
+AS_TEMP_TYPE AS_TEMP_TYPE::replace(INTER_IMP i, int dim) 
+{
+  return AtomSetImp1(aset_ref().replace(i, dim));
+}
+
+AS_TEMPLATE
+bool AS_TEMP_TYPE::operator==(const AS_TEMP_TYPE &other) const { return aset() == other.aset(); } 
+
+AS_TEMPLATE
+bool AS_TEMP_TYPE::operator!=(const AS_TEMP_TYPE &other) const { return aset() != other.aset(); } 
+
+AS_TEMPLATE
+size_t AS_TEMP_TYPE::hash()
+{
+  size_t seed = 0;
+  boost::hash_combine(seed, aset_ref().hash());
+  return seed; 
+}
+
+template struct AtomSetImp1<OrdCT, UnordCT, MultiInterval, Interval, NI1>;
+
+size_t hash_value(const AtomSet &as) { 
+  AtomSet aux = as.aset();
+  return aux.hash(); 
+}
+
+ostream &operator<<(ostream &out, const AtomSet &as)
+{
+  MultiInterval mi = as.aset();
 
   out << "{" << mi << "}";
 
   return out;
 }
+
+/*-----------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------------------------*/
+// Printing instances
+/*-----------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------------------------*/
 
 ostream &operator<<(ostream &out, Set &s)
 {
@@ -822,7 +914,7 @@ PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2)
   OrdCT<NI2>::iterator itg2 = g2.begin();
   OrdCT<NI2> o2 = lm2.off_();
   OrdCT<NI2>::iterator ito2 = o2.begin();
-  OrdCT<Interval> ints = dom.aset_().inters();
+  OrdCT<Interval> ints = dom.aset_ref().inters();
   OrdCT<Interval>::iterator itints = ints.begin();
 
   AtomSet asAux = dom;
@@ -1107,7 +1199,7 @@ PWLMap reduceMapN(PWLMap pw, int dim)
       NI2 off = -(*ito);
 
       BOOST_FOREACH (AtomSet adom, di.asets_()) {
-        MultiInterval mi = adom.aset_();
+        MultiInterval mi = adom.aset();
         OrdCT<Interval> inters = mi.inters();
         OrdCT<Interval>::iterator itints = inters.begin();
 
@@ -1301,7 +1393,7 @@ PWLMap mapInf(PWLMap pw)
         for (int dim = 0; dim < res.ndim_(); ++dim) {
           if (*itg == 1 && *ito != 0) {
             BOOST_FOREACH (AtomSet asi, (*itdoms).asets_()) {
-              MultiInterval mii = asi.aset_();
+              MultiInterval mii = asi.aset();
               OrdCT<Interval> ii = mii.inters();
               OrdCT<Interval>::iterator itii = ii.begin();
 

@@ -662,8 +662,8 @@ PWLMap Connectors::buildEdgeMap(Set dom, Set im, ExpOptList r)
     AtomSet domas = *(dom.asets_().begin());
     AtomSet imas = *(im.asets_().begin());
 
-    MultiInterval dommi = domas.aset_();
-    MultiInterval immi = imas.aset_();
+    MultiInterval dommi = domas.aset();
+    MultiInterval immi = imas.aset();
 
     LMap lm = buildLM(dommi, subscriptMI(immi, r));
     res.addSetLM(dom, lm);
@@ -1233,7 +1233,7 @@ Indexes Connectors::buildIndex(Set connected)
     OrdCT<NI1>::iterator itElems = nElems.begin();
     OrdCT<NI1> nElemsAux;
     OrdCT<NI1>::iterator itAux = nElemsAux.begin();
-    foreach_ (Interval i, c.aset_().inters()) {
+    foreach_ (Interval i, c.aset_ref().inters()) {
       int elems = i.card();
       if (*itElems)
         elems = max(*itElems, elems);
@@ -1309,9 +1309,9 @@ ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet a
   ExpList res;
   ExpList::iterator itres = res.begin();
 
-  OrdCT<Interval> miori = original.aset_().inters();
+  OrdCT<Interval> miori = original.aset_ref().inters();
   OrdCT<Interval>::iterator itmiori = miori.begin();
-  OrdCT<Interval> mias = as.aset_().inters();
+  OrdCT<Interval> mias = as.aset_ref().inters();
   OrdCT<Interval>::iterator itmias = mias.begin();
 
   const VarSymbolTable auxsyms = mmoclass_.syms();
@@ -1440,12 +1440,12 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
   ExpList res;
   ExpList::iterator itres = res.begin();
 
-  OrdCT<Interval> intersas = as.aset_().inters();
+  OrdCT<Interval> intersas = as.aset_ref().inters();
   OrdCT<Interval>::iterator itas = intersas.begin();
 
   // A range is needed in the sum
-  if (as.size() != 1) {
-    foreach_(Interval iori, original.aset_().inters()) {
+  if (as.card() != 1) {
+    foreach_(Interval iori, original.aset_ref().inters()) {
       NI1 lo = (*itas).lo() - iori.lo() + 1;
       NI1 st = (*itas).step();
       NI1 hi = (*itas).hi() - iori.lo() + 1;
@@ -1464,7 +1464,7 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
 
   // No need of range, just a constant
   else {
-    foreach_(Interval iori, original.aset_().inters()) {
+    foreach_(Interval iori, original.aset_ref().inters()) {
       NI1 lo = (*itas).lo() - iori.lo() + 1;
       Expression expr(lo);
 
@@ -1489,7 +1489,7 @@ ExpList Connectors::buildAddExpr(AtomSet atomRept, AtomSet as)
 
   foreach_ (Name nmas, getFlowVars(auxas)) {
     // A sum is needed
-    if (atomRept.size() != as.size()) {
+    if (atomRept.card() != as.card()) {
       ExpList range = buildRanges(getAtomSet(as), as);
       RefTuple rrept(nmas, range);
       AddAll add(rrept);
@@ -1650,7 +1650,7 @@ EquationList Connectors::buildFlowEquations(Indexes indexes, AtomSet atomRept, S
   }
 
   // A loop is needed
-  if (atomRept.size() > 1) {
+  if (atomRept.card() > 1) {
     EquationList eqsLoop;
 
     // Representant subscripts 

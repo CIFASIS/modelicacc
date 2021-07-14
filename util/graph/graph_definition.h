@@ -120,6 +120,11 @@ typedef OrdCT<NI2> contNI2;
 
 INTER_TEMPLATE
 struct IntervalImp1 {
+  member(int, lo);
+  member(int, step);
+  member(int, hi);
+  member(bool, empty);
+
   IntervalImp1();
   IntervalImp1(bool isEmpty);
   IntervalImp1(int vlo, int vstep, int vhi);
@@ -140,11 +145,6 @@ struct IntervalImp1 {
   eq_class(IntervalImp1);
   neq_class(IntervalImp1);
   printable_temp(INTER_TEMPLATE_PRINT, IntervalImp1);
-
-  member(int, lo);
-  member(int, step);
-  member(int, hi);
-  member(bool, empty);
 };
 
 // >>>>> To add new implementation, add:
@@ -227,87 +227,62 @@ ostream &operator<<(ostream &out, const MultiInterval &mi);
 
 // Atomic sets ------------------------------------------------------------------------------------
 
-template <template <typename T, typename = allocator<T>> class CT1,
-          template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
-                    typename Alloc = std::allocator<Value>>
-          class CT2,
-          typename MultiInterImp, typename IntervalImp, typename NumImp>
+#define AS_TEMPLATE                                                       \
+  template <template<typename T, typename = allocator<T>> class ORD_CT,   \
+            template <typename Value,                                     \
+                      typename Hash = boost::hash<Value>,                 \
+                      typename Pred = std::equal_to<Value>,               \
+                      typename Alloc = std::allocator<Value>>             \
+            class UNORD_CT,                                               \
+            typename MI_IMP, typename INTER_IMP, typename NUMERIC_IMP>
+
+#define AS_TEMPLATE_PRINT                                                       \
+  template <template<typename T, typename = allocator<T>> class ORD_CT_PRINT,   \
+            template <typename Value,                                           \
+                      typename Hash = boost::hash<Value>,                       \
+                      typename Pred = std::equal_to<Value>,                     \
+                      typename Alloc = std::allocator<Value>>                   \
+            class UNORD_CT_PRINT,                                               \
+            typename MI_IMP_PRINT, typename INTER_IMP_PRINT, typename NUMERIC_IMP_PRINT>
+
+#define AS_TEMP_TYPE                                        \
+  AtomSetImp1<ORD_CT, UNORD_CT, MI_IMP, INTER_IMP, NUMERIC_IMP>
+
+AS_TEMPLATE
 struct AtomSetImp1 {
-  MultiInterImp aset;
-  int ndim;
+  member(MI_IMP, aset);
+  member(int, ndim);
 
-  AtomSetImp1()
-  {
-    MultiInterImp emptyRes;
-    aset = emptyRes;
-    ndim = 0;
-  }
-  AtomSetImp1(MultiInterImp as)
-  {
-    aset = as;
-    ndim = as.ndim();
-  }
+  AtomSetImp1();
+  AtomSetImp1(MI_IMP as);
 
-  MultiInterImp aset_() { return aset; }
+  bool empty();
 
-  int ndim_() { return ndim; }
+  bool isIn(ORD_CT<NUMERIC_IMP> elem);
+  int card();
+  AtomSetImp1 cap(AtomSetImp1 aset2);
+  UNORD_CT<AtomSetImp1> diff(AtomSetImp1 aset2);
 
-  bool empty() { return aset.empty(); }
+  ORD_CT<NUMERIC_IMP> minElem();
 
-  bool isIn(CT1<NumImp> elem) { return aset.isIn(elem); }
+  AtomSetImp1 crossProd(AtomSetImp1 aset2);
 
-  AtomSetImp1 cap(AtomSetImp1 &aset2)
-  {
-    AtomSetImp1 aux(aset.cap(aset2.aset));
-    return aux;
-  }
+  AtomSetImp1 replace(INTER_IMP i, int dim);
 
-  CT2<AtomSetImp1> diff(AtomSetImp1 &aset2)
-  {
-    CT2<AtomSetImp1> res;
-    typename CT2<AtomSetImp1>::iterator itres = res.begin();
+  eq_class(AtomSetImp1);
+  neq_class(AtomSetImp1);
 
-    CT2<MultiInterImp> atomicDiff = aset.diff(aset2.aset);
+  printable_temp(AS_TEMPLATE_PRINT, AtomSetImp1);
 
-    if (atomicDiff.empty()) {
-      CT2<AtomSetImp1> emptyRes;
-      return emptyRes;
-    }
-
-    else {
-      BOOST_FOREACH (MultiInterImp mi, atomicDiff) {
-        itres = res.insert(itres, AtomSetImp1(mi));
-        ++itres;
-      }
-    }
-
-    return res;
-  }
-
-  AtomSetImp1 crossProd(AtomSetImp1 &aset2) { return AtomSetImp1(aset.crossProd(aset2.aset)); }
-
-  CT1<NumImp> minElem() { return aset.minElem(); }
-
-  AtomSetImp1 replace(IntervalImp &i, int dim) { return AtomSetImp1(aset.replace(i, dim)); }
-
-  int size() { return aset.card(); }
-
-  bool operator==(const AtomSetImp1 &other) const { return aset == other.aset; }
-
-  bool operator!=(const AtomSetImp1 &other) const { return aset != other.aset; }
-
-  size_t hash() { return aset.hash(); }
+  size_t hash();
 };
 
-template <template <typename T, typename = allocator<T>> class CT1,
-          template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
-                    typename Alloc = std::allocator<Value>>
-          class CT2,
-          typename MultiInterImp, typename IntervalImp, typename NumImp>
-size_t hash_value(AtomSetImp1<CT1, CT2, MultiInterImp, IntervalImp, NumImp> as)
-{
-  return as.hash();
-}
+typedef AtomSetImp1<OrdCT, UnordCT, MultiInterval, Interval, NI1> AtomSet;
+size_t hash_value(const AtomSet &as);
+
+ostream &operator<<(ostream &out, const AtomSet &as);
+
+typedef UnordCT<AtomSet> contAS;
 
 // Sets --------------------------------------------------------------------------------------------
 
@@ -332,7 +307,7 @@ struct SetImp1 {
   SetImp1(ASetImp as)
   {
     asets.insert(as);
-    ndim = as.ndim_();
+    ndim = as.ndim();
   }
   SetImp1(SetType ss)
   {
@@ -340,11 +315,11 @@ struct SetImp1 {
 
     if (!ss.empty()) {
       aux2 = *(ss.begin());
-      int aux1 = aux2.ndim_();
+      int aux1 = aux2.ndim();
       bool equalDims = true;
       // Check if all atomic sets have the same dimension
       BOOST_FOREACH (ASetImp as, ss) {
-        if (aux1 != as.ndim_()) equalDims = false;
+        if (aux1 != as.ndim()) equalDims = false;
       }
 
       if (equalDims && aux1 != 0) {
@@ -394,12 +369,12 @@ struct SetImp1 {
 
   void addAtomSet(ASetImp &aset2)
   {
-    if (!aset2.empty() && aset2.ndim_() == ndim && !asets.empty())
+    if (!aset2.empty() && aset2.ndim() == ndim && !asets.empty())
       asets.insert(aset2);
 
     else if (!aset2.empty() && asets.empty()) {
       asets.insert(aset2);
-      ndim = aset2.ndim_();
+      ndim = aset2.ndim();
     }
 
     // else
@@ -526,7 +501,7 @@ struct SetImp1 {
 
     BOOST_FOREACH (ASetImp as1, asets) {
       // CT1<NumImp> min1 = as1.aset_().minElem();
-      if (as1.aset_().minElem() < min.minElem()) min = as1;
+      if (as1.aset_ref().minElem() < min.minElem()) min = as1;
     }
 
     return min.minElem();
@@ -537,7 +512,7 @@ struct SetImp1 {
     int res = 0;
 
     BOOST_FOREACH (ASetImp as, asets) {
-      res += as.size();
+      res += as.card();
     }
 
     return res;
@@ -752,7 +727,7 @@ struct PWAtomLMapImp1 {
     ASetImp aux1;
     LMapImp aux2;
 
-    if (d.ndim_() != l.ndim_()) {
+    if (d.ndim() != l.ndim_()) {
       // WARNING("Atomic set and map should be of the same dimension");
 
       dom = aux1;
@@ -760,7 +735,7 @@ struct PWAtomLMapImp1 {
     }
 
     else {
-      CT<IntervalImp> ints = d.aset_().inters();
+      CT<IntervalImp> ints = d.aset_ref().inters();
       CT<NumImp2> g = l.gain_();
       typename CT<NumImp2>::iterator itg = g.begin();
       CT<NumImp2> o = l.off_();
@@ -815,7 +790,7 @@ struct PWAtomLMapImp1 {
 
   ASetImp image(ASetImp &s)
   {
-    CT<IntervalImp> inters = (s.cap(dom)).aset_().inters();
+    CT<IntervalImp> inters = (s.cap(dom)).aset_ref().inters();
     CT<NumImp2> g = lmap.gain_();
     typename CT<NumImp2>::iterator itg = g.begin();
     CT<NumImp2> o = lmap.off_();
@@ -1337,12 +1312,6 @@ struct PWLMapImp1 {
 
 // Type definitions --------------------------------------------------------------------------------
 
-
-typedef AtomSetImp1<OrdCT, UnordCT, MultiInterval, Interval, NI1> AtomSet;
-
-typedef UnordCT<AtomSet> contAS;
-
-ostream &operator<<(ostream &out, AtomSet &as);
 
 typedef SetImp1<OrdCT, UnordCT, AtomSet, NI1> Set;
 
