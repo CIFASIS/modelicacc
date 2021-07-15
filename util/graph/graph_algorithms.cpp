@@ -198,14 +198,14 @@ bool MatchingStruct::checkRecursion(Set candidate_u)
 
 int MatchingStruct::pathWidth()
 {
-  return Pmax.front().size();
+  return Pmax.front().card();
 }
 
 bool MatchingStruct::matchingLookAhead(Set matched_f, Set matched_u)
 {
   Set possible_match = wholeEdge(matched_f); 
   Set whole_matched_u = matchedUVar(wholeVertex(matched_u));
-  return (possible_match.size() + pathWidth()) > whole_matched_u.size();
+  return (possible_match.card() + pathWidth()) > whole_matched_u.card();
 }
 
 SetPath MatchingStruct::pathTo(Set var)
@@ -330,7 +330,7 @@ SetPath MatchingStruct::waspf(Set ftilde)
       Set uh = mapU.image(eh);
       Set uhn = uh.diff(matchedU);
 
-      int sz = uhn.size();
+      int sz = uhn.card();
       if (sz > wmax) {
         wmax = sz;
         widest_path_from_split.clear(); 
@@ -356,7 +356,7 @@ SetPath MatchingStruct::waspf(Set ftilde)
         if (uhm.subseteq(svisited)) completelyVisited = true;
       }
 
-      if (!completelyVisited && uhm.size() > wmax) {
+      if (!completelyVisited && uhm.card() > wmax) {
         Pmax.insert(Pmax.end(), eh);
         if (checkRecursion(uhm)) {
           if (matchingLookAhead(ftilde, uhm)) {
@@ -379,8 +379,8 @@ SetPath MatchingStruct::waspf(Set ftilde)
           if (!phat.empty()) {
             Set p1 = *(phat.begin());
 
-            if (p1.size() >= wmax) {
-              wmax = uhm.size();
+            if (p1.card() >= wmax) {
+              wmax = uhm.card();
               Set imp1 = mapU.image(p1);
               PWLMap mapUaux = mapU.restrictMap(eh);
               PWLMap auxinv = minInv(mapUaux, imp1);
@@ -414,7 +414,7 @@ SetPath MatchingStruct::waspu(Set utilde)
 
     Set auxFi = vs.cap(Ftilde);
 
-    if (auxFi.size() > wmax) {
+    if (auxFi.card() > wmax) {
       bool notinpath = true;
       BOOST_FOREACH (Set auxs, currentF) {
         if (auxs == auxFi) {
@@ -430,7 +430,7 @@ SetPath MatchingStruct::waspu(Set utilde)
 
         if (!phat.empty()) {
           Set p1 = *(phat.begin());
-          int sz = p1.size();
+          int sz = p1.card();
           if (sz >= wmax) {
             wmax = sz;
             Set imp1 = mapF.image(p1);
@@ -462,10 +462,10 @@ Set MatchingStruct::SBGMatching()
 
     do {
       Set ftilde = *(auxF.begin());
-      int maxcard = ftilde.size();
+      int maxcard = ftilde.card();
 
       BOOST_FOREACH (Set auxFi, auxF) {
-        int cardi = auxFi.size();
+        int cardi = auxFi.card();
         if (cardi > maxcard) {
           maxcard = cardi;
           ftilde = auxFi;

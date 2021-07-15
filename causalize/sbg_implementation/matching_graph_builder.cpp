@@ -125,7 +125,7 @@ SBG::Set MatchingGraphBuilder::buildSet(Equation eq, string eq_id, int offset, s
 SBG::Set MatchingGraphBuilder::generateMapDom(SBG::Set dom, SBG::Set unk_dom, int offset, size_t max_dim)
 {
   MultiInterval edge_set_intervals;
-  SBG::contAS atom_sets = dom.asets_(); 
+  SBG::contAS atom_sets = dom.asets(); 
   foreach_(AtomSet atom_set, atom_sets) {
     MultiInterval dom_intervals = atom_set.aset();
     foreach_(Interval inter, dom_intervals.inters()) {
@@ -244,7 +244,7 @@ SBGraph MatchingGraphBuilder::makeGraph()
     if (!isConstant(var_name, symbols) && !isBuiltIn(var_name, symbols) && !isDiscrete(var_name, symbols) && !isParameter(var_name, symbols)) {
       SBG::Set vertex_dom = buildSet(variable, set_vertex_offset, max_dim);
       _U.push_back(addVertex(var_name, vertex_dom, graph));
-      set_vertex_offset += vertex_dom.size();
+      set_vertex_offset += vertex_dom.card();
     }
   }
 
@@ -261,13 +261,13 @@ SBGraph MatchingGraphBuilder::makeGraph()
       {
         string eq_name = "eq_" + to_string(id++);
         vertex_dom = buildSet(eq, eq_name, set_vertex_offset, max_dim);
-        set_vertex_offset += vertex_dom.size();
+        set_vertex_offset += vertex_dom.card();
         addEquation(for_el, eq_name, vertex_dom, graph);
       }
     } else if (is<Equality>(eq)) {
       string eq_name = "eq_" + to_string(id++);
       vertex_dom = buildSet(eq, eq_name, set_vertex_offset, max_dim);
-      set_vertex_offset += vertex_dom.size();
+      set_vertex_offset += vertex_dom.card();
       addEquation(eq, eq_name, vertex_dom, graph);
     } else {
       ERROR("Only causalization of for and equality equations");
@@ -298,7 +298,7 @@ SBGraph MatchingGraphBuilder::makeGraph()
       {
         cout << "Expression: " << exp << endl;
         MatchingMaps maps = generatePWLMaps(exp, dom, unk_dom, set_edge_offset, eq_vertex.name, max_dim); 
-        set_edge_offset += dom.size();
+        set_edge_offset += dom.card();
         string edge_name = "E_" + to_string(edge_id++);
         cout << "MapF: " << maps.first << endl;
         cout << "MapU: " << maps.second << endl;

@@ -653,14 +653,14 @@ PWLMap Connectors::buildEdgeMap(Set dom, Set im, ExpOptList r)
 
   // In the current implementation, dom and im have only one atomic set
   // Check buildSet and buildEdgeDom
-  if (dom.asets_().size() != 1 || im.asets_().size() != 1) {
+  if (dom.asets_ref().size() != 1 || im.asets_ref().size() != 1) {
     LOG << "COMPILER ERROR: dom and im should have only one atomic set" << endl;
     return res;
   }
 
   else {
-    AtomSet domas = *(dom.asets_().begin());
-    AtomSet imas = *(im.asets_().begin());
+    AtomSet domas = *(dom.asets_ref().begin());
+    AtomSet imas = *(im.asets_ref().begin());
 
     MultiInterval dommi = domas.aset();
     MultiInterval immi = imas.aset();
@@ -709,7 +709,7 @@ void Connectors::buildEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc Vdesc1, S
     return;
   }
   Set dom = dom1;
-  if (dom2.size() > dom1.size())
+  if (dom2.card() > dom1.card())
     dom = dom2;
   PWLMap pw1 = buildEdgeMap(dom, V1.vs_(), r1);
   PWLMap pw2 = buildEdgeMap(dom, V2.vs_(), r2);
@@ -1128,7 +1128,7 @@ AtomSet Connectors::getAtomSet(AtomSet as)
     Set vs = G_[vi].vs_();
 
     if (!auxas.cap(vs).empty()) 
-      res = *(vs.asets_().begin());
+      res = *(vs.asets_ref().begin());
   }
 
   return res;
@@ -1228,7 +1228,7 @@ Indexes Connectors::buildIndex(Set connected)
   ExpList::iterator itCG = countersCG_.begin();
 
   OrdCT<NI1> nElems; // Maximum number of elements in each dimension
-  foreach_ (AtomSet c, connected.asets_()) {
+  foreach_ (AtomSet c, connected.asets()) {
     // Traverse dimensions
     OrdCT<NI1>::iterator itElems = nElems.begin();
     OrdCT<NI1> nElemsAux;
@@ -1281,7 +1281,7 @@ Set Connectors::getRepd(AtomSet atomRept)
   OrdCT<LMap>::iterator itlm = lm.begin();
 
   foreach_ (Set d, ccG_.dom_()) {
-    AtomSet atomD = *(d.asets_().begin()); // ccG_ is atomized 
+    AtomSet atomD = *(d.asets_ref().begin()); // ccG_ is atomized 
     PWAtomLMap atomPW(atomD, *itlm);
 
     diff = d.diff(rept);
@@ -1613,7 +1613,7 @@ EquationList Connectors::buildEffEquations(Indexes indexes, AtomSet atomRept, Se
   }
 
   // Traverse represented connectors
-  foreach_ (AtomSet atomRepd, repd.asets_()) {
+  foreach_ (AtomSet atomRepd, repd.asets()) {
     ExpList effRepd = buildLoopExpr(indexes, atomRepd, getEffVars(Set(atomRepd)));
     // Represented variables in connector
     foreach_ (Expression eRepd, effRepd) {
@@ -1664,7 +1664,7 @@ EquationList Connectors::buildFlowEquations(Indexes indexes, AtomSet atomRept, S
     }
 
     // Traverse represented connectors
-    foreach_ (AtomSet atomRepd, repd.asets_()) {
+    foreach_ (AtomSet atomRepd, repd.asets()) {
       ExpList flowRepd = buildLoopExpr(indexes, atomRepd, getFlowVars(Set(atomRepd)));
       // Represented variables in connector
       foreach_ (Expression expRepd, flowRepd) {
@@ -1689,7 +1689,7 @@ EquationList Connectors::buildFlowEquations(Indexes indexes, AtomSet atomRept, S
     }
 
     // Traverse represented connectors
-    foreach_ (AtomSet atomRepd, repd.asets_()) {
+    foreach_ (AtomSet atomRepd, repd.asets()) {
       ExpList add = buildAddExpr(atomRept, atomRepd);
 
       foreach_ (Expression e, add) 
@@ -1723,7 +1723,7 @@ EquationList Connectors::generateCode()
 
   // Traverse connected components
   foreach_ (Set repd, ccG_.dom_()) {
-    AtomSet atomRepd = *(repd.asets_().begin());
+    AtomSet atomRepd = *(repd.asets_ref().begin());
     PWAtomLMap atomMap(atomRepd, *itLMapccG);
     AtomSet atomRept = atomMap.image(atomRepd);
     Set rept(atomRept);

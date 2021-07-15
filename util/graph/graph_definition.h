@@ -286,264 +286,69 @@ typedef UnordCT<AtomSet> contAS;
 
 // Sets --------------------------------------------------------------------------------------------
 
-template <template <typename T, typename = allocator<T>> class CT1,
-          template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
-                    typename Alloc = std::allocator<Value>>
-          class CT2,
-          typename ASetImp, typename NumImp>
+#define SET_TEMPLATE                                                      \
+  template <template<typename T, typename = allocator<T>> class ORD_CT,   \
+            template <typename Value,                                     \
+                      typename Hash = boost::hash<Value>,                 \
+                      typename Pred = std::equal_to<Value>,               \
+                      typename Alloc = std::allocator<Value>>             \
+            class UNORD_CT,                                               \
+            typename AS_IMP, typename NUMERIC_IMP>
+
+#define SET_TEMPLATE_PRINT                                                      \
+  template <template<typename T, typename = allocator<T>> class ORD_CT_PRINT,   \
+            template <typename Value,                                           \
+                      typename Hash = boost::hash<Value>,                       \
+                      typename Pred = std::equal_to<Value>,                     \
+                      typename Alloc = std::allocator<Value>>                   \
+            class UNORD_CT_PRINT,                                               \
+            typename AS_IMP_PRINT, typename NUMERIC_IMP_PRINT>
+
+#define SET_TEMP_TYPE                                        \
+  SetImp1<ORD_CT, UNORD_CT, AS_IMP, NUMERIC_IMP>
+
+SET_TEMPLATE
 struct SetImp1 {
-  typedef CT2<ASetImp> SetType;
-  typedef typename SetType::iterator SetIt;
+  typedef UNORD_CT<AS_IMP> AtomSets;
+  typedef typename AtomSets::iterator AtomSetsIt;
 
-  SetType asets;
-  int ndim;
+  member(AtomSets, asets);
+  member(int, ndim);
 
-  SetImp1()
-  {
-    SetType aux;
-    asets = aux;
-    ndim = 0;
-  }
-  SetImp1(ASetImp as)
-  {
-    asets.insert(as);
-    ndim = as.ndim();
-  }
-  SetImp1(SetType ss)
-  {
-    ASetImp aux2;
+  SetImp1();
+  SetImp1(AS_IMP as);
+  SetImp1(AtomSets ss);
 
-    if (!ss.empty()) {
-      aux2 = *(ss.begin());
-      int aux1 = aux2.ndim();
-      bool equalDims = true;
-      // Check if all atomic sets have the same dimension
-      BOOST_FOREACH (ASetImp as, ss) {
-        if (aux1 != as.ndim()) equalDims = false;
-      }
+  void addAtomSet(AS_IMP aset2);
+  void addAtomSets(AtomSets sets2);
 
-      if (equalDims && aux1 != 0) {
-        asets = ss;
-        ndim = aux1;
-      }
+  bool empty();
 
-      else {
-        // WARNING("Using atomics sets of different sizes");
+  bool isIn(ORD_CT<NUMERIC_IMP> elem);
+  int card();
+  bool subseteq(SetImp1 set2);
+  bool subset(SetImp1 set2);
+  SetImp1 cap(SetImp1 set2);
+  SetImp1 diff(SetImp1 set2);
+  SetImp1 cup(SetImp1 set2);
 
-        SetType aux3;
-        asets = aux3;
-        ndim = 0;
-      }
-    }
+  ORD_CT<NUMERIC_IMP> minElem();
 
-    else {
-      asets = ss;
-      ndim = 0;
-    }
-  }
+  SetImp1 crossProd(SetImp1 set2);
 
-  SetType asets_() { return asets; }
+  eq_class(SetImp1);
+  neq_class(SetImp1);
 
-  int ndim_() { return ndim; }
-
-  bool empty()
-  {
-    if (asets.empty()) return true;
-
-    bool res = true;
-    BOOST_FOREACH (ASetImp as, asets) {
-      if (!as.empty()) res = false;
-    }
-
-    return res;
-  }
-
-  bool isIn(CT1<NumImp> elem)
-  {
-    BOOST_FOREACH (ASetImp as, asets) {
-      if (as.isIn(elem)) return true;
-    }
-
-    return false;
-  }
-
-  void addAtomSet(ASetImp &aset2)
-  {
-    if (!aset2.empty() && aset2.ndim() == ndim && !asets.empty())
-      asets.insert(aset2);
-
-    else if (!aset2.empty() && asets.empty()) {
-      asets.insert(aset2);
-      ndim = aset2.ndim();
-    }
-
-    // else
-    // WARNING("Atomic sets should have the same dimension");
-  }
-
-  void addAtomSets(SetType &sets2)
-  {
-    ASetImp aux;
-
-    SetIt it = sets2.begin();
-
-    while (it != sets2.end()) {
-      aux = *it;
-      addAtomSet(aux);
-
-      ++it;
-    }
-  }
-
-  SetImp1 cap(SetImp1 &set2)
-  {
-    ASetImp aux1, aux2;
-
-    if (asets.empty() || set2.asets.empty()) {
-      SetImp1 emptyRes;
-      return emptyRes;
-    }
-
-    SetType res;
-
-    BOOST_FOREACH (ASetImp as1, asets) {
-      BOOST_FOREACH (ASetImp as2, set2.asets) {
-        ASetImp capres = as1.cap(as2);
-
-        if (!capres.empty()) res.insert(capres);
-      }
-    }
-
-    return SetImp1(res);
-  }
-
-  SetImp1 diff(SetImp1 &set2)
-  {
-    SetImp1 res;
-    SetType capres = cap(set2).asets;
-
-    if (!capres.empty()) {
-      BOOST_FOREACH (ASetImp as1, asets) {
-        SetType aux;
-        aux.insert(as1);
-
-        BOOST_FOREACH (ASetImp as2, capres) {
-          SetImp1 newSets;
-
-          BOOST_FOREACH (ASetImp as3, aux) {
-            SetType diffres = as3.diff(as2);
-            newSets.addAtomSets(diffres);
-          }
-
-          aux = newSets.asets;
-        }
-
-        res.addAtomSets(aux);
-      }
-    }
-
-    else
-      res.addAtomSets(asets);
-
-    return res;
-  }
-
-  SetImp1 cup(SetImp1 &set2)
-  {
-    SetImp1 res = *this;
-    SetImp1 aux = set2.diff(*this);
-
-    if (!aux.empty()) res.addAtomSets(aux.asets);
-
-    return res;
-  }
-
-  SetImp1 crossProd(SetImp1 &set2)
-  {
-    SetType res;
-
-    BOOST_FOREACH (ASetImp as1, asets.end) {
-      BOOST_FOREACH (ASetImp as2, set2.asets) {
-        ASetImp auxres = as1.crossProd(as2);
-        res.addAtomSet(auxres);
-      }
-    }
-
-    return SetImp1(res);
-  }
-
-  bool subseteq(SetImp1 &s2)
-  {
-    SetImp1 sdiff = (*this).diff(s2);
-
-    if (sdiff.empty()) return true;
-
-    return false;
-  }
-
-  bool subset(SetImp1 &s2)
-  {
-    SetImp1 sdiff1 = (*this).diff(s2);
-    SetImp1 sdiff2 = s2.diff(*this);
-
-    if (sdiff1.empty() && !sdiff2.empty()) return true;
-
-    return false;
-  }
-
-  CT1<NumImp> minElem()
-  {
-    CT1<NumImp> res;
-
-    if (empty()) return res;
-
-    ASetImp min = *(asets.begin());
-
-    BOOST_FOREACH (ASetImp as1, asets) {
-      // CT1<NumImp> min1 = as1.aset_().minElem();
-      if (as1.aset_ref().minElem() < min.minElem()) min = as1;
-    }
-
-    return min.minElem();
-  }
-
-  int size()
-  {
-    int res = 0;
-
-    BOOST_FOREACH (ASetImp as, asets) {
-      res += as.card();
-    }
-
-    return res;
-  }
-
-  bool operator==(const SetImp1 &other) const { 
-    SetImp1 aux1 = *this;
-    SetImp1 aux2 = other;
-    SetImp1 diff1 = aux1.diff(aux2);
-    SetImp1 diff2 = aux2.diff(aux1);
-
-    if (diff1.empty() && diff2.empty())
-      return true;
-
-    return false; 
-  }
-
-  bool operator!=(const SetImp1 &other) const { return asets != other.asets; }
-
-  size_t hash() { return asets.size(); }
+  size_t hash();
 };
 
-template <template <typename T, typename = allocator<T>> class CT1,
-          template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>,
-                    typename Alloc = std::allocator<Value>>
-          class CT2,
-          typename ASetImp, typename NumImp>
-size_t hash_value(SetImp1<CT1, CT2, ASetImp, NumImp> s)
-{
-  return s.hash();
-}
+typedef SetImp1<OrdCT, UnordCT, AtomSet, NI1> Set;
+size_t hash_value(const Set &set);
+
+typedef OrdCT<Set> contSet1;
+
+ostream &operator<<(ostream &out, const Set &set);
+
 
 // LinearMaps ---------------------------------------------------------------------------------------
 
@@ -882,12 +687,12 @@ struct PWLMapImp1 {
   PWLMapImp1(CTSet d, CTLMap l)
   {
     CTLMapIt itl = l.begin();
-    int auxndim = (*(d.begin())).ndim_();
+    int auxndim = (*(d.begin())).ndim();
     bool different = false;
 
     if (d.size() == l.size()) {
       BOOST_FOREACH (SetImp sd, d) {
-        BOOST_FOREACH (ASetImp as, sd.asets_()) {
+        BOOST_FOREACH (ASetImp as, sd.asets()) {
           PWAtomLMapImp pwatom(as, *itl);
 
           if (pwatom.empty()) different = true;
@@ -929,7 +734,7 @@ struct PWLMapImp1 {
     CTSet d;
     CTLMap lm;
 
-    LMapImp aux(s.ndim_());
+    LMapImp aux(s.ndim());
 
     d.insert(d.begin(), s);
     lm.insert(lm.begin(), aux);
@@ -977,7 +782,7 @@ struct PWLMapImp1 {
       SetImp aux1 = ss.cap(s);
       SetImp partialRes;
 
-      CT2<ASetImp> aux1as = aux1.asets_();
+      CT2<ASetImp> aux1as = aux1.asets();
       BOOST_FOREACH (ASetImp as, aux1as) {
         PWAtomLMapImp auxMap(as, *itl);
         ASetImp aux2 = auxMap.image(as);
@@ -1001,11 +806,11 @@ struct PWLMapImp1 {
     BOOST_FOREACH (SetImp ss, dom) {
       SetImp partialRes;
 
-      CT2<ASetImp> ssas = ss.asets_();
+      CT2<ASetImp> ssas = ss.asets();
       BOOST_FOREACH (ASetImp as1, ssas) {
         PWAtomLMapImp auxMap(as1, *itl);
 
-        CT2<ASetImp> sas = s.asets_();
+        CT2<ASetImp> sas = s.asets();
         BOOST_FOREACH (ASetImp as2, sas) {
           ASetImp aux2 = auxMap.preImage(as2);
           partialRes.addAtomSet(aux2);
@@ -1244,7 +1049,7 @@ struct PWLMapImp1 {
 
     CTLMapIt itlm = lmap.begin();
     BOOST_FOREACH (SetImp d, dom) {
-      BOOST_FOREACH (ASetImp as, d.asets_()) {
+      BOOST_FOREACH (ASetImp as, d.asets()) {
         SetImp aux;
         aux.addAtomSet(as);
 
@@ -1313,11 +1118,6 @@ struct PWLMapImp1 {
 // Type definitions --------------------------------------------------------------------------------
 
 
-typedef SetImp1<OrdCT, UnordCT, AtomSet, NI1> Set;
-
-typedef OrdCT<Set> contSet1;
-
-ostream &operator<<(ostream &out, Set &s);
 
 typedef LMapImp1<OrdCT, NI2> LMap;
 

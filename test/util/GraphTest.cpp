@@ -856,7 +856,7 @@ void TestASetCreation1()
 
   AtomSet as(mi);
 
-  BOOST_CHECK(mi == as.aset_());
+  BOOST_CHECK(mi == as.aset());
 }
 
 void TestASetEmpty1()
