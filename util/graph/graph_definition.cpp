@@ -234,6 +234,13 @@ bool INTER_TEMP_TYPE::operator!=(const INTER_TEMP_TYPE &other) const
   return !(*this == other);
 }
 
+INTER_TEMPLATE
+ostream &operator<<(ostream &out, const INTER_TEMP_TYPE &i)
+{
+  out << "[" << i.lo() << ":" << i.step() << ":" << i.hi() << "]";
+  return out;
+}
+
 template struct IntervalImp1<UnordCT>;
 
 size_t hash_value(const Interval &inter) 
@@ -241,12 +248,6 @@ size_t hash_value(const Interval &inter)
   size_t seed = 0;
   boost::hash_combine(seed, inter.lo());
   return seed; 
-}
-
-ostream &operator<<(ostream &out, const Interval &i)
-{
-  out << "[" << i.lo() << ":" << i.step() << ":" << i.hi() << "]";
-  return out;
 }
 
 // >>>>> To add new implementation, add new methods:
@@ -257,7 +258,7 @@ ostream &operator<<(ostream &out, const Interval &i)
 //
 // template struct IntervalImp2<UnordCT>; --- If it is a template class
 //
-// Then modify hash_value and operator<< implementation for Interval 
+// Then modify hash_value implementation for Interval 
 
 // Multi intervals --------------------------------------------------------------------------------
 
@@ -534,17 +535,11 @@ size_t MI_TEMP_TYPE::hash()
   return seed; 
 }
 
-template struct MultiInterImp1<OrdCT, UnordCT, Interval, NI1>;
-
-size_t hash_value(const MultiInterval &mi) { 
-  MultiInterval aux = mi;
-  return aux.hash(); 
-}
-
-ostream &operator<<(ostream &out, const MultiInterval &mi)
+MI_TEMPLATE
+ostream &operator<<(ostream &out, const MI_TEMP_TYPE &mi)
 {
-  OrdCT<Interval> is = mi.inters();
-  OrdCT<Interval>::iterator it = is.begin();
+  ORD_CT<INTER_IMP> is = mi.inters();
+  typename ORD_CT<INTER_IMP>::iterator it = is.begin();
 
   if (is.size() == 0) return out;
 
@@ -562,6 +557,13 @@ ostream &operator<<(ostream &out, const MultiInterval &mi)
   out << "x" << *it;
 
   return out;
+}
+
+template struct MultiInterImp1<OrdCT, UnordCT, Interval, NI1>;
+
+size_t hash_value(const MultiInterval &mi) { 
+  MultiInterval aux = mi;
+  return aux.hash(); 
 }
 
 // Atomic sets ------------------------------------------------------------------------------------
@@ -955,41 +957,189 @@ ostream &operator<<(ostream &out, const Set &set)
   return out;
 }
 
+// Linear maps ------------------------------------------------------------------------------------
+
+#define NUM_TYPE                  \
+   typename LM_TEMP_TYPE::OrdNumeric
+
+LM_TEMPLATE
+LM_TEMP_TYPE::LMapImp1()
+{
+  OrdNumeric empty;
+  gain_ = empty;
+  offset_ = empty;
+  ndim_ = 0;
+}
+
+LM_TEMPLATE
+LM_TEMP_TYPE::LMapImp1(NUM_TYPE g, NUM_TYPE o)
+{
+  OrdNumeric empty;
+
+  if (g.size() == o.size()) {
+    gain_ = g;
+    offset_ = o;
+    ndim_ = g.size();
+  }
+
+  else {
+    gain_ = empty;
+    offset_ = empty;
+    ndim_ = 0;
+  }
+}
+
+LM_TEMPLATE
+LM_TEMP_TYPE::LMapImp1(int dim)
+{
+  OrdNumeric g;
+  OrdNumericIt itg = g.begin();
+  OrdNumeric o;
+  OrdNumericIt ito = o.begin();
+
+  for (int i = 0; i < dim; i++) {
+    itg = g.insert(itg, 1.0);
+    ++itg;
+    ito = o.insert(ito, 0);
+    ++ito;
+  }
+
+  gain_ = g;
+  offset_ = o;
+  ndim_ = dim;
+}
+
+member_imp_temp(LM_TEMPLATE, LM_TEMP_TYPE, NUM_TYPE, gain);
+member_imp_temp(LM_TEMPLATE, LM_TEMP_TYPE, NUM_TYPE, offset);
+member_imp_temp(LM_TEMPLATE, LM_TEMP_TYPE, int, ndim);
+
+LM_TEMPLATE
+void LM_TEMP_TYPE::addGO(NUMERIC_IMP g, NUMERIC_IMP o)
+{
+  gain_.insert(gain_.end(), g);
+  offset_.insert(offset_.end(), o);
+  ++ndim_;
+}
+
+LM_TEMPLATE
+bool LM_TEMP_TYPE::empty()
+{
+  if (gain_ref().empty() && offset_ref().empty()) return true;
+
+  return false;
+}
+
+LM_TEMPLATE
+LM_TEMP_TYPE LM_TEMP_TYPE::compose(LM_TEMP_TYPE lm2)
+{
+  OrdNumeric resg;
+  OrdNumericIt itresg = resg.begin();
+  OrdNumeric reso;
+  OrdNumericIt itreso = reso.begin();
+
+  OrdNumericIt ito1 = offset_ref().begin();
+  OrdNumericIt itg2 = lm2.gain_ref().begin();
+  OrdNumericIt ito2 = lm2.offset_ref().begin();
+
+  if (ndim() == lm2.ndim()) {
+    BOOST_FOREACH (NUMERIC_IMP g1i, gain()) {
+      itresg = resg.insert(itresg, g1i * (*itg2));
+      ++itresg;
+      itreso = reso.insert(itreso, (*ito2) * g1i + (*ito1));
+      ++itreso;
+
+      ++ito1;
+      ++itg2;
+      ++ito2;
+    }
+  }
+
+  else {
+    LMapImp1 aux;
+    return aux;
+  }
+
+  return LMapImp1(resg, reso);
+}
+
+LM_TEMPLATE
+LM_TEMP_TYPE LM_TEMP_TYPE::invLMap()
+{
+  OrdNumeric resg;
+  OrdNumericIt itresg = resg.begin();
+  OrdNumeric reso;
+  OrdNumericIt itreso = reso.begin();
+
+  OrdNumericIt ito1 = offset_ref().begin();
+
+  BOOST_FOREACH (NUMERIC_IMP g1i, gain()) {
+    if (g1i != 0) {
+      itresg = resg.insert(itresg, 1 / g1i);
+      ++itresg;
+
+      itreso = reso.insert(itreso, -(*ito1) / g1i);
+      ++itreso;
+    }
+
+    else {
+      itresg = resg.insert(itresg, Inf);
+      ++itresg;
+
+      itreso = reso.insert(itreso, -Inf);
+      ++itreso;
+    }
+
+    ++ito1;
+  }
+
+  return LMapImp1(resg, reso);
+}
+
+LM_TEMPLATE
+bool LM_TEMP_TYPE::operator==(const LM_TEMP_TYPE &other) const
+{
+  return gain() == other.gain() && offset() == other.offset();
+}
+
+template<typename NUMERIC_IMP>
+std::string mapOper(NUMERIC_IMP &cte) { return (cte >= 0) ? "+ " : ""; }
+
+LM_TEMPLATE
+ostream &operator<<(ostream &out, const LM_TEMP_TYPE &lm)
+{
+  NUM_TYPE g = lm.gain();
+  NUM_TYPE::iterator itg = g.begin();
+  NUM_TYPE o = lm.offset();
+  NUM_TYPE::iterator ito = o.begin();
+
+  if (g.size() == 0) return out;
+
+  if (g.size() == 1) {
+    out << "[" << *itg << " * x " << mapOper<NUMERIC_IMP>(*ito) << *ito << "]";
+    return out;
+  }
+
+  out << "[" << *itg << " * x " << mapOper<NUMERIC_IMP>(*ito) << *ito;
+  ++itg;
+  ++ito;
+  while (next(itg, 1) != g.end()) {
+    out << ", " << *itg << " * x " << mapOper<NUMERIC_IMP>(*ito) << *ito;
+
+    ++itg;
+    ++ito;
+  }
+  out << ", " << *itg << " * x " << mapOper<NUMERIC_IMP>(*ito) << *ito << "]";
+
+  return out;
+}
+
+template struct LMapImp1<OrdCT, NI2>;
+
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 // Printing instances
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
-
-std::string mapOper(NI2 cte) { return (cte >= 0) ? "+ " : ""; }
-
-ostream &operator<<(ostream &out, LMap &lm)
-{
-  OrdCT<NI2> g = lm.gain_();
-  OrdCT<NI2>::iterator itg = g.begin();
-  OrdCT<NI2> o = lm.off_();
-  OrdCT<NI2>::iterator ito = o.begin();
-
-  if (g.size() == 0) return out;
-
-  if (g.size() == 1) {
-    out << "[" << *itg << " * x " << mapOper(*ito) << *ito << "]";
-    return out;
-  }
-
-  out << "[" << *itg << " * x " << mapOper(*ito) << *ito;
-  ++itg;
-  ++ito;
-  while (next(itg, 1) != g.end()) {
-    out << ", " << *itg << " * x " << mapOper(*ito) << *ito;
-
-    ++itg;
-    ++ito;
-  }
-  out << ", " << *itg << " * x " << mapOper(*ito) << *ito << "]";
-
-  return out;
-}
 
 ostream &operator<<(ostream &out, PWAtomLMap &pwatom)
 {
@@ -1096,13 +1246,13 @@ PWLMap offsetMap(OrdCT<NI1> &offElem, PWLMap &pw)
       OrdCT<NI2> reso;
       OrdCT<NI2>::iterator itreso = reso.begin();
 
-      BOOST_FOREACH (NI2 gi, lm.gain_()) {
+      BOOST_FOREACH (NI2 gi, lm.gain()) {
         itresg = resg.insert(itresg, gi);
 
         ++itresg;
       }
 
-      BOOST_FOREACH (NI2 oi, lm.off_()) {
+      BOOST_FOREACH (NI2 oi, lm.offset()) {
         itreso = reso.insert(itreso, oi + (NI2) *itelem);
 
         ++itreso; 
@@ -1166,12 +1316,12 @@ bool equivalentPW(PWLMap pw1, PWLMap pw2)
 
 PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2)
 {
-  OrdCT<NI2> g1 = lm1.gain_();
-  OrdCT<NI2> o1 = lm1.off_();
+  OrdCT<NI2> g1 = lm1.gain();
+  OrdCT<NI2> o1 = lm1.offset();
   OrdCT<NI2>::iterator ito1 = o1.begin();
-  OrdCT<NI2> g2 = lm2.gain_();
+  OrdCT<NI2> g2 = lm2.gain();
   OrdCT<NI2>::iterator itg2 = g2.begin();
-  OrdCT<NI2> o2 = lm2.off_();
+  OrdCT<NI2> o2 = lm2.offset();
   OrdCT<NI2>::iterator ito2 = o2.begin();
   OrdCT<Interval> ints = dom.aset_ref().inters();
   OrdCT<Interval>::iterator itints = ints.begin();
@@ -1185,7 +1335,7 @@ PWLMap minAtomPW(AtomSet &dom, LMap &lm1, LMap &lm2)
   OrdCT<Set> domRes;
   OrdCT<LMap> lmRes;
 
-  if (lm1.ndim_() == lm2.ndim_()) {
+  if (lm1.ndim() == lm2.ndim()) {
     BOOST_FOREACH (NI2 g1i, g1) {
       if (g1i != *itg2) {
         NI2 xinter = (*ito2 - *ito1) / (g1i - *itg2);
@@ -1443,9 +1593,9 @@ PWLMap reduceMapN(PWLMap pw, int dim)
   BOOST_FOREACH (Set di, pw.dom_()) {
     int count1 = 1;
 
-    OrdCT<NI2> g = (*itlm).gain_();
+    OrdCT<NI2> g = (*itlm).gain();
     OrdCT<NI2>::iterator itg = g.begin();
-    OrdCT<NI2> o = (*itlm).off_();
+    OrdCT<NI2> o = (*itlm).offset();
     OrdCT<NI2>::iterator ito = o.begin();
     // Get the dim-th gain and offset
     while (count1 < dim) {
@@ -1478,7 +1628,7 @@ PWLMap reduceMapN(PWLMap pw, int dim)
           OrdCT<LMap>::iterator itnewl = newl.begin();
 
           for (int k = 1; k <= off; k++) {
-            OrdCT<NI2> newo = (*itlm).off_();
+            OrdCT<NI2> newo = (*itlm).offset();
             OrdCT<NI2>::iterator itnewo = newo.begin();
 
             OrdCT<NI2> resg;
@@ -1487,7 +1637,7 @@ PWLMap reduceMapN(PWLMap pw, int dim)
             OrdCT<NI2>::iterator itreso = reso.begin();
 
             int count3 = 1;
-            BOOST_FOREACH (NI2 gi, (*itlm).gain_()) {
+            BOOST_FOREACH (NI2 gi, (*itlm).gain()) {
               if (count3 == dim) {
                 itresg = resg.insert(itresg, 0);
                 itreso = reso.insert(itreso, loint + k - off - 1);
@@ -1629,13 +1779,13 @@ PWLMap mapInf(PWLMap pw)
     OrdCT<Set> doms = res.dom_();
     OrdCT<Set>::iterator itdoms = doms.begin();
     BOOST_FOREACH (LMap lm, res.lmap_()) {
-      OrdCT<NI2> o = lm.off_();
+      OrdCT<NI2> o = lm.offset();
       OrdCT<NI2>::iterator ito = o.begin();
 
       NI2 a = 0;
-      NI2 b = *(lm.gain_().begin());
+      NI2 b = *(lm.gain().begin());
 
-      BOOST_FOREACH (NI2 gi, lm.gain_()) {
+      BOOST_FOREACH (NI2 gi, lm.gain()) {
         a = max(a, gi * abs(*ito));
         b = min(b, gi);
 
@@ -1646,7 +1796,7 @@ PWLMap mapInf(PWLMap pw)
       if (a > 0) {
         NI2 its = 0;
 
-        OrdCT<NI2> g = lm.gain_();
+        OrdCT<NI2> g = lm.gain();
         OrdCT<NI2>::iterator itg = g.begin();
         // For intervals in which size <= off ^ 2 (check reduceMapN, this intervals are not "reduced")
         for (int dim = 0; dim < res.ndim_(); ++dim) {
@@ -1706,14 +1856,14 @@ PWLMap minAdjCompMap(PWLMap pw3, PWLMap pw2, PWLMap pw1)
 
     Set dominv = pw3.image(dom);
     LMap lminv = lm.invLMap();
-    OrdCT<NI2> lminvo = lminv.off_();
+    OrdCT<NI2> lminvo = lminv.offset();
 
     PWLMap invpw;
     invpw.addSetLM(dominv, lminv);
 
-    NI2 maxg = *(lminv.gain_().begin());
+    NI2 maxg = *(lminv.gain().begin());
     NI2 ming = maxg;
-    BOOST_FOREACH (NI2 gi, lminv.gain_()) {
+    BOOST_FOREACH (NI2 gi, lminv.gain()) {
       maxg = max(maxg, gi);
       ming = min(ming, gi);
     }
@@ -1773,7 +1923,7 @@ PWLMap minAdjCompMap(PWLMap pw3, PWLMap pw2, PWLMap pw1)
       OrdCT<NI1>::iterator itmindom = mindom.begin();
 
       // Replace inverse of constant maps for composition (with a dummy value)
-      BOOST_FOREACH (NI2 invgi, lminv.gain_()) {
+      BOOST_FOREACH (NI2 invgi, lminv.gain()) {
         if (invgi >= Inf) {
           itnewinvg = newinvg.insert(itnewinvg, 0);
           itnewinvo = newinvo.insert(itnewinvo, (NI2) (*itmindom));
@@ -1831,12 +1981,12 @@ PWLMap minAdjCompMap(PWLMap pw3, PWLMap pw2, PWLMap pw1)
         OrdCT<NI2> replaceo;
         OrdCT<NI2>::iterator itrepo = replaceo.begin();
 
-        OrdCT<NI2> auxg = (*itlmaux).gain_();
+        OrdCT<NI2> auxg = (*itlmaux).gain();
         OrdCT<NI2>::iterator itauxg = auxg.begin();
-        OrdCT<NI2> auxo = (*itlmaux).off_();
+        OrdCT<NI2> auxo = (*itlmaux).offset();
         OrdCT<NI2>::iterator itauxo = auxo.begin();
 
-        BOOST_FOREACH (NI2 invgi, lminv.gain_()) {
+        BOOST_FOREACH (NI2 invgi, lminv.gain()) {
           // i-th dimension constant
           if (invgi >= Inf) {
             itrepg = replaceg.insert(itrepg, 0);

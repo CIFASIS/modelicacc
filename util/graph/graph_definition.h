@@ -66,10 +66,10 @@ typedef int NI1;
 typedef float NI2;
 
 template <typename T, class = allocator<T>>
-using OrdCT = list<T>;
+using OrdCT = list<T>; // Ord stands for ordered container
 
 template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>, typename Alloc = std::allocator<Value>>
-using UnordCT = boost::unordered_set<Value>;
+using UnordCT = boost::unordered_set<Value>; // Unord stands for unordered container
 
 typedef OrdCT<NI1> contNI1;
 typedef OrdCT<NI2> contNI2;
@@ -156,8 +156,6 @@ size_t hash_value(const Interval &inter);
 // >>>>> To change implementation of Interval:
 // typedef IntervalImp2 Interval;
 
-ostream &operator<<(ostream &out, const Interval &i);
-
 typedef UnordCT<Interval> contInt1;
 typedef OrdCT<Interval> contInt2;
 
@@ -222,8 +220,6 @@ typedef MultiInterImp1<OrdCT, UnordCT, Interval, NI1> MultiInterval;
 size_t hash_value(const MultiInterval &mi);
 
 typedef UnordCT<MultiInterval> contMulti;
-
-ostream &operator<<(ostream &out, const MultiInterval &mi);
 
 // Atomic sets ------------------------------------------------------------------------------------
 
@@ -339,6 +335,8 @@ struct SetImp1 {
   eq_class(SetImp1);
   neq_class(SetImp1);
 
+  printable_temp(SET_TEMPLATE_PRINT, SetImp1);
+
   size_t hash();
 };
 
@@ -349,174 +347,52 @@ typedef OrdCT<Set> contSet1;
 
 ostream &operator<<(ostream &out, const Set &set);
 
-
 // LinearMaps ---------------------------------------------------------------------------------------
 
-template <template <typename T, typename = std::allocator<T>> class CT, typename NumImp>
+#define LM_TEMPLATE                                                       \
+  template <template<typename T, typename = allocator<T>> class ORD_CT,   \
+            typename NUMERIC_IMP>
+
+#define LM_TEMPLATE_PRINT                                                       \
+  template <template<typename T, typename = allocator<T>> class ORD_CT_PRINT,   \
+            typename NUMERIC_IMP_PRINT>
+
+#define LM_TEMP_TYPE                                        \
+  LMapImp1<ORD_CT, NUMERIC_IMP>
+
+LM_TEMPLATE
 struct LMapImp1 {
-  typedef CT<NumImp> CTNum;
-  typedef typename CTNum::iterator CTNumIt;
+  typedef ORD_CT<NUMERIC_IMP> OrdNumeric;
+  typedef typename OrdNumeric::iterator OrdNumericIt;
 
-  CTNum gain;
-  CTNum offset;
-  int ndim;
+  member(OrdNumeric, gain);
+  member(OrdNumeric, offset);
+  member(int, ndim);
 
-  LMapImp1()
-  {
-    CTNum aux1;
-    CTNum aux2;
-    gain = aux2;
-    offset = aux1;
-    ndim = 0;
-  }
-  LMapImp1(CTNum g, CTNum o)
-  {
-    bool negative = false;
+  LMapImp1();
+  LMapImp1(OrdNumeric g, OrdNumeric o);
+  LMapImp1(int dim); // Constructs the id of LMaps
 
-    BOOST_FOREACH (NumImp gi, g) {
-      if (gi < 0) negative = true;
-    }
+  void addGO(NUMERIC_IMP g, NUMERIC_IMP o);
 
-    if (!negative) {
-      if (g.size() == o.size()) {
-        gain = g;
-        offset = o;
-        ndim = g.size();
-      }
+  bool empty();
 
-      else {
-        // WARNING("Offset and gain should be of the same size");
+  LMapImp1 compose(LMapImp1 lm2);
+  LMapImp1 invLMap();
 
-        CTNum aux1;
-        CTNum aux2;
-        gain = aux2;
-        offset = aux1;
-        ndim = 0;
-      }
-    }
+  eq_class(LMapImp1);
 
-    else {
-      // WARNING("All gains should be positive");
-
-      CTNum aux1;
-      CTNum aux2;
-      gain = aux2;
-      offset = aux1;
-      ndim = 0;
-    }
-  }
-  // Constructs the id of LMaps
-  LMapImp1(int dim)
-  {
-    CTNum g;
-    CTNumIt itg = g.begin();
-    CTNum o;
-    CTNumIt ito = o.begin();
-
-    for (int i = 0; i < dim; i++) {
-      itg = g.insert(itg, 1.0);
-      ++itg;
-      ito = o.insert(ito, 0);
-      ++ito;
-    }
-
-    gain = g;
-    offset = o;
-    ndim = dim;
-  }
-
-  CTNum gain_() { return gain; }
-
-  CTNum off_() { return offset; }
-
-  int ndim_() { return ndim; }
-
-  bool empty()
-  {
-    if (gain.empty() && offset.empty()) return true;
-
-    return false;
-  }
-
-  void addGO(NumImp g, NumImp o)
-  {
-    if (g >= 0) {
-      gain.insert(gain.end(), g);
-      offset.insert(offset.end(), o);
-      ++ndim;
-    }
-
-    // else
-    // WARNING("Gain should be positive");
-  }
-
-  LMapImp1 compose(LMapImp1 &lm2)
-  {
-    CTNum resg;
-    CTNumIt itresg = resg.begin();
-    CTNum reso;
-    CTNumIt itreso = reso.begin();
-
-    CTNumIt ito1 = offset.begin();
-    CTNumIt itg2 = lm2.gain.begin();
-    CTNumIt ito2 = lm2.offset.begin();
-
-    if (ndim == lm2.ndim) {
-      BOOST_FOREACH (NumImp g1i, gain) {
-        itresg = resg.insert(itresg, g1i * (*itg2));
-        ++itresg;
-        itreso = reso.insert(itreso, (*ito2) * g1i + (*ito1));
-        ++itreso;
-
-        ++ito1;
-        ++itg2;
-        ++ito2;
-      }
-    }
-
-    else {
-      // WARNING("Linear maps should be of the same size");
-      LMapImp1 aux;
-      return aux;
-    }
-
-    return LMapImp1(resg, reso);
-  }
-
-  LMapImp1 invLMap()
-  {
-    CTNum resg;
-    CTNumIt itresg = resg.begin();
-    CTNum reso;
-    CTNumIt itreso = reso.begin();
-
-    CTNumIt ito1 = offset.begin();
-
-    BOOST_FOREACH (NumImp g1i, gain) {
-      if (g1i != 0) {
-        itresg = resg.insert(itresg, 1 / g1i);
-        ++itresg;
-
-        itreso = reso.insert(itreso, -(*ito1) / g1i);
-        ++itreso;
-      }
-
-      else {
-        itresg = resg.insert(itresg, Inf);
-        ++itresg;
-
-        itreso = reso.insert(itreso, -Inf);
-        ++itreso;
-      }
-
-      ++ito1;
-    }
-
-    return LMapImp1(resg, reso);
-  }
-
-  bool operator==(const LMapImp1 &other) const { return gain == other.gain && offset == other.offset; }
+  printable_temp(LM_TEMPLATE_PRINT, LMapImp1);
 };
+
+typedef LMapImp1<OrdCT, NI2> LMap;
+
+typedef OrdCT<LMap> contLM1;
+
+template<typename NUMERIC_IMP>
+std::string mapOper(NUMERIC_IMP &cte);
+
+//ostream &operator<<(ostream &out, const LMap &lm);
 
 // Piecewise atomic linear maps -----------------------------------------------------------------
 
@@ -532,7 +408,7 @@ struct PWAtomLMapImp1 {
     ASetImp aux1;
     LMapImp aux2;
 
-    if (d.ndim() != l.ndim_()) {
+    if (d.ndim() != l.ndim()) {
       // WARNING("Atomic set and map should be of the same dimension");
 
       dom = aux1;
@@ -541,9 +417,9 @@ struct PWAtomLMapImp1 {
 
     else {
       CT<IntervalImp> ints = d.aset_ref().inters();
-      CT<NumImp2> g = l.gain_();
+      CT<NumImp2> g = l.gain();
       typename CT<NumImp2>::iterator itg = g.begin();
-      CT<NumImp2> o = l.off_();
+      CT<NumImp2> o = l.offset();
       typename CT<NumImp2>::iterator ito = o.begin();
       bool incompatible = false;
 
@@ -596,9 +472,9 @@ struct PWAtomLMapImp1 {
   ASetImp image(ASetImp &s)
   {
     CT<IntervalImp> inters = (s.cap(dom)).aset_ref().inters();
-    CT<NumImp2> g = lmap.gain_();
+    CT<NumImp2> g = lmap.gain();
     typename CT<NumImp2>::iterator itg = g.begin();
-    CT<NumImp2> o = lmap.off_();
+    CT<NumImp2> o = lmap.offset();
     typename CT<NumImp2>::iterator ito = o.begin();
 
     CT<IntervalImp> res;
@@ -959,8 +835,8 @@ struct PWLMapImp1 {
 
       LMapImp lm = *(lmap.begin());
       LMapImp lmInv = lm.invLMap();
-      CT1<NumImp2> g = lmInv.gain_();
-      CT1<NumImp2> o = lmInv.off_();
+      CT1<NumImp2> g = lmInv.gain();
+      CT1<NumImp2> o = lmInv.offset();
       typename CT1<NumImp2>::iterator ito = o.begin();
       CT1<NumImp2> gres;
       typename CT1<NumImp2>::iterator itgres = gres.begin();
@@ -1119,11 +995,6 @@ struct PWLMapImp1 {
 
 
 
-typedef LMapImp1<OrdCT, NI2> LMap;
-
-typedef OrdCT<LMap> contLM1;
-
-ostream &operator<<(ostream &out, LMap &lm);
 
 typedef PWAtomLMapImp1<OrdCT, LMap, AtomSet, MultiInterval, Interval, NI1, NI2> PWAtomLMap;
 

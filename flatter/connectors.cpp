@@ -1139,11 +1139,11 @@ bool Connectors::isIdMap(LMap lm)
 {
   bool cond = true;
 
-  foreach_ (NI2 g, lm.gain_())
+  foreach_ (NI2 g, lm.gain())
     if (g != 1)
       cond = false;
 
-  foreach_ (NI2 o, lm.off_())
+  foreach_ (NI2 o, lm.offset())
     if (o != 0)
       cond = false;
 
