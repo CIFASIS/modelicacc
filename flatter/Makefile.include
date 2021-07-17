@@ -30,6 +30,13 @@ FLATTER_SRC := \
     $(UTIL_DIR)/graph/graph_definition.cpp \
 	$(UTIL_DIR)/graph/graph_algorithms.cpp \
 	$(UTIL_DIR)/graph/graph_printer.cpp \
+  $(UTIL_DIR)/graph/sbg/interval.cpp \
+  $(UTIL_DIR)/graph/sbg/multi_interval.cpp \
+  $(UTIL_DIR)/graph/sbg/atomic_set.cpp \
+  $(UTIL_DIR)/graph/sbg/set.cpp \
+  $(UTIL_DIR)/graph/sbg/lmap.cpp \
+  $(UTIL_DIR)/graph/sbg/atom_pw_map.cpp \
+  $(UTIL_DIR)/graph/sbg/pw_map.cpp \
 	$(MMO_DIR)/mmo_class.cpp \
 	$(MMO_DIR)/mmo_tree.cpp
 
@@ -41,6 +48,7 @@ create-folders::
 	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)
 	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/ast_visitors
 	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/graph
+	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)/graph/sbg
 	@mkdir -p $(BUILD_DIR)/$(MMO_DIR)
 
 $(FLATTER): $(FLATTER_OBJ) $(LIBMODELICA) 

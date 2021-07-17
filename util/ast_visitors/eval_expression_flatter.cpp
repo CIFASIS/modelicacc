@@ -53,7 +53,7 @@ Interval EvalExpFlatter::operator()(Integer v) const{
 }
 
 Interval EvalExpFlatter::operator()(Boolean v) const{
-  NI1 res = 0;
+  INT res = 0;
   if (v.val()) 
     res = 1;
 
@@ -80,7 +80,7 @@ Interval EvalExpFlatter::operator()(Name v) const{
 }
 
 Interval EvalExpFlatter::operator()(Real v) const {
-  NI1 res = v;
+  INT res = v;
   Interval i(res, 1, res);
   return i;
 }
@@ -99,7 +99,7 @@ Interval EvalExpFlatter::operator()(SubAll v) const{
         ++itinds;
 
       Expression aux = *itinds;
-      NI1 to = ApplyThis(itinds);
+      INT to = ApplyThis(itinds);
       Interval i(1, 1, to);
       return i;
     }
@@ -231,9 +231,9 @@ Interval EvalExpFlatter::operator()(Range v) const{
     auxStep = Apply(evexp, st);
   }
 
-  NI1 newLo = auxLo;
-  NI1 newStep = auxStep;
-  NI1 newHi = auxHi;
+  INT newLo = auxLo;
+  INT newStep = auxStep;
+  INT newHi = auxHi;
 
   if (newLo <= newHi)
     return Interval(newLo, newStep, newHi);
@@ -317,7 +317,7 @@ Interval EvalExpFlatter::operator()(Reference v) const{
 
   if (name && name.get() == s){
     Real aux = val.get();
-    NI1 res = aux;
+    INT res = aux;
     Interval i(res, 1, res);
     return i;
   }

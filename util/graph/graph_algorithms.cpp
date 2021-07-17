@@ -142,7 +142,7 @@ Set MatchingStruct::wholeEdge(Set matched_subset)
     for (; ei_start != ei_end; ++ei_start) {
       SetEdge e = g[*ei_start];
       PWLMap map_u = e.es2_();
-      OrdCT<Set> dom = map_u.dom_();
+      OrdCT<Set> dom = map_u.dom();
 
       for (Set edge_dom : dom) {
         Set inter = edge_dom.cap(matched_subset);
@@ -170,7 +170,7 @@ Set MatchingStruct::matchedUVar(Set var)
   for (; ei_start != ei_end; ++ei_start) {
     SetEdge e = g[*ei_start];
     PWLMap map_u = e.es2_();
-    OrdCT<Set> map_u_dom = map_u.dom_();
+    OrdCT<Set> map_u_dom = map_u.dom();
     for (Set edge_dom : map_u_dom) {
       Set matched_dom_edges = edge_dom.cap(matchedE);
       Set map_u_image = map_u.image(matched_dom_edges); 
@@ -249,7 +249,7 @@ UnordCT<Set> MatchingStruct::split(Set ftilde)
     SetEdge e = g[*ei_start];
 
     PWLMap es2 = e.es2_();
-    OrdCT<Set> dome2 = es2.dom_();
+    OrdCT<Set> dome2 = es2.dom();
 
     BOOST_FOREACH (Set d2, dome2) {
       Set etildei = d2.diff(matchedE);

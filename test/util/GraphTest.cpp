@@ -23,6 +23,14 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/unordered_set.hpp>
 
+#include <util/graph/sbg/defs.h>
+#include <util/graph/sbg/interval.h>
+#include <util/graph/sbg/multi_interval.h>
+#include <util/graph/sbg/atomic_set.h>
+#include <util/graph/sbg/set.h>
+#include <util/graph/sbg/lmap.h>
+#include <util/graph/sbg/atom_pw_map.h>
+#include <util/graph/sbg/pw_map.h>
 #include <util/graph/graph_definition.h>
 #include <util/graph/graph_algorithms.h>
 #include <util/graph/graph_printer.h>
@@ -38,8 +46,8 @@ using namespace SBG;
 // typedef UnordCT<MultiInterval> contMulti;
 // typedef UnordCT<AtomSet> contAS;
 //
-// typedef OrdCT<NI1> contNI1;
-// typedef OrdCT<NI2> contNI2;
+// typedef OrdCT<INT> contINT;
+// typedef OrdCT<REAL> contREAL;
 //
 // typedef OrdCT<Set> contSet1;
 // typedef OrdCT<LMap> contLM1;
@@ -243,7 +251,7 @@ void TestIntMin1()
 {
   Interval i(10, 3, 40);
 
-  NI1 res1 = i.minElem();
+  INT res1 = i.minElem();
 
   BOOST_CHECK(res1 == 10);
 }
@@ -336,8 +344,8 @@ void TestMultiQuery1()
   mi.addInter(i2);
   mi.addInter(i3);
 
-  contNI1 elem1;
-  contNI1::iterator it1 = elem1.begin();
+  contINT elem1;
+  contINT::iterator it1 = elem1.begin();
   it1 = elem1.insert(it1, 5);
   ++it1;
   it1 = elem1.insert(it1, 10);
@@ -358,8 +366,8 @@ void TestMultiQuery2()
   mi.addInter(i2);
   mi.addInter(i3);
 
-  contNI1 elem1;
-  contNI1::iterator it1 = elem1.begin();
+  contINT elem1;
+  contINT::iterator it1 = elem1.begin();
   it1 = elem1.insert(it1, 5);
   ++it1;
   it1 = elem1.insert(it1, 10);
@@ -380,8 +388,8 @@ void TestMultiQuery3()
   mi.addInter(i2);
   mi.addInter(i3);
 
-  contNI1 elem1;
-  contNI1::iterator it1 = elem1.begin();
+  contINT elem1;
+  contINT::iterator it1 = elem1.begin();
   it1 = elem1.insert(it1, 5);
   ++it1;
   it1 = elem1.insert(it1, 10);
@@ -778,10 +786,10 @@ void TestMultiMin1()
   mi.addInter(i2);
   mi.addInter(i3);
 
-  contNI1 res1 = mi.minElem();
+  contINT res1 = mi.minElem();
 
-  contNI1 res2;
-  contNI1::iterator it2 = res2.begin();
+  contINT res2;
+  contINT::iterator it2 = res2.begin();
 
   it2 = res2.insert(it2, 0);
   ++it2;
@@ -1072,10 +1080,10 @@ void TestASetMin1()
 
   AtomSet as1(mi);
 
-  contNI1 res1 = mi.minElem();
+  contINT res1 = mi.minElem();
 
-  contNI1 res2;
-  contNI1::iterator it2 = res2.begin();
+  contINT res2;
+  contINT::iterator it2 = res2.begin();
 
   it2 = res2.insert(it2, 0);
   ++it2;
@@ -1498,9 +1506,9 @@ void TestSetMin1()
   s.addAtomSet(as2);
   s.addAtomSet(as3);
 
-  contNI1 res1 = s.minElem();
+  contINT res1 = s.minElem();
 
-  contNI1 res2;
+  contINT res2;
   res2.insert(res2.end(), 5);
 
   BOOST_CHECK(res1 == res2);
@@ -1540,9 +1548,9 @@ void TestSetMin2()
   s.addAtomSet(as2);
   s.addAtomSet(as3);
 
-  contNI1 res1 = s.minElem();
+  contINT res1 = s.minElem();
 
-  contNI1 res2;
+  contINT res2;
   res2.insert(res2.end(), 20);
   res2.insert(res2.end(), 1);
 
@@ -1626,7 +1634,7 @@ void TestInvLMap1()
 
 // -- Piece wise atomic linear maps ------------------------------------------//
 
-void TestPWAtomCreation1()
+void TestAtomPWCreation1()
 {
   Interval i1(1, 1, 10);
   Interval i2(1, 1, 10);
@@ -1644,12 +1652,12 @@ void TestPWAtomCreation1()
   lm1.addGO(1.0, 1.0);
   lm1.addGO(1.0, 1.0);
 
-  PWAtomLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(as1, lm1);
 
   BOOST_CHECK(pwatom1.empty());
 }
 
-void TestPWAtomCreation2()
+void TestAtomPWCreation2()
 {
   Interval i1(1, 1, 10);
   Interval i2(1, 1, 10);
@@ -1664,12 +1672,12 @@ void TestPWAtomCreation2()
   lm1.addGO(0.5, 0.0);
   lm1.addGO(0.5, 0.0);
 
-  PWAtomLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(as1, lm1);
 
   BOOST_CHECK(pwatom1.empty());
 }
 
-void TestPWAtomCreation3()
+void TestAtomPWCreation3()
 {
   Interval i1(2, 2, 10);
   Interval i2(2, 2, 10);
@@ -1684,12 +1692,12 @@ void TestPWAtomCreation3()
   lm1.addGO(0.5, 0.0);
   lm1.addGO(0.5, 0.0);
 
-  PWAtomLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(as1, lm1);
 
   BOOST_CHECK(!pwatom1.empty());
 }
 
-void TestPWAtomImage1()
+void TestAtomPWImage1()
 {
   Interval i1(1, 1, 10);
   Interval i2(1, 1, 10);
@@ -1708,7 +1716,7 @@ void TestPWAtomImage1()
   lm1.addGO(3.0, 0.0);
   lm1.addGO(1.0, 0.0);
 
-  PWAtomLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(as1, lm1);
 
   AtomSet res1 = pwatom1.image(as1);
 
@@ -1726,7 +1734,7 @@ void TestPWAtomImage1()
   BOOST_CHECK(res1 == res2);
 }
 
-void TestPWAtomImage2()
+void TestAtomPWImage2()
 {
   Interval i1(1, 1, 10);
   Interval i2(1, 1, 10);
@@ -1745,7 +1753,7 @@ void TestPWAtomImage2()
   lm1.addGO(3.0, 0.0);
   lm1.addGO(1.0, 0.0);
 
-  PWAtomLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(as1, lm1);
 
   Interval i4(20, 5, 30);
   Interval i5(5, 1, 10);
@@ -1765,7 +1773,7 @@ void TestPWAtomImage2()
   BOOST_CHECK(res1 == res2);
 }
 
-void TestPWAtomImage3()
+void TestAtomPWImage3()
 {
   Interval i1(1, 1, 10);
   Interval i2(1, 1, 10);
@@ -1784,7 +1792,7 @@ void TestPWAtomImage3()
   lm1.addGO(3.0, 0.0);
   lm1.addGO(1.0, 0.0);
 
-  PWAtomLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(as1, lm1);
 
   Interval i4(1, 5, 30);
   Interval i5(5, 1, 10);
@@ -1813,7 +1821,7 @@ void TestPWAtomImage3()
   BOOST_CHECK(res1 == res2);
 }
 
-void TestPWAtomImage4()
+void TestAtomPWImage4()
 {
   Interval i1(1, 1, 10);
 
@@ -1827,7 +1835,7 @@ void TestPWAtomImage4()
   lm1.addGO(0.0, 1.0);
   lm1.addGO(0.0, 1.0);
 
-  PWAtomLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(as1, lm1);
 
   AtomSet res1 = pwatom1.image(as1);
 
@@ -1842,7 +1850,7 @@ void TestPWAtomImage4()
   BOOST_CHECK(res1 == res2);
 }
 
-void TestPWAtomPre1()
+void TestAtomPWPre1()
 {
   Interval i1(1, 1, 10);
   Interval i2(1, 1, 10);
@@ -1861,7 +1869,7 @@ void TestPWAtomPre1()
   lm1.addGO(3.0, 0.0);
   lm1.addGO(1.0, 0.0);
 
-  PWAtomLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(as1, lm1);
 
   Interval i4(2, 2, 20);
   Interval i5(3, 3, 30);
@@ -1890,7 +1898,7 @@ void TestPWAtomPre1()
   BOOST_CHECK(res1 == res2);
 }
 
-void TestPWAtomPre2()
+void TestAtomPWPre2()
 {
   Interval i1(1, 1, 10);
   Interval i2(1, 1, 10);
@@ -1909,7 +1917,7 @@ void TestPWAtomPre2()
   lm1.addGO(3.0, 0.0);
   lm1.addGO(1.0, 0.0);
 
-  PWAtomLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(as1, lm1);
 
   Interval i4(1, 1, 10);
   Interval i5(1, 1, 10);
@@ -1938,7 +1946,7 @@ void TestPWAtomPre2()
   BOOST_CHECK(res1 == res2);
 }
 
-void TestPWAtomPre3()
+void TestAtomPWPre3()
 {
   Interval i1(1, 1, 10);
   Interval i2(1, 1, 10);
@@ -1957,7 +1965,7 @@ void TestPWAtomPre3()
   lm1.addGO(3.0, 0.0);
   lm1.addGO(1.0, 0.0);
 
-  PWAtomLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(as1, lm1);
 
   Interval i4(100, 1, 1000);
   Interval i5(1, 1, 10);
@@ -1977,7 +1985,7 @@ void TestPWAtomPre3()
   BOOST_CHECK(res1 == res2);
 }
 
-void TestPWAtomPre4()
+void TestAtomPWPre4()
 {
   Interval i1(1, 1, 10);
 
@@ -1991,7 +1999,7 @@ void TestPWAtomPre4()
   lm1.addGO(0.0, 3.0);
   lm1.addGO(0.0, 3.0);
 
-  PWAtomLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(as1, lm1);
 
   Interval i2(1, 1, 5);
 
@@ -2008,7 +2016,7 @@ void TestPWAtomPre4()
   BOOST_CHECK(res1 == res2);
 }
 
-void TestPWAtomMin1() { BOOST_CHECK(true); }
+void TestAtomPWMin1() { BOOST_CHECK(true); }
 
 // -- Piece wise linear maps -------------------------------------------------//
 
@@ -5714,18 +5722,18 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestLMCompose2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestInvLMap1));
 
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomCreation1));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomCreation2));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomCreation3));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomImage1));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomImage2));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomImage3));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomImage4));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomPre1));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomPre2));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomPre3));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomPre4));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWAtomMin1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWCreation1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWCreation2));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWCreation3));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWImage1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWImage2));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWImage3));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWImage4));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWPre1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWPre2));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWPre3));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWPre4));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWMin1));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapImage1));

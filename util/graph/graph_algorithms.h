@@ -29,6 +29,14 @@
 #include <boost/unordered_set.hpp>
 
 #include <util/debug.h>
+#include <util/graph/sbg/defs.h>
+#include <util/graph/sbg/interval.h>
+#include <util/graph/sbg/multi_interval.h>
+#include <util/graph/sbg/atomic_set.h>
+#include <util/graph/sbg/set.h>
+#include <util/graph/sbg/lmap.h>
+#include <util/graph/sbg/atom_pw_map.h>
+#include <util/graph/sbg/pw_map.h>
 #include <util/graph/graph_definition.h>
 #include <util/table.h>
 

@@ -9,6 +9,13 @@ all: $(GRP_TEST) $(GRP_PRINT_TEST)
 
 GRP_TEST_SRC := \
     $(TEST_DIR)/util/GraphTest.cpp \
+    $(UTIL_DIR)/graph/sbg/interval.cpp \
+    $(UTIL_DIR)/graph/sbg/multi_interval.cpp \
+    $(UTIL_DIR)/graph/sbg/atomic_set.cpp \
+    $(UTIL_DIR)/graph/sbg/set.cpp \
+    $(UTIL_DIR)/graph/sbg/lmap.cpp \
+    $(UTIL_DIR)/graph/sbg/atom_pw_map.cpp \
+    $(UTIL_DIR)/graph/sbg/pw_map.cpp \
     $(UTIL_DIR)/graph/graph_definition.cpp \
     $(UTIL_DIR)/graph/graph_algorithms.cpp \
     $(UTIL_DIR)/graph/graph_printer.cpp \
@@ -16,6 +23,13 @@ GRP_TEST_SRC := \
 
 GRP_PRINT_TEST_SRC := \
     test/util/PrintGraphs.cpp \
+    $(UTIL_DIR)/graph/sbg/interval.cpp \
+    $(UTIL_DIR)/graph/sbg/multi_interval.cpp \
+    $(UTIL_DIR)/graph/sbg/atomic_set.cpp \
+    $(UTIL_DIR)/graph/sbg/set.cpp \
+    $(UTIL_DIR)/graph/sbg/lmap.cpp \
+    $(UTIL_DIR)/graph/sbg/atom_pw_map.cpp \
+    $(UTIL_DIR)/graph/sbg/pw_map.cpp \
     $(UTIL_DIR)/graph/graph_definition.cpp \
     $(UTIL_DIR)/graph/graph_printer.cpp	
 

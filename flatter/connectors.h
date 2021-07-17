@@ -125,8 +125,8 @@ class Connectors {
   member_(SBGraph, G); // Connect Graph. Variables and edges are labeled with variables names
   member_(PWLMap, ccG); // Connected components of SBG G
   member_(int, maxdim); // Number of dimensions of the variable with maximum dimension in the model
-  member_(vector<NI1>, vCount); // Vertices count in each dimension
-  member_(vector<NI1>, eCount); // Edges count in each dimension
+  member_(vector<INT>, vCount); // Vertices count in each dimension
+  member_(vector<INT>, eCount); // Edges count in each dimension
   member_(int, ECount); // Set-edges count. Used to name set edges 
 
   member_(EquationList, notConnectEqs); // List "non-connect" equations
