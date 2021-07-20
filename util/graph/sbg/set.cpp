@@ -17,48 +17,39 @@ namespace SBG {
    typename SET_TEMP_TYPE::AtomSets
 
 SET_TEMPLATE
-SET_TEMP_TYPE::SetImp1()
+SET_TEMP_TYPE::SetImp1() : ndim_(0)
 {
-  AtomSets aux;
-  asets_ = aux;
-  ndim_ = 0;
+  AtomSets emptyAtomSets;
+  asets_ = emptyAtomSets;
 }
 
 SET_TEMPLATE
-SET_TEMP_TYPE::SetImp1(AS_IMP as)
-{
-  asets_ref().insert(as);
-  ndim_ = as.ndim();
-}
+SET_TEMP_TYPE::SetImp1(AS_IMP as) : ndim_(as.ndim()) { asets_ref().insert(as); }
 
 SET_TEMPLATE
-SET_TEMP_TYPE::SetImp1(AtomSets ss)
+SET_TEMP_TYPE::SetImp1(AtomSets asets)
 {
-  AS_IMP aux2;
-
-  if (!ss.empty()) {
-    aux2 = *(ss.begin());
-    int aux1 = aux2.ndim();
+  if (!asets.empty()) {
+    int dim1 = (*(asets.begin())).ndim();
     bool equalDims = true;
     // Check if all atomic sets have the same dimension
-    BOOST_FOREACH (AS_IMP as, ss) {
-      if (aux1 != as.ndim()) equalDims = false;
-    }
+    BOOST_FOREACH (AS_IMP as, asets) 
+      if (dim1 != as.ndim()) equalDims = false;
 
-    if (equalDims && aux1 != 0) {
-      asets_ = ss;
-      ndim_ = aux1;
+    if (equalDims && dim1 != 0) {
+      asets_ = asets;
+      ndim_ = dim1;
     }
 
     else {
-      AtomSets aux3;
-      asets_ = aux3;
+      AtomSets emptyASets;
+      asets_ = emptyASets;
       ndim_ = 0;
     }
   }
 
   else {
-    asets_ = ss;
+    asets_ = asets;
     ndim_ = 0;
   }
 }

@@ -76,22 +76,22 @@ PWLMap connectedComponents(SBGraph g)
 
     PWLMap oldres;
 
-    while (!equivalentPW(oldres, res)) {
+    while (!oldres.equivalentPW(res)) {
       PWLMap ermap1 = res.compPW(emap1);
       PWLMap ermap2 = res.compPW(emap2);
 
-      PWLMap rmap1 = minAdjMap(ermap1, ermap2);
-      PWLMap rmap2 = minAdjMap(ermap2, ermap1);
+      PWLMap rmap1 = ermap1.minAdjMap(ermap2);
+      PWLMap rmap2 = ermap2.minAdjMap(ermap1);
       rmap1 = rmap1.combine(res);
       rmap2 = rmap2.combine(res);
 
-      PWLMap newRes = minMap(rmap1, rmap2);
+      PWLMap newRes = rmap1.minMap(rmap2);
       oldres = res;
-      res = minMap(newRes, res);
+      res = newRes.minMap(res);
 
-      if (!equivalentPW(oldres, res)) {
+      if (!oldres.equivalentPW(res)) {
         res = newRes;
-        res = mapInf(res);
+        res = res.mapInf();
       }
     }
   }
@@ -337,7 +337,7 @@ SetPath MatchingStruct::waspf(Set ftilde)
         
 
         PWLMap mapUaux = mapU.restrictMap(eh);
-        PWLMap auxinv = minInv(mapUaux, uhn);
+        PWLMap auxinv = mapUaux.minInv(uhn);
         Set auxinvim = auxinv.image(uhn);
 
         widest_path_from_split.insert(widest_path_from_split.begin(), auxinvim);
@@ -383,7 +383,7 @@ SetPath MatchingStruct::waspf(Set ftilde)
               wmax = uhm.card();
               Set imp1 = mapU.image(p1);
               PWLMap mapUaux = mapU.restrictMap(eh);
-              PWLMap auxinv = minInv(mapUaux, imp1);
+              PWLMap auxinv = mapUaux.minInv(imp1);
               Set auxinvim = auxinv.image(imp1);
 
               phat.insert(phat.begin(), auxinvim);

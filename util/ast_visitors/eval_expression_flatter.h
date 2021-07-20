@@ -22,7 +22,7 @@
 #include <boost/variant/static_visitor.hpp>
 #include <ast/expression.h>
 #include <util/table.h>
-#include <util/graph/graph_definition.h>
+#include <util/graph/sbg/graph_definition.h>
 
 namespace Modelica {
 

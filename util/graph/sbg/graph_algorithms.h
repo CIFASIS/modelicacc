@@ -37,7 +37,7 @@
 #include <util/graph/sbg/lmap.h>
 #include <util/graph/sbg/atom_pw_map.h>
 #include <util/graph/sbg/pw_map.h>
-#include <util/graph/graph_definition.h>
+#include <util/graph/sbg/graph_definition.h>
 #include <util/table.h>
 
 using namespace SBG;

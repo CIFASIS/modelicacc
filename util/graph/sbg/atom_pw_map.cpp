@@ -17,48 +17,38 @@ APW_TEMPLATE
 APW_TEMP_TYPE::AtomPWLMapImp1() {}
 
 APW_TEMPLATE
-APW_TEMP_TYPE::AtomPWLMapImp1(AS_IMP d, LM_IMP l)
+APW_TEMP_TYPE::AtomPWLMapImp1(AS_IMP dom, LM_IMP lmap)
 {
-  AS_IMP asaux;
-  LM_IMP lmaux;
+  AS_IMP emptyAS;
+  LM_IMP emptyLM;
 
-  if (d.ndim() != l.ndim()) {
-    // WARNING("Atomic set and map should be of the same dimension");
-
-    dom_ = asaux;
-    lmap_ = lmaux;
+  if (dom.ndim() != lmap.ndim()) {
+    dom_ = emptyAS;
+    lmap_ = emptyLM;
   }
 
   else {
-    ORD_CT<INTER_IMP> ints = d.aset_ref().inters();
-    ORD_CT<REAL_IMP> g = l.gain();
+    ORD_CT<INTER_IMP> inters = dom.aset_ref().inters();
+    ORD_CT<REAL_IMP> g = lmap.gain();
     typename ORD_CT<REAL_IMP>::iterator itg = g.begin();
-    ORD_CT<REAL_IMP> o = l.offset();
+    ORD_CT<REAL_IMP> o = lmap.offset();
     typename ORD_CT<REAL_IMP>::iterator ito = o.begin();
     bool incompatible = false;
 
-    ORD_CT<INTER_IMP> auxdom;
-
-    BOOST_FOREACH (INTER_IMP i, ints) {
+    BOOST_FOREACH (INTER_IMP i, inters) {
       REAL_IMP auxLo = i.lo() * (*itg) + (*ito);
       REAL_IMP auxStep = i.step() * (*itg);
       REAL_IMP auxHi = i.hi() * (*itg) + (*ito);
 
       if (*itg < Inf) {
-        if (auxLo != (int)auxLo && i.lo()) {
-          // WARNING("Incompatible map");
+        if (auxLo != (int)auxLo && i.lo()) 
           incompatible = true;
-        }
 
-        if (auxStep != (int)auxStep && i.step()) {
-          // WARNING("Incompatible map");
+        if (auxStep != (int)auxStep && i.step()) 
           incompatible = true;
-        }
 
-        if (auxHi != (int)auxHi && i.hi()) {
-          // WARNING("Incompatible map");
+        if (auxHi != (int)auxHi && i.hi()) 
           incompatible = true;
-        }
 
         ++itg;
         ++ito;
@@ -66,13 +56,13 @@ APW_TEMP_TYPE::AtomPWLMapImp1(AS_IMP d, LM_IMP l)
     }
 
     if (incompatible) {
-      dom_ = asaux;
-      lmap_ = lmaux;
+      dom_ = emptyAS;
+      lmap_ = emptyLM;
     }
 
     else {
-      dom_ = d;
-      lmap_ = l;
+      dom_ = dom;
+      lmap_ = lmap;
     }
   }
 }

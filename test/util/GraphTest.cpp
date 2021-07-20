@@ -39,19 +39,6 @@ using namespace boost::unit_test;
 
 using namespace SBG;
 
-/// @brief If sb-graphs containers implementation changes (uses vector, for example)
-/// this typedef should also change.
-// typedef UnordCT<Interval> contInt1;
-// typedef OrdCT<Interval> contInt2;
-// typedef UnordCT<MultiInterval> contMulti;
-// typedef UnordCT<AtomSet> contAS;
-//
-// typedef OrdCT<INT> contINT;
-// typedef OrdCT<REAL> contREAL;
-//
-// typedef OrdCT<Set> contSet1;
-// typedef OrdCT<LMap> contLM1;
-
 //____________________________________________________________________________//
 
 // -- Intervals --------------------------------------------------------------//
@@ -60,21 +47,21 @@ void TestIntCreation1()
 {
   Interval i(10, 3, 3);
 
-  BOOST_CHECK(i.empty() == true);
+  BOOST_REQUIRE_MESSAGE(i.empty(), "Interval " << i << " isn't empty");
 }
 
 void TestIntCreation2()
 {
   Interval i(10, 20, 15);
 
-  BOOST_CHECK(i.hi() == 10);
+  BOOST_REQUIRE_MESSAGE(i.hi() == 10, i << " upper bound isn't 10");
 }
 
 void TestIntCreation3()
 {
   Interval i(10, 5, 23);
 
-  BOOST_CHECK(i.hi() == 20);
+  BOOST_REQUIRE_MESSAGE(i.hi() == 20, i << " upper bound isn't 20");
 }
 
 void TestIntCreation4()
@@ -2535,8 +2522,6 @@ void TestPWLMapMinInvComp1()
   PWLMap pw1;
   pw1.addSetLM(s1, lm1);
 
-  cout << pw1 << "\n";
-
   Set wDom = pw1.wholeDom();
   Set newDom = pw1.image(wDom);
   PWLMap res1 = pw1.minInvCompact(newDom);
@@ -2579,8 +2564,6 @@ void TestPWLMapMinInvComp1()
   // TODO: fix res2
   PWLMap res2;
   res2.addSetLM(s2, lm2);
-
-  cout << "\n\nres1: " << res1 << "\nres2: " << res2 << "\n\n";
 
   BOOST_CHECK(res1 == res2);
 }
@@ -2628,7 +2611,6 @@ void TestPWLMapMinInvComp2()
   PWLMap pw1;
   pw1.addSetLM(s1, lm1);
 
-  cout << pw1 << "\n";
 
   Set wDom = pw1.wholeDom();
   Set newDom = pw1.image(wDom);
@@ -2672,8 +2654,6 @@ void TestPWLMapMinInvComp2()
   // TODO: fix res2
   PWLMap res2;
   res2.addSetLM(s2, lm2);
-
-  cout << "\n\nres1: " << res1 << "\n\n";
 
   BOOST_CHECK(res1 == res2);
 }
@@ -2770,7 +2750,7 @@ void TestPWLMapCombine1()
   BOOST_CHECK(res1 == res2);
 }
 
-void TestMinAtomPW1()
+void TestMinAS1()
 {
   Interval i1(2, 2, 20);
   Interval i2(1, 1, 10);
@@ -2793,7 +2773,7 @@ void TestMinAtomPW1()
   lm2.addGO(2.0, 2.0);
   lm2.addGO(1.0, 10.0);
 
-  PWLMap res1 = minAtomPW(as1, lm1, lm2);
+  PWLMap res1 = minMapAtomSet(as1, lm1, lm2);
 
   Interval i4(3, 3, 24);
 
@@ -2826,7 +2806,7 @@ void TestMinAtomPW1()
   BOOST_CHECK(res1 == res2);
 }
 
-void TestMinAtomPW2()
+void TestMinAS2()
 {
   Interval i1(2, 2, 20);
   Interval i2(1, 1, 10);
@@ -2849,7 +2829,7 @@ void TestMinAtomPW2()
   lm2.addGO(2.0, 3.0);
   lm2.addGO(1.0, 10.0);
 
-  PWLMap res1 = minAtomPW(as1, lm1, lm2);
+  PWLMap res1 = minMapAtomSet(as1, lm1, lm2);
 
   Set s1;
   s1.addAtomSet(as1);
@@ -2860,7 +2840,7 @@ void TestMinAtomPW2()
   BOOST_CHECK(res1 == res2);
 }
 
-void TestMinAtomPW3()
+void TestMinAS3()
 {
   Interval i1(2, 2, 20);
   Interval i2(1, 1, 10);
@@ -2878,12 +2858,12 @@ void TestMinAtomPW3()
   lm1.addGO(2.0, 2.0);
   lm1.addGO(0.0, 35.0);
 
-  PWLMap res1 = minAtomPW(as1, lm1, lm1);
+  PWLMap res1 = minMapAtomSet(as1, lm1, lm1);
 
   BOOST_CHECK(true);
 }
 
-void TestMinPW1()
+void TestMinSet1()
 {
   Interval i1(1, 1, 5);
 
@@ -2917,7 +2897,7 @@ void TestMinPW1()
   LMap lm2;
   lm2.addGO(2, -12);
 
-  PWLMap res1 = minPW(s1, lm1, lm2);
+  PWLMap res1 = minMapSet(s1, lm1, lm2);
 
   Interval i4(10, 1, 12);
 
@@ -2942,13 +2922,13 @@ void TestMinPW1()
   s3.addAtomSet(as5);
 
   PWLMap res2;
-  res2.addSetLM(s2, lm2);
   res2.addSetLM(s3, lm1);
+  res2.addSetLM(s2, lm2);
 
   BOOST_CHECK(res1 == res2);
 }
 
-void TestMinPW2()
+void TestMinSet2()
 {
   Interval i1(2, 1, 5);
 
@@ -2982,7 +2962,7 @@ void TestMinPW2()
   LMap lm2;
   lm2.addGO(1, 0);
 
-  PWLMap res1 = minPW(s1, lm1, lm2);
+  PWLMap res1 = minMapSet(s1, lm1, lm2);
 
   PWLMap res2;
   res2.addSetLM(s1, lm1);
@@ -3084,7 +3064,7 @@ void TestMinMap1()
   pw2.addSetLM(s3, lm3);
   pw2.addSetLM(s4, lm4);
 
-  PWLMap res1 = minMap(pw1, pw2);
+  PWLMap res1 = pw1.minMap(pw2);
 
   Interval i9(1, 2, 9);
 
@@ -3208,7 +3188,7 @@ void TestReduce1()
   pw1.addSetLM(s1, lm1);
   pw1.addSetLM(s2, lm2);
 
-  PWLMap res1 = reduceMapN(pw1, 2);
+  PWLMap res1 = pw1.reduceMapN(2);
 
   Interval i5(4, 3, 15);
 
@@ -3340,7 +3320,7 @@ void TestMapInf1()
   pw1.addSetLM(s1, lm1);
   pw1.addSetLM(s2, lm2);
 
-  PWLMap res1 = mapInf(pw1);
+  PWLMap res1 = pw1.mapInf();
 
   PWLMap res2;
 
@@ -3397,7 +3377,7 @@ void TestMapInf2()
   pw1.addSetLM(s1, lm1);
   pw1.addSetLM(s2, lm2);
 
-  PWLMap res1 = mapInf(pw1);
+  PWLMap res1 = pw1.mapInf();
 
   PWLMap res2 = pw1;
 
@@ -3454,7 +3434,7 @@ void TestMapInf3()
   pw1.addSetLM(s1, lm1);
   pw1.addSetLM(s2, lm2);
 
-  PWLMap res1 = mapInf(pw1);
+  PWLMap res1 = pw1.mapInf();
 
   PWLMap res2;
   res2.addSetLM(s1, lm1);
@@ -3508,7 +3488,7 @@ void TestMapInf4()
   pw1.addSetLM(s2, lm2);
   pw1.addSetLM(s3, lm3);
 
-  PWLMap res1 = mapInf(pw1);
+  PWLMap res1 = pw1.mapInf();
 
   BOOST_CHECK(res1 == pw1);
 }
@@ -3545,7 +3525,7 @@ void TestMapInf5()
   pw1.addSetLM(s1, lm1);
   pw1.addSetLM(s2, lm2);
 
-  PWLMap res1 = mapInf(pw1);
+  PWLMap res1 = pw1.mapInf();
 
   Interval i3(2499, 1, 2499);
 
@@ -3736,7 +3716,7 @@ void TestMinAdjComp1()
   pw2.addSetLM(s2, lm2);
   pw2.addSetLM(s3, lm3);
 
-  PWLMap res1 = minAdjCompMap(pw1, pw2);
+  PWLMap res1 = pw1.minAdjCompMap(pw2);
 
   // pw1.inv = pw1
   PWLMap res2 = pw2.compPW(pw1);
@@ -3816,7 +3796,7 @@ void TestMinAdjComp2()
   pw2.addSetLM(s2, lm2);
   pw2.addSetLM(s3, lm3);
 
-  PWLMap res1 = minAdjCompMap(pw1, pw2);
+  PWLMap res1 = pw1.minAdjCompMap(pw2);
 
   PWLMap res2;
 
@@ -3895,7 +3875,7 @@ void TestMinAdjComp3()
   pw2.addSetLM(s2, lm2);
   pw2.addSetLM(s3, lm3);
 
-  PWLMap res1 = minAdjCompMap(pw1, pw2);
+  PWLMap res1 = pw1.minAdjCompMap(pw2);
 
   PWLMap res2;
 
@@ -3999,7 +3979,7 @@ void TestMinAdjComp4()
   pw2.addSetLM(s2, lm2);
   pw2.addSetLM(s3, lm3);
 
-  PWLMap res1 = minAdjCompMap(pw1, pw2);
+  PWLMap res1 = pw1.minAdjCompMap(pw2);
 
   PWLMap res2;
 
@@ -4112,7 +4092,7 @@ void TestMinAdj1()
   pw2.addSetLM(s3, lm3);
   pw2.addSetLM(s4, lm4);
 
-  PWLMap res1 = minAdjMap(pw1, pw2);
+  PWLMap res1 = pw1.minAdjMap(pw2);
 
   Interval i8(180, 2, 200);
   Interval i9(202, 4, 298);
@@ -4173,9 +4153,6 @@ void TestMinAdj1()
   res2.addSetLM(s5, lm5);
   res2.addSetLM(s6, lm3);
   res2.addSetLM(s7, lm4);
-
-  cout << res1 << "\n";
-  cout << res2 << "\n";
 
   BOOST_CHECK(res1 == res2);
 }
@@ -4376,7 +4353,6 @@ void TestRC1()
   g[e5] = E5;
 
   PWLMap res1 = connectedComponents(g);
-  cout << "TestRC1: \n" << res1 << "\n";
 
   BOOST_CHECK(true);
 }
@@ -4595,7 +4571,6 @@ void TestGraph3c()
   g[e6] = E6;
 
   PWLMap res1 = connectedComponents(g);
-  cout << "TestGraph3c: \n" << res1 << "\n";
 
   BOOST_CHECK(true);
 }
@@ -4868,11 +4843,10 @@ void Test2D()
   g[e6] = E6;
 
   PWLMap res1 = connectedComponents(g);
-  cout << "Test2D: \n" << res1 << "\n";
 
   GraphPrinter gp3(g, -1);
   std::string fn3("graph3.dot");
-  gp3.printGraph(fn3);
+  //gp3.printGraph(fn3);
 
   BOOST_CHECK(true);
 }
@@ -5249,10 +5223,6 @@ void TestSplit()
   match.matchedE = s22;
 
   UnordCT<Set> res = match.split(f2);
-  cout << "\n\nTest split:\n";
-  BOOST_FOREACH (Set s, res) {
-    cout << s << "\n";
-  }
 
   BOOST_CHECK(true);
 }
@@ -5510,9 +5480,6 @@ void TestMatching()
   PWLMap mapE8r;
   mapE8r.addSetLM(domE8a, lm16a);
   mapE8r.addSetLM(domE8b, lm16b);
-  // cout << domE8a << " | " << domE8b << "\n";
-  // cout << lm16a << " | " << lm16b << "\n";
-  // cout << "\n\n" << mapE8l << " | " << mapE8r << "\n\n";
   SetEdge E8("E8", 8, mapE8l, mapE8r, 0);
 
   Interval i19(1 + offE8b, 1, offE9);
@@ -5636,10 +5603,7 @@ void TestMatching()
   MatchingStruct match(g);
   Set res = match.SBGMatching();
   SBG::GraphPrinter printer(g, 0);
-  printer.printGraph("matching_test.dot");
-
-  cout << "\n\nTest matching:\n";
-  cout << res << "\n";
+  //printer.printGraph("matching_test.dot");
 
   BOOST_CHECK(true);
 }
@@ -5745,11 +5709,11 @@ test_suite *init_unit_test_suite(int, char *[])
   // framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapMinInvComp2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapCombine1));
 
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAtomPW1));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAtomPW2));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAtomPW3));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinPW1));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinPW2));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAS1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAS2));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAS3));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinSet1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinSet2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinMap1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestReduce1));
   // framework::master_test_suite().add(BOOST_TEST_CASE(&TestMapInf1));

@@ -16,10 +16,11 @@
     along with Modelica C Compiler.  If not, see <http://www.gnu.org/licenses/>.
 
 ******************************************************************************/
+
 #ifndef GRAPH_PRINTER_
 #define GRAPH_PRINTER_
 
-#include<util/graph/graph_definition.h>
+#include<util/graph/sbg/graph_definition.h>
 
 using namespace std;
 

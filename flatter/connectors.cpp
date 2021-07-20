@@ -156,8 +156,8 @@ void Connectors::debug(std::string filename)
 
   // Print vertices
   foreach_ (SetVertexDesc vi, vertices(G_)) {
-    Name n = G_[vi].name;
-    Set vs = G_[vi].vs_();
+    Name n = G_[vi].name();
+    Set vs = G_[vi].range();
     LOG << n << ": " << vs << endl;
   }
 
@@ -368,7 +368,7 @@ Option<SetVertexDesc> Connectors::buildVertex(Name n)
 
   // Vertex already created
   foreach_ (SetVertexDesc Vdesc, vertices(G_)) {
-    if (G_[Vdesc].name == n)
+    if (G_[Vdesc].name() == n)
       return Option<SetVertexDesc>(Vdesc);
   }
  
@@ -697,24 +697,24 @@ void Connectors::buildEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc Vdesc1, S
 
   string nm = "E_";
 
-  if (V1.name_() < V2.name_())
-    nm = nm + V1.name_() + "_" + V2.name_();
+  if (V1.name() < V2.name())
+    nm = nm + V1.name() + "_" + V2.name();
 
   else
-    nm = nm + V2.name_() + "_" + V1.name_();
+    nm = nm + V2.name() + "_" + V1.name();
 
   // Create new set-edge
   Set dom1 = buildEdgeDom(r1);
   Set dom2 = buildEdgeDom(r2);
   if (dom1.empty() && dom2.empty()) {
-    LOG << "ERROR: Check connects " << V1.name_() << ", " << V2.name_() << endl;
+    LOG << "ERROR: Check connects " << V1.name() << ", " << V2.name() << endl;
     return;
   }
   Set dom = dom1;
   if (dom2.card() > dom1.card())
     dom = dom2;
-  PWLMap pw1 = buildEdgeMap(dom, V1.vs_(), r1);
-  PWLMap pw2 = buildEdgeMap(dom, V2.vs_(), r2);
+  PWLMap pw1 = buildEdgeMap(dom, V1.range(), r1);
+  PWLMap pw2 = buildEdgeMap(dom, V2.range(), r2);
   SetEdge E(nm, pw1, pw2);
 
   SetEdgeDesc Edesc;
@@ -1108,10 +1108,10 @@ Name Connectors::getName(AtomSet as)
   auxas.addAtomSet(as);
 
   foreach_ (SetVertexDesc vi, vertices(G_)) {
-    Set vs = G_[vi].vs_();
+    Set vs = G_[vi].range();
 
     if (!auxas.cap(vs).empty()) 
-      nm = G_[vi].name_();
+      nm = G_[vi].name();
   }
 
   return nm;
@@ -1127,7 +1127,7 @@ AtomSet Connectors::getAtomSet(AtomSet as)
   auxas.addAtomSet(as);
 
   foreach_ (SetVertexDesc vi, vertices(G_)) {
-    Set vs = G_[vi].vs_();
+    Set vs = G_[vi].range();
 
     if (!auxas.cap(vs).empty()) 
       res = *(vs.asets_ref().begin());
@@ -1161,8 +1161,8 @@ vector<Name> Connectors::getEffVars(Set connector)
 
   // Get connector name
   foreach_ (SetVertexDesc vi, vertices(G_)) {
-    Set vs = G_[vi].vs_();
-    Name vinm = G_[vi].name_();
+    Set vs = G_[vi].range();
+    Name vinm = G_[vi].name();
 
     if (!connector.cap(vs).empty()) {
       // Search effort vars in the connector
@@ -1195,8 +1195,8 @@ vector<Name> Connectors::getFlowVars(Set connector)
 
   // Get connector name
   foreach_ (SetVertexDesc vi, vertices(G_)) {
-    Set vs = G_[vi].vs_();
-    Name vinm = G_[vi].name_();
+    Set vs = G_[vi].range();
+    Name vinm = G_[vi].name();
 
     if (!connector.cap(vs).empty()) {
       // Search flow vars in the connector

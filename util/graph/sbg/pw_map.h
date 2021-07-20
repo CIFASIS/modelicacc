@@ -7,6 +7,8 @@
 #pragma once
 
 #include <util/graph/sbg/defs.h>
+#include <util/graph/sbg/interval.h>
+#include <util/graph/sbg/multi_interval.h>
 #include <util/graph/sbg/atomic_set.h>
 #include <util/graph/sbg/set.h>
 #include <util/graph/sbg/lmap.h>
@@ -24,10 +26,11 @@ namespace SBG {
                       typename Alloc = std::allocator<Value>>                \
             class UNORD_CT,                                                  \
             typename APW_IMP, typename LM_IMP, typename SET_IMP,             \
-            typename AS_IMP, typename INT_IMP, typename REAL_IMP>
+            typename AS_IMP, typename MI_IMP, typename INTER_IMP,            \
+            typename INT_IMP, typename REAL_IMP>
 
 #define PW_TEMP_TYPE                                        \
-  PWLMapImp1<ORD_CT, UNORD_CT, APW_IMP, LM_IMP, SET_IMP, AS_IMP, INT_IMP, REAL_IMP>
+  PWLMapImp1<ORD_CT, UNORD_CT, APW_IMP, LM_IMP, SET_IMP, AS_IMP, MI_IMP, INTER_IMP, INT_IMP, REAL_IMP>
 
 PW_TEMPLATE
 struct PWLMapImp1 {
@@ -54,19 +57,34 @@ struct PWLMapImp1 {
   SET_IMP preImage(SET_IMP s);
   PWLMapImp1 compPW(PWLMapImp1 pw2);
   PWLMapImp1 minInvCompact(SET_IMP s);
+  PWLMapImp1 minInv(SET_IMP set);
 
+  bool equivalentPW(PWLMapImp1 pw2);
+
+  PWLMapImp1 restrictMap(SET_IMP newdom);
+
+  PWLMapImp1 concat(PWLMapImp1 pw2);
   PWLMapImp1 combine(PWLMapImp1 pw2);
+ 
+  PWLMapImp1 minMap(PWLMapImp1 pw2); 
 
   PWLMapImp1 atomize();
 
-  PWLMapImp1 concat(PWLMapImp1 pw2);
+  PWLMapImp1 reduceMapN(int dim);
+  PWLMapImp1 mapInf();
 
-  PWLMapImp1 restrictMap(SET_IMP newdom);
+  PWLMapImp1 minAdjCompMap(PWLMapImp1 pw2, PWLMapImp1 pw1);
+  PWLMapImp1 minAdjCompMap(PWLMapImp1 pw1);
+  PWLMapImp1 minAdjMap(PWLMapImp1 pw2, PWLMapImp1 pw1);
+  PWLMapImp1 minAdjMap(PWLMapImp1 pw1);
 
   eq_class(PWLMapImp1);
 };
 
-typedef PWLMapImp1<OrdCT, UnordCT, AtomPWLMap, LMap, Set, AtomSet, INT, REAL> PWLMap;
+typedef PWLMapImp1<OrdCT, UnordCT, AtomPWLMap, LMap, Set, AtomSet, MultiInterval, Interval, INT, REAL> PWLMap;
+
+PWLMap minMapAtomSet(AtomSet dom, LMap lm1, LMap lm2);
+PWLMap minMapSet(Set dom, LMap lm1, LMap lm2);
 
 printable_temp(PW_TEMPLATE, PW_TEMP_TYPE);
 

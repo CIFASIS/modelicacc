@@ -13,41 +13,37 @@ namespace SBG {
 
 // MultiIntervals ---------------------------------------------------------------------------------
 
-#define INTER_TYPE                  \
+#define INTERS_TYPE                  \
    typename MI_TEMP_TYPE::Intervals
 
 MI_TEMPLATE
 MI_TEMP_TYPE::MultiInterImp1() : ndim_(0)
 {
-  Intervals emptyRes;
-  inters_ = emptyRes;
+  Intervals emptyInters;
+  inters_ = emptyInters;
 };
 
 MI_TEMPLATE
-MI_TEMP_TYPE::MultiInterImp1(INTER_TYPE is)
+MI_TEMP_TYPE::MultiInterImp1(INTERS_TYPE inters)
 {
-  IntervalsIt it = is.begin();
-  bool areEmptys = false;
+  bool areEmptyInters = false;
 
-  while (it != is.end()) {
-   if ((*it).empty()) areEmptys = true;
+  BOOST_FOREACH (INTER_IMP i, inters)
+   if (i.empty()) areEmptyInters = true;
 
-    ++it;
-  }
-
-  if (areEmptys) {
-    Intervals aux;
-    inters_ = aux;
+  if (areEmptyInters) {
+    Intervals emptyInters;
+    inters_ = emptyInters;
     ndim_ = 0;
   }
 
   else {
-    inters_ = is;
-    ndim_ = is.size();
+    inters_ = inters;
+    ndim_ = inters.size();
   }
 }
 
-member_imp_temp(MI_TEMPLATE, MI_TEMP_TYPE, INTER_TYPE, inters);
+member_imp_temp(MI_TEMPLATE, MI_TEMP_TYPE, INTERS_TYPE, inters);
 member_imp_temp(MI_TEMPLATE, MI_TEMP_TYPE, int, ndim);
 
 MI_TEMPLATE

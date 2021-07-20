@@ -16,9 +16,9 @@ GRP_TEST_SRC := \
     $(UTIL_DIR)/graph/sbg/lmap.cpp \
     $(UTIL_DIR)/graph/sbg/atom_pw_map.cpp \
     $(UTIL_DIR)/graph/sbg/pw_map.cpp \
-    $(UTIL_DIR)/graph/graph_definition.cpp \
-    $(UTIL_DIR)/graph/graph_algorithms.cpp \
-    $(UTIL_DIR)/graph/graph_printer.cpp \
+    $(UTIL_DIR)/graph/sbg/graph_definition.cpp \
+    $(UTIL_DIR)/graph/sbg/graph_algorithms.cpp \
+    $(UTIL_DIR)/graph/sbg/graph_printer.cpp \
     $(UTIL_DIR)/debug.cpp 
 
 GRP_PRINT_TEST_SRC := \
@@ -30,8 +30,8 @@ GRP_PRINT_TEST_SRC := \
     $(UTIL_DIR)/graph/sbg/lmap.cpp \
     $(UTIL_DIR)/graph/sbg/atom_pw_map.cpp \
     $(UTIL_DIR)/graph/sbg/pw_map.cpp \
-    $(UTIL_DIR)/graph/graph_definition.cpp \
-    $(UTIL_DIR)/graph/graph_printer.cpp	
+    $(UTIL_DIR)/graph/sbg/graph_definition.cpp \
+    $(UTIL_DIR)/graph/sbg/graph_printer.cpp	
 
 # Objects
 GRP_TEST_OBJ=$(addprefix $(BUILD_DIR)/, $(GRP_TEST_SRC:.cpp=.o))

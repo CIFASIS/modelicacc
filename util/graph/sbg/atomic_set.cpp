@@ -14,19 +14,14 @@ namespace SBG {
 // Atomic sets ------------------------------------------------------------------------------------
 
 AS_TEMPLATE
-AS_TEMP_TYPE::AtomSetImp1() 
+AS_TEMP_TYPE::AtomSetImp1() : ndim_(0) 
 {
-  MI_IMP emptyRes;
-  aset_ = emptyRes;
-  ndim_ = 0;
+  MI_IMP emptyMI;
+  aset_ = emptyMI;
 }
 
 AS_TEMPLATE
-AS_TEMP_TYPE::AtomSetImp1(MI_IMP as)
-{
-  aset_ = as;
-  ndim_ = as.ndim();
-}
+AS_TEMP_TYPE::AtomSetImp1(MI_IMP aset) : aset_(aset), ndim_(aset.ndim()) {}
 
 member_imp_temp(AS_TEMPLATE, AS_TEMP_TYPE, MI_IMP, aset);
 member_imp_temp(AS_TEMPLATE, AS_TEMP_TYPE, int, ndim);

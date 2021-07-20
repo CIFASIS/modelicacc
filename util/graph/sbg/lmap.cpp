@@ -17,41 +17,39 @@ namespace SBG {
    typename LM_TEMP_TYPE::OrdNumeric
 
 LM_TEMPLATE
-LM_TEMP_TYPE::LMapImp1()
+LM_TEMP_TYPE::LMapImp1() : ndim_(0)
 {
-  OrdNumeric empty;
-  gain_ = empty;
-  offset_ = empty;
-  ndim_ = 0;
+  OrdNumeric emptyNum;
+  gain_ = emptyNum;
+  offset_ = emptyNum;
 }
 
 LM_TEMPLATE
-LM_TEMP_TYPE::LMapImp1(NUM_TYPE g, NUM_TYPE o)
+LM_TEMP_TYPE::LMapImp1(NUM_TYPE gain, NUM_TYPE offset) : ndim_(0)
 {
-  OrdNumeric empty;
+  OrdNumeric emptyNum;
 
-  if (g.size() == o.size()) {
-    gain_ = g;
-    offset_ = o;
-    ndim_ = g.size();
+  if (gain.size() == offset.size()) {
+    gain_ = gain;
+    offset_ = offset;
+    ndim_ = gain.size();
   }
 
   else {
-    gain_ = empty;
-    offset_ = empty;
-    ndim_ = 0;
+    gain_ = emptyNum;
+    offset_ = emptyNum;
   }
 }
 
 LM_TEMPLATE
-LM_TEMP_TYPE::LMapImp1(int dim)
+LM_TEMP_TYPE::LMapImp1(int ndim)
 {
   OrdNumeric g;
   OrdNumericIt itg = g.begin();
   OrdNumeric o;
   OrdNumericIt ito = o.begin();
 
-  for (int i = 0; i < dim; i++) {
+  for (int i = 0; i < ndim; i++) {
     itg = g.insert(itg, 1.0);
     ++itg;
     ito = o.insert(ito, 0);
@@ -60,7 +58,7 @@ LM_TEMP_TYPE::LMapImp1(int dim)
 
   gain_ = g;
   offset_ = o;
-  ndim_ = dim;
+  ndim_ = ndim;
 }
 
 member_imp_temp(LM_TEMPLATE, LM_TEMP_TYPE, NUM_TYPE, gain);

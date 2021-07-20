@@ -15,22 +15,22 @@ INTER_TEMPLATE
 INTER_TEMP_TYPE::IntervalImp1(){};
 
 INTER_TEMPLATE
-INTER_TEMP_TYPE::IntervalImp1(bool isEmpty) : lo_(-1), step_(-1), hi_(-1), empty_(isEmpty) {};
+INTER_TEMP_TYPE::IntervalImp1(bool empty) : lo_(-1), step_(-1), hi_(-1), empty_(empty) {};
 
 INTER_TEMPLATE
-INTER_TEMP_TYPE::IntervalImp1(int vlo, int vstep, int vhi)
+INTER_TEMP_TYPE::IntervalImp1(int lo, int step, int hi)
 {
-  if (vlo >= 0 && vstep > 0 && vhi >= 0) {
+  if (lo >= 0 && step > 0 && hi >= 0) {
     empty_ = false;
-    lo_ = vlo;
-    step_ = vstep;
+    lo_ = lo;
+    step_ = step;
 
-    if (vlo <= vhi && vhi < Inf) {
-      int rem = std::fmod(vhi - vlo, vstep);
-      hi_ = vhi - rem;
+    if (lo <= hi && hi < Inf) {
+      int rem = std::fmod(hi - lo, step);
+      hi_ = hi - rem;
     }
 
-    else if (vlo <= vhi && vhi == Inf) {
+    else if (lo <= hi && hi == Inf) {
       hi_ = Inf;
     }
 
@@ -40,10 +40,10 @@ INTER_TEMP_TYPE::IntervalImp1(int vlo, int vstep, int vhi)
     }
   }
 
-  else if (vlo >= 0 && vstep == 0 && vhi == vlo) {
+  else if (lo >= 0 && step == 0 && hi == lo) {
     empty_ = false;
-    lo_ = vlo;
-    hi_ = vhi;
+    lo_ = lo;
+    hi_ = hi;
     step_ = 1;
   }
 
