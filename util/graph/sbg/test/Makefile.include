@@ -50,7 +50,6 @@ $(GRP_PRINT_TEST): $(GRP_PRINT_TEST_OBJ)
 
 $(SBG_GRAPH_TEST):
 	@echo RUNNING SBG GRAPHS UNIT TESTS
-	@cd $(TEST_DIR) && $(MAKE)
 	@cd $(TEST_DIR) && ./GraphTest
 	@cd $(TEST_DIR) && ./PrintGraphs 
 	@echo Done
