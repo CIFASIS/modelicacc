@@ -61,7 +61,7 @@ size_t hash_value(const Interval &inter);
 
 printable_temp(INTER_TEMPLATE, INTER_TEMP_TYPE);
 
-typedef UnordCT<Interval> contInt1;
-typedef OrdCT<Interval> contInt2;
+typedef OrdCT<Interval> ORD_INTERS;
+typedef UnordCT<Interval> UNORD_INTERS;
 
 } // namespace SBG

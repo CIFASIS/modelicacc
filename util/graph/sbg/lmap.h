@@ -44,8 +44,6 @@ struct LMapImp1 {
 
 typedef LMapImp1<OrdCT, REAL> LMap;
 
-typedef OrdCT<LMap> contLM1;
-
 template<typename REAL_IMP>
 std::string mapOper(REAL_IMP &cte);
 

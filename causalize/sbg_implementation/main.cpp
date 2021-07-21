@@ -1,4 +1,3 @@
-
 /*****************************************************************************
 
     This file is part of Modelica C Compiler.
@@ -25,9 +24,9 @@
 #include <mmo/mmo_class.h>
 #include <parser/parser.h>
 #include <util/debug.h>
-#include <util/graph/graph_algorithms.h>
-#include <util/graph/graph_definition.h>
-#include <util/graph/graph_printer.h>
+#include <util/graph/sbg/sbg.h>
+#include <util/graph/sbg/sbg_algorithms.h>
+#include <util/graph/sbg/sbg_printer.h>
 
 using namespace std;
 using namespace Modelica;

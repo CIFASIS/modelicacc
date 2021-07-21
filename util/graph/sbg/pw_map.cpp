@@ -6,7 +6,6 @@
 
 #include <boost/foreach.hpp>
 
-#include <util/graph/sbg/defs.h>
 #include <util/graph/sbg/pw_map.h>
 
 namespace SBG {
@@ -174,6 +173,7 @@ SET_IMP PW_TEMP_TYPE::preImage(SET_IMP s)
   return res;
 }
 
+// Composition of PWLMaps
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::compPW(PW_TEMP_TYPE pw2)
 {
@@ -215,6 +215,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::compPW(PW_TEMP_TYPE pw2)
   return PWLMapImp1(ress, reslm);
 }
 
+// Minimum inverse of a compact PWLMap. Is minimum, because PWLMaps aren't always bijective
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::minInvCompact(SET_IMP s)
 {
@@ -270,6 +271,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minInvCompact(SET_IMP s)
   return res;
 }
 
+// Minimum inverse of PWLMap. Is minimum because PWLMaps aren't always bijective
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::minInv(SET_IMP s)
 {
@@ -371,6 +373,7 @@ bool PW_TEMP_TYPE::equivalentPW(PW_TEMP_TYPE pw2)
   return false;
 }
 
+// Restrict doms (and consequently, linear maps) according to argument
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::restrictMap(SET_IMP newdom)
 {
@@ -399,6 +402,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::restrictMap(SET_IMP newdom)
   return res;
 }
 
+// Append doms and maps of arguments to the current PWLMap
 PW_TEMPLATE 
 PW_TEMP_TYPE PW_TEMP_TYPE::concat(PW_TEMP_TYPE pw2)
 {
@@ -419,6 +423,8 @@ PW_TEMP_TYPE PW_TEMP_TYPE::concat(PW_TEMP_TYPE pw2)
   return res;
 }
 
+// Use currents maps for current dom, and use maps of the argument
+// for elements that are exclusive of the doms of the argument
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::combine(PW_TEMP_TYPE pw2)
 {
@@ -457,37 +463,40 @@ PW_TEMP_TYPE PW_TEMP_TYPE::combine(PW_TEMP_TYPE pw2)
   return res;
 }
 
-PWLMap minMapAtomSet(AtomSet dom, LMap lm1, LMap lm2)
+// Return a PWLMap, with dom partitioned accordingly to express the minimum
+// map between lm1 and lm2
+PW_TEMPLATE
+PW_TEMP_TYPE MIN_MAP_ATOM_SET(AS_IMP &dom, LM_IMP &lm1, LM_IMP &lm2)
 {
-  OrdCT<REAL> g1 = lm1.gain();
-  OrdCT<REAL> o1 = lm1.offset();
-  typename OrdCT<REAL>::iterator ito1 = o1.begin();
-  OrdCT<REAL> g2 = lm2.gain();
-  typename OrdCT<REAL>::iterator itg2 = g2.begin();
-  OrdCT<REAL> o2 = lm2.offset();
-  typename OrdCT<REAL>::iterator ito2 = o2.begin();
-  OrdCT<Interval> ints = dom.aset_ref().inters();
-  typename OrdCT<Interval>::iterator itints = ints.begin();
+  ORD_CT<REAL_IMP> g1 = lm1.gain();
+  ORD_CT<REAL_IMP> o1 = lm1.offset();
+  typename ORD_CT<REAL_IMP>::iterator ito1 = o1.begin();
+  ORD_CT<REAL_IMP> g2 = lm2.gain();
+  typename ORD_CT<REAL_IMP>::iterator itg2 = g2.begin();
+  ORD_CT<REAL_IMP> o2 = lm2.offset();
+  typename ORD_CT<REAL_IMP>::iterator ito2 = o2.begin();
+  ORD_CT<INTER_IMP> ints = dom.aset_ref().inters();
+  typename ORD_CT<INTER_IMP>::iterator itints = ints.begin();
 
-  AtomSet asAux = dom;
-  LMap lmAux = lm1;
-  OrdCT<REAL> resg = g1;
-  OrdCT<REAL> reso = o1;
+  AS_IMP asAux = dom;
+  LM_IMP lmAux = lm1;
+  ORD_CT<REAL_IMP> resg = g1;
+  ORD_CT<REAL_IMP> reso = o1;
   int count = 1;
 
-  OrdCT<Set> domRes;
-  OrdCT<LMap> lmRes;
+  ORD_CT<SET_IMP> domRes;
+  ORD_CT<LM_IMP> lmRes;
 
   if (lm1.ndim() == lm2.ndim()) {
-    BOOST_FOREACH (REAL g1i, g1) {
+    BOOST_FOREACH (REAL_IMP g1i, g1) {
       if (g1i != *itg2) {
-        REAL xinter = (*ito2 - *ito1) / (g1i - *itg2);
+        REAL_IMP xinter = (*ito2 - *ito1) / (g1i - *itg2);
 
         // Intersection before domain
         if (xinter <= (*itints).lo()) {
           if (*itg2 < g1i) lmAux = lm2;
 
-          Set sAux;
+          SET_IMP sAux;
           sAux.addAtomSet(asAux);
 
           domRes.insert(domRes.begin(), sAux);
@@ -498,7 +507,7 @@ PWLMap minMapAtomSet(AtomSet dom, LMap lm1, LMap lm2)
         else if (xinter >= (*itints).hi()) {
           if (*itg2 > g1i) lmAux = lm2;
 
-          Set sAux;
+          SET_IMP sAux;
           sAux.addAtomSet(asAux);
 
           domRes.insert(domRes.begin(), sAux);
@@ -507,16 +516,16 @@ PWLMap minMapAtomSet(AtomSet dom, LMap lm1, LMap lm2)
 
         // Intersection in domain
         else {
-          Interval i1((*itints).lo(), (*itints).step(), floor(xinter));
-          Interval i2(i1.hi() + i1.step(), (*itints).step(), (*itints).hi());
+          INTER_IMP i1((*itints).lo(), (*itints).step(), floor(xinter));
+          INTER_IMP i2(i1.hi() + i1.step(), (*itints).step(), (*itints).hi());
 
-          AtomSet as1 = asAux.replace(i1, count);
-          AtomSet as2 = asAux.replace(i2, count);
+          AS_IMP as1 = asAux.replace(i1, count);
+          AS_IMP as2 = asAux.replace(i2, count);
 
-          Set d1;
+          SET_IMP d1;
           d1.addAtomSet(as1);
 
-          Set d2;
+          SET_IMP d2;
           d2.addAtomSet(as2);
 
           domRes.insert(domRes.end(), d1);
@@ -533,19 +542,19 @@ PWLMap minMapAtomSet(AtomSet dom, LMap lm1, LMap lm2)
           }
         }
 
-        PWLMap auxRes(domRes, lmRes);
+        PW_TEMP_TYPE auxRes(domRes, lmRes);
         return auxRes;
       }
 
       else if (*ito1 != *ito2) {
         if (*ito2 < *ito1) lmAux = lm2;
 
-        Set sAux;
+        SET_IMP sAux;
         sAux.addAtomSet(asAux);
         domRes.insert(domRes.begin(), sAux);
         lmRes.insert(lmRes.begin(), lmAux);
 
-        PWLMap auxRes(domRes, lmRes);
+        PW_TEMP_TYPE auxRes(domRes, lmRes);
         return auxRes;
       }
 
@@ -557,40 +566,43 @@ PWLMap minMapAtomSet(AtomSet dom, LMap lm1, LMap lm2)
     }
   }
 
-  Set sAux;
+  SET_IMP sAux;
   sAux.addAtomSet(dom);
   domRes.insert(domRes.begin(), sAux);
   lmRes.insert(lmRes.begin(), lm1);
-  PWLMap auxRes(domRes, lmRes);
+  PW_TEMP_TYPE auxRes(domRes, lmRes);
   return auxRes;
 }
 
-PWLMap minMapSet(Set dom, LMap lm1, LMap lm2)
+// Return a PWLMap, with dom partitioned accordingly to express the minimum
+// map between lm1 and lm2
+PW_TEMPLATE
+PW_TEMP_TYPE MIN_MAP_SET(SET_IMP &dom, LM_IMP &lm1, LM_IMP &lm2)
 {
-  OrdCT<Set> sres;
-  OrdCT<LMap> lres;
+  ORD_CT<Set> sres;
+  ORD_CT<LMap> lres;
 
-  Set sres1;
-  Set sres2;
-  LMap lres1;
-  LMap lres2;
+  SET_IMP sres1;
+  SET_IMP sres2;
+  LM_IMP lres1;
+  LM_IMP lres2;
 
-  UnordCT<AtomSet> asets = dom.asets();
-  typename UnordCT<AtomSet>::iterator itas = asets.begin();
+  UNORD_CT<AS_IMP> asets = dom.asets();
+  typename UNORD_CT<AS_IMP>::iterator itas = asets.begin();
 
   if (!dom.empty()) {
-    PWLMap aux;
-    AtomSet asAux = *itas;
+    PW_TEMP_TYPE aux;
+    AS_IMP asAux = *itas;
     aux = minMapAtomSet(asAux, lm1, lm2);
     if (!aux.empty()) {
       sres1 = *(aux.dom_ref().begin());
       lres1 = *(aux.lmap_ref().begin());
       ++itas;
 
-      OrdCT<Set> d;
-      typename OrdCT<Set>::iterator itd;
-      OrdCT<LMap> l;
-      typename OrdCT<LMap>::iterator itl;
+      ORD_CT<SET_IMP> d;
+      typename ORD_CT<SET_IMP>::iterator itd;
+      ORD_CT<LM_IMP> l;
+      typename ORD_CT<LM_IMP>::iterator itl;
       while (itas != asets.end()) {
         asAux = *itas;
         aux = minMapAtomSet(asAux, lm1, lm2);
@@ -632,10 +644,11 @@ PWLMap minMapSet(Set dom, LMap lm1, LMap lm2)
     lres.insert(lres.end(), lres2);
   }
 
-  PWLMap res(sres, lres);
+  PW_TEMP_TYPE res(sres, lres);
   return res;
 }
 
+// Minimum of PWLMaps
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::minMap(PW_TEMP_TYPE pw2)
 {
@@ -672,6 +685,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minMap(PW_TEMP_TYPE pw2)
   return res;
 }
 
+// Transform each set in dom in a compact set (with only one atomic set)
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::atomize()
 {
@@ -699,6 +713,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::atomize()
   return res;
 }
 
+// PWLMap reduction
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
 {
@@ -887,6 +902,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
   return res;
 }
 
+// PWLMap infinite composition
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::mapInf()
 {

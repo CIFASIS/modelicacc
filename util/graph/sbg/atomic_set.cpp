@@ -6,7 +6,6 @@
 
 #include <boost/foreach.hpp>
 
-#include <util/graph/sbg/defs.h>
 #include <util/graph/sbg/atomic_set.h>
 
 namespace SBG {
@@ -14,11 +13,7 @@ namespace SBG {
 // Atomic sets ------------------------------------------------------------------------------------
 
 AS_TEMPLATE
-AS_TEMP_TYPE::AtomSetImp1() : ndim_(0) 
-{
-  MI_IMP emptyMI;
-  aset_ = emptyMI;
-}
+AS_TEMP_TYPE::AtomSetImp1() : ndim_(0), aset_() {} 
 
 AS_TEMPLATE
 AS_TEMP_TYPE::AtomSetImp1(MI_IMP aset) : aset_(aset), ndim_(aset.ndim()) {}
@@ -36,11 +31,7 @@ AS_TEMPLATE
 int AS_TEMP_TYPE::card() { return aset_ref().card(); }
 
 AS_TEMPLATE
-AS_TEMP_TYPE AS_TEMP_TYPE::cap(AS_TEMP_TYPE aset2) 
-{
-  AS_TEMP_TYPE res(aset_ref().cap(aset2.aset()));
-  return res;
-}
+AS_TEMP_TYPE AS_TEMP_TYPE::cap(AS_TEMP_TYPE aset2) { return AS_TEMP_TYPE(aset_ref().cap(aset2.aset())); }
 
 AS_TEMPLATE
 UNORD_CT<AS_TEMP_TYPE> AS_TEMP_TYPE::diff(AS_TEMP_TYPE aset2)

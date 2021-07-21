@@ -6,7 +6,6 @@
 
 #include <boost/foreach.hpp>
 
-#include <util/graph/sbg/defs.h>
 #include <util/graph/sbg/atom_pw_map.h>
 
 namespace SBG {

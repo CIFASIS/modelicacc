@@ -20,8 +20,8 @@ using OrdCT = std::list<T>; // Ord stands for ordered container
 template <typename Value, typename Hash = boost::hash<Value>, typename Pred = std::equal_to<Value>, typename Alloc = std::allocator<Value>>
 using UnordCT = boost::unordered_set<Value>; // Unord stands for unordered container
 
-typedef OrdCT<INT> contINT;
-typedef OrdCT<REAL> contREAL;
+typedef OrdCT<INT> ORD_INTS;
+typedef OrdCT<REAL> ORD_REALS;
 
 // Helpful macros ---------------------------------------------------------------------------------
 

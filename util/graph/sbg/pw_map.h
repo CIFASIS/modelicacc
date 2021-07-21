@@ -17,6 +17,7 @@
 namespace SBG {
 
 // Piecewise linear maps ------------------------------------------------------------------------
+// A compact piecewise linear map is a piecewise linear map which has only one Set and one LMap
 
 #define PW_TEMPLATE                                                          \
   template <template<typename T, typename = std::allocator<T>> class ORD_CT, \
@@ -81,10 +82,19 @@ struct PWLMapImp1 {
   eq_class(PWLMapImp1);
 };
 
-typedef PWLMapImp1<OrdCT, UnordCT, AtomPWLMap, LMap, Set, AtomSet, MultiInterval, Interval, INT, REAL> PWLMap;
+PW_TEMPLATE
+PW_TEMP_TYPE MIN_MAP_ATOM_SET(AS_IMP &dom, LM_IMP &lm1, LM_IMP &lm2);
 
-PWLMap minMapAtomSet(AtomSet dom, LMap lm1, LMap lm2);
-PWLMap minMapSet(Set dom, LMap lm1, LMap lm2);
+#define minMapAtomSet(X, Y, Z) \
+  MIN_MAP_ATOM_SET<OrdCT, UnordCT, AtomPWLMap, LMap, Set, AtomSet, MultiInterval, Interval, INT, REAL>(X, Y, Z);
+
+PW_TEMPLATE
+PW_TEMP_TYPE MIN_MAP_SET(SET_IMP &dom, LM_IMP &lm1, LM_IMP &lm2);
+
+#define minMapSet(X, Y, Z) \
+  MIN_MAP_SET<OrdCT, UnordCT, AtomPWLMap, LMap, Set, AtomSet, MultiInterval, Interval, INT, REAL>(X, Y, Z);
+
+typedef PWLMapImp1<OrdCT, UnordCT, AtomPWLMap, LMap, Set, AtomSet, MultiInterval, Interval, INT, REAL> PWLMap;
 
 printable_temp(PW_TEMPLATE, PW_TEMP_TYPE);
 

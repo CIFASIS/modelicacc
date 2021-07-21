@@ -65,6 +65,4 @@ size_t hash_value(const Set &set);
 
 printable_temp(SET_TEMPLATE, SET_TEMP_TYPE);
 
-typedef OrdCT<Set> contSet1;
-
 } // namespace SBG

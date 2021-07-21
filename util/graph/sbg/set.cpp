@@ -6,7 +6,6 @@
 
 #include <boost/foreach.hpp>
 
-#include <util/graph/sbg/defs.h>
 #include <util/graph/sbg/set.h>
 
 namespace SBG {
@@ -17,11 +16,7 @@ namespace SBG {
    typename SET_TEMP_TYPE::AtomSets
 
 SET_TEMPLATE
-SET_TEMP_TYPE::SetImp1() : ndim_(0)
-{
-  AtomSets emptyAtomSets;
-  asets_ = emptyAtomSets;
-}
+SET_TEMP_TYPE::SetImp1() : ndim_(0), asets_() {}
 
 SET_TEMPLATE
 SET_TEMP_TYPE::SetImp1(AS_IMP as) : ndim_(as.ndim()) { asets_ref().insert(as); }

@@ -4,7 +4,6 @@
 
 ******************************************************************************/
 
-#include <util/graph/sbg/defs.h>
 #include <util/graph/sbg/interval.h>
 
 namespace SBG {
@@ -30,14 +29,11 @@ INTER_TEMP_TYPE::IntervalImp1(int lo, int step, int hi)
       hi_ = hi - rem;
     }
 
-    else if (lo <= hi && hi == Inf) {
+    else if (lo <= hi && hi == Inf) 
       hi_ = Inf;
-    }
 
-    else {
-      // WARNING("Wrong values for subscript (check low <= hi)");
+    else 
       empty_ = true;
-    }
   }
 
   else if (lo >= 0 && step == 0 && hi == lo) {
@@ -110,11 +106,8 @@ int INTER_TEMP_TYPE::card()
 INTER_TEMPLATE
 INTER_TEMP_TYPE INTER_TEMP_TYPE::offset(int off)
 {
-  int newLo = lo() + off;
-  int newHi = hi() + off;
-
   if (!empty())
-    return IntervalImp1(newLo, step(), newHi);
+    return IntervalImp1(lo() + off, step(), hi() + off);
 
   else
     return IntervalImp1(true);

@@ -27,9 +27,10 @@ FLATTER_SRC := \
 	$(UTIL_DIR)/ast_visitors/mark_connector.cpp \
 	$(UTIL_DIR)/ast_visitors/partial_eval_expression.cpp \
 	$(UTIL_DIR)/ast_visitors/replace_expression.cpp \
-    $(UTIL_DIR)/graph/sbg/graph_definition.cpp \
-	$(UTIL_DIR)/graph/sbg/graph_algorithms.cpp \
-	$(UTIL_DIR)/graph/sbg/graph_printer.cpp \
+    $(UTIL_DIR)/graph/sbg/sbg.cpp \
+	$(UTIL_DIR)/graph/sbg/sbg_algorithms.cpp \
+	$(UTIL_DIR)/graph/sbg/sbg_printer.cpp \
+	$(UTIL_DIR)/graph/sbg/descs.cpp \
   $(UTIL_DIR)/graph/sbg/interval.cpp \
   $(UTIL_DIR)/graph/sbg/multi_interval.cpp \
   $(UTIL_DIR)/graph/sbg/atomic_set.cpp \

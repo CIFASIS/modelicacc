@@ -163,9 +163,9 @@ void Connectors::debug(std::string filename)
 
   // Print edges
   foreach_ (SetEdgeDesc ei, edges(G_)) {
-    Name n = G_[ei].name;
-    PWLMap es1 = G_[ei].es1_();
-    PWLMap es2 = G_[ei].es2_();
+    Name n = G_[ei].name();
+    PWLMap es1 = G_[ei].map_f();
+    PWLMap es2 = G_[ei].map_u();
     AtomPWLMap den;
     LOG << den << endl;
     LOG << n << ": " << es1 << ", " << es2 << endl;
@@ -678,7 +678,7 @@ PWLMap Connectors::buildEdgeMap(Set dom, Set im, ExpOptList r)
 bool Connectors::existsEdge(string nm)
 {
   foreach_ (SetEdgeDesc ei, edges(G_)) {
-    string nmi = G_[ei].name_();
+    string nmi = G_[ei].name();
 
     if (nmi == nm)
       return true;
@@ -1544,7 +1544,7 @@ EquationList Connectors::buildLoop(Indexes indexes, EquationList eqs)
   set<Name> indexesNms;
 
   foreach_ (Index i, indexes.indexes_) 
-    indexesNms.insert(i.name_);
+    indexesNms.insert(i.name());
 
   // Traverse equations
   foreach_ (Equation eq, eqs) {

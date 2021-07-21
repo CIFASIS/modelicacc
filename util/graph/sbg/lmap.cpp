@@ -13,19 +13,14 @@ namespace SBG {
 
 // Linear maps ------------------------------------------------------------------------------------
 
-#define NUM_TYPE                  \
+#define ORD_NUMS_TYPE                  \
    typename LM_TEMP_TYPE::OrdNumeric
 
 LM_TEMPLATE
-LM_TEMP_TYPE::LMapImp1() : ndim_(0)
-{
-  OrdNumeric emptyNum;
-  gain_ = emptyNum;
-  offset_ = emptyNum;
-}
+LM_TEMP_TYPE::LMapImp1() : ndim_(0), gain_(), offset_() {}
 
 LM_TEMPLATE
-LM_TEMP_TYPE::LMapImp1(NUM_TYPE gain, NUM_TYPE offset) : ndim_(0)
+LM_TEMP_TYPE::LMapImp1(ORD_NUMS_TYPE gain, ORD_NUMS_TYPE offset) : ndim_(0)
 {
   OrdNumeric emptyNum;
 
@@ -61,8 +56,8 @@ LM_TEMP_TYPE::LMapImp1(int ndim)
   ndim_ = ndim;
 }
 
-member_imp_temp(LM_TEMPLATE, LM_TEMP_TYPE, NUM_TYPE, gain);
-member_imp_temp(LM_TEMPLATE, LM_TEMP_TYPE, NUM_TYPE, offset);
+member_imp_temp(LM_TEMPLATE, LM_TEMP_TYPE, ORD_NUMS_TYPE, gain);
+member_imp_temp(LM_TEMPLATE, LM_TEMP_TYPE, ORD_NUMS_TYPE, offset);
 member_imp_temp(LM_TEMPLATE, LM_TEMP_TYPE, int, ndim);
 
 LM_TEMPLATE
@@ -158,31 +153,33 @@ template struct LMapImp1<OrdCT, REAL>;
 template<typename REAL_IMP>
 std::string mapOper(REAL_IMP &cte) { return (cte >= 0) ? "+ " : ""; }
 
+template std::string mapOper<REAL>(REAL &cte);
+
 LM_TEMPLATE
 std::ostream &operator<<(std::ostream &out, const LM_TEMP_TYPE &lm)
 {
-  NUM_TYPE g = lm.gain();
-  NUM_TYPE::iterator itg = g.begin();
-  NUM_TYPE o = lm.offset();
-  NUM_TYPE::iterator ito = o.begin();
+  ORD_NUMS_TYPE g = lm.gain();
+  ORD_NUMS_TYPE::iterator itg = g.begin();
+  ORD_NUMS_TYPE o = lm.offset();
+  ORD_NUMS_TYPE::iterator ito = o.begin();
 
   if (g.size() == 0) return out;
 
   if (g.size() == 1) {
-    out << "[" << *itg << " * x " << mapOper<REAL_IMP>(*ito) << *ito << "]";
+    out << "[" << *itg << " * x " << mapOper(*ito) << *ito << "]";
     return out;
   }
 
-  out << "[" << *itg << " * x " << mapOper<REAL_IMP>(*ito) << *ito;
+  out << "[" << *itg << " * x " << mapOper(*ito) << *ito;
   ++itg;
   ++ito;
   while (next(itg, 1) != g.end()) {
-    out << ", " << *itg << " * x " << mapOper<REAL_IMP>(*ito) << *ito;
+    out << ", " << *itg << " * x " << mapOper(*ito) << *ito;
 
     ++itg;
     ++ito;
   }
-  out << ", " << *itg << " * x " << mapOper<REAL_IMP>(*ito) << *ito << "]";
+  out << ", " << *itg << " * x " << mapOper(*ito) << *ito << "]";
 
   return out;
 }

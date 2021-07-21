@@ -58,6 +58,6 @@ size_t hash_value(const AtomSet &as);
 
 printable_temp(AS_TEMPLATE, AS_TEMP_TYPE);
 
-typedef UnordCT<AtomSet> contAS;
+typedef UnordCT<AtomSet> UNORD_AS;
 
 } // namespace SBG

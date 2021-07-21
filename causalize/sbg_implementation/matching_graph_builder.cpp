@@ -46,10 +46,10 @@ void MatchingGraphBuilder::addDims(size_t max_dim, size_t exp_dim, SBG::MultiInt
   }      
 }
 
-void MatchingGraphBuilder::addDims(size_t max_dim, size_t exp_dim, contREAL& constant, contREAL& slope)
+void MatchingGraphBuilder::addDims(size_t max_dim, size_t exp_dim, ORD_REALS& constant, ORD_REALS& slope)
 {
-  contREAL::iterator constant_it = constant.end();
-  contREAL::iterator slope_it = slope.end();
+  ORD_REALS::iterator constant_it = constant.end();
+  ORD_REALS::iterator slope_it = slope.end();
   if (max_dim > exp_dim) {
     for (size_t i = exp_dim; i < max_dim; i++) {
       constant_it = constant.insert(constant_it, 0);
@@ -125,7 +125,7 @@ SBG::Set MatchingGraphBuilder::buildSet(Equation eq, std::string eq_id, int offs
 SBG::Set MatchingGraphBuilder::generateMapDom(SBG::Set dom, SBG::Set unk_dom, int offset, size_t max_dim)
 {
   MultiInterval edge_set_intervals;
-  SBG::contAS atom_sets = dom.asets(); 
+  SBG::UNORD_AS atom_sets = dom.asets(); 
   foreach_(AtomSet atom_set, atom_sets) {
     MultiInterval dom_intervals = atom_set.aset();
     foreach_(Interval inter, dom_intervals.inters()) {
@@ -153,7 +153,7 @@ void MatchingGraphBuilder::addEquation(Equation eq, std::string id, SBG::Set set
   _F.push_back(std::make_pair(addVertex(id, set, graph),get<Equality>(eq)));  
 }
 
-PWLMap MatchingGraphBuilder::buildPWLMap(contREAL constants, contREAL slopes, SBG::Set dom)
+PWLMap MatchingGraphBuilder::buildPWLMap(ORD_REALS constants, ORD_REALS slopes, SBG::Set dom)
 {
   LMap lmap(slopes, constants);
 
@@ -170,20 +170,20 @@ MatchingGraphBuilder::MatchingMaps MatchingGraphBuilder::generatePWLMaps(Express
 {
   assert(is<Reference>(exp));
   VarSymbolTable symbols = _mmo_class.syms();
-  contREAL constant_pwl_map_u;
-  contREAL::iterator constant_pwl_map_u_it = constant_pwl_map_u.begin();
-  contREAL slope_pwl_map_u;
-  contREAL::iterator slope_pwl_map_u_it = slope_pwl_map_u.begin();
-  contREAL constant_pwl_map_f;
-  contREAL::iterator constant_pwl_map_f_it = constant_pwl_map_f.begin();
-  contREAL slope_pwl_map_f;
-  contREAL::iterator slope_pwl_map_f_it = slope_pwl_map_f.begin();
+  ORD_REALS constant_pwl_map_u;
+  ORD_REALS::iterator constant_pwl_map_u_it = constant_pwl_map_u.begin();
+  ORD_REALS slope_pwl_map_u;
+  ORD_REALS::iterator slope_pwl_map_u_it = slope_pwl_map_u.begin();
+  ORD_REALS constant_pwl_map_f;
+  ORD_REALS::iterator constant_pwl_map_f_it = constant_pwl_map_f.begin();
+  ORD_REALS slope_pwl_map_f;
+  ORD_REALS::iterator slope_pwl_map_f_it = slope_pwl_map_f.begin();
   
   Reference occur = get<Reference>(exp);   
   ExpList indexes = get<1>(occur.ref().front());
-  SBG::contINT init_elems = unk_dom.minElem();
+  SBG::ORD_INTS init_elems = unk_dom.minElem();
   assert(init_elems.size() == indexes.size() || indexes.size() == 0);
-  SBG::contINT::iterator min_elem = init_elems.begin();
+  SBG::ORD_INTS::iterator min_elem = init_elems.begin();
   SBG::Set map_dom = generateMapDom(dom, unk_dom, offset, max_dim);
   int map_offset = offset - 1;
 
@@ -283,21 +283,21 @@ SBGraph MatchingGraphBuilder::makeGraph()
     SetVertex eq_vertex = graph[eq_vertex_desc];
     Expression left = eq_desc.second.left();
     Expression right = eq_desc.second.right();
-    SBG::Set dom = eq_vertex.vs_(); 
+    SBG::Set dom = eq_vertex.range(); 
     foreach_(SetVertexDesc unknown_vertex_desc, _U)
     {
       SetVertex unknown_vertex = graph[unknown_vertex_desc];
-      SBG::Set unk_dom = unknown_vertex.vs_();       
-      MatchingExps matching_exps(unknown_vertex.name);
+      SBG::Set unk_dom = unknown_vertex.range();       
+      MatchingExps matching_exps(unknown_vertex.name());
       Apply(matching_exps, left);
       Apply(matching_exps, right);
       std::set<Expression> matched_exps = matching_exps.matchedExps();
-      std::cout << "Matched exps for: " << unknown_vertex.name << " in " << eq_desc.second << std::endl;
+      std::cout << "Matched exps for: " << unknown_vertex.name() << " in " << eq_desc.second << std::endl;
       std::cout << "Equation dom: " << dom << std::endl;
       foreach_(Expression exp, matched_exps)
       {
         std::cout << "Expression: " << exp << std::endl;
-        MatchingMaps maps = generatePWLMaps(exp, dom, unk_dom, set_edge_offset, eq_vertex.name, max_dim); 
+        MatchingMaps maps = generatePWLMaps(exp, dom, unk_dom, set_edge_offset, eq_vertex.name(), max_dim); 
         set_edge_offset += dom.card();
         std::string edge_name = "E_" + std::to_string(edge_id++);
         std::cout << "MapF: " << maps.first << std::endl;

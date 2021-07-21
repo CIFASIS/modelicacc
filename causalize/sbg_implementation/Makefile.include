@@ -11,9 +11,10 @@ CAUSALIZE_SBG_SRC := \
 	$(CAUSALIZE_SBG_DIR)/matching_graph_builder.cpp\
 	$(UTIL_DIR)/ast_visitors/matching_exps.cpp \
 	$(UTIL_DIR)/ast_visitors/pwl_map_values.cpp \
-	$(UTIL_DIR)/graph/sbg/graph_algorithms.cpp \
-	$(UTIL_DIR)/graph/sbg/graph_definition.cpp \
-	$(UTIL_DIR)/graph/sbg/graph_printer.cpp \
+	$(UTIL_DIR)/graph/sbg/descs.cpp \
+	$(UTIL_DIR)/graph/sbg/sbg.cpp \
+	$(UTIL_DIR)/graph/sbg/sbg_algorithms.cpp \
+	$(UTIL_DIR)/graph/sbg/sbg_printer.cpp \
   $(UTIL_DIR)/graph/sbg/interval.cpp \
   $(UTIL_DIR)/graph/sbg/multi_interval.cpp \
   $(UTIL_DIR)/graph/sbg/atomic_set.cpp \

@@ -30,9 +30,9 @@
 
 #include <util/ast_visitors/replace_expression.h>
 #include <util/ast_visitors/constant_expression.h>
-#include <util/graph/sbg/graph_definition.h>
-#include <util/graph/sbg/graph_algorithms.h>
-#include <util/graph/sbg/graph_printer.h>
+#include <util/graph/sbg/sbg.h>
+#include <util/graph/sbg/sbg_algorithms.h>
+#include <util/graph/sbg/sbg_printer.h>
 #include <util/table.h>
 #include <util/type.h>
 

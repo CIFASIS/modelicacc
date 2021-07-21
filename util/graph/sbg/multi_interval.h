@@ -62,6 +62,6 @@ size_t hash_value(const MultiInterval &mi);
 
 printable_temp(MI_TEMPLATE, MI_TEMP_TYPE);
 
-typedef UnordCT<MultiInterval> contMulti;
+typedef UnordCT<MultiInterval> UNORD_MI;
 
 } // namespace SBG
