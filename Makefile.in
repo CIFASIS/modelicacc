@@ -31,7 +31,7 @@ include mmo/Makefile.include
 include flatter/Makefile.include
 include causalize/Makefile.include
 include test/causalize/Makefile.include
-include test/util/Makefile.include
+include util/graph/sbg/test/Makefile.include
 
 # Sources
 COMMON_SRC := \
