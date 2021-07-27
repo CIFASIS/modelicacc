@@ -65,4 +65,8 @@ size_t hash_value(const Set &set);
 
 printable_temp(SET_TEMPLATE, SET_TEMP_TYPE);
 
+Set createSet(Interval i);
+Set createSet(MultiInterval mmi);
+Set createSet(AtomSet as);
+
 } // namespace SBG

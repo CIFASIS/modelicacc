@@ -4,6 +4,8 @@
 
 ******************************************************************************/
 
+#pragma once
+
 #include <boost/config.hpp>
 #include <boost/unordered_set.hpp>
 
@@ -22,6 +24,9 @@ using UnordCT = boost::unordered_set<Value>; // Unord stands for unordered conta
 
 typedef OrdCT<INT> ORD_INTS;
 typedef OrdCT<REAL> ORD_REALS;
+
+std::ostream &operator<<(std::ostream &out, const ORD_INTS &nums);
+std::ostream &operator<<(std::ostream &out, const ORD_REALS &nums);
 
 // Helpful macros ---------------------------------------------------------------------------------
 

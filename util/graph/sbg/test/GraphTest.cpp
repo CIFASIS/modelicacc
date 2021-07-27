@@ -38,49 +38,49 @@ void TestIntCreation1()
 {
   Interval i(10, 3, 3);
 
-  BOOST_REQUIRE_MESSAGE(i.empty(), "Interval " << i << " isn't empty");
+  BOOST_REQUIRE_MESSAGE(i.empty(), "\nInterval " << i << " isn't empty");
 }
 
 void TestIntCreation2()
 {
   Interval i(10, 20, 15);
 
-  BOOST_REQUIRE_MESSAGE(i.hi() == 10, i << " upper bound isn't 10");
+  BOOST_REQUIRE_MESSAGE(i.hi() == 10, "\n" << i << " upper bound isn't 10");
 }
 
 void TestIntCreation3()
 {
   Interval i(10, 5, 23);
 
-  BOOST_REQUIRE_MESSAGE(i.hi() == 20, i << " upper bound isn't 20");
+  BOOST_REQUIRE_MESSAGE(i.hi() == 20, "\n" << i << " upper bound isn't 20");
 }
 
 void TestIntCreation4()
 {
   Interval i(10, 1, Inf);
 
-  BOOST_CHECK(i.hi() == Inf);
+  BOOST_REQUIRE_MESSAGE(i.hi() == Inf, "\n" << i << " upper bound isn't Inf");
 }
 
 void TestIntQuery1()
 {
   Interval i(10, 2, 20);
 
-  BOOST_CHECK(!i.isIn(13));
+  BOOST_REQUIRE_MESSAGE(!i.isIn(13), "\n13 shouldn't be in " << i);
 }
 
 void TestIntQuery2()
 {
   Interval i(10, 2, 20);
 
-  BOOST_CHECK(i.isIn(18));
+  BOOST_REQUIRE_MESSAGE(i.isIn(18), "\n18 should be in " << i);
 }
 
 void TestIntQuery3()
 {
   Interval i(10, 2, 20);
 
-  BOOST_CHECK(!i.isIn(100));
+  BOOST_REQUIRE_MESSAGE(!i.isIn(100), "\n100 is shouldn't be in " << i);
 }
 
 void TestIntQuery4()
@@ -91,17 +91,16 @@ void TestIntQuery4()
   bool b1 = i1.isIn(12);
   bool b2 = i2.isIn(12);
 
-  BOOST_CHECK(b1 && b2);
+  BOOST_REQUIRE_MESSAGE(b1 && b2, "\n12 should be in " << i1 << " and " << i2);
 }
 
 void TestIntQuery5()
 {
   Interval i(true);
 
-  BOOST_CHECK(!i.isIn(10));
+  BOOST_REQUIRE_MESSAGE(!i.isIn(10), "\n" << i << " should be empty");
 }
 
-// Cap should be commutative
 void TestIntCap1()
 {
   Interval i1(10, 2, 20);
@@ -110,7 +109,7 @@ void TestIntCap1()
   Interval i3(i1.cap(i2));
   Interval i4(i2.cap(i1));
 
-  BOOST_CHECK(i3 == i4);
+  BOOST_REQUIRE_MESSAGE(i3 == i4, "\nIntersection should be commutative");
 }
 
 void TestIntCap2()
@@ -122,7 +121,7 @@ void TestIntCap2()
 
   Interval i4(12, 6, 18);
 
-  BOOST_CHECK(i3 == i4);
+  BOOST_REQUIRE_MESSAGE(i3 == i4, "\n" << i1 << " cap " << i2 << " = " << i3 << "\nExpected: " << i4);
 }
 
 void TestIntCap3()
@@ -134,7 +133,7 @@ void TestIntCap3()
 
   Interval i4(true);
 
-  BOOST_CHECK(i3 == i4);
+  BOOST_REQUIRE_MESSAGE(i3 == i4, "\n" << i1 << " cap " << i2 << " = " << i3 << "\nExpected: " << i4);
 }
 
 void TestIntCap4()
@@ -146,7 +145,7 @@ void TestIntCap4()
 
   Interval i4(14, 2, 28);
 
-  BOOST_CHECK(i3 == i4);
+  BOOST_REQUIRE_MESSAGE(i3 == i4, "\n" << i1 << " cap " << i2 << " = " << i3 << "\nExpected: " << i4);
 }
 
 void TestIntCap5()
@@ -155,7 +154,7 @@ void TestIntCap5()
 
   Interval i2 = i1.cap(i1);
 
-  BOOST_CHECK(i1 == i2);
+  BOOST_REQUIRE_MESSAGE(i1 == i2, "\n" << i1 << " cap " << i1 << " = " << i2 << "\nExpected: " << i1);
 }
 
 void TestIntDiff1()
@@ -168,7 +167,7 @@ void TestIntDiff1()
   UNORD_INTERS res2;
   res2.insert(i1);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << i1 << " - " << i2 << " = " << res1 << "\nExpected: " << res2);
 }
 
 void TestIntDiff2()
@@ -189,7 +188,7 @@ void TestIntDiff2()
   res2.insert(i5);
   res2.insert(i6);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << i1 << " - " << i2 << " = " << res1 << "\nExpected: " << res2);
 }
 
 void TestIntDiff3()
@@ -210,7 +209,7 @@ void TestIntDiff3()
   res2.insert(i5);
   res2.insert(i6);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << i1 << " - " << i2 << " = " << res1 << "\nExpected: " << res2);
 }
 
 void TestIntDiff4()
@@ -222,7 +221,7 @@ void TestIntDiff4()
 
   UNORD_INTERS res2;
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << i1 << " - " << i2 << " = " << res1 << "\nExpected: " << res2);
 }
 
 void TestIntMin1()
@@ -231,10 +230,11 @@ void TestIntMin1()
 
   INT res1 = i.minElem();
 
-  BOOST_CHECK(res1 == 10);
+  BOOST_REQUIRE_MESSAGE(res1 == 10, "\n" << "min(" << i << ")" << " = " << res1 << "\nExpected: " << 10);
 }
 
 // -- MultiIntervals --------------------------------------------------------------//
+
 void TestMultiCreation1()
 {
   Interval i1(1, 1, 10);
@@ -245,7 +245,7 @@ void TestMultiCreation1()
   res1.addInter(i2);
   res1.addInter(i2);
 
-  BOOST_CHECK(!res1.empty());
+  BOOST_REQUIRE_MESSAGE(!res1.empty(), "\n" << res1 << " shouldn't be empty");
 }
 
 void TestMultiCreation2()
@@ -273,14 +273,14 @@ void TestMultiCreation2()
 
   MultiInterval mi2(res);
 
-  BOOST_CHECK(mi1 == mi2);
+  BOOST_REQUIRE_MESSAGE(mi1 == mi2, "\n" << mi1 << " should be equal to " << mi2);
 }
 
 void TestMultiEmpty1()
 {
   MultiInterval mi;
 
-  BOOST_CHECK(mi.empty());
+  BOOST_REQUIRE_MESSAGE(mi.empty(), "\n" << mi << " should be empty");
 }
 
 void TestMultiEmpty2()
@@ -294,7 +294,7 @@ void TestMultiEmpty2()
   mi.addInter(i2);
   mi.addInter(i3);
 
-  BOOST_CHECK(mi.empty());
+  BOOST_REQUIRE_MESSAGE(mi.empty(), "\n" << mi << " should be empty");
 }
 
 void TestMultiEmpty3()
@@ -308,7 +308,7 @@ void TestMultiEmpty3()
   mi.addInter(i2);
   mi.addInter(i3);
 
-  BOOST_CHECK(!mi.empty());
+  BOOST_REQUIRE_MESSAGE(!mi.empty(), "\n" << mi << " shouldn't be empty");
 }
 
 void TestMultiQuery1()
@@ -330,7 +330,7 @@ void TestMultiQuery1()
   ++it1;
   elem1.insert(it1, 21);
 
-  BOOST_CHECK(!mi.isIn(elem1));
+  BOOST_REQUIRE_MESSAGE(!mi.isIn(elem1), "\nElem shouldn't be in " << mi);
 }
 
 void TestMultiQuery2()
@@ -352,7 +352,7 @@ void TestMultiQuery2()
   ++it1;
   elem1.insert(it1, 21);
 
-  BOOST_CHECK(!mi.isIn(elem1));
+  BOOST_REQUIRE_MESSAGE(!mi.isIn(elem1), "\nElem shouldn't be in " << mi);
 }
 
 void TestMultiQuery3()
@@ -374,7 +374,7 @@ void TestMultiQuery3()
   ++it1;
   elem1.insert(it1, 20);
 
-  BOOST_CHECK(mi.isIn(elem1));
+  BOOST_REQUIRE_MESSAGE(mi.isIn(elem1), "\nElem shouldn't be in " << mi);
 }
 
 void TestMultiAddInter1()
@@ -390,7 +390,7 @@ void TestMultiAddInter1()
 
   MultiInterval mi2(ints2);
 
-  BOOST_CHECK(mi1 == mi2);
+  BOOST_REQUIRE_MESSAGE(mi1 == mi2, "\n" << mi1 << " should be equal to " << mi2);
 }
 
 void TestMultiAddInter2()
@@ -414,7 +414,7 @@ void TestMultiAddInter2()
 
   MultiInterval mi2(ints2);
 
-  BOOST_CHECK(mi1 == mi2);
+  BOOST_REQUIRE_MESSAGE(mi1 == mi2, "\n" << mi1 << " should be equal to " << mi2);
 }
 
 void TestMultiCap1()
@@ -433,7 +433,7 @@ void TestMultiCap1()
   MultiInterval mi3 = mi1.cap(mi2);
   MultiInterval mi4 = mi2.cap(mi1);
 
-  BOOST_CHECK(mi2 == mi3 && mi3 == mi4);
+  BOOST_REQUIRE_MESSAGE(mi2 == mi3 && mi3 == mi4, "\n" << mi2 << " should be equal to " << mi3 << " and " << mi4);
 }
 
 void TestMultiCap2()
@@ -463,7 +463,7 @@ void TestMultiCap2()
   MultiInterval res2 = mi1.cap(mi2);
   MultiInterval res3 = mi2.cap(mi1);
 
-  BOOST_CHECK(res1 == res2 && res2 == res3);
+  BOOST_REQUIRE_MESSAGE(res1 == res2 && res2 == res3, "\n" << res1 << " should be equal to " << res2 << " and " << res3);
 }
 
 void TestMultiCap3()
@@ -484,7 +484,7 @@ void TestMultiCap3()
 
   MultiInterval mi3 = mi1.cap(mi2);
 
-  BOOST_CHECK(mi3.empty());
+  BOOST_REQUIRE_MESSAGE(mi3.empty(), "\n" << mi3 << " should be empty");
 }
 
 void TestMultiCap4()
@@ -498,26 +498,7 @@ void TestMultiCap4()
 
   MultiInterval mi2 = mi1.cap(mi1);
 
-  BOOST_CHECK(mi1 == mi2);
-}
-
-void TestMultiCap5()
-{
-  Interval i1(1, 1, 100);
-
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  mi1.addInter(i1);
-
-  Interval i2(5, 5, 50);
-
-  MultiInterval mi2;
-  mi2.addInter(i2);
-  mi2.addInter(i2);
-
-  MultiInterval mi3 = mi1.cap(mi2);
-
-  BOOST_CHECK(true);
+  BOOST_REQUIRE_MESSAGE(mi1 == mi2, "\n" << mi1 << " should be equal to " << mi2);
 }
 
 void TestMultiDiff1()
@@ -594,7 +575,7 @@ void TestMultiDiff1()
   res2.insert(mi7);
   res2.insert(mi8);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << mi1 << " - " << mi2 << " = " << res1 << "\nExpected: " << res2);
 }
 
 void TestMultiDiff2()
@@ -662,7 +643,7 @@ void TestMultiDiff2()
   res2.insert(mi6);
   res2.insert(mi7);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << mi1 << " - " << mi2 << " = " << res1 << "\nExpected: " << res2);
 }
 
 void TestMultiDiff3()
@@ -687,7 +668,7 @@ void TestMultiDiff3()
 
   UNORD_MI res1 = mi1.diff(mi2);
 
-  BOOST_CHECK(res1.empty());
+  BOOST_REQUIRE_MESSAGE(res1.empty(), "\n" << mi1 << " - " << mi2 << " = " << res1 << " should be empty");
 }
 
 void TestMultiDiff4()
@@ -701,7 +682,7 @@ void TestMultiDiff4()
 
   UNORD_MI res1 = mi1.diff(mi1);
 
-  BOOST_CHECK(res1.empty());
+  BOOST_REQUIRE_MESSAGE(res1.empty(), "\n" << mi1 << " - " << mi1 << " = " << res1 << " should be empty");
 }
 
 void TestMultiDiff5()
@@ -722,7 +703,7 @@ void TestMultiDiff5()
 
   UNORD_MI res1 = mi1.diff(mi2);
 
-  BOOST_CHECK(res1.empty());
+  BOOST_REQUIRE_MESSAGE(res1.empty(), "\n" << mi1 << " - " << mi2 << " = " << res1 << " should be empty");
 }
 
 void TestMultiCrossProd1()
@@ -749,7 +730,7 @@ void TestMultiCrossProd1()
   res2.addInter(i3);
   res2.addInter(i4);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << mi1 << " x " << mi2 << " = " << res1 << "\nExpected: " << res2);
 }
 
 void TestMultiMin1()
@@ -798,7 +779,7 @@ void TestMultiReplace1()
   res2.addInter(i2);
   res2.addInter(i3);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\nreplace(" << mi1 << ", 1) = " << res1 << "\nExpected: " << res2);
 }
 
 void TestMultiReplace2()
@@ -821,7 +802,7 @@ void TestMultiReplace2()
   res2.addInter(i2);
   res2.addInter(i3);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\nreplace(" << mi1 << ", 4) = " << res1 << "\nExpected: " << res2);
 }
 
 // -- AtomicSets --------------------------------------------------------------//
@@ -842,17 +823,10 @@ void TestASetCreation1()
 
   AtomSet as(mi);
 
-  BOOST_CHECK(mi == as.aset());
+  BOOST_REQUIRE_MESSAGE(mi == as.aset(), "\naset = " << as.aset() << "\nExpected: " << mi);
 }
 
 void TestASetEmpty1()
-{
-  MultiInterval mi;
-
-  BOOST_CHECK(mi.empty());
-}
-
-void TestASetEmpty2()
 {
   Interval i1(true);
   Interval i2(0, 2, 50);
@@ -868,10 +842,10 @@ void TestASetEmpty2()
 
   AtomSet as(mi);
 
-  BOOST_CHECK(!as.empty());
+  BOOST_REQUIRE_MESSAGE(!as.empty(), "\n" << as << " shouldn't be empty");
 }
 
-void TestASetEmpty3()
+void TestASetEmpty2()
 {
   Interval i1(true);
   Interval i2(true);
@@ -884,10 +858,10 @@ void TestASetEmpty3()
 
   AtomSet as(mi);
 
-  BOOST_CHECK(mi.empty());
+  BOOST_REQUIRE_MESSAGE(as.empty(), "\n" << as << " should be empty");
 }
 
-void TestASetEmpty4()
+void TestASetEmpty3()
 {
   Interval i1(true);
   Interval i2(true);
@@ -900,7 +874,7 @@ void TestASetEmpty4()
 
   AtomSet as(mi);
 
-  BOOST_CHECK(!mi.empty());
+  BOOST_REQUIRE_MESSAGE(!as.empty(), "\n" << as << " shouldn't be empty");
 }
 
 void TestASetCap1()
@@ -932,7 +906,7 @@ void TestASetCap1()
 
   AtomSet res3;
 
-  BOOST_CHECK(res1 == res2 && res2 == res3);
+  BOOST_REQUIRE_MESSAGE(res1 == res2 && res2 == res3, "\n" << mi1 << " cap " << mi2 << " = " << res1 << "\nExpected: " << res3);
 }
 
 void TestASetCap2()
@@ -948,7 +922,7 @@ void TestASetCap2()
 
   AtomSet as2 = as1.cap(as1);
 
-  BOOST_CHECK(as1 == as2);
+  BOOST_REQUIRE_MESSAGE(as1 == as2, "\n" << as1 << " cap " << as2 << " = " << as2 << "\nExpected: " << as1);
 }
 
 void TestASetDiff1()
@@ -1041,7 +1015,7 @@ void TestASetDiff1()
   res2.insert(as7);
   res2.insert(as8);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << as1 << " - " << as2 << " = " << res1 << "\nExpected: " << res2);
 }
 
 void TestASetMin1()
@@ -1106,7 +1080,7 @@ void TestSetCreation1()
 
   Set s2(res2);
 
-  BOOST_CHECK(s1 == s2);
+  BOOST_REQUIRE_MESSAGE(s1 == s2, "\n" << s1 << "\nshould be equal to\n" << s2);
 }
 
 void TestCompSets1()
@@ -1131,7 +1105,7 @@ void TestCompSets1()
   Set s2;
   s2.addAtomSet(as2);
 
-  BOOST_CHECK(!(s1 == s2));
+  BOOST_REQUIRE_MESSAGE(s1 != s2, "\n" << s1 << "\nshouldn't be equal to\n" << s2);
 }
 
 void TestSetEmpty1()
@@ -1150,7 +1124,7 @@ void TestSetEmpty1()
   Set s2;
   s2.addAtomSet(as3);
 
-  BOOST_CHECK(!s2.empty());
+  BOOST_REQUIRE_MESSAGE(!s2.empty(), "\n" << s2 << " shouldn't be empty");
 }
 
 void TestAddASets1()
@@ -1187,7 +1161,7 @@ void TestAddASets1()
 
   Set s2(aux);
 
-  BOOST_CHECK(s1 == s2);
+  BOOST_REQUIRE_MESSAGE(s1 == s2, "\n" << s1 << "\nshould be equal to\n" << s2);
 }
 
 void TestSetCap1()
@@ -1198,7 +1172,7 @@ void TestSetCap1()
   Set res1 = s1.cap(s2);
   Set res2 = s2.cap(s1);
 
-  BOOST_CHECK(res1 == res2 && res1.empty() && res2.empty());
+  BOOST_REQUIRE_MESSAGE(res1 == res2 && res1.empty() && res2.empty(), "Empty sets, should have empty intersection");
 }
 
 void TestSetCap2()
@@ -1223,7 +1197,8 @@ void TestSetCap2()
   Set res1 = s1.cap(s2);
   Set res2 = s2.cap(s1);
 
-  BOOST_CHECK(res1 == res2 && res1.empty() && res2.empty());
+  BOOST_REQUIRE_MESSAGE(res1 == res2 && res1.empty() && res2.empty(), 
+                        "\n" << s1 << "\ncap\n" << s2 << "\n=\n" << res1 << "\nExpected empty set");
 }
 
 void TestSetCap3()
@@ -1292,6 +1267,8 @@ void TestSetCap3()
   res3.addAtomSet(as5);
 
   BOOST_CHECK(res1 == res2 && res2 == res3);
+  BOOST_REQUIRE_MESSAGE(res1 == res2 && res2 == res3
+                        , "\n" << s1 << "\ncap\n" << s2 << "\n=\n" << res1 << "\nExpected: " << res3);
 }
 
 void TestSetCap4()
@@ -1320,7 +1297,7 @@ void TestSetCap4()
 
   Set s2 = s1.cap(s1);
 
-  BOOST_CHECK(s1 == s2);
+  BOOST_REQUIRE_MESSAGE(s1 == s2, "\n" << s1 << "\ncap\n" << s2 << "\n=\n" << s2 << "\nExpected: " << s1);
 }
 
 void TestSetDiff1()
@@ -1352,7 +1329,7 @@ void TestSetDiff1()
   Set res1 = s1.diff(s2);
   Set res2;
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << s1 << "\ndiff\n" << s2 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestSetDiff2()
@@ -1448,6 +1425,7 @@ void TestSetDiff2()
   res2.addAtomSet(as9);
 
   BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << s1 << "\n-\n" << s2 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestSetMin1()
@@ -1541,7 +1519,7 @@ void TestLMCreation1()
 {
   LMap res;
 
-  BOOST_CHECK(res.empty());
+  BOOST_REQUIRE_MESSAGE(res.empty(), "Linear map should be empty");
 }
 
 void TestLMCompose1()
@@ -1566,7 +1544,7 @@ void TestLMCompose1()
   res2.addGO(20.0, 32.0);
   res2.addGO(6.0, 12.0);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << lm1 << "\n°\n" << lm2 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestLMCompose2()
@@ -1584,7 +1562,7 @@ void TestLMCompose2()
 
   LMap res1 = lm1.compose(lm2);
 
-  BOOST_CHECK(res1.empty());
+  BOOST_REQUIRE_MESSAGE(res1.empty(), "\n" << lm1 << "\n°\n" << lm2 << "\n=\n" << res1 << "\nExpected empty result");
 }
 
 void TestInvLMap1()
@@ -1608,6 +1586,7 @@ void TestInvLMap1()
   res2.addGO(v3, -1);
 
   BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\ninv(" << lm1 << ") = " << res1 << "\nExpected: " << res2);
 }
 
 // -- Piece wise atomic linear maps ------------------------------------------//
@@ -1632,7 +1611,7 @@ void TestAtomPWCreation1()
 
   AtomPWLMap pwatom1(as1, lm1);
 
-  BOOST_CHECK(pwatom1.empty());
+  BOOST_REQUIRE_MESSAGE(pwatom1.empty(), "\n" << pwatom1 << " should be empty");
 }
 
 void TestAtomPWCreation2()
@@ -1652,7 +1631,7 @@ void TestAtomPWCreation2()
 
   AtomPWLMap pwatom1(as1, lm1);
 
-  BOOST_CHECK(pwatom1.empty());
+  BOOST_REQUIRE_MESSAGE(pwatom1.empty(), "\n" << pwatom1 << " should be empty");
 }
 
 void TestAtomPWCreation3()
@@ -1672,7 +1651,7 @@ void TestAtomPWCreation3()
 
   AtomPWLMap pwatom1(as1, lm1);
 
-  BOOST_CHECK(!pwatom1.empty());
+  BOOST_REQUIRE_MESSAGE(!pwatom1.empty(), "\n" << pwatom1 << " shouldn't be empty");
 }
 
 void TestAtomPWImage1()
@@ -1709,7 +1688,8 @@ void TestAtomPWImage1()
 
   AtomSet res2(mi2);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\nimage(" << pwatom1 << ", " << as1 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWImage2()
@@ -1748,7 +1728,8 @@ void TestAtomPWImage2()
 
   AtomSet res2;
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\nimage(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWImage3()
@@ -1796,7 +1777,8 @@ void TestAtomPWImage3()
 
   AtomSet res2(mi3);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\nimage(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWImage4()
@@ -1826,6 +1808,8 @@ void TestAtomPWImage4()
   AtomSet res2(mi2);
 
   BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\nimage(" << pwatom1 << ", " << as1 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWPre1()
@@ -1873,7 +1857,8 @@ void TestAtomPWPre1()
 
   AtomSet res2(mi3);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\npre(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWPre2()
@@ -1921,7 +1906,8 @@ void TestAtomPWPre2()
 
   AtomSet res2(mi3);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\npre(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWPre3()
@@ -1960,7 +1946,8 @@ void TestAtomPWPre3()
 
   AtomSet res2;
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\npre(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWPre4()
@@ -1991,10 +1978,9 @@ void TestAtomPWPre4()
 
   AtomSet res2 = as1;
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\npre(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
-
-void TestAtomPWMin1() { BOOST_CHECK(true); }
 
 // -- Piece wise linear maps -------------------------------------------------//
 
@@ -2045,7 +2031,7 @@ void TestPWLMapCreation1()
   pw1.addSetLM(s1, lm1);
   pw1.addSetLM(s2, lm2);
 
-  BOOST_CHECK(pw1.empty());
+  BOOST_REQUIRE_MESSAGE(pw1.empty(), "\n" << pw1 << " should be empty");
 }
 
 void TestPWLMapImage1()
@@ -2133,7 +2119,8 @@ void TestPWLMapImage1()
 
   Set res2 = s1.cup(s3);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\nimage(" << pw1 << ", " << aux << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestPWLMapImage2()
@@ -2198,7 +2185,8 @@ void TestPWLMapImage2()
 
   Set res2 = s1;
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\nimage(" << pw1 << ", " << s1 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestPWLMapPre1()
@@ -2282,7 +2270,8 @@ void TestPWLMapPre1()
   res2.addAtomSet(as2);
   res2.addAtomSet(as6);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\npre(" << pw1 << ", " << s3 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestPWLMapComp1()
@@ -2394,7 +2383,8 @@ void TestPWLMapComp1()
   res2.addSetLM(s5, lm4);
   res2.addSetLM(s6, lm2);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\n" << pw1 << "\n°\n" << pw2 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestPWLMapComp2()
@@ -2467,186 +2457,8 @@ void TestPWLMapComp2()
 
   PWLMap res2;
 
-  BOOST_CHECK(res1 == res2);
-}
-
-void TestPWLMapMinInvComp1()
-{
-  Interval i1(1, 1, 10);
-
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  mi1.addInter(i1);
-  mi1.addInter(i1);
-
-  AtomSet as1(mi1);
-
-  Interval i2(15, 3, 30);
-  Interval i3(1, 1, 5);
-
-  MultiInterval mi2;
-  mi2.addInter(i1);
-  mi2.addInter(i2);
-  mi2.addInter(i3);
-
-  AtomSet as2(mi2);
-
-  Interval i4(11, 1, 14);
-
-  MultiInterval mi3;
-  mi3.addInter(i4);
-  mi3.addInter(i3);
-  mi3.addInter(i1);
-
-  AtomSet as3(mi3);
-
-  Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
-  s1.addAtomSet(as3);
-
-  LMap lm1;
-  lm1.addGO(1.0, 1.0);
-  lm1.addGO(1.0, 0.0);
-  lm1.addGO(1.0, 0.0);
-
-  PWLMap pw1;
-  pw1.addSetLM(s1, lm1);
-
-  Set wDom = pw1.wholeDom();
-  Set newDom = pw1.image(wDom);
-  PWLMap res1 = pw1.minInvCompact(newDom);
-
-  Interval i5(2, 1, 11);
-
-  MultiInterval mi4;
-  mi4.addInter(i5);
-  mi4.addInter(i1);
-  mi4.addInter(i1);
-
-  AtomSet as4(mi4);
-
-  MultiInterval mi5;
-  mi5.addInter(i5);
-  mi5.addInter(i2);
-  mi5.addInter(i3);
-
-  AtomSet as5(mi5);
-
-  Interval i6(12, 1, 15);
-
-  MultiInterval mi6;
-  mi6.addInter(i6);
-  mi6.addInter(i3);
-  mi6.addInter(i1);
-
-  AtomSet as6(mi6);
-
-  Set s2;
-  s2.addAtomSet(as4);
-  s2.addAtomSet(as5);
-  s2.addAtomSet(as6);
-
-  LMap lm2;
-  lm2.addGO(1.0, -1.0);
-  lm2.addGO(1.0, 0.0);
-  lm2.addGO(1.0, 0.0);
-
-  // TODO: fix res2
-  PWLMap res2;
-  res2.addSetLM(s2, lm2);
-
-  BOOST_CHECK(res1 == res2);
-}
-
-void TestPWLMapMinInvComp2()
-{
-  Interval i1(1, 1, 10);
-
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  mi1.addInter(i1);
-  mi1.addInter(i1);
-
-  AtomSet as1(mi1);
-
-  Interval i2(15, 3, 30);
-  Interval i3(1, 1, 5);
-
-  MultiInterval mi2;
-  mi2.addInter(i1);
-  mi2.addInter(i2);
-  mi2.addInter(i3);
-
-  AtomSet as2(mi2);
-
-  Interval i4(11, 1, 14);
-
-  MultiInterval mi3;
-  mi3.addInter(i4);
-  mi3.addInter(i3);
-  mi3.addInter(i1);
-
-  AtomSet as3(mi3);
-
-  Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
-  s1.addAtomSet(as3);
-
-  LMap lm1;
-  lm1.addGO(1.0, 1.0);
-  lm1.addGO(0.0, 3.0);
-  lm1.addGO(1.0, 0.0);
-
-  PWLMap pw1;
-  pw1.addSetLM(s1, lm1);
-
-
-  Set wDom = pw1.wholeDom();
-  Set newDom = pw1.image(wDom);
-  PWLMap res1 = pw1.minInvCompact(newDom);
-
-  Interval i5(2, 1, 11);
-
-  MultiInterval mi4;
-  mi4.addInter(i5);
-  mi4.addInter(i1);
-  mi4.addInter(i1);
-
-  AtomSet as4(mi4);
-
-  MultiInterval mi5;
-  mi5.addInter(i5);
-  mi5.addInter(i2);
-  mi5.addInter(i3);
-
-  AtomSet as5(mi5);
-
-  Interval i6(12, 1, 15);
-
-  MultiInterval mi6;
-  mi6.addInter(i6);
-  mi6.addInter(i3);
-  mi6.addInter(i1);
-
-  AtomSet as6(mi6);
-
-  Set s2;
-  s2.addAtomSet(as4);
-  s2.addAtomSet(as5);
-  s2.addAtomSet(as6);
-
-  LMap lm2;
-  lm2.addGO(1.0, -1.0);
-  lm2.addGO(1.0, 0.0);
-  lm2.addGO(1.0, 0.0);
-
-  // TODO: fix res2
-  PWLMap res2;
-  res2.addSetLM(s2, lm2);
-
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\n" << pw1 << "\n°\n" << pw1 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestPWLMapCombine1()
@@ -2738,7 +2550,8 @@ void TestPWLMapCombine1()
   res2.addSetLM(s2, lm2);
   res2.addSetLM(s5, lm3);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\ncombine(" << pw1 << ",\n        " << pw2 << ")\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestMinAS1()
@@ -2794,7 +2607,8 @@ void TestMinAS1()
   res2.addSetLM(s1, lm2);
   res2.addSetLM(s2, lm1);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\nmin(" << as1 << ",  " << lm1 << ", " << lm2 << ")\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestMinAS2()
@@ -2828,30 +2642,8 @@ void TestMinAS2()
   PWLMap res2;
   res2.addSetLM(s1, lm2);
 
-  BOOST_CHECK(res1 == res2);
-}
-
-void TestMinAS3()
-{
-  Interval i1(2, 2, 20);
-  Interval i2(1, 1, 10);
-  Interval i3(3, 3, 50);
-
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  mi1.addInter(i2);
-  mi1.addInter(i3);
-
-  AtomSet as1(mi1);
-
-  LMap lm1;
-  lm1.addGO(1.0, 60.0);
-  lm1.addGO(2.0, 2.0);
-  lm1.addGO(0.0, 35.0);
-
-  PWLMap res1 = minMapAtomSet(as1, lm1, lm1);
-
-  BOOST_CHECK(true);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\nmin(" << as1 << ",  " << lm1 << ", " << lm2 << ")\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestMinSet1()
@@ -2916,7 +2708,8 @@ void TestMinSet1()
   res2.addSetLM(s3, lm1);
   res2.addSetLM(s2, lm2);
 
-  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), "\nres1: " << res1 << "\nres2: " << res2 << "\n");
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\nmin(" << s1 << ",  " << lm1 << ", " << lm2 << ")\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestMinSet2()
@@ -2958,7 +2751,8 @@ void TestMinSet2()
   PWLMap res2;
   res2.addSetLM(s1, lm1);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\nmin(" << s1 << ",  " << lm1 << ", " << lm2 << ")\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestMinMap1()
@@ -3116,7 +2910,8 @@ void TestMinMap1()
   res2.addSetLM(s7, lm2);
   res2.addSetLM(s5, lm1);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\nmin(" << pw1 << "\n,\n" << pw2 << ")\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestReduce1()
@@ -3242,397 +3037,8 @@ void TestReduce1()
   res2.addSetLM(s4, lm4);
   res2.addSetLM(s5, lm5);
 
-  BOOST_CHECK(res1 == res2);
-}
-
-void TestMapInf1()
-{
-  Interval i1(3, 1, 100);
-  Interval i2(50, 5, 150);
-  Interval i3(100, 10, 1000);
-
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  mi1.addInter(i2);
-  mi1.addInter(i3);
-
-  AtomSet as1(mi1);
-
-  Interval i4(35, 7, 99);
-
-  MultiInterval mi2;
-  mi2.addInter(i1);
-  mi2.addInter(i1);
-  mi2.addInter(i4);
-
-  AtomSet as2(mi2);
-
-  Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
-
-  Interval i5(200, 20, 400);
-  Interval i6(5, 5, 100);
-  Interval i7(10, 9, 90);
-
-  MultiInterval mi3;
-  mi3.addInter(i5);
-  mi3.addInter(i6);
-  mi3.addInter(i7);
-
-  AtomSet as3(mi3);
-
-  Interval i8(150, 50, 300);
-  Interval i9(200, 3, 500);
-  Interval i10(4, 4, 80);
-
-  MultiInterval mi4;
-  mi4.addInter(i8);
-  mi4.addInter(i9);
-  mi4.addInter(i10);
-
-  AtomSet as4(mi4);
-
-  Set s2;
-  s2.addAtomSet(as3);
-  s2.addAtomSet(as4);
-
-  LMap lm1;
-  lm1.addGO(1, -3);
-  lm1.addGO(0, 0);
-  lm1.addGO(1, 1);
-
-  LMap lm2;
-  lm2.addGO(3, 2);
-  lm2.addGO(1, -2);
-  lm2.addGO(1, 0);
-
-  PWLMap pw1;
-  pw1.addSetLM(s1, lm1);
-  pw1.addSetLM(s2, lm2);
-
-  PWLMap res1 = pw1.mapInf();
-
-  PWLMap res2;
-
-  BOOST_CHECK(res1 == res2);
-}
-
-void TestMapInf2()
-{
-  Interval i1(1, 1, 100);
-
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  mi1.addInter(i1);
-  mi1.addInter(i1);
-
-  AtomSet as1(mi1);
-
-  Set s1;
-  s1.addAtomSet(as1);
-
-  Interval i2(200, 4, 500);
-
-  MultiInterval mi2;
-  mi2.addInter(i2);
-  mi2.addInter(i2);
-  mi2.addInter(i2);
-
-  AtomSet as2(mi2);
-
-  Interval i3(200, 1, 2000);
-
-  MultiInterval mi3;
-  mi3.addInter(i1);
-  mi3.addInter(i1);
-  mi3.addInter(i3);
-
-  AtomSet as3(mi3);
-
-  Set s2;
-  s2.addAtomSet(as2);
-  s2.addAtomSet(as3);
-
-  LMap lm1;
-  lm1.addGO(1, 0);
-  lm1.addGO(1, 0);
-  lm1.addGO(1, 0);
-
-  LMap lm2;
-  lm2.addGO(0, 1);
-  lm2.addGO(0, 1);
-  lm2.addGO(0, 1);
-
-  PWLMap pw1;
-  pw1.addSetLM(s1, lm1);
-  pw1.addSetLM(s2, lm2);
-
-  PWLMap res1 = pw1.mapInf();
-
-  PWLMap res2 = pw1;
-
-  BOOST_CHECK(res1 == res2);
-}
-
-void TestMapInf3()
-{
-  Interval i1(1, 1, 100);
-
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  mi1.addInter(i1);
-  mi1.addInter(i1);
-
-  AtomSet as1(mi1);
-
-  Set s1;
-  s1.addAtomSet(as1);
-
-  Interval i2(200, 4, 500);
-
-  MultiInterval mi2;
-  mi2.addInter(i2);
-  mi2.addInter(i2);
-  mi2.addInter(i2);
-
-  AtomSet as2(mi2);
-
-  Interval i3(200, 1, 2000);
-
-  MultiInterval mi3;
-  mi3.addInter(i1);
-  mi3.addInter(i1);
-  mi3.addInter(i3);
-
-  AtomSet as3(mi3);
-
-  Set s2;
-  s2.addAtomSet(as2);
-  s2.addAtomSet(as3);
-
-  LMap lm1;
-  lm1.addGO(1, 0);
-  lm1.addGO(1, 0);
-  lm1.addGO(1, 0);
-
-  LMap lm2;
-  lm2.addGO(0, 150);
-  lm2.addGO(0, 150);
-  lm2.addGO(0, 150);
-
-  PWLMap pw1;
-  pw1.addSetLM(s1, lm1);
-  pw1.addSetLM(s2, lm2);
-
-  PWLMap res1 = pw1.mapInf();
-
-  PWLMap res2;
-  res2.addSetLM(s1, lm1);
-
-  BOOST_CHECK(res1 == res2);
-}
-
-void TestMapInf4()
-{
-  Interval i1(1, 1, 500);
-
-  MultiInterval mi1;
-  mi1.addInter(i1);
-
-  AtomSet as1(mi1);
-
-  Set s1;
-  s1.addAtomSet(as1);
-
-  LMap lm1;
-  lm1.addGO(2, 1000);
-
-  Interval i2(501, 1, 1000);
-
-  MultiInterval mi2;
-  mi2.addInter(i2);
-
-  AtomSet as2(mi2);
-
-  Set s2;
-  s2.addAtomSet(as2);
-
-  LMap lm2;
-  lm2.addGO(2, -1);
-
-  Interval i3(1001, 1, 2000);
-
-  MultiInterval mi3;
-  mi3.addInter(i3);
-
-  AtomSet as3(mi3);
-
-  Set s3;
-  s3.addAtomSet(as3);
-
-  LMap lm3;
-  lm3.addGO(1, 0);
-
-  PWLMap pw1;
-  pw1.addSetLM(s1, lm1);
-  pw1.addSetLM(s2, lm2);
-  pw1.addSetLM(s3, lm3);
-
-  PWLMap res1 = pw1.mapInf();
-
-  BOOST_CHECK(res1 == pw1);
-}
-
-void TestMapInf5()
-{
-  Interval i1(500, 1, 5000);
-
-  MultiInterval mi1;
-  mi1.addInter(i1);
-
-  AtomSet as1(mi1);
-
-  Set s1;
-  s1.addAtomSet(as1);
-
-  LMap lm1;
-  lm1.addGO(2, 1);
-
-  Interval i2(6000, 1, 16000);
-
-  MultiInterval mi2;
-  mi2.addInter(i2);
-
-  AtomSet as2(mi2);
-
-  Set s2;
-  s2.addAtomSet(as2);
-
-  LMap lm2;
-  lm2.addGO(1, 0);
-
-  PWLMap pw1;
-  pw1.addSetLM(s1, lm1);
-  pw1.addSetLM(s2, lm2);
-
-  PWLMap res1 = pw1.mapInf();
-
-  Interval i3(2499, 1, 2499);
-
-  MultiInterval mi3;
-  mi3.addInter(i3);
-
-  AtomSet as3(mi3);
-
-  Set s3;
-  s3.addAtomSet(as3);
-
-  LMap lm3;
-  lm3.addGO(4, 3);
-
-  Interval i4(1249, 1, 1249);
-
-  MultiInterval mi4;
-  mi4.addInter(i4);
-
-  AtomSet as4(mi4);
-
-  Set s4;
-  s4.addAtomSet(as4);
-
-  LMap lm4;
-  lm4.addGO(8, 7);
-
-  Interval i5(624, 1, 624);
-
-  MultiInterval mi5;
-  mi5.addInter(i5);
-
-  AtomSet as5(mi5);
-
-  Set s5;
-  s5.addAtomSet(as5);
-
-  LMap lm5;
-  lm5.addGO(16, 15);
-
-  Interval i6(3000, 1, 5000);
-
-  MultiInterval mi6;
-  mi6.addInter(i6);
-
-  AtomSet as6(mi6);
-
-  Set s6;
-  s6.addAtomSet(as6);
-
-  LMap lm6;
-  lm6.addGO(2, 1);
-
-  Interval i7(1500, 1, 2498);
-
-  MultiInterval mi7;
-  mi7.addInter(i7);
-
-  AtomSet as7(mi7);
-
-  Set s7;
-  s7.addAtomSet(as7);
-
-  LMap lm7;
-  lm7.addGO(4, 3);
-
-  Interval i8(750, 1, 1248);
-
-  MultiInterval mi8;
-  mi8.addInter(i8);
-
-  AtomSet as8(mi8);
-
-  Set s8;
-  s8.addAtomSet(as8);
-
-  LMap lm8;
-  lm8.addGO(8, 7);
-
-  Interval i9(500, 1, 623);
-
-  MultiInterval mi9;
-  mi9.addInter(i9);
-
-  AtomSet as9(mi9);
-
-  Set s9;
-  s9.addAtomSet(as9);
-
-  LMap lm9;
-  lm9.addGO(16, 15);
-
-  Interval i10(6000, 1, 16000);
-
-  MultiInterval mi10;
-  mi10.addInter(i10);
-
-  AtomSet as10(mi10);
-
-  Set s10;
-  s10.addAtomSet(as10);
-
-  LMap lm10;
-  lm10.addGO(1, 0);
-
-  PWLMap res2;
-  res2.addSetLM(s3, lm3);
-  res2.addSetLM(s4, lm4);
-  res2.addSetLM(s5, lm5);
-  res2.addSetLM(s6, lm6);
-  res2.addSetLM(s7, lm7);
-  res2.addSetLM(s8, lm8);
-  res2.addSetLM(s9, lm9);
-  res2.addSetLM(s10, lm10);
-
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\nreduceN(" << pw1 << ", 2)\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestMinAdjComp1()
@@ -3709,10 +3115,10 @@ void TestMinAdjComp1()
 
   PWLMap res1 = pw1.minAdjCompMap(pw2);
 
-  // pw1.inv = pw1
   PWLMap res2 = pw2.compPW(pw1);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\nminAdj(" << pw1 << ",\n" << pw2 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestMinAdjComp2()
@@ -3791,7 +3197,8 @@ void TestMinAdjComp2()
 
   PWLMap res2;
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\nminAdj(" << pw1 << ",\n" << pw2 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestMinAdjComp3()
@@ -3895,7 +3302,8 @@ void TestMinAdjComp3()
 
   res2.addSetLM(s4, lm2);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\nminAdj(" << pw1 << ",\n" << pw2 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestMinAdjComp4()
@@ -3993,7 +3401,8 @@ void TestMinAdjComp4()
 
   res2.addSetLM(s4, lm4);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\nminAdj(" << pw1 << ",\n" << pw2 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestMinAdj1()
@@ -4145,7 +3554,8 @@ void TestMinAdj1()
   res2.addSetLM(s6, lm3);
   res2.addSetLM(s7, lm4);
 
-  BOOST_CHECK(res1 == res2);
+  BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
+                        "\nminAdj(" << pw1 << ",\n" << pw2 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 // -- Connected component-----------------------------------------------------//
@@ -4345,7 +3755,79 @@ void TestRC1()
 
   PWLMap res1 = connectedComponents(g);
 
-  BOOST_CHECK(true);
+  Interval i21(1, 1, 1);
+  Set s21 = createSet(i21);
+
+  LMap lm21;
+  lm21.addGO(0.0, 1.0);
+
+  Interval i22(2, 1, 2);
+  Set s22 = createSet(i22);
+
+  LMap lm22;
+  lm22.addGO(0.0, 2.0);
+
+  Interval i23(3, 1, 3);
+  Set s23 = createSet(i23);
+
+  LMap lm23;
+  lm23.addGO(0.0, 2.0);
+
+  Interval i24(1001, 1, 1001);
+  Set s24 = createSet(i24);
+
+  LMap lm24;
+  lm24.addGO(0.0, 1.0);
+
+  Interval i25(1002, 1, 2000);
+  Set s25 = createSet(i25);
+
+  LMap lm25;
+  lm25.addGO(1.0, 0.0);
+
+  Interval i26(2001, 1, 2999);
+  Set s26 = createSet(i26);
+
+  LMap lm26;
+  lm26.addGO(1.0, -999.0);
+
+  Interval i27(3000, 1, 3000);
+  Set s27 = createSet(i27);
+
+  LMap lm27;
+  lm27.addGO(1.0, 0.0);
+
+  Interval i28(3001, 1, 3999);
+  Set s28 = createSet(i28);
+  
+  LMap lm28;
+  lm28.addGO(1.0, -1999.0);
+
+  Interval i29(4000, 1, 4000);
+  Set s29 = createSet(i29);
+
+  LMap lm29;
+  lm29.addGO(1.0, -1000.0);
+
+  Interval i30(4001, 1, 5000);
+  Set s30 = createSet(i30);
+
+  LMap lm30;
+  lm30.addGO(0.0, 2.0);
+
+  PWLMap res2;
+  res2.addSetLM(s21, lm21);
+  res2.addSetLM(s22, lm22);
+  res2.addSetLM(s23, lm23);
+  res2.addSetLM(s24, lm24);
+  res2.addSetLM(s25, lm25);
+  res2.addSetLM(s26, lm26);
+  res2.addSetLM(s27, lm27);
+  res2.addSetLM(s28, lm28);
+  res2.addSetLM(s29, lm29);
+  res2.addSetLM(s30, lm30);
+
+  BOOST_CHECK(res1.equivalentPW(res2));
 }
 
 void TestGraph3c()
@@ -4563,7 +4045,93 @@ void TestGraph3c()
 
   PWLMap res1 = connectedComponents(g);
 
-  BOOST_CHECK(true);
+  Interval i21(1, 1, 1);
+  Set s21 = createSet(i21);
+
+  LMap lm21;
+  lm21.addGO(0.0, 1.0);
+
+  Interval i22(2, 1, 2);
+  Set s22 = createSet(i22);
+
+  LMap lm22;
+  lm22.addGO(0.0, 2.0);
+
+  Interval i23(3, 1, 3);
+  Set s23 = createSet(i23);
+
+  LMap lm23;
+  lm23.addGO(0.0, 2.0);
+
+  Interval i24(1001, 1, 1001);
+  Set s24 = createSet(i24);
+
+  LMap lm24;
+  lm24.addGO(0.0, 1.0);
+
+  Interval i25(1002, 1, 2000);
+  Set s25 = createSet(i25);
+
+  LMap lm25;
+  lm25.addGO(1.0, 0.0);
+
+  Interval i26(2001, 1, 2999);
+  Set s26 = createSet(i26);
+
+  LMap lm26;
+  lm26.addGO(1.0, -999.0);
+
+  Interval i27(3000, 1, 3000);
+  Set s27 = createSet(i27);
+
+  LMap lm27;
+  lm27.addGO(1.0, 0.0);
+
+  Interval i28(3001, 1, 3999);
+  Set s28 = createSet(i28);
+  
+  LMap lm28;
+  lm28.addGO(1.0, -1999.0);
+
+  Interval i29(4000, 1, 4000);
+  Set s29 = createSet(i29);
+
+  LMap lm29;
+  lm29.addGO(1.0, -1000.0);
+
+  Interval i30(4001, 1, 4001);
+  Set s30 = createSet(i30);
+
+  LMap lm30;
+  lm30.addGO(0.0, 2.0);
+
+  Interval i31(4002, 1, 4999);
+  Set s31 = createSet(i31);
+
+  LMap lm31;
+  lm31.addGO(0.0, 2.0);
+
+  Interval i32(5000, 1, 5000);
+  Set s32 = createSet(i32);
+
+  LMap lm32;
+  lm32.addGO(0.0, 2.0);
+
+  PWLMap res2;
+  res2.addSetLM(s21, lm21);
+  res2.addSetLM(s22, lm22);
+  res2.addSetLM(s23, lm23);
+  res2.addSetLM(s24, lm24);
+  res2.addSetLM(s25, lm25);
+  res2.addSetLM(s26, lm26);
+  res2.addSetLM(s27, lm27);
+  res2.addSetLM(s28, lm28);
+  res2.addSetLM(s29, lm29);
+  res2.addSetLM(s30, lm30);
+  res2.addSetLM(s31, lm31);
+  res2.addSetLM(s32, lm32);
+
+  BOOST_CHECK(res1.equivalentPW(res2));
 }
 
 void Test2D()
@@ -4835,11 +4403,138 @@ void Test2D()
 
   PWLMap res1 = connectedComponents(g);
 
-  GraphPrinter gp3(g, -1);
-  std::string fn3("graph3.dot");
-  //gp3.printGraph(fn3);
+  Interval i30(1, 1, 1);
+  MultiInterval mi30;
+  mi30.addInter(i30); 
+  mi30.addInter(i30); 
+  Set s30 = createSet(mi30);
 
-  BOOST_CHECK(true);
+  LMap lm30;
+  lm30.addGO(0.0, 1.0);
+  lm30.addGO(0.0, 1.0);
+
+  Interval i31(2, 1, 2);
+  MultiInterval mi31;
+  mi31.addInter(i31);
+  mi31.addInter(i31);
+  Set s31 = createSet(mi31);
+
+  LMap lm31;
+  lm31.addGO(0.0, 2.0);
+  lm31.addGO(0.0, 2.0);
+
+  Interval i32(3, 1, 3);
+  MultiInterval mi32;
+  mi32.addInter(i32);
+  mi32.addInter(i32);
+  Set s32 = createSet(mi32);
+
+  LMap lm32;
+  lm32.addGO(0.0, 2.0);
+  lm32.addGO(0.0, 2.0);
+
+  Interval i33(1001, 1, 2000);
+  Interval i34(101, 1, 101);
+  MultiInterval mi33;
+  mi33.addInter(i33);
+  mi33.addInter(i34);
+  Set s33 = createSet(mi33);
+
+  LMap lm33;
+  lm33.addGO(1.0, 0.0);
+  lm33.addGO(1.0, 0.0);
+
+  Interval i35(1001, 1, 2000);
+  Interval i36(102, 1, 200);
+  MultiInterval mi35;
+  mi35.addInter(i35);
+  mi35.addInter(i36);
+  Set s35 = createSet(mi35);
+
+  LMap lm35;
+  lm35.addGO(1.0, 0.0);
+  lm35.addGO(1.0, 0.0);
+
+  Interval i37(2001, 1, 3000);
+  Interval i38(201, 1, 299);
+  MultiInterval mi37;
+  mi37.addInter(i37);
+  mi37.addInter(i38);
+  Set s37 = createSet(mi37);
+
+  LMap lm37;
+  lm37.addGO(1.0, -1000.0);
+  lm37.addGO(1.0, -99.0);
+
+  Interval i39(2001, 1, 3000);
+  Interval i40(300, 1, 300);
+  MultiInterval mi39;
+  mi39.addInter(i39);
+  mi39.addInter(i40);
+  Set s39 = createSet(mi39);
+
+  LMap lm39;
+  lm39.addGO(1.0, -1000.0);
+  lm39.addGO(1.0, -199.0);
+
+  Interval i41(3001, 1, 3001);
+  Interval i42(301, 1, 400);
+  MultiInterval mi41;
+  mi41.addInter(i41);
+  mi41.addInter(i42);
+  Set s41 = createSet(mi41);
+
+  LMap lm41;
+  lm41.addGO(0.0, 1.0);
+  lm41.addGO(0.0, 1.0);
+
+  Interval i43(3002, 1, 4000);
+  Interval i44(301, 1, 400);
+  MultiInterval mi43;
+  mi43.addInter(i43);
+  mi43.addInter(i44);
+  Set s43 = createSet(mi43);
+
+  LMap lm43;
+  lm43.addGO(1.0, 0.0);
+  lm43.addGO(1.0, 0.0);
+
+  Interval i45(4001, 1, 4999);
+  Interval i46(401, 1, 500);
+  MultiInterval mi45;
+  mi45.addInter(i45);
+  mi45.addInter(i46);
+  Set s45 = createSet(mi45);
+
+  LMap lm45;
+  lm45.addGO(1.0, -999.0);
+  lm45.addGO(1.0, -100.0);
+
+  Interval i47(5000, 1, 5000);
+  Interval i48(401, 1, 500);
+  MultiInterval mi47;
+  mi47.addInter(i47);
+  mi47.addInter(i48);
+  Set s47 = createSet(mi47);
+
+  LMap lm47;
+  lm47.addGO(0.0, 2.0);
+  lm47.addGO(0.0, 2.0);
+
+  PWLMap res2;
+  res2.addSetLM(s30, lm30);
+  res2.addSetLM(s31, lm31);
+  res2.addSetLM(s32, lm32);
+  res2.addSetLM(s33, lm33);
+  res2.addSetLM(s35, lm35);
+  res2.addSetLM(s37, lm37);
+  res2.addSetLM(s39, lm39);
+  res2.addSetLM(s41, lm41);
+  res2.addSetLM(s43, lm43);
+  res2.addSetLM(s45, lm45);
+  res2.addSetLM(s47, lm47);
+
+  BOOST_CHECK(res1.equivalentPW(res2));
 }
 
 // -- Matching ---------------------------------------------------------------//
@@ -5593,8 +5288,6 @@ void TestMatching()
 
   MatchingStruct match(g);
   Set res = match.SBGMatching();
-  SBG::GraphPrinter printer(g, 0);
-  //printer.printGraph("matching_test.dot");
 
   BOOST_CHECK(true);
 }
@@ -5639,7 +5332,6 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiCap2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiCap3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiCap4));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiCap5));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiDiff1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiDiff2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiDiff3));
@@ -5688,7 +5380,6 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWPre2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWPre3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWPre4));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWMin1));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapImage1));
@@ -5696,31 +5387,23 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapPre1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapComp1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapComp2));
-  // framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapMinInvComp1));
-  // framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapMinInvComp2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapCombine1));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAS1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAS2));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAS3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinSet1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinSet2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinMap1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestReduce1));
-  // framework::master_test_suite().add(BOOST_TEST_CASE(&TestMapInf1));
-  // framework::master_test_suite().add(BOOST_TEST_CASE(&TestMapInf2));
-  // framework::master_test_suite().add(BOOST_TEST_CASE(&TestMapInf3));
-  // framework::master_test_suite().add(BOOST_TEST_CASE(&TestMapInf4));
-  // framework::master_test_suite().add(BOOST_TEST_CASE(&TestMapInf5));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp4));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdj1));
 
-  // framework::master_test_suite().add(BOOST_TEST_CASE(&TestRC1));
-  // framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
-  // framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestRC1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestSplit));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching));

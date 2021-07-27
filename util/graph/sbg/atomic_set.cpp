@@ -101,4 +101,25 @@ size_t hash_value(const AtomSet &as) {
   return aux.hash(); 
 }
 
+std::ostream &operator<<(std::ostream &out, const UNORD_AS &ass)
+{
+  UNORD_AS auxass = ass;
+  AtomSet as1 = *(auxass.begin());
+
+  out << "{";
+  if (auxass.size() == 1)
+    out << as1;
+
+  else if (auxass.size() > 1) {
+    auxass.erase(as1);
+
+    BOOST_FOREACH (AtomSet as, auxass)
+      out << as << ", ";
+    out << as1;
+  }
+  out << "}";
+
+  return out;
+}
+
 } // namespace SBG

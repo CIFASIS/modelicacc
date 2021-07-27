@@ -290,4 +290,32 @@ size_t hash_value(const Set &set) {
   return aux.hash(); 
 }
 
+Set createSet(Interval i)
+{
+  MultiInterval mi;
+  mi.addInter(i);
+  AtomSet as(mi);
+  Set s;
+  s.addAtomSet(as);
+
+  return s;
+}
+
+Set createSet(MultiInterval mi)
+{
+  AtomSet as(mi);
+  Set s;
+  s.addAtomSet(as);
+
+  return s;
+}
+
+Set createSet(AtomSet as)
+{
+  Set s;
+  s.addAtomSet(as);
+
+  return s;
+}
+
 } // namespace SBG

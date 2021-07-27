@@ -60,4 +60,6 @@ printable_temp(AS_TEMPLATE, AS_TEMP_TYPE);
 
 typedef UnordCT<AtomSet> UNORD_AS;
 
+std::ostream &operator<<(std::ostream &out, const UNORD_AS &ass);
+
 } // namespace SBG

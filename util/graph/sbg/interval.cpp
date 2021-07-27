@@ -4,6 +4,8 @@
 
 ******************************************************************************/
 
+#include <boost/foreach.hpp>
+
 #include <util/graph/sbg/interval.h>
 
 namespace SBG {
@@ -211,6 +213,43 @@ size_t hash_value(const Interval &inter)
   size_t seed = 0;
   boost::hash_combine(seed, inter.lo());
   return seed; 
+}
+
+std::ostream &operator<<(std::ostream &out, const ORD_INTERS &inters)
+{
+  out << "[";
+  if (inters.size() == 1)
+    out << *(inters.begin());
+
+  else if (inters.size() > 1) {
+    for (auto it = inters.begin(); std::next(it) != inters.end(); it++) 
+      out << *it << ", ";
+    out << *(std::prev(inters.end()));
+  }
+  out << "]";
+
+  return out;
+}
+
+std::ostream &operator<<(std::ostream &out, const UNORD_INTERS &inters)
+{
+  UNORD_INTERS auxinters = inters;
+  Interval i1 = *(inters.begin());
+
+  out << "{";
+  if (auxinters.size() == 1)
+    out << i1;
+
+  else if (auxinters.size() > 1) {
+    auxinters.erase(i1);
+
+    BOOST_FOREACH (Interval i, auxinters)
+      out << i << ", ";
+    out << i1;
+  }
+  out << "}";
+
+  return out;
 }
 
 // >>>>> To add new implementation, add new methods:

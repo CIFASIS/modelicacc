@@ -310,4 +310,25 @@ size_t hash_value(const MultiInterval &mi) {
   return aux.hash(); 
 }
 
+std::ostream &operator<<(std::ostream &out, const UNORD_MI &mis)
+{
+  UNORD_MI auxmis = mis;
+  MultiInterval mi1 = *(mis.begin());
+
+  out << "{";
+  if (auxmis.size() == 1)
+    out << mi1;
+
+  else if (auxmis.size() > 1) {
+    auxmis.erase(mi1);
+
+    BOOST_FOREACH (MultiInterval mi, auxmis) 
+      out << mi << ", ";
+    out << mi1;
+  }
+  out << "}";
+
+  return out;
+}
+
 } // namespace SBG

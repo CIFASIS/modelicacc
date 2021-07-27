@@ -9,6 +9,7 @@ all: $(GRP_TEST) $(GRP_PRINT_TEST)
 
 GRP_TEST_SRC := \
     $(TEST_DIR)/GraphTest.cpp \
+    $(SBG_DIR)/defs.cpp \
     $(SBG_DIR)/interval.cpp \
     $(SBG_DIR)/multi_interval.cpp \
     $(SBG_DIR)/atomic_set.cpp \
@@ -23,6 +24,7 @@ GRP_TEST_SRC := \
 
 GRP_PRINT_TEST_SRC := \
     $(TEST_DIR)/PrintGraphs.cpp \
+    $(SBG_DIR)/defs.cpp \
     $(SBG_DIR)/interval.cpp \
     $(SBG_DIR)/multi_interval.cpp \
     $(SBG_DIR)/atomic_set.cpp \

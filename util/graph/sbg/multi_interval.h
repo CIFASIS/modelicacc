@@ -64,4 +64,6 @@ printable_temp(MI_TEMPLATE, MI_TEMP_TYPE);
 
 typedef UnordCT<MultiInterval> UNORD_MI;
 
+std::ostream &operator<<(std::ostream &out, const UNORD_MI &mis);
+
 } // namespace SBG

@@ -64,4 +64,7 @@ printable_temp(INTER_TEMPLATE, INTER_TEMP_TYPE);
 typedef OrdCT<Interval> ORD_INTERS;
 typedef UnordCT<Interval> UNORD_INTERS;
 
+std::ostream &operator<<(std::ostream &out, const ORD_INTERS &inters);
+std::ostream &operator<<(std::ostream &out, const UNORD_INTERS &inters);
+
 } // namespace SBG
