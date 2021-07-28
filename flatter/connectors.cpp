@@ -107,7 +107,7 @@ bool Connectors::init()
       Option<ExpList> oinds = vi.indices();
       if (oinds) {
         ExpList inds = *oinds;
-        set_maxdim(max(maxdim_, (NI1) inds.size()));
+        set_maxdim(max(maxdim_, (INT) inds.size()));
       }
     }
 
@@ -117,7 +117,7 @@ bool Connectors::init()
     }
   }  
 
-  vector<NI1> maxdimVector(maxdim_, 1);
+  vector<INT> maxdimVector(maxdim_, 1);
   set_vCount(maxdimVector);
   set_eCount(maxdimVector);
 
@@ -156,16 +156,18 @@ void Connectors::debug(std::string filename)
 
   // Print vertices
   foreach_ (SetVertexDesc vi, vertices(G_)) {
-    Name n = G_[vi].name;
-    Set vs = G_[vi].vs_();
+    Name n = G_[vi].name();
+    Set vs = G_[vi].range();
     LOG << n << ": " << vs << endl;
   }
 
   // Print edges
   foreach_ (SetEdgeDesc ei, edges(G_)) {
-    Name n = G_[ei].name;
-    PWLMap es1 = G_[ei].es1_();
-    PWLMap es2 = G_[ei].es2_();
+    Name n = G_[ei].name();
+    PWLMap es1 = G_[ei].map_f();
+    PWLMap es2 = G_[ei].map_u();
+    AtomPWLMap den;
+    LOG << den << endl;
     LOG << n << ": " << es1 << ", " << es2 << endl;
   }
 
@@ -313,8 +315,8 @@ Set Connectors::buildSet(MultiInterval mi)
 // To be used in buildVertex
 Set Connectors::buildSet(VarInfo v)
 {
-  vector<NI1> newVCount;
-  vector<NI1>::iterator itNewVC = newVCount.begin();
+  vector<INT> newVCount;
+  vector<INT>::iterator itNewVC = newVCount.begin();
 
   Option<ExpList> dims = v.indices();
   MultiInterval v_intervals;
@@ -331,13 +333,13 @@ Set Connectors::buildSet(VarInfo v)
   EvalExpFlatter evexp(auxsyms);
 
   // Fill dimensions if necessary
-  foreach_ (NI1 offset, vCount_) {
+  foreach_ (INT offset, vCount_) {
     Interval i;
 
     // Use declared dimensions for the variable
     if (itinds != inds.end()) {
       Interval auxi = Apply(evexp, *itinds);
-      i = Interval(offset, auxi.step_(), offset + auxi.lo_() - 1);
+      i = Interval(offset, auxi.step(), offset + auxi.lo() - 1);
 
       ++itinds;
     }
@@ -348,7 +350,7 @@ Set Connectors::buildSet(VarInfo v)
 
     v_intervals.addInter(i);
 
-    itNewVC = newVCount.insert(itNewVC, i.hi_() + 1);
+    itNewVC = newVCount.insert(itNewVC, i.hi() + 1);
     ++itNewVC;
   }
 
@@ -366,7 +368,7 @@ Option<SetVertexDesc> Connectors::buildVertex(Name n)
 
   // Vertex already created
   foreach_ (SetVertexDesc Vdesc, vertices(G_)) {
-    if (G_[Vdesc].name == n)
+    if (G_[Vdesc].name() == n)
       return Option<SetVertexDesc>(Vdesc);
   }
  
@@ -392,9 +394,9 @@ Option<SetVertexDesc> Connectors::buildVertex(Name n)
 // To be used in buildEdgeDom
 MultiInterval Connectors::buildEdgeMultiInterval(VarInfo v, int offset)
 {
-  vector<NI1>::iterator itEC = eCount_.begin();
-  vector<NI1> newECount;
-  vector<NI1>::iterator itNewEC = newECount.begin();
+  vector<INT>::iterator itEC = eCount_.begin();
+  vector<INT> newECount;
+  vector<INT>::iterator itNewEC = newECount.begin();
 
   Option<ExpList> dims = v.indices();
   MultiInterval v_intervals;
@@ -422,11 +424,11 @@ MultiInterval Connectors::buildEdgeMultiInterval(VarInfo v, int offset)
   foreach_ (Expression e, inds) {
     Interval i;
     Interval auxi = Apply(evexp, *itinds);
-    i = Interval(*itEC + auxi.lo_() - 1, auxi.step_(), *itEC + auxi.hi_() - 1);
+    i = Interval(*itEC + auxi.lo() - 1, auxi.step(), *itEC + auxi.hi() - 1);
 
     v_intervals.addInter(i);
 
-    itNewEC = newECount.insert(itNewEC, i.hi_() + 1);
+    itNewEC = newECount.insert(itNewEC, i.hi() + 1);
     ++itNewEC;
     if (itEC != eCount_.end())
       ++itEC;
@@ -470,10 +472,10 @@ int Connectors::locateCounterDimension(ExpOptList r, Name nm)
 // complete it to have the maximum dimension in the model
 MultiInterval Connectors::fillDims(MultiInterval mi, int olddim, int dim) 
 {
-  vector<NI1> newECount;
-  vector<NI1>::iterator itNewEC = newECount.begin();
+  vector<INT> newECount;
+  vector<INT>::iterator itNewEC = newECount.begin();
   int i = 0;
-  foreach_ (NI1 ei, eCount_) {
+  foreach_ (INT ei, eCount_) {
     if (i < olddim || i > dim) {
       Interval idim(ei, 1, ei);
       MultiInterval midim;
@@ -511,10 +513,10 @@ Set Connectors::buildEdgeDom(ExpOptList r)
 
   // Connect out of any loop
   if (counters_.size() == 0) {
-    vector<NI1> newECount;
-    vector<NI1>::iterator itNewEC = newECount.begin();
+    vector<INT> newECount;
+    vector<INT>::iterator itNewEC = newECount.begin();
 
-    foreach_ (NI1 eci, eCount_) {
+    foreach_ (INT eci, eCount_) {
       miCounters.addInter(Interval(eci, 1, eci));
       itNewEC = newECount.insert(itNewEC, eci + 1);
 
@@ -570,20 +572,20 @@ Set Connectors::buildEdgeDom(ExpOptList r)
 // ENHANCEMENT: support discontinuidades
 LMap Connectors::buildLM(MultiInterval mi1, MultiInterval mi2)
 {
-  OrdCT<NI2> resg;
-  OrdCT<NI2>::iterator itresg = resg.begin();
-  OrdCT<NI2> reso;
-  OrdCT<NI2>::iterator itreso = reso.begin();
+  OrdCT<REAL> resg;
+  OrdCT<REAL>::iterator itresg = resg.begin();
+  OrdCT<REAL> reso;
+  OrdCT<REAL>::iterator itreso = reso.begin();
 
-  OrdCT<Interval> miinters1 = mi1.inters_();
+  OrdCT<Interval> miinters1 = mi1.inters();
   OrdCT<Interval>::iterator itmi1 = miinters1.begin();
-  OrdCT<Interval> miinters2 = mi2.inters_();
+  OrdCT<Interval> miinters2 = mi2.inters();
   OrdCT<Interval>::iterator itmi2 = miinters2.begin();
   // Traverse dimensions
   while (itmi1 != miinters1.end()) {
-    if ((*itmi2).size() == 1) {
-      NI2 newg = 0;
-      NI2 newo = (*itmi2).lo_(); 
+    if ((*itmi2).card() == 1) {
+      REAL newg = 0;
+      REAL newo = (*itmi2).lo(); 
 
       itresg = resg.insert(itresg, newg);
       itreso = reso.insert(itreso, newo);
@@ -592,9 +594,9 @@ LMap Connectors::buildLM(MultiInterval mi1, MultiInterval mi2)
       ++itreso;
     }
 
-    else if ((*itmi1).size() == (*itmi2).size()) {
-      NI2 newg = (*itmi2).step_() / (*itmi1).step_();
-      NI2 newo = (*itmi2).lo_() - newg * (*itmi1).lo_(); 
+    else if ((*itmi1).card() == (*itmi2).card()) {
+      REAL newg = (*itmi2).step() / (*itmi1).step();
+      REAL newo = (*itmi2).lo() - newg * (*itmi1).lo(); 
 
       itresg = resg.insert(itresg, newg);
       itreso = reso.insert(itreso, newo);
@@ -622,7 +624,7 @@ MultiInterval Connectors::subscriptMI(MultiInterval mi, ExpOptList r)
 {
   OrdCT<Interval> mires;
   OrdCT<Interval>::iterator itmires = mires.begin();
-  OrdCT<Interval> miinters = mi.inters_();
+  OrdCT<Interval> miinters = mi.inters();
   OrdCT<Interval>::iterator itmi = miinters.begin();
 
   const VarSymbolTable auxsyms = mmoclass_.syms();
@@ -631,8 +633,8 @@ MultiInterval Connectors::subscriptMI(MultiInterval mi, ExpOptList r)
   if (r) {
     foreach_ (Expression ri, *r) {
       Interval ndim = Apply(evexp, ri);
-      int offset = (*itmi).lo_();
-      Interval res(ndim.lo_() + offset - 1, ndim.step_(), ndim.hi_() + offset - 1);
+      int offset = (*itmi).lo();
+      Interval res(ndim.lo() + offset - 1, ndim.step(), ndim.hi() + offset - 1);
       itmires = mires.insert(itmires, (*itmi).cap(res));
 
       ++itmires;
@@ -653,17 +655,17 @@ PWLMap Connectors::buildEdgeMap(Set dom, Set im, ExpOptList r)
 
   // In the current implementation, dom and im have only one atomic set
   // Check buildSet and buildEdgeDom
-  if (dom.asets_().size() != 1 || im.asets_().size() != 1) {
+  if (dom.asets_ref().size() != 1 || im.asets_ref().size() != 1) {
     LOG << "COMPILER ERROR: dom and im should have only one atomic set" << endl;
     return res;
   }
 
   else {
-    AtomSet domas = *(dom.asets_().begin());
-    AtomSet imas = *(im.asets_().begin());
+    AtomSet domas = *(dom.asets_ref().begin());
+    AtomSet imas = *(im.asets_ref().begin());
 
-    MultiInterval dommi = domas.aset_();
-    MultiInterval immi = imas.aset_();
+    MultiInterval dommi = domas.aset();
+    MultiInterval immi = imas.aset();
 
     LMap lm = buildLM(dommi, subscriptMI(immi, r));
     res.addSetLM(dom, lm);
@@ -676,7 +678,7 @@ PWLMap Connectors::buildEdgeMap(Set dom, Set im, ExpOptList r)
 bool Connectors::existsEdge(string nm)
 {
   foreach_ (SetEdgeDesc ei, edges(G_)) {
-    string nmi = G_[ei].name_();
+    string nmi = G_[ei].name();
 
     if (nmi == nm)
       return true;
@@ -695,24 +697,24 @@ void Connectors::buildEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc Vdesc1, S
 
   string nm = "E_";
 
-  if (V1.name_() < V2.name_())
-    nm = nm + V1.name_() + "_" + V2.name_();
+  if (V1.name() < V2.name())
+    nm = nm + V1.name() + "_" + V2.name();
 
   else
-    nm = nm + V2.name_() + "_" + V1.name_();
+    nm = nm + V2.name() + "_" + V1.name();
 
   // Create new set-edge
   Set dom1 = buildEdgeDom(r1);
   Set dom2 = buildEdgeDom(r2);
   if (dom1.empty() && dom2.empty()) {
-    LOG << "ERROR: Check connects " << V1.name_() << ", " << V2.name_() << endl;
+    LOG << "ERROR: Check connects " << V1.name() << ", " << V2.name() << endl;
     return;
   }
   Set dom = dom1;
-  if (dom2.size() > dom1.size())
+  if (dom2.card() > dom1.card())
     dom = dom2;
-  PWLMap pw1 = buildEdgeMap(dom, V1.vs_(), r1);
-  PWLMap pw2 = buildEdgeMap(dom, V2.vs_(), r2);
+  PWLMap pw1 = buildEdgeMap(dom, V1.range(), r1);
+  PWLMap pw2 = buildEdgeMap(dom, V2.range(), r2);
   SetEdge E(nm, pw1, pw2);
 
   SetEdgeDesc Edesc;
@@ -1022,7 +1024,7 @@ Pair<bool, EquationList> Connectors::buildConnects(EquationList &eqs)
         OptExp e = ind.exp();
         if (e) {
           Interval i = Apply(evexp, *e);
-          if (!i.empty_()) {
+          if (!i.empty()) {
             VarInfo vi(TypePrefixes(), n, Option<Comment>(), 
                        Option<Modification>(Modification(ModAssign(*e))), 
                        ExpOptList(ExpList(1, *e)), false);
@@ -1106,10 +1108,10 @@ Name Connectors::getName(AtomSet as)
   auxas.addAtomSet(as);
 
   foreach_ (SetVertexDesc vi, vertices(G_)) {
-    Set vs = G_[vi].vs_();
+    Set vs = G_[vi].range();
 
     if (!auxas.cap(vs).empty()) 
-      nm = G_[vi].name_();
+      nm = G_[vi].name();
   }
 
   return nm;
@@ -1125,10 +1127,10 @@ AtomSet Connectors::getAtomSet(AtomSet as)
   auxas.addAtomSet(as);
 
   foreach_ (SetVertexDesc vi, vertices(G_)) {
-    Set vs = G_[vi].vs_();
+    Set vs = G_[vi].range();
 
     if (!auxas.cap(vs).empty()) 
-      res = *(vs.asets_().begin());
+      res = *(vs.asets_ref().begin());
   }
 
   return res;
@@ -1139,11 +1141,11 @@ bool Connectors::isIdMap(LMap lm)
 {
   bool cond = true;
 
-  foreach_ (NI2 g, lm.gain_())
+  foreach_ (REAL g, lm.gain())
     if (g != 1)
       cond = false;
 
-  foreach_ (NI2 o, lm.off_())
+  foreach_ (REAL o, lm.offset())
     if (o != 0)
       cond = false;
 
@@ -1159,8 +1161,8 @@ vector<Name> Connectors::getEffVars(Set connector)
 
   // Get connector name
   foreach_ (SetVertexDesc vi, vertices(G_)) {
-    Set vs = G_[vi].vs_();
-    Name vinm = G_[vi].name_();
+    Set vs = G_[vi].range();
+    Name vinm = G_[vi].name();
 
     if (!connector.cap(vs).empty()) {
       // Search effort vars in the connector
@@ -1193,8 +1195,8 @@ vector<Name> Connectors::getFlowVars(Set connector)
 
   // Get connector name
   foreach_ (SetVertexDesc vi, vertices(G_)) {
-    Set vs = G_[vi].vs_();
-    Name vinm = G_[vi].name_();
+    Set vs = G_[vi].range();
+    Name vinm = G_[vi].name();
 
     if (!connector.cap(vs).empty()) {
       // Search flow vars in the connector
@@ -1227,14 +1229,14 @@ Indexes Connectors::buildIndex(Set connected)
 
   ExpList::iterator itCG = countersCG_.begin();
 
-  OrdCT<NI1> nElems; // Maximum number of elements in each dimension
-  foreach_ (AtomSet c, connected.asets_()) {
+  OrdCT<INT> nElems; // Maximum number of elements in each dimension
+  foreach_ (AtomSet c, connected.asets()) {
     // Traverse dimensions
-    OrdCT<NI1>::iterator itElems = nElems.begin();
-    OrdCT<NI1> nElemsAux;
-    OrdCT<NI1>::iterator itAux = nElemsAux.begin();
-    foreach_ (Interval i, c.aset_().inters_()) {
-      int elems = i.size();
+    OrdCT<INT>::iterator itElems = nElems.begin();
+    OrdCT<INT> nElemsAux;
+    OrdCT<INT>::iterator itAux = nElemsAux.begin();
+    foreach_ (Interval i, c.aset_ref().inters()) {
+      int elems = i.card();
       if (*itElems)
         elems = max(*itElems, elems);
 
@@ -1247,7 +1249,7 @@ Indexes Connectors::buildIndex(Set connected)
   }
 
   // Traverse dimensions
-  foreach_ (NI1 n, nElems) {
+  foreach_ (INT n, nElems) {
     Range r(Expression(1), Expression(1), Expression(n));
     Expression er(r);
     Option<Expression> oer(er);
@@ -1277,12 +1279,12 @@ Set Connectors::getRepd(AtomSet atomRept)
   if (diff.empty())
     return rept;
 
-  OrdCT<LMap> lm = ccG_.lmap_();
+  OrdCT<LMap> lm = ccG_.lmap();
   OrdCT<LMap>::iterator itlm = lm.begin();
 
-  foreach_ (Set d, ccG_.dom_()) {
-    AtomSet atomD = *(d.asets_().begin()); // ccG_ is atomized 
-    PWAtomLMap atomPW(atomD, *itlm);
+  foreach_ (Set d, ccG_.dom()) {
+    AtomSet atomD = *(d.asets_ref().begin()); // ccG_ is atomized 
+    AtomPWLMap atomPW(atomD, *itlm);
 
     diff = d.diff(rept);
     if (atomPW.image(atomD) == atomRept && !diff.empty() && atomD != atomRept)
@@ -1309,9 +1311,9 @@ ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet a
   ExpList res;
   ExpList::iterator itres = res.begin();
 
-  OrdCT<Interval> miori = original.aset_().inters_();
+  OrdCT<Interval> miori = original.aset_ref().inters();
   OrdCT<Interval>::iterator itmiori = miori.begin();
-  OrdCT<Interval> mias = as.aset_().inters_();
+  OrdCT<Interval> mias = as.aset_ref().inters();
   OrdCT<Interval>::iterator itmias = mias.begin();
 
   const VarSymbolTable auxsyms = mmoclass_.syms();
@@ -1330,11 +1332,11 @@ ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet a
     if (dim < dims) {
       OptExp oe = ind.exp_;
       if (oe) {
-        int loInd = Apply(evexp, *oe).lo_();
+        int loInd = Apply(evexp, *oe).lo();
 
         // Constant value in dimension, don't use counter
-        if ((*itmias).size() == 1) {
-          int off = (*itmias).lo_() - (*itmiori).lo_() + 1; 
+        if ((*itmias).card() == 1) {
+          int off = (*itmias).lo() - (*itmiori).lo() + 1; 
 
           Expression eoff(off);
           itres = res.insert(itres, eoff);
@@ -1342,8 +1344,8 @@ ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet a
 
         // Use counter
         else {
-          Real step = (*itmias).step_(); 
-          Real off = (((*itmias).lo_() - (*itmiori).lo_() + 1)) - (step * loInd); 
+          Real step = (*itmias).step(); 
+          Real off = (((*itmias).lo() - (*itmiori).lo() + 1)) - (step * loInd); 
 
           if (step == 0)
             itres = res.insert(itres, Expression(off));
@@ -1440,15 +1442,15 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
   ExpList res;
   ExpList::iterator itres = res.begin();
 
-  OrdCT<Interval> intersas = as.aset_().inters_();
+  OrdCT<Interval> intersas = as.aset_ref().inters();
   OrdCT<Interval>::iterator itas = intersas.begin();
 
   // A range is needed in the sum
-  if (as.size() != 1) {
-    foreach_(Interval iori, original.aset_().inters_()) {
-      NI1 lo = (*itas).lo_() - iori.lo_() + 1;
-      NI1 st = (*itas).step_();
-      NI1 hi = (*itas).hi_() - iori.lo_() + 1;
+  if (as.card() != 1) {
+    foreach_(Interval iori, original.aset_ref().inters()) {
+      INT lo = (*itas).lo() - iori.lo() + 1;
+      INT st = (*itas).step();
+      INT hi = (*itas).hi() - iori.lo() + 1;
       Expression elo(lo);
       Expression est(st);
       Expression ehi(hi);
@@ -1464,8 +1466,8 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
 
   // No need of range, just a constant
   else {
-    foreach_(Interval iori, original.aset_().inters_()) {
-      NI1 lo = (*itas).lo_() - iori.lo_() + 1;
+    foreach_(Interval iori, original.aset_ref().inters()) {
+      INT lo = (*itas).lo() - iori.lo() + 1;
       Expression expr(lo);
 
       itres = res.insert(itres, expr);
@@ -1489,7 +1491,7 @@ ExpList Connectors::buildAddExpr(AtomSet atomRept, AtomSet as)
 
   foreach_ (Name nmas, getFlowVars(auxas)) {
     // A sum is needed
-    if (atomRept.size() != as.size()) {
+    if (atomRept.card() != as.card()) {
       ExpList range = buildRanges(getAtomSet(as), as);
       RefTuple rrept(nmas, range);
       AddAll add(rrept);
@@ -1507,14 +1509,14 @@ ExpList Connectors::buildAddExpr(AtomSet atomRept, AtomSet as)
 
       // A subscript is needed
       else {
-        OrdCT<NI1> minOriginal = original.minElem();
-        OrdCT<NI1> minAs = as.minElem();
-        OrdCT<NI1>::iterator itMinAs = minAs.begin();
+        OrdCT<INT> minOriginal = original.minElem();
+        OrdCT<INT> minAs = as.minElem();
+        OrdCT<INT>::iterator itMinAs = minAs.begin();
 
         ExpList subs;
         ExpList::iterator itsubs = subs.begin();
 
-        foreach_ (NI1 lo, minOriginal) {
+        foreach_ (INT lo, minOriginal) {
           itsubs = subs.insert(itsubs, *itMinAs - lo + 1);
           ++itsubs;
           ++itMinAs;
@@ -1542,7 +1544,7 @@ EquationList Connectors::buildLoop(Indexes indexes, EquationList eqs)
   set<Name> indexesNms;
 
   foreach_ (Index i, indexes.indexes_) 
-    indexesNms.insert(i.name_);
+    indexesNms.insert(i.name());
 
   // Traverse equations
   foreach_ (Equation eq, eqs) {
@@ -1613,7 +1615,7 @@ EquationList Connectors::buildEffEquations(Indexes indexes, AtomSet atomRept, Se
   }
 
   // Traverse represented connectors
-  foreach_ (AtomSet atomRepd, repd.asets_()) {
+  foreach_ (AtomSet atomRepd, repd.asets()) {
     ExpList effRepd = buildLoopExpr(indexes, atomRepd, getEffVars(Set(atomRepd)));
     // Represented variables in connector
     foreach_ (Expression eRepd, effRepd) {
@@ -1650,7 +1652,7 @@ EquationList Connectors::buildFlowEquations(Indexes indexes, AtomSet atomRept, S
   }
 
   // A loop is needed
-  if (atomRept.size() > 1) {
+  if (atomRept.card() > 1) {
     EquationList eqsLoop;
 
     // Representant subscripts 
@@ -1664,7 +1666,7 @@ EquationList Connectors::buildFlowEquations(Indexes indexes, AtomSet atomRept, S
     }
 
     // Traverse represented connectors
-    foreach_ (AtomSet atomRepd, repd.asets_()) {
+    foreach_ (AtomSet atomRepd, repd.asets()) {
       ExpList flowRepd = buildLoopExpr(indexes, atomRepd, getFlowVars(Set(atomRepd)));
       // Represented variables in connector
       foreach_ (Expression expRepd, flowRepd) {
@@ -1689,7 +1691,7 @@ EquationList Connectors::buildFlowEquations(Indexes indexes, AtomSet atomRept, S
     }
 
     // Traverse represented connectors
-    foreach_ (AtomSet atomRepd, repd.asets_()) {
+    foreach_ (AtomSet atomRepd, repd.asets()) {
       ExpList add = buildAddExpr(atomRept, atomRepd);
 
       foreach_ (Expression e, add) 
@@ -1712,7 +1714,7 @@ EquationList Connectors::generateCode()
   EquationList::iterator itres = res.begin();
 
   set_ccG(ccG_.atomize());
-  OrdCT<LMap> lmapccG = ccG_.lmap_();
+  OrdCT<LMap> lmapccG = ccG_.lmap();
   OrdCT<LMap>::iterator itLMapccG = lmapccG.begin();
 
   Set wDom = ccG_.wholeDom();
@@ -1722,9 +1724,9 @@ EquationList Connectors::generateCode()
   Set effReps;
 
   // Traverse connected components
-  foreach_ (Set repd, ccG_.dom_()) {
-    AtomSet atomRepd = *(repd.asets_().begin());
-    PWAtomLMap atomMap(atomRepd, *itLMapccG);
+  foreach_ (Set repd, ccG_.dom()) {
+    AtomSet atomRepd = *(repd.asets_ref().begin());
+    AtomPWLMap atomMap(atomRepd, *itLMapccG);
     AtomSet atomRept = atomMap.image(atomRepd);
     Set rept(atomRept);
     repd = ccG_.preImage(rept);
@@ -1743,7 +1745,6 @@ EquationList Connectors::generateCode()
     }
 
     // Flow equations
-    //repd = getRepd(atomRept).diff(flowVertices);
     EquationList flowEqs = buildFlowEquations(indexes, atomRept, repd);
 
     foreach_ (Equation e, flowEqs) {

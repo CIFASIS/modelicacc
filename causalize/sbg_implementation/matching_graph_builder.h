@@ -18,7 +18,7 @@
 ******************************************************************************/
 
 #include <mmo/mmo_class.h>
-#include <util/graph/graph_definition.h>
+#include <util/graph/sbg/sbg.h>
 
 namespace Causalize {
 
@@ -37,11 +37,11 @@ class MatchingGraphBuilder {
   SBG::SetVertexDesc addVertex(std::string vertex_name, SBG::Set set, SBG::SBGraph& graph);
   void addEquation(Equation eq, std::string id, SBG::Set set, SBG::SBGraph& graph);
   Real getValue(Expression exp);
-  SBG::PWLMap buildPWLMap(SBG::contNI2 constants, SBG::contNI2 slopes, SBG::Set dom);
+  SBG::PWLMap buildPWLMap(SBG::ORD_REALS constants, SBG::ORD_REALS slopes, SBG::Set dom);
   MatchingMaps generatePWLMaps(Expression exp, SBG::Set dom, SBG::Set unk_dom, int offset, std::string eq_id, size_t max_dim);
   SBG::Set generateMapDom(SBG::Set dom, SBG::Set unk_dom, int offset, size_t max_dim);
   void addDims(size_t max_dim, size_t exp_dim, SBG::MultiInterval& intervals, int offset);
-  void addDims(size_t max_dim, size_t exp_dim, SBG::contNI2& constant, SBG::contNI2& slope);
+  void addDims(size_t max_dim, size_t exp_dim, SBG::ORD_REALS& constant, SBG::ORD_REALS& slope);
   
   private:
   typedef std::pair<SBG::SetVertexDesc, Equality> EquationDesc; 

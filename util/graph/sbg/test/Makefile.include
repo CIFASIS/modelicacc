@@ -1,0 +1,57 @@
+# The Directories, Source, Includes, Objects, Binary 
+SBG_DIR         := util/graph/sbg
+TEST_DIR        := util/graph/sbg/test
+GRP_TEST        := util/graph/sbg/test/GraphTest
+GRP_PRINT_TEST  := util/graph/sbg/test/PrintGraphs
+SBG_GRAPH_TEST  := test-sbg-graph
+
+all: $(GRP_TEST) $(GRP_PRINT_TEST) 
+
+GRP_TEST_SRC := \
+    $(TEST_DIR)/GraphTest.cpp \
+    $(SBG_DIR)/defs.cpp \
+    $(SBG_DIR)/interval.cpp \
+    $(SBG_DIR)/multi_interval.cpp \
+    $(SBG_DIR)/atomic_set.cpp \
+    $(SBG_DIR)/set.cpp \
+    $(SBG_DIR)/lmap.cpp \
+    $(SBG_DIR)/atom_pw_map.cpp \
+    $(SBG_DIR)/pw_map.cpp \
+    $(SBG_DIR)/descs.cpp \
+    $(SBG_DIR)/sbg.cpp \
+    $(SBG_DIR)/sbg_algorithms.cpp \
+    $(SBG_DIR)/sbg_printer.cpp 
+
+GRP_PRINT_TEST_SRC := \
+    $(TEST_DIR)/PrintGraphs.cpp \
+    $(SBG_DIR)/defs.cpp \
+    $(SBG_DIR)/interval.cpp \
+    $(SBG_DIR)/multi_interval.cpp \
+    $(SBG_DIR)/atomic_set.cpp \
+    $(SBG_DIR)/set.cpp \
+    $(SBG_DIR)/lmap.cpp \
+    $(SBG_DIR)/atom_pw_map.cpp \
+    $(SBG_DIR)/pw_map.cpp \
+    $(SBG_DIR)/descs.cpp \
+    $(SBG_DIR)/sbg.cpp \
+    $(SBG_DIR)/sbg_printer.cpp	
+
+# Objects
+GRP_TEST_OBJ=$(addprefix $(BUILD_DIR)/, $(GRP_TEST_SRC:.cpp=.o))
+
+GRP_PRINT_TEST_OBJ=$(addprefix $(BUILD_DIR)/, $(GRP_PRINT_TEST_SRC:.cpp=.o))
+
+create-folders::
+	@mkdir -p $(BUILD_DIR)/util/graph/sbg/test
+
+$(GRP_TEST): $(GRP_TEST_OBJ)
+	$(CXX) $(INCLUDES) $(CXXFLAGS) -o $(GRP_TEST) $(GRP_TEST_OBJ) $(LIBS)
+
+$(GRP_PRINT_TEST): $(GRP_PRINT_TEST_OBJ)
+	$(CXX) $(INCLUDES) $(CXXFLAGS) -o $(GRP_PRINT_TEST) $(GRP_PRINT_TEST_OBJ) $(LIBS)
+
+$(SBG_GRAPH_TEST):
+	@echo RUNNING SBG GRAPHS UNIT TESTS
+	@cd $(TEST_DIR) && ./GraphTest
+	@cd $(TEST_DIR) && ./PrintGraphs 
+	@echo Done

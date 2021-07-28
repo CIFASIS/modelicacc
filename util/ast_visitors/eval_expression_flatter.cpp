@@ -53,7 +53,7 @@ Interval EvalExpFlatter::operator()(Integer v) const{
 }
 
 Interval EvalExpFlatter::operator()(Boolean v) const{
-  NI1 res = 0;
+  INT res = 0;
   if (v.val()) 
     res = 1;
 
@@ -80,7 +80,7 @@ Interval EvalExpFlatter::operator()(Name v) const{
 }
 
 Interval EvalExpFlatter::operator()(Real v) const {
-  NI1 res = v;
+  INT res = v;
   Interval i(res, 1, res);
   return i;
 }
@@ -99,7 +99,7 @@ Interval EvalExpFlatter::operator()(SubAll v) const{
         ++itinds;
 
       Expression aux = *itinds;
-      NI1 to = ApplyThis(itinds);
+      INT to = ApplyThis(itinds);
       Interval i(1, 1, to);
       return i;
     }
@@ -121,9 +121,9 @@ Interval EvalExpFlatter::operator()(BinOp v) const{
   Interval ll = ApplyThis(l), rr = ApplyThis(r); 
 
   // Operations using constants
-  if(ll.size() == 1 && rr.size() == 1){
-    Real nl = ll.lo_();
-    Real nr = rr.lo_();
+  if(ll.card() == 1 && rr.card() == 1){
+    Real nl = ll.lo();
+    Real nr = rr.lo();
     BinOp bop(nl, v.op(), nr);
     Expression e(bop);
     EvalExpression evexp(vtable);
@@ -133,27 +133,27 @@ Interval EvalExpFlatter::operator()(BinOp v) const{
     return i;
   }
 
-  else if(ll.size() == 1){
+  else if(ll.card() == 1){
     switch(v.op()){
       case Add:
         {
-          Interval i(ll.lo_() + rr.lo_(), 
-                     rr.step_(), 
-                     ll.hi_() + rr.hi_());
+          Interval i(ll.lo() + rr.lo(), 
+                     rr.step(), 
+                     ll.hi() + rr.hi());
           return i;
         }
       case Sub:
         {
-          Interval i(ll.lo_() - rr.lo_(), 
-                    rr.step_(), 
-                    ll.hi_() - rr.hi_());
+          Interval i(ll.lo() - rr.lo(), 
+                    rr.step(), 
+                    ll.hi() - rr.hi());
           return i;
         }
       case Mult:
         {
-          Interval i(ll.lo_() * rr.lo_(), 
-                     ll.lo_() * rr.step_(), 
-                     ll.hi_() * rr.hi_());
+          Interval i(ll.lo() * rr.lo(), 
+                     ll.lo() * rr.step(), 
+                     ll.hi() * rr.hi());
           return i;
         }
       default:
@@ -165,27 +165,27 @@ Interval EvalExpFlatter::operator()(BinOp v) const{
     }
   }
 
-  else if(rr.size() == 1){
+  else if(rr.card() == 1){
     switch(v.op()){
       case Add:
         {
-          Interval i(ll.lo_() + rr.lo_(), 
-                     ll.step_(), 
-                     ll.hi_() + rr.hi_());
+          Interval i(ll.lo() + rr.lo(), 
+                     ll.step(), 
+                     ll.hi() + rr.hi());
           return i;
         }
       case Sub:
         {
-          Interval i(ll.lo_() - rr.lo_(), 
-                     ll.step_(), 
-                     ll.hi_() - rr.hi_());
+          Interval i(ll.lo() - rr.lo(), 
+                     ll.step(), 
+                     ll.hi() - rr.hi());
           return i;
         }
       case Mult:
         {
-          Interval i(ll.lo_() * rr.lo_(), 
-                     ll.lo_() * rr.step_(), 
-                     ll.hi_() * rr.hi_());
+          Interval i(ll.lo() * rr.lo(), 
+                     ll.lo() * rr.step(), 
+                     ll.hi() * rr.hi());
           return i;
         }
       default:
@@ -231,9 +231,9 @@ Interval EvalExpFlatter::operator()(Range v) const{
     auxStep = Apply(evexp, st);
   }
 
-  NI1 newLo = auxLo;
-  NI1 newStep = auxStep;
-  NI1 newHi = auxHi;
+  INT newLo = auxLo;
+  INT newStep = auxStep;
+  INT newHi = auxHi;
 
   if (newLo <= newHi)
     return Interval(newLo, newStep, newHi);
@@ -317,7 +317,7 @@ Interval EvalExpFlatter::operator()(Reference v) const{
 
   if (name && name.get() == s){
     Real aux = val.get();
-    NI1 res = aux;
+    INT res = aux;
     Interval i(res, 1, res);
     return i;
   }
