@@ -2019,10 +2019,7 @@ void TestPWLMapCreation1()
   mi3.addInter(i5);
   mi3.addInter(i6);
 
-  AtomSet as3(mi3);
-
-  Set s2;
-  s2.addAtomSet(as3);
+  Set s2 = createSet(mi3);
 
   LMap lm2;
   lm2.addGO(1.0, 0.0);
@@ -2304,10 +2301,7 @@ void TestPWLMapComp1()
   mi3.addInter(i4);
   mi3.addInter(i5);
 
-  AtomSet as3(mi3);
-
-  Set s2;
-  s2.addAtomSet(as3);
+  Set s2 = createSet(mi3);
 
   LMap lm1;
   lm1.addGO(2.0, 1.0);
@@ -2327,10 +2321,7 @@ void TestPWLMapComp1()
   mi4.addInter(i6);
   mi4.addInter(i6);
 
-  AtomSet as4(mi4);
-
-  Set s4;
-  s4.addAtomSet(as4);
+  Set s4 = createSet(mi4);
 
   LMap lm3;
   lm3.addGO(1.0, 1.0);
@@ -2370,10 +2361,7 @@ void TestPWLMapComp1()
   mi7.addInter(i11);
   mi7.addInter(i12);
 
-  AtomSet as7(mi7);
-
-  Set s6;
-  s6.addAtomSet(as7);
+  Set s6 = createSet(mi7);
 
   LMap lm4;
   lm4.addGO(2.0, 3.0);
@@ -2526,10 +2514,7 @@ void TestPWLMapCombine1()
   mi5.addInter(i4);
   mi5.addInter(i4);
 
-  AtomSet as5(mi5);
-
-  Set s3;
-  s3.addAtomSet(as5);
+  Set s3 = createSet(mi5);
 
   LMap lm3;
   lm3.addGO(1, 1);
@@ -2586,10 +2571,7 @@ void TestMinAS1()
   mi2.addInter(i2);
   mi2.addInter(i4);
 
-  AtomSet as2(mi2);
-
-  Set s1;
-  s1.addAtomSet(as2);
+  Set s1 = createSet(mi2);
 
   Interval i5(27, 3, 50);
 
@@ -2598,10 +2580,7 @@ void TestMinAS1()
   mi3.addInter(i2);
   mi3.addInter(i5);
 
-  AtomSet as3(mi3);
-
-  Set s2;
-  s2.addAtomSet(as3);
+  Set s2 = createSet(mi3);
 
   PWLMap res2;
   res2.addSetLM(s1, lm2);
@@ -2636,8 +2615,7 @@ void TestMinAS2()
 
   PWLMap res1 = minMapAtomSet(as1, lm1, lm2);
 
-  Set s1;
-  s1.addAtomSet(as1);
+  Set s1 = createSet(as1);
 
   PWLMap res2;
   res2.addSetLM(s1, lm2);
@@ -2897,13 +2875,7 @@ void TestMinMap1()
 
   Interval i14(50, 5, 60);
 
-  MultiInterval mi14;
-  mi14.addInter(i14);
-
-  AtomSet as14(mi14);
-
-  Set s7;
-  s7.addAtomSet(as14);
+  Set s7 = createSet(i14);
 
   PWLMap res2;
   res2.addSetLM(s6, lm4);
@@ -2983,10 +2955,7 @@ void TestReduce1()
   mi5.addInter(i5);
   mi5.addInter(i1);
 
-  AtomSet as5(mi5);
-
-  Set s3;
-  s3.addAtomSet(as5);
+  Set s3 = createSet(mi5);
 
   LMap lm3;
   lm3.addGO(1, 0);
@@ -3000,10 +2969,7 @@ void TestReduce1()
   mi6.addInter(i6);
   mi6.addInter(i1);
 
-  AtomSet as6(mi6);
-
-  Set s4;
-  s4.addAtomSet(as6);
+  Set s4 = createSet(mi6);
 
   LMap lm4;
   lm4.addGO(1, 0);
@@ -3017,18 +2983,14 @@ void TestReduce1()
   mi7.addInter(i7);
   mi7.addInter(i1);
 
-  AtomSet as7(mi7);
-
-  Set s5;
-  s5.addAtomSet(as7);
+  Set s5 = createSet(mi7);
 
   LMap lm5;
   lm5.addGO(1, 0);
   lm5.addGO(0, 3);
   lm5.addGO(3, 0);
 
-  Set s6;
-  s6.addAtomSet(as2);
+  Set s6 = createSet(as2);
 
   PWLMap res2;
   res2.addSetLM(s6, lm1);
@@ -3082,10 +3044,7 @@ void TestMinAdjComp1()
   mi3.addInter(i4);
   mi3.addInter(i5);
 
-  AtomSet as3(mi3);
-
-  Set s2;
-  s2.addAtomSet(as3);
+  Set s2 = createSet(mi3);
 
   Interval i6(200, 1, 200);
 
@@ -3094,10 +3053,7 @@ void TestMinAdjComp1()
   mi4.addInter(i6);
   mi4.addInter(i6);
 
-  AtomSet as4(mi4);
-
-  Set s3;
-  s3.addAtomSet(as4);
+  Set s3 = createSet(mi4);
 
   LMap lm2;
   lm2.addGO(0, 3);
@@ -3162,10 +3118,7 @@ void TestMinAdjComp2()
   mi3.addInter(i4);
   mi3.addInter(i5);
 
-  AtomSet as3(mi3);
-
-  Set s2;
-  s2.addAtomSet(as3);
+  Set s2 = createSet(mi3);
 
   Interval i6(200, 1, 200);
 
@@ -3174,10 +3127,7 @@ void TestMinAdjComp2()
   mi4.addInter(i6);
   mi4.addInter(i6);
 
-  AtomSet as4(mi4);
-
-  Set s3;
-  s3.addAtomSet(as4);
+  Set s3 = createSet(mi4);
 
   LMap lm2;
   lm2.addGO(0, 3);
@@ -3242,10 +3192,7 @@ void TestMinAdjComp3()
   mi3.addInter(i4);
   mi3.addInter(i5);
 
-  AtomSet as3(mi3);
-
-  Set s2;
-  s2.addAtomSet(as3);
+  Set s2 = createSet(mi3);
 
   Interval i6(200, 1, 200);
 
@@ -3254,10 +3201,7 @@ void TestMinAdjComp3()
   mi4.addInter(i6);
   mi4.addInter(i6);
 
-  AtomSet as4(mi4);
-
-  Set s3;
-  s3.addAtomSet(as4);
+  Set s3 = createSet(mi4);
 
   LMap lm2;
   lm2.addGO(0, 3);
@@ -3347,10 +3291,7 @@ void TestMinAdjComp4()
   mi3.addInter(i4);
   mi3.addInter(i5);
 
-  AtomSet as3(mi3);
-
-  Set s2;
-  s2.addAtomSet(as3);
+  Set s2 = createSet(mi3);
 
   Interval i6(200, 1, 200);
 
@@ -3359,10 +3300,7 @@ void TestMinAdjComp4()
   mi4.addInter(i6);
   mi4.addInter(i6);
 
-  AtomSet as4(mi4);
-
-  Set s3;
-  s3.addAtomSet(as4);
+  Set s3 = createSet(mi4);
 
   LMap lm2;
   lm2.addGO(1, 3);
@@ -3389,10 +3327,7 @@ void TestMinAdjComp4()
   mi5.addInter(i7);
   mi5.addInter(i7);
 
-  AtomSet as5(mi5);
-
-  Set s4;
-  s4.addAtomSet(as5);
+  Set s4 = createSet(mi5);
 
   LMap lm4;
   lm4.addGO(0, 88);
@@ -3431,10 +3366,7 @@ void TestMinAdj1()
   mi3.addInter(i1);
   mi3.addInter(i2);
 
-  AtomSet as3(mi3);
-
-  Set s2;
-  s2.addAtomSet(as3);
+  Set s2 = createSet(mi3);
 
   LMap lm1;
   lm1.addGO(1, 0);
@@ -3454,10 +3386,7 @@ void TestMinAdj1()
   mi4.addInter(i3);
   mi4.addInter(i3);
 
-  AtomSet as4(mi4);
-
-  Set s3;
-  s3.addAtomSet(as4);
+  Set s3 = createSet(mi4);
 
   Interval i4(51, 3, 80);
 
@@ -3501,10 +3430,7 @@ void TestMinAdj1()
   mi7.addInter(i8);
   mi7.addInter(i9);
 
-  AtomSet as7(mi7);
-
-  Set s5;
-  s5.addAtomSet(as7);
+  Set s5 = createSet(mi7);
 
   Interval i10(10, 5, 50);
 
@@ -3512,10 +3438,7 @@ void TestMinAdj1()
   mi8.addInter(i10);
   mi8.addInter(i10);
 
-  AtomSet as8(mi8);
-
-  Set s6;
-  s6.addAtomSet(as8);
+  Set s6 = createSet(mi8);
 
   Interval i11(101, 2, 149);
 
@@ -3578,53 +3501,25 @@ void TestRC1()
   Interval i6(1 + offCp, 1, offRp + offCp);
   Interval i7(1 + offCn, 1, offRp + offCn);
 
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  AtomSet as1(mi1);
-  Set sp;
-  sp.addAtomSet(as1);
+  Set sp = createSet(i1);
   SetVertex V1("V1", 1, sp, 0);
 
-  MultiInterval mi2;
-  mi2.addInter(i2);
-  AtomSet as2(mi2);
-  Set sn;
-  sn.addAtomSet(as2);
+  Set sn = createSet(i2);
   SetVertex V2("V2", 2, sn, 0);
 
-  MultiInterval mi3;
-  mi3.addInter(i3);
-  AtomSet as3(mi3);
-  Set gp;
-  gp.addAtomSet(as3);
+  Set gp = createSet(i3);
   SetVertex V3("V3", 3, gp, 0);
 
-  MultiInterval mi4;
-  mi4.addInter(i4);
-  AtomSet as4(mi4);
-  Set rp;
-  rp.addAtomSet(as4);
+  Set rp = createSet(i4);
   SetVertex V4("V4", 4, rp, 0);
 
-  MultiInterval mi5;
-  mi5.addInter(i5);
-  AtomSet as5(mi5);
-  Set rn;
-  rn.addAtomSet(as5);
+  Set rn = createSet(i5);
   SetVertex V5("V5", 5, rn, 0);
 
-  MultiInterval mi6;
-  mi6.addInter(i6);
-  AtomSet as6(mi6);
-  Set cp;
-  cp.addAtomSet(as6);
+  Set cp = createSet(i6);
   SetVertex V6("V6", 6, cp, 0);
 
-  MultiInterval mi7;
-  mi7.addInter(i7);
-  AtomSet as7(mi7);
-  Set cn;
-  cn.addAtomSet(as7);
+  Set cn = createSet(i7);
   SetVertex V7("V7", 7, cn, 0);
 
   float offE1 = 0;
@@ -3634,11 +3529,7 @@ void TestRC1()
   float offE5 = 2 + 2 * offRp - 1;
 
   Interval i8(1 + offE1, 1, offE2);
-  MultiInterval mi8;
-  mi8.addInter(i8);
-  AtomSet as8(mi8);
-  Set domE1;
-  domE1.addAtomSet(as8);
+  Set domE1 = createSet(i8);
   LMap lm1;
   lm1.addGO(0, 1 + offSp);
   LMap lm2;
@@ -3650,11 +3541,7 @@ void TestRC1()
   SetEdge E1("E1", 1, mapE1sp, mapE1rp, 0);
 
   Interval i9(1 + offE2, 1, offE3);
-  MultiInterval mi9;
-  mi9.addInter(i9);
-  AtomSet as9(mi9);
-  Set domE2;
-  domE2.addAtomSet(as9);
+  Set domE2 = createSet(i9);
   LMap lm3;
   lm3.addGO(0, 1 + offSn);
   LMap lm4;
@@ -3666,11 +3553,7 @@ void TestRC1()
   SetEdge E2("E2", 2, mapE2sn, mapE2gp, 0);
 
   Interval i10(1 + offE3, 1, offE4);
-  MultiInterval mi10;
-  mi10.addInter(i10);
-  AtomSet as10(mi10);
-  Set domE3;
-  domE3.addAtomSet(as10);
+  Set domE3 = createSet(i10);
   LMap lm5;
   lm5.addGO(1, offRn - offE3);
   LMap lm6;
@@ -3682,11 +3565,7 @@ void TestRC1()
   SetEdge E3("E3", 3, mapE3rn, mapE3cp, 0);
 
   Interval i11(1 + offE4, 1, offE5);
-  MultiInterval mi11;
-  mi11.addInter(i11);
-  AtomSet as11(mi11);
-  Set domE4;
-  domE4.addAtomSet(as11);
+  Set domE4 = createSet(i11);
   LMap lm7;
   lm7.addGO(1, offRn - offE4);
   LMap lm8;
@@ -3698,11 +3577,7 @@ void TestRC1()
   SetEdge E4("E4", 4, mapE4rn, mapE4rp, 0);
 
   Interval i12(1 + offE5, 1, 1 + offE5 + offRp - 1);
-  MultiInterval mi12;
-  mi12.addInter(i12);
-  AtomSet as12(mi12);
-  Set domE5;
-  domE5.addAtomSet(as12);
+  Set domE5 = createSet(i12);
   LMap lm9;
   lm9.addGO(1, offCn - offE5);
   LMap lm10;
@@ -3841,59 +3716,31 @@ void TestGraph3c()
   float offcn = 4 * offrp;
 
   Interval i1(1 + offsp, 1, 1 + offsp);
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  AtomSet as1(mi1);
-  Set sp;
-  sp.addAtomSet(as1);
+  Set sp = createSet(i1);
   SetVertex V1("V1", 1, sp, 0);
 
   Interval i2(1 + offsn, 1, 1 + offsn);
-  MultiInterval mi2;
-  mi2.addInter(i2);
-  AtomSet as2(mi2);
-  Set sn;
-  sn.addAtomSet(as2);
+  Set sn = createSet(i2);
   SetVertex V2("V2", 2, sn, 0);
 
   Interval i3(1 + offgp, 1, 1 + offgp);
-  MultiInterval mi3;
-  mi3.addInter(i3);
-  AtomSet as3(mi3);
-  Set gp;
-  gp.addAtomSet(as3);
+  Set gp = createSet(i3);
   SetVertex V3("V3", 3, gp, 0);
 
   Interval i4(1 + offrp, 1, offrp + offrp);
-  MultiInterval mi4;
-  mi4.addInter(i4);
-  AtomSet as4(mi4);
-  Set rp;
-  rp.addAtomSet(as4);
+  Set rp = createSet(i4);
   SetVertex V4("V4", 4, rp, 0);
 
   Interval i5(1 + offrn, 1, offrp + offrn);
-  MultiInterval mi5;
-  mi5.addInter(i5);
-  AtomSet as5(mi5);
-  Set rn;
-  rn.addAtomSet(as5);
+  Set rn = createSet(i5);
   SetVertex V5("V5", 5, rn, 0);
 
   Interval i6(1 + offcp, 1, offrp + offcp);
-  MultiInterval mi6;
-  mi6.addInter(i6);
-  AtomSet as6(mi6);
-  Set cp;
-  cp.addAtomSet(as6);
+  Set cp = createSet(i6);
   SetVertex V6("V6", 6, cp, 0);
 
   Interval i7(1 + offcn, 1, offrp + offcn);
-  MultiInterval mi7;
-  mi7.addInter(i7);
-  AtomSet as7(mi7);
-  Set cn;
-  cn.addAtomSet(as7);
+  Set cn = createSet(i7);
   SetVertex V7("V7", 7, cn, 0);
 
   float offE1 = 0;
@@ -3904,11 +3751,7 @@ void TestGraph3c()
   float offE6 = 2 + 2 * offrp;
 
   Interval i8(1 + offE1, 1, offE2);
-  MultiInterval mi8;
-  mi8.addInter(i8);
-  AtomSet as8(mi8);
-  Set domE1;
-  domE1.addAtomSet(as8);
+  Set domE1 = createSet(i8);
   LMap lm1;
   lm1.addGO(0, 1 + offsp);
   LMap lm2;
@@ -3920,11 +3763,7 @@ void TestGraph3c()
   SetEdge E1("E1", 1, mapE1sp, mapE1rp, 0);
 
   Interval i9(1 + offE2, 1, offE3);
-  MultiInterval mi9;
-  mi9.addInter(i9);
-  AtomSet as9(mi9);
-  Set domE2;
-  domE2.addAtomSet(as9);
+  Set domE2 = createSet(i9);
   LMap lm3;
   lm3.addGO(0, 1 + offsn);
   LMap lm4;
@@ -3936,11 +3775,7 @@ void TestGraph3c()
   SetEdge E2("E2", 2, mapE2sn, mapE2gp, 0);
 
   Interval i10(1 + offE3, 1, offE4);
-  MultiInterval mi10;
-  mi10.addInter(i10);
-  AtomSet as10(mi10);
-  Set domE3;
-  domE3.addAtomSet(as10);
+  Set domE3 = createSet(i10);
   LMap lm5;
   lm5.addGO(1, offrn - offE3);
   LMap lm6;
@@ -3952,11 +3787,7 @@ void TestGraph3c()
   SetEdge E3("E3", 3, mapE3rn, mapE3cp, 0);
 
   Interval i11(1 + offE4, 1, offE5);
-  MultiInterval mi11;
-  mi11.addInter(i11);
-  AtomSet as11(mi11);
-  Set domE4;
-  domE4.addAtomSet(as11);
+  Set domE4 = createSet(i11);
   LMap lm7;
   lm7.addGO(1, offrn - offE4);
   LMap lm8;
@@ -3968,11 +3799,7 @@ void TestGraph3c()
   SetEdge E4("E4", 4, mapE4rn, mapE4rp, 0);
 
   Interval i12(1 + offE5, 1, offE6);
-  MultiInterval mi12;
-  mi12.addInter(i12);
-  AtomSet as12(mi12);
-  Set domE5;
-  domE5.addAtomSet(as12);
+  Set domE5 = createSet(i12);
   LMap lm9;
   lm9.addGO(1, offcn - offE5);
   LMap lm10;
@@ -3984,11 +3811,7 @@ void TestGraph3c()
   SetEdge E5("E5", 1, mapE5cn, mapE5gp, 0);
 
   Interval i13(1 + offE6, 1, 1 + offE6 + offrp - 2);
-  MultiInterval mi13;
-  mi13.addInter(i13);
-  AtomSet as13(mi13);
-  Set domE6;
-  domE6.addAtomSet(as13);
+  Set domE6 = createSet(i13);
   LMap lm11;
   lm11.addGO(1, offcn - offE6);
   LMap lm12;
@@ -4553,51 +4376,27 @@ void TestSplit()
   float offF6 = offF5 + 1;
 
   Interval i1(offF1, 1, offF1);
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  AtomSet as1(mi1);
-  Set f1;
-  f1.addAtomSet(as1);
+  Set f1 = createSet(i1);
   SetVertex F1("F1", 1, f1, 0);
 
   Interval i2(1 + offF1, 1, offF2);
-  MultiInterval mi2;
-  mi2.addInter(i2);
-  AtomSet as2(mi2);
-  Set f2;
-  f2.addAtomSet(as2);
+  Set f2 = createSet(i2);
   SetVertex F2("F2", 2, f2, 0);
 
   Interval i3(1 + offF2, 1, offF3);
-  MultiInterval mi3;
-  mi3.addInter(i3);
-  AtomSet as3(mi3);
-  Set f3;
-  f3.addAtomSet(as3);
+  Set f3 = createSet(i3);
   SetVertex F3("F3", 3, f3, 0);
 
   Interval i4(1 + offF3, 1, offF4);
-  MultiInterval mi4;
-  mi4.addInter(i4);
-  AtomSet as4(mi4);
-  Set f4;
-  f4.addAtomSet(as4);
+  Set f4 = createSet(i4);
   SetVertex F4("F4", 4, f4, 0);
 
   Interval i5(1 + offF4, 1, offF5);
-  MultiInterval mi5;
-  mi5.addInter(i5);
-  AtomSet as5(mi5);
-  Set f5;
-  f5.addAtomSet(as5);
+  Set f5 = createSet(i5);
   SetVertex F5("F5", 1, f5, 0);
 
   Interval i6(1 + offF5, 1, offF6);
-  MultiInterval mi6;
-  mi6.addInter(i6);
-  AtomSet as6(mi6);
-  Set f6;
-  f6.addAtomSet(as6);
+  Set f6 = createSet(i6);
   SetVertex F6("F6", 6, f6, 0);
 
   // Unknowns
@@ -4608,35 +4407,19 @@ void TestSplit()
   float offU4 = offU3 + n;
 
   Interval i7(1 + offF6, 1, offU1);
-  MultiInterval mi7;
-  mi7.addInter(i7);
-  AtomSet as7(mi7);
-  Set u1;
-  u1.addAtomSet(as7);
+  Set u1 = createSet(i7);
   SetVertex U1("U1", 7, u1, 0);
 
   Interval i8(1 + offU1, 1, offU2);
-  MultiInterval mi8;
-  mi8.addInter(i8);
-  AtomSet as8(mi8);
-  Set u2;
-  u2.addAtomSet(as8);
+  Set u2 = createSet(i8);
   SetVertex U2("U2", 8, u2, 0);
 
   Interval i9(1 + offU2, 1, offU3);
-  MultiInterval mi9;
-  mi9.addInter(i9);
-  AtomSet as9(mi9);
-  Set u3;
-  u3.addAtomSet(as9);
+  Set u3 = createSet(i9);
   SetVertex U3("U3", 9, u3, 0);
 
   Interval i10(1 + offU3, 1, offU4);
-  MultiInterval mi10;
-  mi10.addInter(i10);
-  AtomSet as10(mi10);
-  Set u4;
-  u4.addAtomSet(as10);
+  Set u4 = createSet(i10);
   SetVertex U4("U4", 10, u4, 0);
 
   // Edges
@@ -4654,11 +4437,7 @@ void TestSplit()
   float offE11 = offE10 + 1;
 
   Interval i11(offE1, 1, offE1);
-  MultiInterval mi11;
-  mi11.addInter(i11);
-  AtomSet as11(mi11);
-  Set domE1;
-  domE1.addAtomSet(as11);
+  Set domE1 = createSet(i11);
   LMap lm1;
   lm1.addGO(1, offF1 - offE1);
   LMap lm2;
@@ -4670,11 +4449,7 @@ void TestSplit()
   SetEdge E1("E1", 1, mapE1l, mapE1r, 0);
 
   Interval i12(1 + offE1, 1, offE2);
-  MultiInterval mi12;
-  mi12.addInter(i12);
-  AtomSet as12(mi12);
-  Set domE2;
-  domE2.addAtomSet(as12);
+  Set domE2 = createSet(i12);
   LMap lm3;
   lm3.addGO(1, offF1 - offE1);
   LMap lm4;
@@ -4686,11 +4461,7 @@ void TestSplit()
   SetEdge E2("E2", 2, mapE2l, mapE2r, 0);
 
   Interval i13(1 + offE2, 1, offE3);
-  MultiInterval mi13;
-  mi13.addInter(i13);
-  AtomSet as13(mi13);
-  Set domE3;
-  domE3.addAtomSet(as13);
+  Set domE3 = createSet(i13);
   LMap lm5;
   lm5.addGO(1, offF1 - offE2);
   LMap lm6;
@@ -4702,11 +4473,7 @@ void TestSplit()
   SetEdge E3("E3", 3, mapE3l, mapE3r, 0);
 
   Interval i14(1 + offE3, 1, offE4);
-  MultiInterval mi14;
-  mi14.addInter(i14);
-  AtomSet as14(mi14);
-  Set domE4;
-  domE4.addAtomSet(as14);
+  Set domE4 = createSet(i14);
   LMap lm7;
   lm7.addGO(1, offF2 - offE3);
   LMap lm8;
@@ -4718,11 +4485,7 @@ void TestSplit()
   SetEdge E4("E4", 4, mapE4l, mapE4r, 0);
 
   Interval i15(1 + offE4, 1, offE5);
-  MultiInterval mi15;
-  mi15.addInter(i15);
-  AtomSet as15(mi15);
-  Set domE5;
-  domE5.addAtomSet(as15);
+  Set domE5 = createSet(i15);
   LMap lm9;
   lm9.addGO(1, offF2 - offE4);
   LMap lm10;
@@ -4734,11 +4497,7 @@ void TestSplit()
   SetEdge E5("E5", 5, mapE5l, mapE5r, 0);
 
   Interval i16(1 + offE5, 1, offE6);
-  MultiInterval mi16;
-  mi16.addInter(i16);
-  AtomSet as16(mi16);
-  Set domE6;
-  domE6.addAtomSet(as16);
+  Set domE6 = createSet(i16);
   LMap lm11;
   lm11.addGO(1, offF3 - offE5);
   LMap lm12;
@@ -4750,11 +4509,7 @@ void TestSplit()
   SetEdge E6("E6", 6, mapE6l, mapE6r, 0);
 
   Interval i17(1 + offE6, 1, offE7);
-  MultiInterval mi17;
-  mi17.addInter(i17);
-  AtomSet as17(mi17);
-  Set domE7;
-  domE7.addAtomSet(as17);
+  Set domE7 = createSet(i17);
   LMap lm13;
   lm13.addGO(1, offF3 - offE6);
   LMap lm14;
@@ -4766,11 +4521,7 @@ void TestSplit()
   SetEdge E7("E7", 7, mapE7l, mapE7r, 0);
 
   Interval i18(1 + offE7, 1, offE8);
-  MultiInterval mi18;
-  mi18.addInter(i18);
-  AtomSet as18(mi18);
-  Set domE8;
-  domE8.addAtomSet(as18);
+  Set domE8 = createSet(i18);
   LMap lm15;
   lm15.addGO(1, offF4 - offE7);
   LMap lm16;
@@ -4782,11 +4533,7 @@ void TestSplit()
   SetEdge E8("E8", 8, mapE8l, mapE8r, 0);
 
   Interval i19(1 + offE8, 1, offE9);
-  MultiInterval mi19;
-  mi19.addInter(i19);
-  AtomSet as19(mi19);
-  Set domE9;
-  domE9.addAtomSet(as19);
+  Set domE9 = createSet(i19);
   LMap lm17;
   lm17.addGO(1, offF4 - offE8);
   LMap lm18;
@@ -4798,11 +4545,7 @@ void TestSplit()
   SetEdge E9("E9", 9, mapE9l, mapE9r, 0);
 
   Interval i20(1 + offE9, 1, offE10);
-  MultiInterval mi20;
-  mi20.addInter(i20);
-  AtomSet as20(mi20);
-  Set domE10;
-  domE10.addAtomSet(as20);
+  Set domE10 = createSet(i20);
   LMap lm19;
   lm19.addGO(1, offF5 - offE9);
   LMap lm20;
@@ -4814,11 +4557,7 @@ void TestSplit()
   SetEdge E10("E10", 10, mapE10l, mapE10r, 0);
 
   Interval i21(1 + offE10, 1, offE11);
-  MultiInterval mi21;
-  mi21.addInter(i21);
-  AtomSet as21(mi21);
-  Set domE11;
-  domE11.addAtomSet(as21);
+  Set domE11 = createSet(i21);
   LMap lm21;
   lm21.addGO(1, offF5 - offE10);
   LMap lm22;
@@ -4901,11 +4640,7 @@ void TestSplit()
 
   MatchingStruct match(g);
   Interval i22(75, 3, 125);
-  MultiInterval mi22;
-  mi22.addInter(i22);
-  AtomSet as22(mi22);
-  Set s22;
-  s22.addAtomSet(as22);
+  Set s22 = createSet(i22);
   match.matchedE = s22;
 
   UnordCT<Set> res = match.split(f2);
@@ -4927,51 +4662,27 @@ void TestMatching()
   float offF6 = offF5 + 1;
 
   Interval i1(offF1, 1, offF1);
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  AtomSet as1(mi1);
-  Set f1;
-  f1.addAtomSet(as1);
+  Set f1 = createSet(i1);
   SetVertex F1("F1", 1, f1, 0);
 
   Interval i2(1 + offF1, 1, offF2);
-  MultiInterval mi2;
-  mi2.addInter(i2);
-  AtomSet as2(mi2);
-  Set f2;
-  f2.addAtomSet(as2);
+  Set f2 = createSet(i2);
   SetVertex F2("F2", 2, f2, 0);
 
   Interval i3(1 + offF2, 1, offF3);
-  MultiInterval mi3;
-  mi3.addInter(i3);
-  AtomSet as3(mi3);
-  Set f3;
-  f3.addAtomSet(as3);
+  Set f3 = createSet(i3);
   SetVertex F3("F3", 3, f3, 0);
 
   Interval i4(1 + offF3, 1, offF4);
-  MultiInterval mi4;
-  mi4.addInter(i4);
-  AtomSet as4(mi4);
-  Set f4;
-  f4.addAtomSet(as4);
+  Set f4 = createSet(i4);
   SetVertex F4("F4", 4, f4, 0);
 
   Interval i5(1 + offF4, 1, offF5);
-  MultiInterval mi5;
-  mi5.addInter(i5);
-  AtomSet as5(mi5);
-  Set f5;
-  f5.addAtomSet(as5);
+  Set f5 = createSet(i5);
   SetVertex F5("F5", 1, f5, 0);
 
   Interval i6(1 + offF5, 1, offF6);
-  MultiInterval mi6;
-  mi6.addInter(i6);
-  AtomSet as6(mi6);
-  Set f6;
-  f6.addAtomSet(as6);
+  Set f6 = createSet(i6);
   SetVertex F6("F6", 6, f6, 0);
 
   // Unknowns
@@ -4982,35 +4693,19 @@ void TestMatching()
   float offU4 = offU3 + n;
 
   Interval i7(1 + offF6, 1, offU1);
-  MultiInterval mi7;
-  mi7.addInter(i7);
-  AtomSet as7(mi7);
-  Set u1;
-  u1.addAtomSet(as7);
+  Set u1 = createSet(i7);
   SetVertex U1("U1", 7, u1, 0);
 
   Interval i8(1 + offU1, 1, offU2);
-  MultiInterval mi8;
-  mi8.addInter(i8);
-  AtomSet as8(mi8);
-  Set u2;
-  u2.addAtomSet(as8);
+  Set u2 = createSet(i8);
   SetVertex U2("U2", 8, u2, 0);
 
   Interval i9(1 + offU2, 1, offU3);
-  MultiInterval mi9;
-  mi9.addInter(i9);
-  AtomSet as9(mi9);
-  Set u3;
-  u3.addAtomSet(as9);
+  Set u3 = createSet(i9);
   SetVertex U3("U3", 9, u3, 0);
 
   Interval i10(1 + offU3, 1, offU4);
-  MultiInterval mi10;
-  mi10.addInter(i10);
-  AtomSet as10(mi10);
-  Set u4;
-  u4.addAtomSet(as10);
+  Set u4 = createSet(i10);
   SetVertex U4("U4", 10, u4, 0);
 
   // Edges
@@ -5029,11 +4724,7 @@ void TestMatching()
   float offE11 = offE10 + 1;
 
   Interval i11(offE1, 1, offE1);
-  MultiInterval mi11;
-  mi11.addInter(i11);
-  AtomSet as11(mi11);
-  Set domE1;
-  domE1.addAtomSet(as11);
+  Set domE1 = createSet(i11);
   LMap lm1;
   lm1.addGO(1, offF1 - offE1);
   LMap lm2;
@@ -5045,11 +4736,7 @@ void TestMatching()
   SetEdge E1("E1", 1, mapE1l, mapE1r, 0);
 
   Interval i12(1 + offE1, 1, offE2);
-  MultiInterval mi12;
-  mi12.addInter(i12);
-  AtomSet as12(mi12);
-  Set domE2;
-  domE2.addAtomSet(as12);
+  Set domE2 = createSet(i12);
   LMap lm3;
   lm3.addGO(1, offF1 - offE1);
   LMap lm4;
@@ -5061,11 +4748,7 @@ void TestMatching()
   SetEdge E2("E2", 2, mapE2l, mapE2r, 0);
 
   Interval i13(1 + offE2, 1, offE3);
-  MultiInterval mi13;
-  mi13.addInter(i13);
-  AtomSet as13(mi13);
-  Set domE3;
-  domE3.addAtomSet(as13);
+  Set domE3 = createSet(i13);
   LMap lm5;
   lm5.addGO(1, offF1 - offE2);
   LMap lm6;
@@ -5077,11 +4760,7 @@ void TestMatching()
   SetEdge E3("E3", 3, mapE3l, mapE3r, 0);
 
   Interval i14(1 + offE3, 1, offE4);
-  MultiInterval mi14;
-  mi14.addInter(i14);
-  AtomSet as14(mi14);
-  Set domE4;
-  domE4.addAtomSet(as14);
+  Set domE4 = createSet(i14);
   LMap lm7;
   lm7.addGO(1, offF2 - offE3);
   LMap lm8;
@@ -5093,11 +4772,7 @@ void TestMatching()
   SetEdge E4("E4", 4, mapE4l, mapE4r, 0);
 
   Interval i15(1 + offE4, 1, offE5);
-  MultiInterval mi15;
-  mi15.addInter(i15);
-  AtomSet as15(mi15);
-  Set domE5;
-  domE5.addAtomSet(as15);
+  Set domE5 = createSet(i15);
   LMap lm9;
   lm9.addGO(1, offF2 - offE4);
   LMap lm10;
@@ -5109,11 +4784,7 @@ void TestMatching()
   SetEdge E5("E5", 5, mapE5l, mapE5r, 0);
 
   Interval i16(1 + offE5, 1, offE6);
-  MultiInterval mi16;
-  mi16.addInter(i16);
-  AtomSet as16(mi16);
-  Set domE6;
-  domE6.addAtomSet(as16);
+  Set domE6 = createSet(i16);
   LMap lm11;
   lm11.addGO(1, offF3 - offE5);
   LMap lm12;
@@ -5125,11 +4796,7 @@ void TestMatching()
   SetEdge E6("E6", 6, mapE6l, mapE6r, 0);
 
   Interval i17(1 + offE6, 1, offE7);
-  MultiInterval mi17;
-  mi17.addInter(i17);
-  AtomSet as17(mi17);
-  Set domE7;
-  domE7.addAtomSet(as17);
+  Set domE7 = createSet(i17);
   LMap lm13;
   lm13.addGO(1, offF3 - offE6);
   LMap lm14;
@@ -5141,17 +4808,9 @@ void TestMatching()
   SetEdge E7("E7", 7, mapE7l, mapE7r, 0);
 
   Interval i18a(1 + offE7, 1, offE8a);
-  MultiInterval mi18a;
-  mi18a.addInter(i18a);
-  AtomSet as18a(mi18a);
-  Set domE8a;
-  domE8a.addAtomSet(as18a);
+  Set domE8a = createSet(i18a);
   Interval i18b(1 + offE8a, 1, offE8b);
-  MultiInterval mi18b;
-  mi18b.addInter(i18b);
-  AtomSet as18b(mi18b);
-  Set domE8b;
-  domE8b.addAtomSet(as18b);
+  Set domE8b = createSet(i18b);
   LMap lm15a;
   lm15a.addGO(1, offF4 - offE7);
   LMap lm15b;
@@ -5169,11 +4828,7 @@ void TestMatching()
   SetEdge E8("E8", 8, mapE8l, mapE8r, 0);
 
   Interval i19(1 + offE8b, 1, offE9);
-  MultiInterval mi19;
-  mi19.addInter(i19);
-  AtomSet as19(mi19);
-  Set domE9;
-  domE9.addAtomSet(as19);
+  Set domE9 = createSet(i19);
   LMap lm17;
   lm17.addGO(1, offF4 - offE8b);
   LMap lm18;
@@ -5185,11 +4840,7 @@ void TestMatching()
   SetEdge E9("E9", 9, mapE9l, mapE9r, 0);
 
   Interval i20(1 + offE9, 1, offE10);
-  MultiInterval mi20;
-  mi20.addInter(i20);
-  AtomSet as20(mi20);
-  Set domE10;
-  domE10.addAtomSet(as20);
+  Set domE10 = createSet(i20);
   LMap lm19;
   lm19.addGO(1, offF5 - offE9);
   LMap lm20;
@@ -5201,11 +4852,7 @@ void TestMatching()
   SetEdge E10("E10", 10, mapE10l, mapE10r, 0);
 
   Interval i21(1 + offE10, 1, offE11);
-  MultiInterval mi21;
-  mi21.addInter(i21);
-  AtomSet as21(mi21);
-  Set domE11;
-  domE11.addAtomSet(as21);
+  Set domE11 = createSet(i21);
   LMap lm21;
   lm21.addGO(1, offF5 - offE10);
   LMap lm22;
@@ -5287,9 +4934,33 @@ void TestMatching()
   g[e11] = E11;
 
   MatchingStruct match(g);
-  Set res = match.SBGMatching();
+  Set res1 = match.SBGMatching();
 
-  BOOST_CHECK(true);
+  Interval i30(102, 1, 201);
+  Set s30 = createSet(i30);
+
+  Interval i31(202, 1, 301);
+  Set s31 = createSet(i31);
+
+  Interval i32(302, 1, 401);
+  Set s32 = createSet(i32);
+
+  Interval i33(501, 1, 599);
+  Set s33 = createSet(i33);
+
+  Interval i34(798, 1, 896);
+  Set s34 = createSet(i34);
+
+  Interval i35(898, 1, 898);
+  Set s35 = createSet(i35);
+
+  Set res2 = s30.cup(s31);
+  res2 = res2.cup(s32);
+  res2 = res2.cup(s33);
+  res2 = res2.cup(s34);
+  res2 = res2.cup(s35);
+
+  BOOST_CHECK(res1 == res2);
 }
 
 //____________________________________________________________________________//
