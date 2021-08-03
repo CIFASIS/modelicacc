@@ -31,14 +31,14 @@ package GT_MODELS
     Real LossPower;
     Real T_heatPort(start = 288.15);
     Real R_actual;
-  equation
-    R_actual = R * (1.0 + alpha * (T_heatPort - T_ref));
-    v = R_actual * i;
-    LossPower = v * i;
-    T_heatPort = T_ref;
-    v = p.v - n.v;
-    0.0 = p.i + n.i;
-    i = p.i;
+    equation
+      R_actual = R * (1.0 + alpha * (T_heatPort - T_ref));
+      v = R_actual * i;
+      LossPower = v * i;
+      T_heatPort = T_ref;
+      v = p.v - n.v;
+      0.0 = p.i + n.i;
+      i = p.i;
   end Resistor;
 
   class Capacitor
@@ -47,11 +47,11 @@ package GT_MODELS
     PositivePin p;
     NegativePin n;
     parameter Real C(start = 1.0);
-  equation
-    i = C * der(v);
-    v = p.v - n.v;
-    0.0 = p.i + n.i;
-    i = p.i;
+    equation
+      i = C * der(v);
+      v = p.v - n.v;
+      0.0 = p.i + n.i;
+      i = p.i;
   end Capacitor;
 
   class ConstantVoltage
@@ -60,11 +60,11 @@ package GT_MODELS
     Real i;
     PositivePin p;
     NegativePin n;
-  equation
-    v = V;
-    v = p.v - n.v;
-    0.0 = p.i + n.i;
-    i = p.i;
+    equation
+      v = V;
+      v = p.v - n.v;
+      0.0 = p.i + n.i;
+      i = p.i;
   end ConstantVoltage;
 
   model RLC
@@ -73,44 +73,36 @@ package GT_MODELS
     Resistor R[N];
     Capacitor C[N];
     ConstantVoltage S;
-  equation
-    connect(S.p, R[1].p);
-    connect(S.n, G.p);
-    for i in 1:N - 1 loop
-      connect(R[i].n, R[i + 1].p);
-    end for;
-    for i in 1:N loop
-      connect(C[i].p, R[i].n);
-      connect(C[i].n, G.p);
-    end for;
-    annotation(
-      experiment(StartTime = 0, StopTime = 10, Tolerance = 1e-10, Interval = 0.002),
-      Documentation,
-  __OpenModelica_commandLineOptions = "--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian",
-  __OpenModelica_simulationFlags(lv = "LOG_STATS", s = "dassl"));
+    equation
+      connect(S.p, R[1].p);
+      connect(S.n, G.p);
+      for i in 1:N - 1 loop
+        connect(R[i].n, R[i + 1].p);
+      end for;
+      for i in 1:N loop
+        connect(C[i].p, R[i].n);
+        connect(C[i].n, G.p);
+      end for;
   end RLC;
   
-model RRLC
-  constant Integer N=100;
-  Ground G;
-  Resistor R[N];
-  Capacitor C[N];
-  ConstantVoltage S;
-  equation
-    connect(S.p,R[1].p);
-    connect(S.n,G.p);
-    connect(C[1].n, G.p);
-    for i in 1:N-1 loop
-      connect(R[i].n, R[i+1].p);
-      connect(C[i+1].n, C[i].n);
-    end for;
-    for i in 1:N loop
-      connect(C[i].p, R[i].n);
-    end for;
-  annotation(
-      experiment(StartTime = 0, StopTime = 10, Tolerance = 1e-10, Interval = 0.002),
-      __OpenModelica_commandLineOptions = "--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian",
-  __OpenModelica_simulationFlags(lv = "LOG_STATS", s = "dassl"));end RRLC;
+  model RRLC
+    constant Integer N=100;
+    Ground G;
+    Resistor R[N];
+    Capacitor C[N];
+    ConstantVoltage S;
+    equation
+      connect(S.p,R[1].p);
+      connect(S.n,G.p);
+      connect(C[1].n, G.p);
+      for i in 1:N-1 loop
+        connect(R[i].n, R[i+1].p);
+        connect(C[i+1].n, C[i].n);
+      end for;
+      for i in 1:N loop
+        connect(C[i].p, R[i].n);
+      end for;
+  end RRLC;
 
   model RCcell
     Resistor resistor;
@@ -121,14 +113,14 @@ model RRLC
     Pin d;
     Pin r;
     Pin u;
-  equation
-    connect(resistor.n, capacitor.p);
-    connect(resistor1.n, capacitor1.p);
-    connect(resistor1.n, capacitor.p);
-    connect(resistor.p, l);
-    connect(capacitor.n, r);
-    connect(resistor1.p, u);
-    connect(capacitor1.n, d);
+    equation
+      connect(resistor.n, capacitor.p);
+      connect(resistor1.n, capacitor1.p);
+      connect(resistor1.n, capacitor.p);
+      connect(resistor.p, l);
+      connect(capacitor.n, r);
+      connect(resistor1.p, u);
+      connect(capacitor1.n, d);
   end RCcell;
 
   model N2D
@@ -137,21 +129,17 @@ model RRLC
     RCcell Cell[N, M];
     ConstantVoltage S;
     Ground G;
-  equation
-    for i in 1:N - 1, j in 1:M - 1 loop
-      connect(Cell[i, j].r, Cell[i, j + 1].l);
-      connect(Cell[i, j].d, Cell[i + 1, j].u);
-    end for;
-    for i in 1:N loop
-      connect(Cell[i, M].r, Cell[i, 1].l);
-    end for;
-    for j in 1:M loop
-      connect(Cell[1, j].u, S.p);
-      connect(Cell[N, j].d, S.n);
-    end for;
-    annotation(
-      experiment(StartTime = 0, StopTime = 20, Tolerance = 1e-10, Interval = 0.004),
-      __OpenModelica_commandLineOptions = "--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian",
-  __OpenModelica_simulationFlags(lv = "LOG_STATS", s = "dassl"));
+    equation
+      for i in 1:N - 1, j in 1:M - 1 loop
+        connect(Cell[i, j].r, Cell[i, j + 1].l);
+        connect(Cell[i, j].d, Cell[i + 1, j].u);
+      end for;
+      for i in 1:N loop
+        connect(Cell[i, M].r, Cell[i, 1].l);
+      end for;
+      for j in 1:M loop
+        connect(Cell[1, j].u, S.p);
+        connect(Cell[N, j].d, S.n);
+      end for;
   end N2D;
 end GT_MODELS;

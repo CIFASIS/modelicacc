@@ -30,14 +30,14 @@ class Resistor
   Real LossPower;
   Real T_heatPort(start = 288.15);
   Real R_actual;
-equation
-  R_actual = R * (1.0 + alpha * (T_heatPort - T_ref));
-  v = R_actual * i;
-  LossPower = v * i;
-  T_heatPort = T_ref;
-  v = p.v - n.v;
-  0.0 = p.i + n.i;
-  i = p.i;
+  equation
+    R_actual = R * (1.0 + alpha * (T_heatPort - T_ref));
+    v = R_actual * i;
+    LossPower = v * i;
+    T_heatPort = T_ref;
+    v = p.v - n.v;
+    0.0 = p.i + n.i;
+    i = p.i;
 end Resistor;
 
 class Capacitor 
@@ -46,11 +46,11 @@ class Capacitor
   PositivePin p;
   NegativePin n;
   parameter Real C(start = 1.0);
-equation
-  i = C * der(v);
-  v = p.v - n.v;
-  0.0 = p.i + n.i;
-  i = p.i;
+  equation
+    i = C * der(v);
+    v = p.v - n.v;
+    0.0 = p.i + n.i;
+    i = p.i;
 end Capacitor;
 
 class ConstantVoltage
@@ -59,11 +59,11 @@ class ConstantVoltage
   Real i;
   PositivePin p;
   NegativePin n;
-equation
-  v = V;
-  v = p.v - n.v;
-  0.0 = p.i + n.i;
-  i = p.i;
+  equation
+    v = V;
+    v = p.v - n.v;
+    0.0 = p.i + n.i;
+    i = p.i;
 end ConstantVoltage;
 
 model RLC_dassl_100
@@ -72,14 +72,14 @@ model RLC_dassl_100
   Resistor R[N];
   Capacitor C[N];
   ConstantVoltage S;
-equation
-connect(S.p,R[1].p);
-connect(S.n,G.p);
-for i in 1:N-1 loop
-  connect(R[i].n, R[i+1].p);
-end for;
-for i in 1:N loop
-  connect(C[i].p, R[i].n);
-  connect(C[i].n, G.p);
-end for;
+  equation
+    connect(S.p,R[1].p);
+    connect(S.n,G.p);
+    for i in 1:N-1 loop
+      connect(R[i].n, R[i+1].p);
+    end for;
+    for i in 1:N loop
+      connect(C[i].p, R[i].n);
+      connect(C[i].n, G.p);
+    end for;
 end RLC_dassl_100;
