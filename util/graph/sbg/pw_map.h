@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <iostream>
+
 #include <util/graph/sbg/defs.h>
 #include <util/graph/sbg/interval.h>
 #include <util/graph/sbg/multi_interval.h>
@@ -68,6 +70,9 @@ struct PWLMapImp1 {
   PWLMapImp1 combine(PWLMapImp1 pw2);
  
   PWLMapImp1 minMap(PWLMapImp1 pw2); 
+
+  PWLMapImp1 offsetMap(ORD_CT<INT_IMP> off);
+  PWLMapImp1 diffMap(PWLMapImp1 pw2);
 
   PWLMapImp1 atomize();
 

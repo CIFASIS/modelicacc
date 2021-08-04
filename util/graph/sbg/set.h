@@ -51,6 +51,7 @@ struct SetImp1 {
   SetImp1 cup(SetImp1 set2);
 
   ORD_CT<INT_IMP> minElem();
+  ORD_CT<INT_IMP> maxElem();
 
   SetImp1 crossProd(SetImp1 set2);
 

@@ -685,6 +685,70 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minMap(PW_TEMP_TYPE pw2)
   return res;
 }
 
+// This operation applies an offset to each linear expression
+// of the map.
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::offsetMap(ORD_CT<INT_IMP> offElem) 
+{
+  LMaps lmres;
+  LMapsIt itlmres = lmres.begin();
+
+  if ((int) offElem.size() == ndim()) {
+    typename ORD_CT<INT_IMP>::iterator itelem = offElem.begin();
+    BOOST_FOREACH (LM_IMP lmi, lmap()) {
+      ORD_CT<REAL_IMP> reso;
+      typename ORD_CT<REAL_IMP>::iterator itreso = reso.begin();
+
+      BOOST_FOREACH (REAL_IMP oi, lmi.offset()) {
+        itreso = reso.insert(itreso, oi + (REAL_IMP) *itelem);
+        ++itreso;
+      }
+
+      itlmres = lmres.insert(itlmres, LM_IMP(lmi.gain(), reso)); 
+      ++itlmres;
+    }
+  } 
+
+  return PWLMapImp1(dom(), lmres);
+}
+
+// This operation substracts one map from another. In the
+// intersection of the domains, the linear map will be 
+// the substraction of both linear maps
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::diffMap(PW_TEMP_TYPE pw2)
+{
+  Sets domres;
+  SetsIt itdom = domres.begin();
+  LMaps lmres;
+  LMapsIt itlm = lmres.begin(); 
+
+  if (ndim() == pw2.ndim()) {
+    LMapsIt itlm1 = lmap_ref().begin();
+
+    BOOST_FOREACH (SET_IMP d1, dom()) {
+      LMapsIt itlm2 = pw2.lmap_ref().begin();
+      BOOST_FOREACH (SET_IMP d2, pw2.dom()) {
+        SET_IMP domcap = d1.cap(d2);
+        LM_IMP diff = (*itlm1).diffLM(*itlm2);
+
+        if (!domcap.empty()) {
+          itdom = domres.insert(itdom, domcap);
+          ++itdom;
+          itlm = lmres.insert(itlm, diff);
+          ++itlm;
+        }
+
+        ++itlm2;
+      }
+
+      ++itlm1;
+    }
+  }
+
+  return PWLMapImp1(domres, lmres);
+}
+
 // Transform each set in dom in a compact set (with only one atomic set)
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::atomize()
@@ -1110,7 +1174,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
       SET_IMP mins2 = pw1.preImage(scomp);
 
       // Choose minimum in min2
-      // Assign dom(pw1) this element as image
+      // Assign dom(pw3) this element as image
       ORD_CT<INT> min2 = mins2.minElem();
       typename ORD_CT<INT>::iterator itmin2 = min2.begin();
 

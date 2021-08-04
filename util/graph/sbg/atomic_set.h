@@ -42,6 +42,7 @@ struct AtomSetImp1 {
   UNORD_CT<AtomSetImp1> diff(AtomSetImp1 aset2);
 
   ORD_CT<INT_IMP> minElem();
+  ORD_CT<INT_IMP> maxElem();
 
   AtomSetImp1 crossProd(AtomSetImp1 aset2);
 

@@ -229,6 +229,22 @@ ORD_CT<INT_IMP> MI_TEMP_TYPE::minElem()
 }
 
 MI_TEMPLATE
+ORD_CT<INT_IMP> MI_TEMP_TYPE::maxElem()
+{
+  ORD_CT<INT_IMP> res;
+  typename ORD_CT<INT_IMP>::iterator itres = res.begin();
+
+  BOOST_FOREACH (INTER_IMP i, inters()) {
+    if (i.empty()) return ORD_CT<INT_IMP>();
+
+    itres = res.insert(itres, i.maxElem());
+    ++itres;
+  }
+
+  return res;
+}
+
+MI_TEMPLATE
 MI_TEMP_TYPE MI_TEMP_TYPE::replace(INTER_IMP i, int dim)
 {
   Intervals res;

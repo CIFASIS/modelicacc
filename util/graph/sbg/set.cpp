@@ -207,6 +207,21 @@ ORD_CT<INT_IMP> SET_TEMP_TYPE::minElem()
 } 
 
 SET_TEMPLATE
+ORD_CT<INT_IMP> SET_TEMP_TYPE::maxElem()
+{
+  ORD_CT<INT_IMP> res;
+
+  if (empty()) return res;
+
+  AS_IMP max = *(asets_ref().begin());
+
+  BOOST_FOREACH (AS_IMP as1, asets()) 
+    if (max.maxElem() < as1.aset_ref().maxElem()) max = as1;
+
+  return max.maxElem();
+} 
+
+SET_TEMPLATE
 SET_TEMP_TYPE SET_TEMP_TYPE::crossProd(SET_TEMP_TYPE set2)
 {
   AtomSets res;
