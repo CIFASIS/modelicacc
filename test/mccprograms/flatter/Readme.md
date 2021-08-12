@@ -13,8 +13,11 @@ The models are the following:
 In order to run the flatter algorithm the following steps must be taken:
 
 * Install the ModelicaCC compiler as described [here](https://github.com/CIFASIS/modelicacc#installation)
-* From the ModelicaCC root folder run: `./bin/flatter ./test/mccprograms/flatter/{TEST_MODEL} > {OUTPUT_MODEL}` where `{TEST_MODEL}` is one of the models defined above and `{OUTPUT_MODEL}` is the result output Modelica model.
+* From the ModelicaCC root folder run: `./bin/flatter -d ./test/mccprograms/flatter/{TEST_MODEL} > {OUTPUT_MODEL}` where `{TEST_MODEL}` is one of the models defined above and `{OUTPUT_MODEL}` is the result output Modelica model.
 
 The obtained Modelica model can be directly compiled and simulated using [OpenModelica](https://www.openmodelica.org/#). 
 
-
+**Note:* 
+The -d flag will generate a log file located in the same folder where the command is called, this file contains detailed information about the differente steps taken by the flatter algorithm
+and also information about the generated graph used by the algorithm. Additionally, a dot file with the definition of the graph is created, to generate a pdf file from the dot file, run:
+`dot -Grankdir=LR -Tpdf <PATH_TO_DOT_FILE>`
