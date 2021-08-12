@@ -36,7 +36,7 @@ using namespace Causalize;
 void usage()
 {
   cout << "Usage causalize [options] file" << endl;
-  cout << "Generates matching graph dot file for a gibven Modelica mode file." << endl;
+  cout << "Generates matching graph dot file for a given Modelica model file." << endl;
   cout << endl;
   cout << "-h, --help      Display this information and exit" << endl;
   cout << "-o <path>, --output <path> Sets the output path for the generated graph dot file." << endl;
