@@ -85,7 +85,7 @@ model RCcell
     connect(capacitor1.n, d);
 end RCcell;
 
-model N2D_dassl_10
+model N2D
 	constant Integer N = 10;
 	constant Integer M = 10;
   RCcell Cell[N,M];
@@ -103,4 +103,4 @@ model N2D_dassl_10
         connect(Cell[1,j].u,S.p);
         connect(Cell[N,j].d,S.n);
     end for;
-end N2D_dassl_10;
+end N2D;

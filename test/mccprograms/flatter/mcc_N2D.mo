@@ -1,4 +1,4 @@
-model N2D_dassl_10
+model N2D
   constant Integer N=10;
   constant Integer M=10;
   parameter Real Cell_resistor_R[N, M](each start=1);
@@ -159,4 +159,4 @@ equation
   for i in 1:1:9,j in 1:1:9 loop
     Cell_d_v[i,j] = Cell_u_v[i+1,j];
   end for;
-end N2D_dassl_10;
+end N2D;

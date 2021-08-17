@@ -66,8 +66,8 @@ class ConstantVoltage
     i = p.i;
 end ConstantVoltage;
 
-model RLC_dassl_100
-	constant Integer N = 100;
+model RC
+  constant Integer N = 100;
   Ground G;
   Resistor R[N];
   Capacitor C[N];
@@ -82,4 +82,4 @@ model RLC_dassl_100
       connect(C[i].p, R[i].n);
       connect(C[i].n, G.p);
     end for;
-end RLC_dassl_100;
+end RC;

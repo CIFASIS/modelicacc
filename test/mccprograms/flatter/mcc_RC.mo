@@ -1,4 +1,4 @@
-model RLC_dassl_100
+model RC
   constant Integer N=100;
   Real G_p_v;
   Real G_p_i;
@@ -66,4 +66,4 @@ equation
     C_p_v[i] = R_p_v[i+1];
     C_p_v[i] = R_n_v[i];
   end for;
-end RLC_dassl_100;
+end RC;

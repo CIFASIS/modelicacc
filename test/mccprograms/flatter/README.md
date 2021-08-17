@@ -5,10 +5,9 @@ It also contains the expected results for each of them and a Modelica package th
 
 The models are the following: 
 
-* A simple RC network `RLC.mo` -> Expected results `mcc_RLC.mo`
-* An RC network with recursive connections `RRLC.mo` -> Expected results `mcc_RRLC.mo`
+* A simple RC network `RC.mo` -> Expected results `mcc_RC.mo`
+* An RC network with recursive connections `RRC.mo` -> Expected results `mcc_RRC.mo`
 * A two-dimensional RC network `N2D.mo`-> Expected results `mcc_N2D.mo`
-
 
 In order to run the flatter algorithm the following steps must be taken:
 
