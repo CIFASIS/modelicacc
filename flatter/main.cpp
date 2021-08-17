@@ -21,6 +21,7 @@
 #include <boost/variant/get.hpp>
 
 #include <fstream>
+#include <getopt.h>
 #include <iostream>
 #include <string>
 #include <time.h>
@@ -35,6 +36,33 @@
 #include <util/logger.h>
 #include <util/table.h>
 
+void usage()
+{
+  cout << "Usage flatter [options] file" << endl;
+  cout << "Generates flattened model for a given Modelica file." << endl;
+  cout << endl;
+  cout << "-c <class_name>, --class <class_name> Flatter class <class_name> defined in a Modelica model." << endl;
+  cout << "-d, --debug     Generate a detailed log file with debug information about the " << endl;
+  cout << "                the generated graph, including a dot file for it and the" << endl; 
+  cout << "                differents stages of the flatter algorithm." << endl;
+  cout << "-g <path>, --graph <path> Sets the output path for the generated graph dot file," << endl;
+  cout << "                this flag only has effect if the debug flag is enabled." << endl;
+  cout << "-h, --help      Display this information and exit" << endl;
+  
+  cout << "-v, --version   Display version information and exit" << endl;
+  cout << endl;
+  cout << "Modelica C Compiler home page: https://github.com/CIFASIS/modelicacc " << endl;
+}
+
+void version()
+{
+  cout << "Modelica C Compiler 2.0" << endl;
+  cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << endl;
+  cout << "This is free software: you are free to change and redistribute it." << endl;
+  cout << "There is NO WARRANTY, to the extent permitted by law." << endl;
+}
+
+
 int main(int argc, char** argv)
 {
   using namespace std;
@@ -45,23 +73,48 @@ int main(int argc, char** argv)
   bool ret;
   char* className = NULL;
   string filename;
-  char opt;
   int debug = 0;
   std::ofstream outputFile;
+  int opt;
+  extern char* optarg;
+  string output_path = "";
 
-  while ((opt = getopt(argc, argv, "i:c:g:d")) != -1) {
+  while (true) {
+    static struct option long_options[] = {{"version", no_argument, 0, 'v'},
+                                           {"help", no_argument, 0, 'h'},
+                                           {"class", required_argument, 0, 'c'},
+                                           {"graph", required_argument, 0, 'g'},
+                                           {"debug", no_argument, 0, 'd'},
+                                           {0, 0, 0, 0}};
+    int option_index = 0;
+    opt = getopt_long(argc, argv, "vhdc:g:", long_options, &option_index);
+    if (opt == EOF) {
+      break;
+    }
     switch (opt) {
+    case 'v':
+      version();
+      exit(0);
+    case 'h':
+      usage();
+      exit(0);
     case 'g':
       filename = optarg;
       break;
     case 'd':
       debug = 1;
+      break;
     case 'c':
       className = optarg;
       break;
+    case '?':
+      usage();
+      exit(-1);
+      break;
+    default:
+      abort();
     }
   }
-
 
   StoredDef sd;
   if (argv[optind] != NULL)
