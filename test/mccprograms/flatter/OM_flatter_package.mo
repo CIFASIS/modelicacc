@@ -105,22 +105,22 @@ package GT_MODELS
   end RRLC;
 
   model RCcell
-    Resistor resistor;
-    Resistor resistor1;
-    Capacitor capacitor;
-    Capacitor capacitor1;
+    Resistor R1;
+    Resistor R2;
+    Capacitor C1;
+    Capacitor C2;
     Pin l;
     Pin d;
     Pin r;
     Pin u;
     equation
-      connect(resistor.n, capacitor.p);
-      connect(resistor1.n, capacitor1.p);
-      connect(resistor1.n, capacitor.p);
-      connect(resistor.p, l);
-      connect(capacitor.n, r);
-      connect(resistor1.p, u);
-      connect(capacitor1.n, d);
+      connect(R1.n, C1.p);
+      connect(R2.n, C2.p);
+      connect(R2.n, C1.p);
+      connect(R1.p, l);
+      connect(C1.n, r);
+      connect(R2.p, u);
+      connect(C2.n, d);
   end RCcell;
 
   model N2D
