@@ -143,6 +143,35 @@ LM_TEMP_TYPE LM_TEMP_TYPE::invLMap()
 }
 
 LM_TEMPLATE
+LM_TEMP_TYPE LM_TEMP_TYPE::addLM(LM_TEMP_TYPE lm2)
+{
+  OrdNumeric resg;
+  OrdNumericIt itresg = resg.begin();
+  OrdNumeric reso;
+  OrdNumericIt itreso = reso.begin();
+
+  if (ndim() == lm2.ndim()) {
+    OrdNumericIt ito = offset_ref().begin();
+    OrdNumericIt itg2 = lm2.gain_ref().begin();
+    OrdNumericIt ito2 = lm2.offset_ref().begin();
+
+    BOOST_FOREACH (REAL_IMP gi, gain()) {
+      itresg = resg.insert(itresg, gi + *itg2);
+      ++itresg;
+      itreso = reso.insert(itreso, *ito + *ito2);
+      ++itreso;
+
+      ++ito;
+      ++itg2;
+      ++ito2;
+    } 
+  }
+
+  LMapImp1 aux(resg, reso);
+  return LMapImp1(resg, reso);  
+}
+
+LM_TEMPLATE
 LM_TEMP_TYPE LM_TEMP_TYPE::diffLM(LM_TEMP_TYPE lm2)
 {
   OrdNumeric resg;

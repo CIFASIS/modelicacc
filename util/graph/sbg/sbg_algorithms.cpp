@@ -88,7 +88,9 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   }
 
   mapD = mapF;
+  map_D = mapD;
   mapB = mapU;
+  map_B = mapB;
 
   allEdges = mapF.wholeDom();
   F = mapF.image(allEdges);
@@ -100,17 +102,20 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   matchedE = emptySet;
   Ed = allEdges; 
 
+  PWLMap idMap(allVertices);
+  mmap = idMap;
+
   PWLMap emptyMap;
   rmap = emptyMap;
   smap = emptyMap;
-
-  PWLMap idMap(allVertices);
-  mmap = idMap;
+  lmap = emptyMap;
+  lmapD = emptyMap;
+  lmapB = emptyMap;
 }
 
-Set MatchingStruct::recursion(PWLMap smap, int iters, Set E)
+Set MatchingStruct::recursion(PWLMap s_map, int iters, Set E)
 {
-  PWLMap tildesmap = smap;
+  PWLMap tildesmap = s_map;
  
   for (int i = 0; i < iters; i++) {
     std::set<SetVertexDesc> visited;
@@ -157,38 +162,40 @@ Set MatchingStruct::recursion(PWLMap smap, int iters, Set E)
       rmap = idRecM.combine(rmap);
     }
 
-    tildesmap = tildesmap.compPW(smap);
+    tildesmap = tildesmap.compPW(s_map);
   }
 
   return E;
 }
 
-void MatchingStruct::minReachable(PWLMap m_map, PWLMap map_D, PWLMap map_B, Set E)
+void MatchingStruct::minReachable(PWLMap m_map, Set E)
 {
-  Set unmatchedE = allEdges.diff(matchedE);
+  std::cout << "E: " << E << "\n\n";
+
+  ORD_REALS g;
+  g.insert(g.begin(), 0);
+  ORD_REALS o;
+  o.insert(o.begin(), 0);
+  PWLMap lengths;
+  lengths.addSetLM(allVertices, LMap(g, o));
+  lmap = lengths;
 
   Set tildeV = m_map.image(allVertices);
+  Set tildeMatchedV = m_map.image(matchedV);
 
   map_D = map_D.restrictMap(E);
   map_B = map_B.restrictMap(E);
   PWLMap tildeD = m_map.compPW(map_D);
   PWLMap tildeB = m_map.compPW(map_B);
 
-  Set unmatchedD = tildeD.image(unmatchedE);
+  Set unmatchedD = tildeD.image(allEdges);
+  unmatchedD = unmatchedD.diff(tildeMatchedV);
 
   PWLMap tildeVid(tildeV);
   rmap = tildeVid;
   smap = tildeVid;
 
   PWLMap oldrmap = rmap;
-
-  int iters = 1;
-
-  Set m_mapDom = m_map.wholeDom();
-  Set m_mapImage = m_map.image(m_mapDom);
-  PWLMap m_mapInv = m_map.minInv(m_mapImage);
-
-  Set dom = rmap.wholeDom();
 
   do {
     map_D = map_D.restrictMap(E);
@@ -197,30 +204,157 @@ void MatchingStruct::minReachable(PWLMap m_map, PWLMap map_D, PWLMap map_B, Set 
     tildeB = m_map.compPW(map_B);
   
     PWLMap dr = rmap.compPW(tildeD);
-    PWLMap br = rmap.compPW(tildeB);
+    PWLMap br = tildeB;
 
     PWLMap r1map = br.minAdjMap(dr);
-    Set aux = r1map.preImage(unmatchedD);
-    r1map = r1map.restrictMap(aux);
     PWLMap tildermap = r1map.combine(rmap);
-    tildermap = tildermap.minMap(rmap);
 
     oldrmap = rmap;
     rmap = tildermap.mapInf();
-    if (!oldrmap.equivalentPW(rmap)) {
-      smap = tildeB.minAdjMap(tildeD, rmap);
-      smap = smap.combine(rmap);
-      smap = smap.minMap(rmap);
-      smap = smap.mapInf();
-      //E = recursion(smap, iters, E);
-    }
+    rmap = rmap.minMap(oldrmap);
+    Set aux = rmap.preImage(unmatchedD);
+    rmap = rmap.restrictMap(aux);
 
-    iters++;
+    tildeD = m_map.compPW(map_D);
+    smap = tildeB.minAdjMap(tildeD, rmap);
   }
   while (!oldrmap.equivalentPW(rmap));
 
+  Set m_mapImage = m_map.image(m_map.wholeDom());
+  PWLMap m_mapInv = m_map.minInv(m_mapImage);
+
   rmap = rmap.compPW(m_map);
   rmap = m_mapInv.compPW(rmap);
+  Set reps = rmap.image(allVertices);
+
+  smap = smap.compPW(m_map);
+  smap = m_mapInv.compPW(smap);
+  smap = smap.restrictMap(rmap.wholeDom());
+
+  // Create lmap
+  PWLMap auxsmap = smap;
+  PWLMap originalsmap = auxsmap;
+  PWLMap oldsmap = auxsmap;
+
+  PWLMap auxlmap;
+  ORD_INTS off;
+  off.insert(off.begin(), 1);
+
+  auxlmap = lmap.restrictMap(allVertices.diff(reps));
+  auxlmap = auxlmap.offsetMap(off);
+  lmap = auxlmap.combine(lmap);
+
+  do {
+    Set converged = auxsmap.preImage(reps);
+    Set unconverged = auxsmap.wholeDom().diff(converged);
+    auxlmap = lmap.restrictMap(unconverged);
+    auxlmap = auxlmap.offsetMap(off); 
+    lmap = auxlmap.combine(lmap);
+
+    oldsmap = auxsmap;
+    auxsmap = auxsmap.compPW(originalsmap);
+  }
+  while (!oldsmap.equivalentPW(auxsmap));
+
+  if (rmap.wholeDom() != allVertices) {
+    ORD_REALS g;
+    g.insert(g.begin(), 0);
+    ORD_REALS o;
+    o.insert(o.begin(), 0);
+    PWLMap auxmap;
+    auxmap.addSetLM(allVertices.diff(rmap.wholeDom()), LMap(g, o));
+    auxlmap = auxmap;
+    lmap = auxlmap.combine(lmap);
+  }
+}
+
+Set MatchingStruct::findPathEdges(int lD, int lB, PWLMap smapD, PWLMap smapB, Set v)
+{
+  Set edges;
+
+  Set auxv = v;
+
+  PWLMap auxsmapD = smapD;
+  for (int i = 0; i < lD; i++) {
+    Set adjEdges = mapB.preImage(v);
+    Set succ = smapD.image(v);
+    adjEdges = adjEdges.cap(mapD.preImage(succ));
+
+      edges = edges.cup(adjEdges);
+
+    v = succ;
+  }
+
+  PWLMap auxsmapB = smapB;
+  v = auxv;
+  for (int i = 0; i < lB; i++) {
+    Set adjEdges = mapD.preImage(v);
+    Set succ = smapB.image(v);
+    adjEdges = adjEdges.cap(mapB.preImage(succ));
+
+    edges = edges.cup(adjEdges);
+
+    v = succ;
+  }
+
+  std::cout << "edges: " << edges << "\n\n";
+  return edges;
+}
+
+Set MatchingStruct::longestPath(PWLMap rmapD, PWLMap rmapB, PWLMap smapD, PWLMap smapB)
+{
+  Set edges;
+
+  Set inAlternatingPath = rmapD.wholeDom().cap(rmapB.wholeDom()); // Vertices that reach unmatched right and left vertices
+  std::cout << "inAlternating: " << inAlternatingPath << "\n\n";
+  Set reps = rmapD.image(inAlternatingPath); // Representants of inAlternatingPath
+  reps = reps.cup(rmapB.image(inAlternatingPath));
+
+  std::cout << "rmapD: " << rmapD << "\n";
+  std::cout << "rmapB: " << rmapB << "\n\n";
+
+  // Traverse "connected" components
+  BOOST_FOREACH (AtomSet as, reps.asets()) {
+    Set sas = createSet(as);
+    Set repd = rmapD.preImage(sas); // Represented vertices in an alternating path
+    repd = repd.cup(rmapB.preImage(sas));
+    repd = repd.cap(inAlternatingPath);      
+    std::cout << "reps: " << reps << "\n";
+    std::cout << "repd: " << repd << "\n\n";
+
+    PWLMap lmap = lmapD.addMap(lmapB);
+    std::cout << "lmap: " << lmap << "\n";
+    ORD_INTS longest = (lmap.image(repd)).maxElem(); // Length of longest alternating path with vertices in repd
+    INT l = *(longest.begin());
+    std::cout << "l: " << l << "\n";
+
+    Interval iLongest(l, 1, l);
+    Set sLongest = createSet(iLongest);
+    Set vertexInLongest = lmap.preImage(sLongest); // Vertex in longest alternating path
+    std::cout << "vertexl: " << vertexInLongest << "\n";
+
+    ORD_INTS longestD = lmapD.image(vertexInLongest).maxElem();
+    INT lD = *(longestD.begin()); 
+    ORD_INTS longestB = lmapB.image(vertexInLongest).maxElem();
+    INT lB = *(longestB.begin()); 
+
+    BOOST_FOREACH (SetVertexDesc vdi, vertices(g)) {
+      Set vi = g[vdi].range();
+
+      Set setVertexLongest = vertexInLongest.cap(vi);
+      if (!setVertexLongest.empty()) {
+        setVertexLongest = setVertexLongest.cap(vi);
+        std::cout << "vertex: " << setVertexLongest << "\n";
+        std::cout << "as: " << as << "\n\n";
+        Set edgesInPath = findPathEdges(lD, lB, smapD, smapB, setVertexLongest);
+        edges = edges.cup(edgesInPath);
+  
+        break;
+      }
+    }
+  }
+  
+  return edges;
 }
 
 Set MatchingStruct::SBGMatching()
@@ -236,13 +370,12 @@ Set MatchingStruct::SBGMatching()
     mi.addInter(i);
   Set zero = createSet(mi);
 
-  Set unknowns = mapU.image(allVertices);
-
   std::cout << "\n";
   do {
     Ed = allEdges;
     Set unmatchedV = allVertices.diff(matchedV);
     OrdCT<INT> maxV = allVertices.maxElem();
+
 
     // Forward direction
     Set unmatchedRight = mapU.image(Ed);
@@ -250,16 +383,14 @@ Set MatchingStruct::SBGMatching()
     PWLMap offsetUD = mmap.restrictMap(unmatchedRight);
     offsetUD = offsetUD.offsetMap(maxV);
 
-    Set matchedRight = mapU.image(Ed);
-    matchedRight = matchedRight.cap(matchedV);
-    PWLMap offsetMD = mmap.restrictMap(matchedRight);
-    offsetMD = offsetMD.offsetMap(maxV);
-
     PWLMap mmapD = offsetUD.combine(mmap);
-    mmapD = offsetMD.combine(mmapD);
-    
-    minReachable(mmapD, mapD, mapB, Ed);
+   
+    map_D = mapD;
+    map_B = mapB; 
+    minReachable(mmapD, Ed);
     PWLMap rmapD = rmap;
+    PWLMap smapD = smap;
+    lmapD = lmap;
 
     Set tildeV = rmapD.preImage(F);
     tildeEd = mapU.preImage(tildeV);
@@ -277,16 +408,14 @@ Set MatchingStruct::SBGMatching()
     PWLMap offsetUB = mmap.restrictMap(unmatchedLeft);
     offsetUB = offsetUB.offsetMap(maxV);
 
-    Set matchedLeft = mapF.image(Ed);
-    matchedLeft = matchedLeft.cap(matchedV);
-    PWLMap offsetMB = mmap.restrictMap(matchedLeft);
-    offsetMB = offsetMB.offsetMap(maxV);
-
     PWLMap mmapB = offsetUB.combine(mmap);
-    mmapB = offsetMB.combine(mmapB);
     
-    minReachable(mmapB, mapB, mapD, tildeEd);
+    map_D = mapB;
+    map_B = mapD; 
+    minReachable(mmapB, tildeEd);
     PWLMap rmapB = rmap;
+    PWLMap smapB = smap;
+    lmapB = lmap;
 
     tildeV = rmapB.preImage(U);
     Set auxTildeEd = mapU.preImage(tildeV);
@@ -299,15 +428,34 @@ Set MatchingStruct::SBGMatching()
     tildeEd = auxTildeEd.cap(tildeEd); 
 
     // Leave only one edge departuring from each vertex
-    PWLMap invB = mapB.minInv(mapB.image(mapB.wholeDom()));
-    tildeEd = invB.compPW(mapB).image(tildeEd);
+    Set longest = longestPath(rmapD, rmapB, smapD, smapB);
+    tildeEd = longest;
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
+
+    PWLMap mapDEd = mapD.restrictMap(tildeEd);
+    PWLMap invD = mapDEd.minInv(mapD.image(tildeEd));
+    Set auxtildeEd = invD.compPW(mapD).image(tildeEd);
+    tildeEd = auxtildeEd.cap(tildeEd);
+
+    PWLMap mapBEd = mapB.restrictMap(tildeEd);
+    PWLMap invB = mapBEd.minInv(mapB.image(tildeEd));
+    auxtildeEd = invB.compPW(mapB).image(tildeEd);
+    tildeEd = auxtildeEd.cap(tildeEd);
 
     // Update matched vertices
-    Set matchedD = (rmapD.compPW(mapD)).image(tildeEd);
-    Set matchedB = (rmapB.compPW(mapB)).image(tildeEd);
-    matchedV = matchedV.cup(matchedD);
-    matchedV = matchedV.cup(matchedB);
-    diffMatched = unknowns.diff(matchedV);
+
+    // Revert matched and unmatched edges
+    mapDEd = mapD.restrictMap(tildeEd);
+    mapBEd = mapB.restrictMap(tildeEd);
+    mapD = mapBEd.combine(mapD);
+    map_D = map_D;
+    mapB = mapDEd.combine(mapB);
+    map_B = map_B;
+
+    matchedE = mapD.preImage(U);
+    matchedV = mapD.image(matchedE);
+    matchedV = matchedV.cup(mapB.image(matchedE));
+    diffMatched = U.diff(matchedV);
 
     // Update mmap
     PWLMap auxM = mmap.restrictMap(matchedV);
@@ -315,14 +463,13 @@ Set MatchingStruct::SBGMatching()
     auxM = auxM.offsetMap(maxV);
     mmap = auxM.combine(mmap);
 
-    // Revert matched and unmatched edges
-    PWLMap mapDEd = mapD.restrictMap(tildeEd);
-    PWLMap mapBEd = mapB.restrictMap(tildeEd);
-    mapD = mapBEd.combine(mapD);
-    mapB = mapDEd.combine(mapB);
+    unmatchedV = allVertices.diff(matchedV);
+    PWLMap idUnmatched(unmatchedV);
+    mmap = idUnmatched.combine(mmap);
 
-    matchedE = mapD.preImage(U);
     bool den = diffMatched.empty();
+    std::cout << "matchedE: " << matchedE << "\n";
+    std::cout << "matchedV: " << matchedV << "\n";
     std::cout << "den: " << den << "\n\n";
   }
   while (!diffMatched.empty() && !tildeEd.empty());

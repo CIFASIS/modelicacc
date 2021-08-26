@@ -40,6 +40,7 @@ struct LMapImp1 {
 
   LMapImp1 compose(LMapImp1 lm2);
   LMapImp1 invLMap();
+  LMapImp1 addLM(LMapImp1 lm2);
   LMapImp1 diffLM(LMapImp1 lm2);
 
   eq_class(LMapImp1);

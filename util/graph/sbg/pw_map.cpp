@@ -712,6 +712,43 @@ PW_TEMP_TYPE PW_TEMP_TYPE::offsetMap(ORD_CT<INT_IMP> offElem)
   return PWLMapImp1(dom(), lmres);
 }
 
+// This operation adds two maps. In the
+// intersection of the domains, the linear map will be 
+// the substraction of both linear maps
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::addMap(PW_TEMP_TYPE pw2)
+{
+  Sets domres;
+  SetsIt itdom = domres.begin();
+  LMaps lmres;
+  LMapsIt itlm = lmres.begin(); 
+
+  if (ndim() == pw2.ndim()) {
+    LMapsIt itlm1 = lmap_ref().begin();
+
+    BOOST_FOREACH (SET_IMP d1, dom()) {
+      LMapsIt itlm2 = pw2.lmap_ref().begin();
+      BOOST_FOREACH (SET_IMP d2, pw2.dom()) {
+        SET_IMP domcap = d1.cap(d2);
+        LM_IMP add = (*itlm1).addLM(*itlm2);
+
+        if (!domcap.empty()) {
+          itdom = domres.insert(itdom, domcap);
+          ++itdom;
+          itlm = lmres.insert(itlm, add);
+          ++itlm;
+        }
+
+        ++itlm2;
+      }
+
+      ++itlm1;
+    }
+  }
+
+  return PWLMapImp1(domres, lmres);
+}
+
 // This operation substracts one map from another. In the
 // intersection of the domains, the linear map will be 
 // the substraction of both linear maps
@@ -996,7 +1033,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf()
 
       ito = o.begin();
       if (a > 0) {
-        REAL its = 0;
+        REAL its = 1;
 
         ORD_CT<REAL> g = lm.gain();
         typename ORD_CT<REAL>::iterator itg = g.begin();
@@ -1014,9 +1051,6 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf()
             }
           }
 
-          // else
-          //  ++maxit;
-
           ++itg;
           ++ito;
         }
@@ -1033,8 +1067,8 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf()
     if (maxit == 0)
       return res;
 
-    else
-      maxit = floor(log2(maxit)) + 1;
+    //else
+    //  maxit = floor(log2(maxit)) + 1;
 
     for (int j = 0; j < maxit; ++j) res = res.compPW(res);
   }
@@ -1273,6 +1307,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
     }
   }
 
+
   return res;
 }
 
@@ -1283,7 +1318,8 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjMap(PW_TEMP_TYPE pw1)
   SET_IMP im1 = pw1.image(dom1);
   PWLMapImp1 idmap(im1);
 
-  return minAdjMap(pw1, idmap);
+  PWLMap res = minAdjMap(pw1, idmap);
+  return res;
 }
 
 PW_TEMPLATE

@@ -21,11 +21,6 @@ PWLMap connectedComponents(SBGraph g);
 
 // Matching of undirected SBGraphs ---------------------------------------------------------------
 
-
-typedef OrdCT<Set> SetPath;
-
-//typedef VertexMap property_map<SBGraph, > // For access to set-vertices
-
 struct MatchingStruct{
   MatchingStruct(SBGraph g);
 
@@ -33,8 +28,10 @@ struct MatchingStruct{
 
   Set SBGMatching();
 
-  Set recursion(PWLMap smap, int iters, Set E);
-  void minReachable(PWLMap m_map, PWLMap map_D, PWLMap map_B, Set E);
+  Set recursion(PWLMap s_map, int iters, Set E);
+  Set findPathEdges(int lD, int lB, PWLMap smapD, PWLMap smapB, Set v);
+  Set longestPath(PWLMap rmapD, PWLMap rmapB, PWLMap smapD, PWLMap smapB);
+  void minReachable(PWLMap m_map, Set E);
   //void recursion();
 
   private:
@@ -48,7 +45,9 @@ struct MatchingStruct{
   PWLMap mapF; // "Left" maps
   PWLMap mapU; // "Right" maps
   PWLMap mapD; // Forward direction
+  PWLMap map_D; // Auxiliary map
   PWLMap mapB; // Backward direction
+  PWLMap map_B; // Auxiliary map
 
   Set matchedV;
   Set matchedE; 
@@ -58,4 +57,7 @@ struct MatchingStruct{
 
   PWLMap rmap; // Map of reachable vertices
   PWLMap smap; // Map of successors
+  PWLMap lmap; // Map of length of paths
+  PWLMap lmapD; // Auxiliary map
+  PWLMap lmapB; // Auxiliary map
 };
