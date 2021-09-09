@@ -50,6 +50,7 @@ struct MatchingStruct{
   PWLMap map_B; // Auxiliary map
 
   Set matchedV;
+  Set unmatchedV;
   Set matchedE; 
   Set Ed;
 

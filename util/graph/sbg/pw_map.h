@@ -68,8 +68,6 @@ struct PWLMapImp1 {
 
   PWLMapImp1 concat(PWLMapImp1 pw2);
   PWLMapImp1 combine(PWLMapImp1 pw2);
- 
-  PWLMapImp1 minMap(PWLMapImp1 pw2); 
 
   PWLMapImp1 offsetMap(ORD_CT<INT_IMP> off);
   PWLMapImp1 addMap(PWLMapImp1 pw2);
@@ -77,28 +75,24 @@ struct PWLMapImp1 {
 
   PWLMapImp1 atomize();
 
-  PWLMapImp1 reduceMapN(int dim);
-  PWLMapImp1 mapInf();
+  void minMapAtomSet(AS_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3, LM_IMP lm4); 
+  void minMapAtomSet(AS_IMP dom, LM_IMP lm1, LM_IMP lm2); 
+  void minMapSet(SET_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3, LM_IMP lm4);
+  void minMapSet(SET_IMP dom, LM_IMP lm1, LM_IMP lm2, PWLMapImp1 pw3); 
+  void minMapSet(SET_IMP dom, LM_IMP lm1, LM_IMP lm2);
+  PWLMapImp1 minMap(PWLMapImp1 pw2, PWLMapImp1 pw1); 
+  PWLMapImp1 minMap(PWLMapImp1 pw2); 
 
   PWLMapImp1 minAdjCompMap(PWLMapImp1 pw2, PWLMapImp1 pw1);
   PWLMapImp1 minAdjCompMap(PWLMapImp1 pw1);
   PWLMapImp1 minAdjMap(PWLMapImp1 pw2, PWLMapImp1 pw1);
   PWLMapImp1 minAdjMap(PWLMapImp1 pw1);
 
+  PWLMapImp1 reduceMapN(int dim);
+  PWLMapImp1 mapInf();
+
   eq_class(PWLMapImp1);
 };
-
-PW_TEMPLATE
-PW_TEMP_TYPE MIN_MAP_ATOM_SET(AS_IMP &dom, LM_IMP &lm1, LM_IMP &lm2);
-
-#define minMapAtomSet(X, Y, Z) \
-  MIN_MAP_ATOM_SET<OrdCT, UnordCT, AtomPWLMap, LMap, Set, AtomSet, MultiInterval, Interval, INT, REAL>(X, Y, Z);
-
-PW_TEMPLATE
-PW_TEMP_TYPE MIN_MAP_SET(SET_IMP &dom, LM_IMP &lm1, LM_IMP &lm2);
-
-#define minMapSet(X, Y, Z) \
-  MIN_MAP_SET<OrdCT, UnordCT, AtomPWLMap, LMap, Set, AtomSet, MultiInterval, Interval, INT, REAL>(X, Y, Z);
 
 typedef PWLMapImp1<OrdCT, UnordCT, AtomPWLMap, LMap, Set, AtomSet, MultiInterval, Interval, INT, REAL> PWLMap;
 

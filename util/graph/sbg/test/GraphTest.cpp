@@ -2562,7 +2562,8 @@ void TestMinAS1()
   lm2.addGO(2.0, 2.0);
   lm2.addGO(1.0, 10.0);
 
-  PWLMap res1 = minMapAtomSet(as1, lm1, lm2);
+  PWLMap res1;
+  res1.minMapAtomSet(as1, lm1, lm2);
 
   Interval i4(3, 3, 24);
 
@@ -2613,7 +2614,8 @@ void TestMinAS2()
   lm2.addGO(2.0, 3.0);
   lm2.addGO(1.0, 10.0);
 
-  PWLMap res1 = minMapAtomSet(as1, lm1, lm2);
+  PWLMap res1;
+  res1.minMapAtomSet(as1, lm1, lm2);
 
   Set s1 = createSet(as1);
 
@@ -2658,7 +2660,8 @@ void TestMinSet1()
   LMap lm2;
   lm2.addGO(2, -12);
 
-  PWLMap res1 = minMapSet(s1, lm1, lm2);
+  PWLMap res1;
+  res1.minMapSet(s1, lm1, lm2);
 
   Interval i4(10, 1, 12);
 
@@ -2724,7 +2727,8 @@ void TestMinSet2()
   LMap lm2;
   lm2.addGO(1, 0);
 
-  PWLMap res1 = minMapSet(s1, lm1, lm2);
+  PWLMap res1;
+  res1.minMapSet(s1, lm1, lm2);
 
   PWLMap res2;
   res2.addSetLM(s1, lm1);
@@ -4362,295 +4366,7 @@ void Test2D()
 
 // -- Matching ---------------------------------------------------------------//
 
-/*
-void TestSplit()
-{
-  float n = 100;
-
-  // Equations
-
-  float offF1 = 1;
-  float offF2 = offF1 + n;
-  float offF3 = offF2 + n;
-  float offF4 = offF3 + n - 1;
-  float offF5 = offF4 + n - 1;
-  float offF6 = offF5 + 1;
-
-  Interval i1(offF1, 1, offF1);
-  Set f1 = createSet(i1);
-  SetVertex F1("F1", 1, f1, 0);
-
-  Interval i2(1 + offF1, 1, offF2);
-  Set f2 = createSet(i2);
-  SetVertex F2("F2", 2, f2, 0);
-
-  Interval i3(1 + offF2, 1, offF3);
-  Set f3 = createSet(i3);
-  SetVertex F3("F3", 3, f3, 0);
-
-  Interval i4(1 + offF3, 1, offF4);
-  Set f4 = createSet(i4);
-  SetVertex F4("F4", 4, f4, 0);
-
-  Interval i5(1 + offF4, 1, offF5);
-  Set f5 = createSet(i5);
-  SetVertex F5("F5", 1, f5, 0);
-
-  Interval i6(1 + offF5, 1, offF6);
-  Set f6 = createSet(i6);
-  SetVertex F6("F6", 6, f6, 0);
-
-  // Unknowns
-
-  float offU1 = offF6 + n;
-  float offU2 = offU1 + n;
-  float offU3 = offU2 + n;
-  float offU4 = offU3 + n;
-
-  Interval i7(1 + offF6, 1, offU1);
-  Set u1 = createSet(i7);
-  SetVertex U1("U1", 7, u1, 0);
-
-  Interval i8(1 + offU1, 1, offU2);
-  Set u2 = createSet(i8);
-  SetVertex U2("U2", 8, u2, 0);
-
-  Interval i9(1 + offU2, 1, offU3);
-  Set u3 = createSet(i9);
-  SetVertex U3("U3", 9, u3, 0);
-
-  Interval i10(1 + offU3, 1, offU4);
-  Set u4 = createSet(i10);
-  SetVertex U4("U4", 10, u4, 0);
-
-  // Edges
-
-  float offE1 = 1;
-  float offE2 = offE1 + n;
-  float offE3 = offE2 + n;
-  float offE4 = offE3 + n;
-  float offE5 = offE4 + n;
-  float offE6 = offE5 + n - 1;
-  float offE7 = offE6 + n - 1;
-  float offE8 = offE7 + n - 1;
-  float offE9 = offE8 + n - 1;
-  float offE10 = offE9 + 1;
-  float offE11 = offE10 + 1;
-
-  Interval i11(offE1, 1, offE1);
-  Set domE1 = createSet(i11);
-  LMap lm1;
-  lm1.addGO(1, offF1 - offE1);
-  LMap lm2;
-  lm2.addGO(1, 1 + offF6 - offE1);
-  PWLMap mapE1l;
-  mapE1l.addSetLM(domE1, lm1);
-  PWLMap mapE1r;
-  mapE1r.addSetLM(domE1, lm2);
-  SetEdge E1("E1", 1, mapE1l, mapE1r, 0);
-
-  Interval i12(1 + offE1, 1, offE2);
-  Set domE2 = createSet(i12);
-  LMap lm3;
-  lm3.addGO(1, offF1 - offE1);
-  LMap lm4;
-  lm4.addGO(1, offF6 - offE1);
-  PWLMap mapE2l;
-  mapE2l.addSetLM(domE2, lm3);
-  PWLMap mapE2r;
-  mapE2r.addSetLM(domE2, lm4);
-  SetEdge E2("E2", 2, mapE2l, mapE2r, 0);
-
-  Interval i13(1 + offE2, 1, offE3);
-  Set domE3 = createSet(i13);
-  LMap lm5;
-  lm5.addGO(1, offF1 - offE2);
-  LMap lm6;
-  lm6.addGO(1, offU1 - offE2);
-  PWLMap mapE3l;
-  mapE3l.addSetLM(domE3, lm5);
-  PWLMap mapE3r;
-  mapE3r.addSetLM(domE3, lm6);
-  SetEdge E3("E3", 3, mapE3l, mapE3r, 0);
-
-  Interval i14(1 + offE3, 1, offE4);
-  Set domE4 = createSet(i14);
-  LMap lm7;
-  lm7.addGO(1, offF2 - offE3);
-  LMap lm8;
-  lm8.addGO(1, offF6 - offE3);
-  PWLMap mapE4l;
-  mapE4l.addSetLM(domE4, lm7);
-  PWLMap mapE4r;
-  mapE4r.addSetLM(domE4, lm8);
-  SetEdge E4("E4", 4, mapE4l, mapE4r, 0);
-
-  Interval i15(1 + offE4, 1, offE5);
-  Set domE5 = createSet(i15);
-  LMap lm9;
-  lm9.addGO(1, offF2 - offE4);
-  LMap lm10;
-  lm10.addGO(1, offU2 - offE4);
-  PWLMap mapE5l;
-  mapE5l.addSetLM(domE5, lm9);
-  PWLMap mapE5r;
-  mapE5r.addSetLM(domE5, lm10);
-  SetEdge E5("E5", 5, mapE5l, mapE5r, 0);
-
-  Interval i16(1 + offE5, 1, offE6);
-  Set domE6 = createSet(i16);
-  LMap lm11;
-  lm11.addGO(1, offF3 - offE5);
-  LMap lm12;
-  lm12.addGO(1, offU1 - offE5);
-  PWLMap mapE6l;
-  mapE6l.addSetLM(domE6, lm11);
-  PWLMap mapE6r;
-  mapE6r.addSetLM(domE6, lm12);
-  SetEdge E6("E6", 6, mapE6l, mapE6r, 0);
-
-  Interval i17(1 + offE6, 1, offE7);
-  Set domE7 = createSet(i17);
-  LMap lm13;
-  lm13.addGO(1, offF3 - offE6);
-  LMap lm14;
-  lm14.addGO(1, offU2 - offE6);
-  PWLMap mapE7l;
-  mapE7l.addSetLM(domE7, lm13);
-  PWLMap mapE7r;
-  mapE7r.addSetLM(domE7, lm14);
-  SetEdge E7("E7", 7, mapE7l, mapE7r, 0);
-
-  Interval i18(1 + offE7, 1, offE8);
-  Set domE8 = createSet(i18);
-  LMap lm15;
-  lm15.addGO(1, offF4 - offE7);
-  LMap lm16;
-  lm16.addGO(1, offF6 - offE7);
-  PWLMap mapE8l;
-  mapE8l.addSetLM(domE8, lm15);
-  PWLMap mapE8r;
-  mapE8r.addSetLM(domE8, lm16);
-  SetEdge E8("E8", 8, mapE8l, mapE8r, 0);
-
-  Interval i19(1 + offE8, 1, offE9);
-  Set domE9 = createSet(i19);
-  LMap lm17;
-  lm17.addGO(1, offF4 - offE8);
-  LMap lm18;
-  lm18.addGO(1, offU3 - offE8);
-  PWLMap mapE9l;
-  mapE9l.addSetLM(domE9, lm17);
-  PWLMap mapE9r;
-  mapE9r.addSetLM(domE9, lm18);
-  SetEdge E9("E9", 9, mapE9l, mapE9r, 0);
-
-  Interval i20(1 + offE9, 1, offE10);
-  Set domE10 = createSet(i20);
-  LMap lm19;
-  lm19.addGO(1, offF5 - offE9);
-  LMap lm20;
-  lm20.addGO(1, offF6 - offE9 + n - 1);
-  PWLMap mapE10l;
-  mapE10l.addSetLM(domE10, lm19);
-  PWLMap mapE10r;
-  mapE10r.addSetLM(domE10, lm20);
-  SetEdge E10("E10", 10, mapE10l, mapE10r, 0);
-
-  Interval i21(1 + offE10, 1, offE11);
-  Set domE11 = createSet(i21);
-  LMap lm21;
-  lm21.addGO(1, offF5 - offE10);
-  LMap lm22;
-  lm22.addGO(1, offU3 - offE10 + n - 1);
-  PWLMap mapE11l;
-  mapE11l.addSetLM(domE11, lm21);
-  PWLMap mapE11r;
-  mapE11r.addSetLM(domE11, lm22);
-  SetEdge E11("E11", 11, mapE11l, mapE11r, 0);
-
-  SBGraph g;
-
-  SetVertexDesc v1 = boost::add_vertex(g);
-  SetVertexDesc v2 = boost::add_vertex(g);
-  SetVertexDesc v3 = boost::add_vertex(g);
-  SetVertexDesc v4 = boost::add_vertex(g);
-  SetVertexDesc v5 = boost::add_vertex(g);
-  SetVertexDesc v6 = boost::add_vertex(g);
-  SetVertexDesc v7 = boost::add_vertex(g);
-  SetVertexDesc v8 = boost::add_vertex(g);
-  SetVertexDesc v9 = boost::add_vertex(g);
-  SetVertexDesc v10 = boost::add_vertex(g);
-
-  g[v1] = F1;
-  g[v2] = F2;
-  g[v3] = F3;
-  g[v4] = F4;
-  g[v5] = F5;
-  g[v6] = F6;
-  g[v7] = U1;
-  g[v8] = U2;
-  g[v9] = U3;
-  g[v10] = U4;
-
-  SetEdgeDesc e1;
-  bool b1;
-  boost::tie(e1, b1) = boost::add_edge(v1, v7, g);
-  SetEdgeDesc e2;
-  bool b2;
-  boost::tie(e2, b2) = boost::add_edge(v2, v7, g);
-  SetEdgeDesc e3;
-  bool b3;
-  boost::tie(e3, b3) = boost::add_edge(v2, v8, g);
-  SetEdgeDesc e4;
-  bool b4;
-  boost::tie(e4, b4) = boost::add_edge(v3, v7, g);
-  SetEdgeDesc e5;
-  bool b5;
-  boost::tie(e5, b5) = boost::add_edge(v3, v9, g);
-  SetEdgeDesc e6;
-  bool b6;
-  boost::tie(e6, b6) = boost::add_edge(v4, v8, g);
-  SetEdgeDesc e7;
-  bool b7;
-  boost::tie(e7, b7) = boost::add_edge(v4, v9, g);
-  SetEdgeDesc e8;
-  bool b8;
-  boost::tie(e8, b8) = boost::add_edge(v5, v7, g);
-  SetEdgeDesc e9;
-  bool b9;
-  boost::tie(e9, b9) = boost::add_edge(v5, v10, g);
-  SetEdgeDesc e10;
-  bool b10;
-  boost::tie(e10, b10) = boost::add_edge(v6, v7, g);
-  SetEdgeDesc e11;
-  bool b11;
-  boost::tie(e11, b11) = boost::add_edge(v6, v10, g);
-
-  g[e1] = E1;
-  g[e2] = E2;
-  g[e3] = E3;
-  g[e4] = E4;
-  g[e5] = E5;
-  g[e6] = E6;
-  g[e7] = E7;
-  g[e8] = E8;
-  g[e9] = E9;
-  g[e10] = E10;
-  g[e11] = E11;
-
-  MatchingStruct match(g);
-  Interval i22(75, 3, 125);
-  Set s22 = createSet(i22);
-  match.matchedE = s22;
-
-  UnordCT<Set> res = match.split(f2);
-
-  BOOST_CHECK(true);
-}
-*/
-
-void TestMatching()
+void TestMatching1()
 {
   float n = 100;
 
@@ -4969,6 +4685,220 @@ void TestMatching()
   BOOST_CHECK(res1 == res2);
 }
 
+void TestMatching2()
+{
+  INT N = 10;
+
+  // Vertices
+  Interval i1(1, 1, 1);
+  MultiInterval mi1;
+  mi1.addInter(i1);
+  AtomSet as1(mi1);
+  Set s1;
+  s1.addAtomSet(as1);
+  SetVertex F1("eq1", 1, s1, 0);
+
+  Interval i2(2, 1, N);
+  MultiInterval mi2;
+  mi2.addInter(i2);
+  AtomSet as2(mi2);
+  Set s2;
+  s2.addAtomSet(as2);
+  SetVertex F2("eqloop", 2, s2, 0);
+
+  Interval i3(N + 1, 1, 2 * N);
+  MultiInterval mi3;
+  mi3.addInter(i3);
+  AtomSet as3(mi3);
+  Set s3;
+  s3.addAtomSet(as3);
+  SetVertex U("u", 3, s3, 0);
+
+  // Edges
+  Interval i4(1, 1, 1);
+  MultiInterval mi4;
+  mi4.addInter(i4);
+  AtomSet as4(mi4);
+  Set domE1;
+  domE1.addAtomSet(as4);
+  LMap lm1;
+  lm1.addGO(0, 1);
+  LMap lm2;
+  lm2.addGO(0, N + N/2);
+  PWLMap mapE1f;
+  mapE1f.addSetLM(domE1, lm1);
+  PWLMap mapE1u;
+  mapE1u.addSetLM(domE1, lm2);
+  SetEdge E1("E1", 1, mapE1f, mapE1u, 0);
+
+  Interval i5(2, 1, N);
+  MultiInterval mi5;
+  mi5.addInter(i5);
+  AtomSet as5(mi5);
+  Set domE2a;
+  domE2a.addAtomSet(as5); 
+
+  Interval i6(N + 1, 1, 2 * N - 1);
+  MultiInterval mi6;
+  mi6.addInter(i6);
+  AtomSet as6(mi6);
+  Set domE2b;
+  domE2b.addAtomSet(as6);
+
+  LMap lm3;
+  lm3.addGO(1, 0);
+  LMap lm4;
+  lm4.addGO(1, N - 1);
+  
+  LMap lm5;
+  lm5.addGO(1, (-N) + 1);
+  LMap lm6;
+  lm6.addGO(1, 1);
+
+  PWLMap mapE2f;
+  mapE2f.addSetLM(domE2a, lm3);
+  mapE2f.addSetLM(domE2b, lm5);
+  PWLMap mapE2u;
+  mapE2u.addSetLM(domE2a, lm4);
+  mapE2u.addSetLM(domE2b, lm6);
+  SetEdge E2("E2", 2, mapE2f, mapE2u, 0);
+
+  SBGraph g;
+
+  SetVertexDesc v1 = boost::add_vertex(g);
+  SetVertexDesc v2 = boost::add_vertex(g);
+  SetVertexDesc v3 = boost::add_vertex(g);
+
+  g[v1] = F1;
+  g[v2] = F2;
+  g[v3] = U;
+
+  SetEdgeDesc e1;
+  bool b1;
+  boost::tie(e1, b1) = boost::add_edge(v1, v3, g);
+  SetEdgeDesc e2;
+  bool b2;
+  boost::tie(e2, b2) = boost::add_edge(v2, v3, g);
+
+  g[e1] = E1;
+  g[e2] = E2;
+
+  MatchingStruct match(g);
+  Set res = match.SBGMatching();
+
+  cout << "\n\nTest matching 2:\n";
+  cout << res << "\n\n";
+
+  BOOST_CHECK(true);
+} 
+
+void TestMatching3()
+{
+  INT N = 500;
+
+  // Vertices
+  Interval i1(1, 1, 1);
+  MultiInterval mi1;
+  mi1.addInter(i1);
+  AtomSet as1(mi1);
+  Set s1;
+  s1.addAtomSet(as1);
+  SetVertex F1("eq1", 1, s1, 0);
+
+  Interval i2(2, 1, N);
+  MultiInterval mi2;
+  mi2.addInter(i2);
+  AtomSet as2(mi2);
+  Set s2;
+  s2.addAtomSet(as2);
+  SetVertex F2("eqloop", 2, s2, 0);
+
+  Interval i3(N + 1, 1, 2 * N);
+  MultiInterval mi3;
+  mi3.addInter(i3);
+  AtomSet as3(mi3);
+  Set s3;
+  s3.addAtomSet(as3);
+  SetVertex U("u", 3, s3, 0);
+
+  // Edges
+  Interval i4(1, 1, 1);
+  MultiInterval mi4;
+  mi4.addInter(i4);
+  AtomSet as4(mi4);
+  Set domE1;
+  domE1.addAtomSet(as4);
+  LMap lm1;
+  lm1.addGO(0, 1);
+  LMap lm2;
+  lm2.addGO(0, N + 1);
+  PWLMap mapE1f;
+  mapE1f.addSetLM(domE1, lm1);
+  PWLMap mapE1u;
+  mapE1u.addSetLM(domE1, lm2);
+  SetEdge E1("E1", 1, mapE1f, mapE1u, 0);
+
+  Interval i5(2, 1, N);
+  MultiInterval mi5;
+  mi5.addInter(i5);
+  AtomSet as5(mi5);
+  Set domE2a;
+  domE2a.addAtomSet(as5); 
+
+  Interval i6(N + 1, 1, 2 * N - 1);
+  MultiInterval mi6;
+  mi6.addInter(i6);
+  AtomSet as6(mi6);
+  Set domE2b;
+  domE2b.addAtomSet(as6);
+
+  LMap lm3;
+  lm3.addGO(1, 0);
+  LMap lm4;
+  lm4.addGO(1, N - 1);
+  
+  LMap lm5;
+  lm5.addGO(1, (-N) + 1);
+  LMap lm6;
+  lm6.addGO(1, 1);
+
+  PWLMap mapE2f;
+  mapE2f.addSetLM(domE2a, lm3);
+  mapE2f.addSetLM(domE2b, lm5);
+  PWLMap mapE2u;
+  mapE2u.addSetLM(domE2a, lm4);
+  mapE2u.addSetLM(domE2b, lm6);
+  SetEdge E2("E2", 2, mapE2f, mapE2u, 0);
+
+  SBGraph g;
+
+  SetVertexDesc v1 = boost::add_vertex(g);
+  SetVertexDesc v2 = boost::add_vertex(g);
+  SetVertexDesc v3 = boost::add_vertex(g);
+
+  g[v1] = F1;
+  g[v2] = F2;
+  g[v3] = U;
+
+  SetEdgeDesc e1;
+  bool b1;
+  boost::tie(e1, b1) = boost::add_edge(v1, v3, g);
+  SetEdgeDesc e2;
+  bool b2;
+  boost::tie(e2, b2) = boost::add_edge(v2, v3, g);
+
+  g[e1] = E1;
+  g[e2] = E2;
+
+  MatchingStruct match(g);
+  Set res = match.SBGMatching();
+
+  cout << "\n\nTest matching 3:\n";
+  cout << res << "\n";
+
+  BOOST_CHECK(true);
+} 
+
 //____________________________________________________________________________//
 
 test_suite *init_unit_test_suite(int, char *[])
@@ -5082,8 +5012,9 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
   framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
 
-  //framework::master_test_suite().add(BOOST_TEST_CASE(&TestSplit));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching));
+  //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching2));
+  //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching3));
 
   return 0;
 }
