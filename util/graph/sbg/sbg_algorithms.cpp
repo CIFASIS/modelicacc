@@ -88,14 +88,47 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   }
 
   mapD = mapF;
-  map_D = mapD;
   mapB = mapU;
-  map_B = mapB;
 
   allEdges = mapF.wholeDom();
   F = mapF.image(allEdges);
   U = mapU.image(allEdges);
   allVertices = F.cup(U);  
+  int dims = F.ndim();
+
+  PWLMap vmap;
+  BOOST_FOREACH (SetVertexDesc vdi, vertices(g)) {
+    SetVertex vi = g[vdi];
+
+    LMap lm;
+    for (int i = 0; i < dims; i++) 
+      lm.addGO(0, vi.id());
+    vmap.addSetLM(vi.range(), lm);
+  }
+  Vmap = vmap;
+
+  int eCount = 1;
+  PWLMap emap;
+  BOOST_FOREACH (SetEdgeDesc edi, edges(g)) {
+    SetEdge ei = g[edi];
+
+    BOOST_FOREACH (Set sf, ei.map_f_ref().dom()) {
+      BOOST_FOREACH (Set su, ei.map_u_ref().dom()) {
+        Set uf = sf.cap(su);
+ 
+        if (!uf.empty()) {
+          LMap lm;
+          for (int i = 0; i < dims; i++) 
+            lm.addGO(0, eCount);
+          emap.addSetLM(uf, lm);
+  
+          ++eCount;
+        }
+      }
+    }
+  }
+  Emap = emap;
+  std::cout << "\nEmap: " << Emap << "\n\n";
 
   Set emptySet;
   matchedV = emptySet;
@@ -109,15 +142,46 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   PWLMap emptyMap;
   rmap = emptyMap;
   smap = emptyMap;
-  lmap = emptyMap;
-  lmapD = emptyMap;
-  lmapB = emptyMap;
 }
 
-void MatchingStruct::minReachable(PWLMap m_map, Set E)
+PWLMap MatchingStruct::recursion(int n, Set VR, PWLMap map_D, PWLMap map_B)
 {
-  std::cout << "E: " << E << "\n\n";
-  std::cout << "m_map: " << m_map << "\n\n";
+  Interval i(0, 1, 0);
+  MultiInterval mi;
+  for (int j = 0; j < mapF.ndim(); j++)
+    mi.addInter(i);
+  Set zero = createSet(mi);
+
+  Set ES = smap.compPW(map_B).diffMap(map_D).preImage(zero);
+
+  Set ER;
+  PWLMap smapNth = smap;
+  PWLMap originalSmap = smap;
+  for (int i = 0; i < n; i++) {
+    smapNth = smapNth.compPW(originalSmap); 
+    ER = ER.cup(map_D.preImage(smapNth.image(VR)));
+  }
+  ER = ER.cap(ES);
+
+  Set ERplus = Emap.preImage(Emap.image(ER));
+  
+  PWLMap tildeD = map_D.restrictMap(ERplus);
+  PWLMap tildeB = map_B.restrictMap(ERplus);
+  PWLMap smapPlus = tildeD.compPW(tildeB.minInv(tildeB.image()));
+
+  PWLMap finals = smap.restrictMap(smapNth.image(VR));
+  smapPlus = finals.combine(smapPlus);
+
+  PWLMap rmapPlus = rmap.compPW(smapPlus.mapInf());
+  PWLMap tildeRmap = rmap.minMap(rmapPlus);
+  rmap = tildeRmap.combine(rmap);
+
+  return rmap;
+}
+
+PWLMap MatchingStruct::minReachable(Set V, Set E, PWLMap map_D, PWLMap map_B)
+{
+  int nmax = num_vertices(g);
  
   Interval i(0, 1, 0);
   MultiInterval mi;
@@ -125,48 +189,43 @@ void MatchingStruct::minReachable(PWLMap m_map, Set E)
     mi.addInter(i);
   Set zero = createSet(mi);
 
-  Set tildeV = m_map.image(allVertices);
-
   map_D = map_D.restrictMap(E);
   map_B = map_B.restrictMap(E);
-  PWLMap tildeD = m_map.compPW(map_D);
-  PWLMap tildeB = m_map.compPW(map_B);
 
-  PWLMap tildeVid(tildeV);
-  rmap = tildeVid;
-  smap = tildeVid;
+  PWLMap Vid(V);
+  rmap = Vid;
+  smap = Vid;
 
   PWLMap oldsmap = smap;
   PWLMap oldrmap = rmap;
 
   Set Vc;
 
-  Set m_mapImage = m_map.image(m_map.wholeDom());
-  PWLMap m_mapInv = m_map.minInv(m_mapImage);
-
   do {
     oldsmap = smap;
-    smap = tildeB.minAdjMap(tildeD, rmap);
-    smap = smap.combine(tildeVid);
+    smap = map_B.minAdjMap(map_D, rmap);
+    smap = smap.combine(Vid);
     rmap = smap.mapInf();
     PWLMap deltaSmap = smap.diffMap(oldsmap);
-    Vc = tildeV.diff(deltaSmap.preImage(zero));
+    Vc = V.diff(deltaSmap.preImage(zero));
+
+    if (!Vc.empty()) {
+      int n = 0;
+      Set VR;
+      do {
+        n++;
+        PWLMap deltaVmap = Vmap.compPW(smap.compPW(n)).diffMap(Vmap); 
+        VR = deltaVmap.preImage(zero).cap(Vc);
+      }
+      while(VR.empty() && n < nmax);
+
+      if (!VR.empty()) 
+        rmap = recursion(n, VR, map_D, map_B);
+    }
   }
   while (!Vc.empty());
 
-
-  Set first = map_D.image(allEdges).cap(unmatchedV); // Unmatched vertices at start of alternating path
-  Set inPath = rmap.preImage(first); // Vertices that reach unmatched vertices
-  //std::cout << "first: " << first << "\n\n";
-  rmap = rmap.restrictMap(inPath);
-  rmap = rmap.compPW(m_map);
-  rmap = m_mapInv.compPW(rmap);
-
-  smap = smap.compPW(m_map);
-  smap = m_mapInv.compPW(smap);
-  smap = smap.restrictMap(rmap.wholeDom());
-  std::cout << "smap: " << smap << "\n\n";
-  std::cout << "rmap: " << rmap << "\n\n";
+  return rmap;
 }
 
 Set MatchingStruct::SBGMatching()
@@ -195,15 +254,14 @@ Set MatchingStruct::SBGMatching()
     offsetUD = offsetUD.offsetMap(maxV);
 
     PWLMap mmapD = offsetUD.combine(mmap);
+    PWLMap mmapInv = mmap.minInv(mmapD.image());
    
-    map_D = mapD;
-    map_B = mapB; 
-    minReachable(mmapD, Ed);
-    PWLMap rmapD = rmap;
-    PWLMap smapD = smap;
-    lmapD = lmap;
+    PWLMap map_D = mmapD.compPW(mapD);
+    PWLMap map_B = mmapD.compPW(mapB); 
+    PWLMap rmapD = minReachable(mmapD.image(allVertices), Ed, map_D, map_B);
+    rmapD = mmapInv.compPW(rmapD.compPW(mmapD));
 
-    Set tildeV = rmapD.preImage(F);
+    Set tildeV = rmapD.preImage(F.cap(unmatchedV));
     tildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
     tildeEd = tildeEd.cap(Ed);
 
@@ -226,15 +284,14 @@ Set MatchingStruct::SBGMatching()
     offsetUB = offsetUB.offsetMap(maxV);
 
     PWLMap mmapB = offsetUB.combine(mmap);
+    mmapInv = mmap.minInv(mmapB.image());
     
-    map_D = mapB;
-    map_B = mapD; 
-    minReachable(mmapB, tildeEd);
-    PWLMap rmapB = rmap;
-    PWLMap smapB = smap;
-    lmapB = lmap;
+    map_D = mmapB.compPW(mapB);
+    map_B = mmapB.compPW(mapD); 
+    PWLMap rmapB = minReachable(mmapB.image(allVertices), tildeEd, map_D, map_B);
+    rmapB = mmapInv.compPW(rmapB.compPW(mmapB));
 
-    tildeV = rmapB.preImage(U);
+    tildeV = rmapB.preImage(U.cap(unmatchedV));
     Set auxTildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
     tildeEd = auxTildeEd.cap(tildeEd);
 

@@ -145,6 +145,12 @@ SET_IMP PW_TEMP_TYPE::image(SET_IMP s)
 }
 
 PW_TEMPLATE
+SET_IMP PW_TEMP_TYPE::image()
+{
+  return image(wholeDom());
+}
+
+PW_TEMPLATE
 SET_IMP PW_TEMP_TYPE::preImage(SET_IMP s)
 {
   LMapsIt itl = lmap_ref().begin();
@@ -213,6 +219,18 @@ PW_TEMP_TYPE PW_TEMP_TYPE::compPW(PW_TEMP_TYPE pw2)
   }
 
   return PWLMapImp1(ress, reslm);
+}
+
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::compPW(int n)
+{
+  PWLMapImp1 res = *this;
+  PWLMapImp1 original = *this;
+
+  for (int i = 1; i < n; i++)
+    res = res.compPW(original);
+
+  return res;
 }
 
 // Minimum inverse of a compact PWLMap. Is minimum, because PWLMaps aren't always bijective
@@ -925,6 +943,20 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minMap(PW_TEMP_TYPE pw2)
       ++itl1;
     }
   }
+
+  return res;
+}
+
+// Given two maps pw3 (this PWLMap), and pw2, return pw1:
+//   pw3 : A -> B
+//   pw2 : A -> C
+//   pw1 : B -> C
+// where, for each a \in A that belongs to pw3 and pw2 domains,
+// pw1(pw3(a)) = pw2(a)
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::adjMap(PW_TEMP_TYPE pw2)
+{
+  PWLMap res;
 
   return res;
 }

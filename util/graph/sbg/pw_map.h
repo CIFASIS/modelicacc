@@ -57,8 +57,10 @@ struct PWLMapImp1 {
 
   SET_IMP wholeDom();
   SET_IMP image(SET_IMP s);
+  SET_IMP image();
   SET_IMP preImage(SET_IMP s);
   PWLMapImp1 compPW(PWLMapImp1 pw2);
+  PWLMapImp1 compPW(int n);
   PWLMapImp1 minInvCompact(SET_IMP s);
   PWLMapImp1 minInv(SET_IMP set);
 
@@ -83,6 +85,7 @@ struct PWLMapImp1 {
   PWLMapImp1 minMap(PWLMapImp1 pw2, PWLMapImp1 pw1); 
   PWLMapImp1 minMap(PWLMapImp1 pw2); 
 
+  PWLMapImp1 adjMap(PWLMapImp1 pw2);
   PWLMapImp1 minAdjCompMap(PWLMapImp1 pw2, PWLMapImp1 pw1);
   PWLMapImp1 minAdjCompMap(PWLMapImp1 pw1);
   PWLMapImp1 minAdjMap(PWLMapImp1 pw2, PWLMapImp1 pw1);

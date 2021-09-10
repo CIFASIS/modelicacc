@@ -28,16 +28,15 @@ struct MatchingStruct{
 
   Set SBGMatching();
 
-  Set recursion(PWLMap s_map, int iters, Set E);
-  Set findPathEdges(int lD, int lB, PWLMap smapD, PWLMap smapB, Set v);
-  Set longestPath(PWLMap rmapD, PWLMap rmapB, PWLMap smapD, PWLMap smapB);
-  void minReachable(PWLMap m_map, Set E);
-  //void recursion();
+  PWLMap recursion(int n, Set VR, PWLMap map_D, PWLMap map_B);
+  PWLMap minReachable(Set V, Set E, PWLMap map_D, PWLMap map_B);
 
   private:
   SBGraph g;
   Set F;
   Set U;
+  PWLMap Vmap; // Map from vertices to set-vertices
+  PWLMap Emap; // Map from edges to set-edges
 
   Set allEdges;
   Set allVertices;
@@ -45,9 +44,7 @@ struct MatchingStruct{
   PWLMap mapF; // "Left" maps
   PWLMap mapU; // "Right" maps
   PWLMap mapD; // Forward direction
-  PWLMap map_D; // Auxiliary map
   PWLMap mapB; // Backward direction
-  PWLMap map_B; // Auxiliary map
 
   Set matchedV;
   Set unmatchedV;
@@ -58,7 +55,4 @@ struct MatchingStruct{
 
   PWLMap rmap; // Map of reachable vertices
   PWLMap smap; // Map of successors
-  PWLMap lmap; // Map of length of paths
-  PWLMap lmapD; // Auxiliary map
-  PWLMap lmapB; // Auxiliary map
 };
