@@ -71,7 +71,8 @@ struct PWLMapImp1 {
   PWLMapImp1 concat(PWLMapImp1 pw2);
   PWLMapImp1 combine(PWLMapImp1 pw2);
 
-  PWLMapImp1 offsetMap(ORD_CT<INT_IMP> off);
+  PWLMapImp1 offsetDomMap(PWLMapImp1 pw2);
+  PWLMapImp1 offsetImageMap(ORD_CT<INT_IMP> off);
   PWLMapImp1 addMap(PWLMapImp1 pw2);
   PWLMapImp1 diffMap(PWLMapImp1 pw2);
 

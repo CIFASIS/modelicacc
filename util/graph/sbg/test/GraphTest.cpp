@@ -4687,7 +4687,7 @@ void TestMatching1()
 
 void TestMatching2()
 {
-  INT N = 10;
+  INT N = 100000;
 
   // Vertices
   Interval i1(1, 1, 1);
@@ -5010,7 +5010,7 @@ test_suite *init_unit_test_suite(int, char *[])
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestRC1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
+  //framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
 
   //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching2));

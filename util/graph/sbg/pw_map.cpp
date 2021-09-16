@@ -481,10 +481,27 @@ PW_TEMP_TYPE PW_TEMP_TYPE::combine(PW_TEMP_TYPE pw2)
   return res;
 }
 
+// This operation uses the image of pw2 through dom(pw1) (this map),
+// keeping the linear maps as they are. pw2 should be a bijective map
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::offsetDomMap(PW_TEMP_TYPE pw2)
+{
+  Sets domRes;
+  SetsIt itDomRes = domRes.begin();
+
+  BOOST_FOREACH (Set d, dom()) {
+    itDomRes = domRes.insert(itDomRes, pw2.image(d));
+    ++itDomRes;
+  }
+
+  PWLMapImp1 res(domRes, lmap());
+  return res;
+}
+
 // This operation applies an offset to each linear expression
 // of the map.
 PW_TEMPLATE
-PW_TEMP_TYPE PW_TEMP_TYPE::offsetMap(ORD_CT<INT_IMP> offElem) 
+PW_TEMP_TYPE PW_TEMP_TYPE::offsetImageMap(ORD_CT<INT_IMP> offElem) 
 {
   LMaps lmres;
   LMapsIt itlmres = lmres.begin();
@@ -1209,15 +1226,13 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjMap(PW_TEMP_TYPE pw1)
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
 {
-  Sets sres = dom();
-  SetsIt itsres = sres.end();
-  LMaps lres = lmap();
-  LMapsIt itlres = lres.end();
+  PWLMap res;
 
   LMaps lm = lmap();
   LMapsIt itlm = lm.begin();
 
   unsigned int i = 1;
+  // Traverse dom. Reduce all possible intervals
   BOOST_FOREACH (SET_IMP di, dom()) {
     int count1 = 1;
 
@@ -1225,6 +1240,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
     typename ORD_CT<REAL>::iterator itg = g.begin();
     ORD_CT<REAL> o = (*itlm).offset();
     typename ORD_CT<REAL>::iterator ito = o.begin();
+
     // Get the dim-th gain and offset
     while (count1 < dim) {
       ++itg;
@@ -1232,155 +1248,56 @@ PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
       ++count1;
     }
 
-    if (*itg == 1 && *ito < 0) {
-      REAL off = -(*ito);
+    if (*itg == 1 && *ito != 0) {
+      REAL off = std::abs(*ito);
 
+      // Traverse dom
       BOOST_FOREACH (AS_IMP adom, di.asets()) {
         MI_IMP mi = adom.aset();
         ORD_CT<INTER_IMP> inters = mi.inters();
         typename ORD_CT<INTER_IMP>::iterator itints = inters.begin();
 
         int count2 = 1;
+        // Get the dim-th interval
         while (count2 < dim) {
           ++itints;
           ++count2;
         }
 
         INT loint = (*itints).lo();
+        INT stint = (*itints).step();
         INT hiint = (*itints).hi();
 
-        if ((hiint - loint) > (off * off)) {
-          Sets news;
-          SetsIt itnews = news.begin();
-          LMaps newl;
-          LMapsIt itnewl = newl.begin();
+        // Map's image is in adom, reduction is plausible
+        if (INT_IMP(off) % stint == 0) {
+        // Is convenient to partition the interval?
+          if (((hiint - loint) / stint) > (off * off)) {
+            Sets news;
+            SetsIt itnews = news.begin();
+            LMaps newl;
+            LMapsIt itnewl = newl.begin();
 
-          for (int k = 1; k <= off; k++) {
-            ORD_CT<REAL> newo = (*itlm).offset();
-            typename ORD_CT<REAL>::iterator itnewo = newo.begin();
+            // Partition of the interval
+            for (int k = 1; k <= off; k++) {
+              REAL_IMP newoff = loint + k + *ito - 1;
+              if (*ito > 0)
+                newoff = hiint + k + *ito - 1;
 
-            ORD_CT<REAL> resg;
-            typename ORD_CT<REAL>::iterator itresg = resg.begin();
-            ORD_CT<REAL> reso;
-            typename ORD_CT<REAL>::iterator itreso = reso.begin();
+              LM_IMP newlmap = (*itlm).replace(0, newoff, dim);
+              INTER_IMP newinter(loint + k - 1, off, hiint);
+              AS_IMP auxas = adom.replace(newinter, dim);
+              SET_IMP newset;
+              newset.addAtomSet(auxas);
 
-            int count3 = 1;
-            BOOST_FOREACH (REAL gi, (*itlm).gain()) {
-              if (count3 == dim) {
-                itresg = resg.insert(itresg, 0);
-                itreso = reso.insert(itreso, loint + k - off - 1);
-              }
-
-              else {
-                itresg = resg.insert(itresg, gi);
-                itreso = reso.insert(itreso, *itnewo);
-              }
-
-              ++itresg;
-              ++itreso;
-              ++itnewo;
-              ++count3;
+              itnews = news.insert(itnews, newset);
+              ++itnews;
+              itnewl = newl.insert(itnewl, newlmap);
+              ++itnewl;
             }
 
-            LM_IMP newlmap(resg, reso);
-            INTER_IMP newinter(loint + k - 1, off, hiint);
-            AS_IMP auxas = adom.replace(newinter, dim);
-            SET_IMP newset;
-            newset.addAtomSet(auxas);
-
-            itnews = news.insert(itnews, newset);
-            ++itnews;
-            itnewl = newl.insert(itnewl, newlmap);
-            ++itnewl;
-          }
-
-          PWLMapImp1 newmap(news, newl);
-
-          UNORD_CT<AS_IMP> auxnewd;
-          BOOST_FOREACH (AS_IMP auxasi, di.asets()) {
-            if (auxasi != adom) auxnewd.insert(auxasi);
-          }
-
-          SET_IMP newdomi(auxnewd);
-
-          if (newdomi.empty()) {
-            itlres = lres.begin();
-
-            if (i < sres.size()) {
-              Sets auxs;
-              SetsIt itauxs = auxs.begin();
-              LMaps auxl;
-              LMapsIt itauxl = auxl.begin();
-
-              unsigned int count4 = 1;
-              BOOST_FOREACH (SET_IMP si, sres) {
-                if (count4 != i) {
-                  itauxs = auxs.insert(itauxs, si);
-                  ++itauxs;
-                  itauxl = auxl.insert(itauxl, *itlres);
-                  ++itauxl;
-                }
-
-                ++count4;
-                ++itlres;
-              }
-
-              sres = auxs;
-              lres = auxl;
-            }
-
-            else {
-              Sets auxs;
-              SetsIt itauxs = auxs.begin();
-              LMaps auxl;
-              LMapsIt itauxl = auxl.begin();
-
-              unsigned int count4 = 1;
-              BOOST_FOREACH (SET_IMP si, sres) {
-                if (count4 < i) {
-                  itauxs = auxs.insert(itauxs, si);
-                  ++itauxs;
-                  itauxl = auxl.insert(itauxl, *itlres);
-                  ++itauxl;
-                }
-
-                ++count4;
-                ++itlres;
-              }
-
-              sres = auxs;
-              lres = auxl;
-            }
-          }
-
-          else {
-            Sets auxs;
-            SetsIt itauxs = auxs.begin();
-            SetsIt itauxsres = sres.begin();
-            unsigned int count5 = 1;
-            while (itauxsres != sres.end()) {
-              if (count5 == i)
-                itauxs = auxs.insert(itauxs, newdomi);
-
-              else
-                itauxs = auxs.insert(itauxs, *itauxsres);
-
-              ++itauxs;
-              ++itauxsres;
-              ++count5;
-            }
-
-            sres = auxs;
-          }
-
-          BOOST_FOREACH (SET_IMP newi, newmap.dom()) {
-            itsres = sres.insert(itsres, newi);
-            ++itsres;
-          }
-
-          BOOST_FOREACH (LM_IMP newi, newmap.lmap()) {
-            itlres = lres.insert(itlres, newi);
-            ++itlres;
+            PWLMapImp1 newmap(news, newl);
+            if (!newmap.empty())
+              res = res.concat(newmap);
           }
         }
       }
@@ -1390,7 +1307,21 @@ PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
     ++i;
   }
 
-  PWLMapImp1 res(sres, lres);
+  // Add intervals that weren't reduced
+  SET_IMP reducedDom = res.wholeDom();
+  LMapsIt itlmNR = lmap_ref().begin();
+  BOOST_FOREACH (SET_IMP di, dom()) {
+    SET_IMP notReduced = di.diff(reducedDom);
+
+    if (!notReduced.empty()) {
+      PWLMapImp1 aux;
+      aux.addSetLM(notReduced, *itlmNR);
+      res.concat(aux);
+    }
+
+    ++itlmNR;
+  }
+
   return res;
 }
 
@@ -1399,6 +1330,7 @@ PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::mapInf()
 {
   PWLMapImp1 res;
+
   if (!empty()) {
     res = reduceMapN(1);
 
@@ -1428,7 +1360,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf()
 
         ORD_CT<REAL> g = lm.gain();
         typename ORD_CT<REAL>::iterator itg = g.begin();
-        // For intervals in which size <= off ^ 2 (check reduceMapN, this intervals are not "reduced")
+        // For intervals in which size <= off ^ 2 (check reduceMapN, these intervals are not "reduced")
         for (int dim = 0; dim < res.ndim(); ++dim) {
           if (*itg == 1 && *ito != 0) {
             BOOST_FOREACH (AS_IMP asi, (*itdoms).asets()) {
@@ -1458,8 +1390,8 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf()
     if (maxit == 0)
       return res;
 
-    //else
-    //  maxit = floor(log2(maxit)) + 1;
+    else
+      maxit = ceil(log2(maxit));
 
     for (int j = 0; j < maxit; ++j) res = res.compPW(res);
   }

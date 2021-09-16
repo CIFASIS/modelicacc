@@ -38,6 +38,8 @@ struct LMapImp1 {
 
   bool empty();
 
+  LMapImp1 replace(REAL_IMP g, REAL_IMP o, int dim);
+
   LMapImp1 compose(LMapImp1 lm2);
   LMapImp1 invLMap();
   LMapImp1 addLM(LMapImp1 lm2);
