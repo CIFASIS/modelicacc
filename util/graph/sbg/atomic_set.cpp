@@ -72,6 +72,12 @@ AS_TEMP_TYPE AS_TEMP_TYPE::replace(INTER_IMP i, int dim)
 }
 
 AS_TEMPLATE
+AS_TEMP_TYPE AS_TEMP_TYPE::normalize(AS_TEMP_TYPE aset2)
+{
+  return AtomSetImp1(aset_ref().normalize(aset2.aset()));
+} 
+
+AS_TEMPLATE
 bool AS_TEMP_TYPE::operator==(const AS_TEMP_TYPE &other) const { return aset() == other.aset(); } 
 
 AS_TEMPLATE

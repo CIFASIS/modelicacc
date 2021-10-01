@@ -46,6 +46,8 @@ struct IntervalImp1 {
   int minElem();
   int maxElem();
 
+  IntervalImp1 normalize(IntervalImp1 i2);
+
   eq_class(IntervalImp1);
   neq_class(IntervalImp1);
 };

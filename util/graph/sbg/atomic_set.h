@@ -48,6 +48,8 @@ struct AtomSetImp1 {
 
   AtomSetImp1 replace(INTER_IMP i, int dim);
 
+  AtomSetImp1 normalize(AtomSetImp1 aset2);
+
   eq_class(AtomSetImp1);
   neq_class(AtomSetImp1);
 

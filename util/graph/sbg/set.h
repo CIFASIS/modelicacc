@@ -55,6 +55,8 @@ struct SetImp1 {
 
   SetImp1 crossProd(SetImp1 set2);
 
+  SetImp1 normalize();
+
   eq_class(SetImp1);
   neq_class(SetImp1);
 
@@ -67,7 +69,7 @@ size_t hash_value(const Set &set);
 printable_temp(SET_TEMPLATE, SET_TEMP_TYPE);
 
 Set createSet(Interval i);
-Set createSet(MultiInterval mmi);
+Set createSet(MultiInterval mi);
 Set createSet(AtomSet as);
 
 } // namespace SBG

@@ -65,12 +65,132 @@ PWLMap connectedComponents(SBGraph g)
 
       if (!oldres.equivalentPW(res)) {
         res = newRes;
-        res = res.mapInf();
+        res = res.mapInf(1);
       }
     }
   }
 
   return res;
+}
+
+// Minimum reachable ------------------------------------------------------------------------------
+
+// Emap, allVertices
+PWLMap recursion(int n, Set VR, Set E, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap)
+{
+  PWLMap newRmap;
+
+  Interval i(0, 1, 0);
+  MultiInterval mi;
+  for (int j = 0; j < map_D.ndim(); j++)
+    mi.addInter(i);
+  Set zero = createSet(mi);
+
+  Set ES = currentSmap.compPW(map_B).diffMap(map_D).preImage(zero);
+
+  PWLMap smapNth = currentSmap;
+  Set ER;
+  PWLMap originalSmap = currentSmap;
+  for (int i = 0; i < n - 1; i++) {
+    ER = ER.cup(map_B.preImage(smapNth.image(VR)));
+    smapNth = smapNth.compPW(originalSmap); 
+  }
+  ER = ER.cap(ES);
+
+  Set ERplus = Emap.preImage(Emap.image(ER));
+  ERplus = ERplus.cap(E);
+  
+  PWLMap tildeD = map_D.restrictMap(ERplus);
+  PWLMap tildeB = map_B.restrictMap(ERplus);
+  PWLMap smapPlus = tildeD.compPW(tildeB.minInv(tildeB.image()));
+
+  PWLMap finalsRec = currentSmap.restrictMap(smapNth.image(VR));
+  smapPlus = finalsRec.combine(smapPlus);
+  smapPlus = smapPlus.combine(currentSmap);
+
+  std::cout << "rec1\n";
+  PWLMap rmapPlus = currentRmap.compPW(smapPlus.mapInf(1));
+  std::cout << "rec2\n\n";
+  PWLMap tildeRmap = currentRmap.minMap(rmapPlus);
+  newRmap = tildeRmap.combine(currentRmap);
+
+  return newRmap;
+}
+
+bool notEqId(Set dom, LMap lm) 
+{
+  ORD_REALS::iterator itg = lm.gain_ref().begin();
+  ORD_REALS::iterator ito = lm.offset_ref().begin();
+
+  for (int i = 0; i < lm.ndim(); i++) 
+    if (*itg != 1 || *ito != 0)
+      return true;
+
+  return false;
+}
+
+std::pair<PWLMap, Set> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap)
+{
+  PWLMap newSmap;
+  PWLMap newRmap;
+
+  std::cout << "E: " << E << "\n\n";
+ 
+  Interval i(0, 1, 0);
+  MultiInterval mi;
+  for (int j = 0; j < map_D.ndim(); j++)
+    mi.addInter(i);
+  Set zero = createSet(mi);
+
+
+  map_D = map_D.restrictMap(E);
+  map_B = map_B.restrictMap(E);
+
+  PWLMap Vid(V);
+  newRmap = Vid;
+  newSmap = Vid;
+
+  PWLMap oldsmap = currentSmap;
+  PWLMap oldrmap = currentRmap;
+
+  Set Vc;
+
+  do {
+    oldsmap = newSmap;
+    newSmap = map_B.minAdjMap(map_D, newRmap);
+    newSmap = newSmap.combine(Vid);
+    newRmap = newSmap.mapInf(1);
+    PWLMap deltaSmap = newSmap.diffMap(oldsmap);
+    Vc = V.diff(deltaSmap.preImage(zero));
+
+    if (!Vc.empty()) {
+      int n = 0;
+      Set VR;
+      do {
+        n++;
+        PWLMap deltaVmap = Vmap.compPW(newSmap).diffMap(Vmap);
+        VR = deltaVmap.preImage(zero).cap(Vc);
+      }
+      while(VR.empty() && n < nmax);
+
+      if (!VR.empty()) 
+        newRmap = recursion(n, VR, E, Emap, map_D, map_B, newSmap, newRmap);
+    }
+  }
+  while (!Vc.empty());
+
+  PWLMap auxSmap = newSmap.filterMap(notEqId);
+
+  Set edgesB = map_B.preImage(auxSmap.wholeDom());
+  Set edgesD = map_D.preImage(auxSmap.image());
+  Set edgesBD = edgesB.cap(edgesD);
+  Set edges;
+
+  BOOST_FOREACH (AtomSet as, edgesBD.asets()) 
+    if (auxSmap.image(map_B.image(as)) == map_D.image(as))
+      edges.addAtomSet(as);
+
+  return std::pair<PWLMap, Set>(newRmap, edges);
 }
 
 // Matching ---------------------------------------------------------------------------------------
@@ -128,7 +248,6 @@ MatchingStruct::MatchingStruct(SBGraph garg)
     }
   }
   Emap = emap;
-  std::cout << "\nEmap: " << Emap << "\n\n";
 
   Set emptySet;
   matchedV = emptySet;
@@ -144,124 +263,11 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   smap = emptyMap;
 }
 
-PWLMap MatchingStruct::recursion(int n, Set VR, PWLMap map_D, PWLMap map_B)
-{
-  /*
-  std::cout << "map_D: " << map_D << "\n\n";
-  std::cout << "map_B: " << map_B << "\n\n";
-  std::cout << "VR: " << VR << "\n\n";
-  */
-
-  Interval i(0, 1, 0);
-  MultiInterval mi;
-  for (int j = 0; j < mapF.ndim(); j++)
-    mi.addInter(i);
-  Set zero = createSet(mi);
-
-  PWLMap auxRmap = smap.restrictMap(allVertices.diff(VR)).mapInf();
-  rmap = auxRmap.combine(rmap);
-
-  Set ES = smap.compPW(map_B).diffMap(map_D).preImage(zero);
-
-  PWLMap smapNth = smap;
-  Set ER = map_D.preImage(smapNth.image(VR));
-  PWLMap originalSmap = smap;
-  for (int i = 0; i < n - 1; i++) {
-    smapNth = smapNth.compPW(originalSmap); 
-    ER = ER.cup(map_D.preImage(smapNth.image(VR)));
-  }
-  ER = ER.cap(ES);
-
-  Set ERplus = Emap.preImage(Emap.image(ER));
-  
-  PWLMap tildeD = map_D.restrictMap(ERplus);
-  PWLMap tildeB = map_B.restrictMap(ERplus);
-  PWLMap smapPlus = tildeD.compPW(tildeB.minInv(tildeB.image()));
-  
-  //Set VRplus = smapPlus.wholeDom();
-
-  PWLMap finals = smap.restrictMap(smapNth.image(VR));
-  smapPlus = finals.combine(smapPlus);
-
-  PWLMap smapPlusNth = smapPlus;
-  PWLMap originalSmapPlus = smapPlus;
-  for (int i = 0; i < n - 1; i++) 
-    smapPlusNth = smapPlusNth.compPW(originalSmapPlus);
-
-  //std::cout << "smapPlus: " << smapPlus << "\n\n";
-  //std::cout << "smapPlusNth: " << smapPlusNth << "\n\n";
-
-  PWLMap rmapPlus = rmap.compPW(smapPlusNth.mapInf());
-  PWLMap tildeRmap = rmap.minMap(rmapPlus);
-  rmap = tildeRmap.combine(rmap);
-
-  //std::cout << "rmap: " << rmap << "\n\n";
-
-  return rmap;
-}
-
-PWLMap MatchingStruct::minReachable(Set V, Set E, PWLMap map_D, PWLMap map_B)
-{
-  std::cout << "E: " << E << "\n\n";
-  int nmax = num_vertices(g);
- 
-  Interval i(0, 1, 0);
-  MultiInterval mi;
-  for (int j = 0; j < mapF.ndim(); j++)
-    mi.addInter(i);
-  Set zero = createSet(mi);
-
-
-  map_D = map_D.restrictMap(E);
-  map_B = map_B.restrictMap(E);
-
-  PWLMap Vid(V);
-  rmap = Vid;
-  smap = Vid;
-
-  PWLMap oldsmap = smap;
-  PWLMap oldrmap = rmap;
-
-  Set Vc;
-
-  //std::cout << "map_D: " << map_D << "\n\n"; 
-  //std::cout << "map_B: " << map_B << "\n\n"; 
-
-  do {
-    oldsmap = smap;
-    smap = map_B.minAdjMap(map_D, rmap);
-    smap = smap.combine(Vid);
-    PWLMap deltaSmap = smap.diffMap(oldsmap);
-    Vc = V.diff(deltaSmap.preImage(zero));
-
-    if (!Vc.empty()) {
-      int n = 0;
-      Set VR;
-      do {
-        n++;
-        PWLMap deltaVmap = Vmap.compPW(smap.compPW(n)).diffMap(Vmap);
-        VR = deltaVmap.preImage(zero).cap(Vc);
-      }
-      while(VR.empty() && n < nmax);
-
-      if (!VR.empty()) 
-        rmap = recursion(n, VR, map_D, map_B);
-
-      else
-        rmap = smap.mapInf();
-    }
-  }
-  while (!Vc.empty());
-
-  //std::cout << "smap: " << smap << "\n\n";
-  //std::cout << "final: " << rmap << "\n\n";
-
-  return rmap;
-}
-
 Set MatchingStruct::SBGMatching()
 {
   debug();
+
+  int nmax = num_vertices(g);
 
   Set tildeEd;
   Set diffMatched;
@@ -292,25 +298,42 @@ Set MatchingStruct::SBGMatching()
     Vmap = oldVmap.offsetDomMap(mmapD);
     PWLMap map_D = mmapD.compPW(mapD);
     PWLMap map_B = mmapD.compPW(mapB);
-    //std::cout << "mmapD: " << mmapD << "\n\n";
-    PWLMap rmapD = minReachable(mmapD.image(allVertices), Ed, map_D, map_B);
+    std::cout << "mmapD: " << mmapD << "\n\n";
+    std::pair<PWLMap, Set> p = minReachable(nmax, mmapD.image(allVertices), Ed, Vmap, Emap, map_D, map_B, smap, rmap);
+    PWLMap rmapD = std::get<0>(p);
     rmapD = mmapInv.compPW(rmapD.compPW(mmapD));
 
     Set tildeV = rmapD.preImage(F.cap(unmatchedV));
     tildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
     tildeEd = tildeEd.cap(Ed);
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
 
     PWLMap edgesRmapD = rmapD.compPW(mapD);
     PWLMap edgesRmapB = rmapD.compPW(mapB);
     PWLMap mapd = edgesRmapD.diffMap(edgesRmapB);
     Set auxEd = mapd.preImage(zero);
     tildeEd = auxEd.cap(tildeEd); 
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
 
+    // Only one outing edge
+    //tildeEd = tildeEd.cap(std::get<1>(p));
+    /*
     PWLMap mapBEd = mapB.restrictMap(tildeEd);
     PWLMap invB = mapBEd.minInv(mapB.image(tildeEd));
-    PWLMap teo = invB.compPW(mapBEd);
     Set auxtildeEd = invB.compPW(mapBEd).image(tildeEd);
     tildeEd = auxtildeEd.cap(tildeEd);
+    PWLMap mapBEd = mapB.restrictMap(tildeEd);
+    PWLMap invB = mapBEd.restrictInv(mapB.image(tildeEd), std::get<1>(p));
+    std::cout << "invB: " << invB << "\n\n";
+    Set auxtildeEd = invB.compPW(mapBEd).image(tildeEd);
+    tildeEd = auxtildeEd.cap(tildeEd);
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
+    */
+    PWLMap mapBEd = mapB.restrictMap(tildeEd);
+    PWLMap invB = mapB.restrictMap(std::get<1>(p)).minInv(mapB.image(tildeEd));
+    Set auxtildeEd = invB.compPW(mapBEd).image(tildeEd);
+    tildeEd = auxtildeEd.cap(tildeEd);
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
 
     // Backward direction
     Set unmatchedLeft = mapF.image(tildeEd);
@@ -324,19 +347,33 @@ Set MatchingStruct::SBGMatching()
     Vmap = oldVmap.offsetDomMap(mmapB);
     map_D = mmapB.compPW(mapB);
     map_B = mmapB.compPW(mapD); 
-    //std::cout << "mmapB: " << mmapB << "\n\n";
-    PWLMap rmapB = minReachable(mmapB.image(allVertices), tildeEd, map_D, map_B);
+    std::cout << "mmapB: " << mmapB << "\n\n";
+    p = minReachable(nmax, mmapB.image(allVertices), tildeEd, Vmap, Emap, map_D, map_B, smap, rmap);
+    PWLMap rmapB = std::get<0>(p);
     rmapB = mmapInv.compPW(rmapB.compPW(mmapB));
 
     tildeV = rmapB.preImage(U.cap(unmatchedV));
     Set auxTildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
     tildeEd = auxTildeEd.cap(tildeEd);
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
 
     edgesRmapD = rmapB.compPW(mapD);
     edgesRmapB = rmapB.compPW(mapB);
     mapd = edgesRmapB.diffMap(edgesRmapD);
     auxTildeEd = mapd.preImage(zero);
     tildeEd = auxTildeEd.cap(tildeEd); 
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
+
+    // Only one outing edge
+    /*
+    PWLMap mapDEd = mapD.restrictMap(tildeEd);
+    PWLMap invD = mapDEd.minInv(mapD.image(tildeEd));
+    auxtildeEd = invD.compPW(mapDEd).image(tildeEd);
+    tildeEd = auxtildeEd.cap(tildeEd);
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
+    */
+    //tildeEd = tildeEd.cap(std::get<1>(p));
+    //std::cout << "tildeEd: " << tildeEd << "\n\n";
 
     // Update matched vertices
 

@@ -19,6 +19,11 @@ using namespace SBG;
 
 PWLMap connectedComponents(SBGraph g);
 
+// Minimum reachable -----------------------------------------------------------------------------
+
+PWLMap recursion(int n, Set VR, Set E, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap);
+std::pair<PWLMap, Set> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap);
+
 // Matching of undirected SBGraphs ---------------------------------------------------------------
 
 struct MatchingStruct{
@@ -28,8 +33,6 @@ struct MatchingStruct{
 
   Set SBGMatching();
 
-  PWLMap recursion(int n, Set VR, PWLMap map_D, PWLMap map_B);
-  PWLMap minReachable(Set V, Set E, PWLMap map_D, PWLMap map_B);
 
   private:
   SBGraph g;

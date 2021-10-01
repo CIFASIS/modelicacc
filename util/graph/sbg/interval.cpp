@@ -4,6 +4,7 @@
 
 ******************************************************************************/
 
+#include <iostream>
 #include <boost/foreach.hpp>
 
 #include <util/graph/sbg/interval.h>
@@ -184,6 +185,26 @@ int INTER_TEMP_TYPE::minElem() { return lo(); }
 
 INTER_TEMPLATE
 int INTER_TEMP_TYPE::maxElem() { return hi(); }
+
+INTER_TEMPLATE
+INTER_TEMP_TYPE INTER_TEMP_TYPE::normalize(INTER_TEMP_TYPE i2)
+{
+  int st = step();
+  int l = lo();
+  int l2 = i2.lo();
+  int h = hi();
+  int h2 = i2.hi();
+
+  if (st == i2.step()) {
+    if (h + st == l2 || isIn(l2)) 
+      return IntervalImp1(l, st, h2);
+
+    else if (h2 + st == l || i2.isIn(l)) 
+      return IntervalImp1(l2, st, h);
+  }
+
+  return IntervalImp1(true);
+}
 
 INTER_TEMPLATE
 bool INTER_TEMP_TYPE::operator==(const INTER_TEMP_TYPE &other) const 

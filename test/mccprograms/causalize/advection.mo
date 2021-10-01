@@ -1,6 +1,6 @@
 model advection
   parameter Real alpha=0.5,mu=1000;
-  constant Integer N = 20;
+  constant Integer N = 200000;
   Real u[N];
   initial algorithm
   for i in 1:N/3 loop

@@ -233,6 +233,20 @@ void TestIntMin1()
   BOOST_REQUIRE_MESSAGE(res1 == 10, "\n" << "min(" << i << ")" << " = " << res1 << "\nExpected: " << 10);
 }
 
+void TestIntNormalize1()
+{
+  Interval i1(10, 3, 40);
+  Interval i2(43, 3, 100);
+
+  Interval res1 = i1.normalize(i2);
+  Interval res2 = i2.normalize(i1);
+
+  Interval res3(10, 3, 100);
+
+  BOOST_CHECK(res1 == res2 && res2 == res3);
+  BOOST_REQUIRE_MESSAGE(res1 == res2 && res2 == res3, "\nShould be: " << res1 << " == " << res2 << " && " << res2 << " == " << res3);
+}
+
 // -- MultiIntervals --------------------------------------------------------------//
 
 void TestMultiCreation1()
@@ -803,6 +817,34 @@ void TestMultiReplace2()
   res2.addInter(i3);
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, "\nreplace(" << mi1 << ", 4) = " << res1 << "\nExpected: " << res2);
+}
+
+void TestMultiNormalize1() 
+{
+  Interval i1(1, 1, 10);
+
+  MultiInterval mi1;
+  mi1.addInter(i1);
+  mi1.addInter(i1);
+  mi1.addInter(i1);
+
+  Interval i2(11, 1, 20);
+
+  MultiInterval mi2;
+  mi2.addInter(i1);
+  mi2.addInter(i2);
+  mi2.addInter(i1);
+
+  MultiInterval res1 = mi1.normalize(mi2);
+
+  Interval i3(1, 1, 20);
+
+  MultiInterval res2;
+  res2.addInter(i1);
+  res2.addInter(i3);
+  res2.addInter(i1);
+
+  BOOST_REQUIRE_MESSAGE(res1 == res2, "\nnormalize(" << mi1 << ", "<< mi2 <<") = " << res1 << "\nExpected: " << res2);
 }
 
 // -- AtomicSets --------------------------------------------------------------//
@@ -1509,6 +1551,68 @@ void TestSetMin2()
   ORD_INTS res2;
   res2.insert(res2.end(), 20);
   res2.insert(res2.end(), 1);
+
+  BOOST_CHECK(res1 == res2);
+}
+
+void TestSetNormalize1()
+{
+  Interval i1(1, 1, 10);
+
+  MultiInterval mi1;
+  mi1.addInter(i1);
+  mi1.addInter(i1);
+  mi1.addInter(i1);
+
+  AtomSet as1(mi1);
+
+  Interval i2(11, 1, 20);
+
+  MultiInterval mi2;
+  mi2.addInter(i1);
+  mi2.addInter(i2);
+  mi2.addInter(i1);
+
+  AtomSet as2(mi2);
+
+  Interval i3(500, 3, 1000);
+
+  MultiInterval mi3;
+  mi3.addInter(i1);
+  mi3.addInter(i3);
+  mi3.addInter(i1);
+ 
+  AtomSet as3(mi3);
+
+  Interval i4(21, 1, 80);
+
+  MultiInterval mi4;
+  mi4.addInter(i1);
+  mi4.addInter(i4);
+  mi4.addInter(i1);
+
+  AtomSet as4(mi4);
+
+  Set s;
+  s.addAtomSet(as1);
+  s.addAtomSet(as2);
+  s.addAtomSet(as3);
+  s.addAtomSet(as4);
+
+  Set res1 = s.normalize();
+
+  Interval i5(1, 1, 80);
+
+  MultiInterval mi5;
+  mi5.addInter(i1);
+  mi5.addInter(i5);
+  mi5.addInter(i1);
+
+  AtomSet as5(mi5);
+
+  Set res2;
+  res2.addAtomSet(as3);
+  res2.addAtomSet(as5);
 
   BOOST_CHECK(res1 == res2);
 }
@@ -4687,7 +4791,7 @@ void TestMatching1()
 
 void TestMatching2()
 {
-  INT N = 100000;
+  INT N = 200000;
 
   // Vertices
   Interval i1(1, 1, 1);
@@ -4924,6 +5028,7 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntDiff3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntDiff4));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntMin1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntNormalize1));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiCreation2));
@@ -4948,6 +5053,7 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiMin1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiReplace1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiReplace2));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiNormalize1));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestASetCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestASetEmpty1));
@@ -4970,6 +5076,7 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestSetDiff2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestSetMin1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestSetMin2));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestSetNormalize1));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestLMCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestLMCompose1));

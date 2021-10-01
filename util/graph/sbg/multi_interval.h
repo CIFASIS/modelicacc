@@ -51,6 +51,8 @@ struct MultiInterImp1 {
 
   MultiInterImp1 replace(INTER_IMP i, int dim);
 
+  MultiInterImp1 normalize(MultiInterImp1 mi2);
+
   eq_class(MultiInterImp1);
   neq_class(MultiInterImp1);
   lt_class(MultiInterImp1);
