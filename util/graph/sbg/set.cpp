@@ -4,6 +4,8 @@
 
 ******************************************************************************/
 
+#include <iostream>
+
 #include <boost/foreach.hpp>
 
 #include <util/graph/sbg/set.h>
@@ -207,6 +209,21 @@ ORD_CT<INT_IMP> SET_TEMP_TYPE::minElem()
 } 
 
 SET_TEMPLATE
+ORD_CT<INT_IMP> SET_TEMP_TYPE::maxElem()
+{
+  ORD_CT<INT_IMP> res;
+
+  if (empty()) return res;
+
+  AS_IMP max = *(asets_ref().begin());
+
+  BOOST_FOREACH (AS_IMP as1, asets()) 
+    if (max.maxElem() < as1.aset_ref().maxElem()) max = as1;
+
+  return max.maxElem();
+} 
+
+SET_TEMPLATE
 SET_TEMP_TYPE SET_TEMP_TYPE::crossProd(SET_TEMP_TYPE set2)
 {
   AtomSets res;
@@ -217,6 +234,55 @@ SET_TEMP_TYPE SET_TEMP_TYPE::crossProd(SET_TEMP_TYPE set2)
       res.insert(auxres);
     }
   }
+
+  return SetImp1(res);
+}
+
+SET_TEMPLATE
+SET_TEMP_TYPE SET_TEMP_TYPE::normalize()
+{
+  UNORD_CT<AS_IMP> res = asets();
+  UNORD_CT<AS_IMP> toInsert, toDelete;
+  
+  do {
+    UNORD_CT<AS_IMP> empty;
+    toInsert = empty;
+    toDelete = empty;
+
+    BOOST_FOREACH (AS_IMP as1, res) {
+      BOOST_FOREACH (AS_IMP as2, res) {
+        AS_IMP normalized = as1.normalize(as2);
+
+        if (!normalized.empty()) {
+          toInsert.insert(normalized);
+          toDelete.insert(as1);
+          toDelete.insert(as2);
+        }
+
+        else {
+          toInsert.insert(as1);
+          toInsert.insert(as2);
+        }
+      }
+    }
+
+    std::cout << "res1: " << res << "\n\n";
+
+    BOOST_FOREACH (AS_IMP ins, toInsert) {
+      std::cout << "ins: " << ins << "\n";
+      res.insert(ins);
+      std::cout << "resn1: " << res << "\n\n";
+    }
+
+    BOOST_FOREACH (AS_IMP del, toDelete) {
+      std::cout << "del: " << del << "\n";
+      res.erase(del);
+      std::cout << "resn2: " << res << "\n\n";
+    }
+
+    std::cout << "\nres2: " << res << "\n\n";
+  }
+  while (!toDelete.empty());
 
   return SetImp1(res);
 }

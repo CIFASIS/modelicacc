@@ -4,6 +4,8 @@
 
 ******************************************************************************/
 
+#include <utility>
+
 #include <boost/foreach.hpp>
 
 #include <util/graph/sbg/pw_map.h>
@@ -145,6 +147,12 @@ SET_IMP PW_TEMP_TYPE::image(SET_IMP s)
 }
 
 PW_TEMPLATE
+SET_IMP PW_TEMP_TYPE::image()
+{
+  return image(wholeDom());
+}
+
+PW_TEMPLATE
 SET_IMP PW_TEMP_TYPE::preImage(SET_IMP s)
 {
   LMapsIt itl = lmap_ref().begin();
@@ -215,7 +223,20 @@ PW_TEMP_TYPE PW_TEMP_TYPE::compPW(PW_TEMP_TYPE pw2)
   return PWLMapImp1(ress, reslm);
 }
 
-// Minimum inverse of a compact PWLMap. Is minimum, because PWLMaps aren't always bijective
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::compPW(int n)
+{
+  PWLMapImp1 res = *this;
+  PWLMapImp1 original = *this;
+
+  for (int i = 1; i < n; i++)
+    res = res.compPW(original);
+
+  return res;
+}
+
+// Minimum inverse of a compact PWLMap. Is minimum, because PWLMaps aren't always injective,
+// in which case the minimum element of the dom is selected
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::minInvCompact(SET_IMP s)
 {
@@ -223,11 +244,9 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minInvCompact(SET_IMP s)
   LMaps lmRes;
 
   if (dom_ref().size() == 1) {
-    SET_IMP wDom = wholeDom();
-    ORD_CT<INT_IMP> minElem = wDom.minElem();
-    typename ORD_CT<INT_IMP>::iterator itmin = minElem.begin();
-    SET_IMP im = image(wDom);
-    SET_IMP domInv = im.cap(s);
+    ORD_CT<INT_IMP> min = wholeDom().minElem();
+    typename ORD_CT<INT_IMP>::iterator itmin = min.begin();
+    SET_IMP domInv = image().cap(s);
 
     if (domInv.empty()) {
       PWLMapImp1 res;
@@ -271,16 +290,13 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minInvCompact(SET_IMP s)
   return res;
 }
 
-// Minimum inverse of PWLMap. Is minimum because PWLMaps aren't always bijective
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::minInv(SET_IMP s)
 {
   if (!empty()) {
     // Initialization
-    Sets auxdom = dom();
-    SetsIt itdom = auxdom.begin();
-    LMaps auxlm = lmap();
-    LMapsIt itlm = auxlm.begin();
+    SetsIt itdom = dom_ref().begin();
+    LMapsIt itlm = lmap_ref().begin();
 
     SET_IMP dom1 = *itdom;
     ++itdom;
@@ -296,7 +312,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minInv(SET_IMP s)
     PWLMapImp1 invpw2 = pw2.minInvCompact(s);
     pw2 = invpw2;
 
-    for (; itdom != auxdom.end(); ++itdom) {
+    for (; itdom != dom_ref().end(); ++itdom) {
       Sets pwidom;
       pwidom.insert(pwidom.begin(), *itdom);
       LMaps pwilm;
@@ -323,6 +339,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minInv(SET_IMP s)
   PWLMapImp1 res;
   return res;
 }
+
 
 // This function calculates if pw1 and pw2 are equivalent
 // (have the same whole dom, and the image of each dom is
@@ -463,41 +480,303 @@ PW_TEMP_TYPE PW_TEMP_TYPE::combine(PW_TEMP_TYPE pw2)
   return res;
 }
 
-// Return a PWLMap, with dom partitioned accordingly to express the minimum
-// map between lm1 and lm2
 PW_TEMPLATE
-PW_TEMP_TYPE MIN_MAP_ATOM_SET(AS_IMP &dom, LM_IMP &lm1, LM_IMP &lm2)
+PW_TEMP_TYPE PW_TEMP_TYPE::filterMap(bool (*f)(SET_IMP dom, LM_IMP lm))
 {
-  ORD_CT<REAL_IMP> g1 = lm1.gain();
-  ORD_CT<REAL_IMP> o1 = lm1.offset();
-  typename ORD_CT<REAL_IMP>::iterator ito1 = o1.begin();
-  ORD_CT<REAL_IMP> g2 = lm2.gain();
-  typename ORD_CT<REAL_IMP>::iterator itg2 = g2.begin();
-  ORD_CT<REAL_IMP> o2 = lm2.offset();
-  typename ORD_CT<REAL_IMP>::iterator ito2 = o2.begin();
+  PWLMapImp1 res;
+
+  SetsIt itdom = dom_ref().begin();
+  LMapsIt itlm = lmap_ref().begin();
+
+  for(unsigned int i = 0; i < dom_ref().size(); i++) {
+    if (f(*itdom, *itlm))
+      res.addSetLM(*itdom, *itlm);
+
+    ++itdom;
+    ++itlm;
+  }
+
+  return res;
+}
+
+// This operation uses the image of pw2 through dom(pw1) (this map),
+// keeping the linear maps as they are. pw2 should be a bijective map
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::offsetDomMap(PW_TEMP_TYPE pw2)
+{
+  Sets domRes;
+  SetsIt itDomRes = domRes.begin();
+
+  BOOST_FOREACH (Set d, dom()) {
+    itDomRes = domRes.insert(itDomRes, pw2.image(d));
+    ++itDomRes;
+  }
+
+  PWLMapImp1 res(domRes, lmap());
+  return res;
+}
+
+// This operation applies an offset to each linear expression
+// of the map.
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::offsetImageMap(ORD_CT<INT_IMP> offElem) 
+{
+  LMaps lmres;
+  LMapsIt itlmres = lmres.begin();
+
+  if ((int) offElem.size() == ndim()) {
+    typename ORD_CT<INT_IMP>::iterator itelem = offElem.begin();
+    BOOST_FOREACH (LM_IMP lmi, lmap()) {
+      ORD_CT<REAL_IMP> reso;
+      typename ORD_CT<REAL_IMP>::iterator itreso = reso.begin();
+
+      BOOST_FOREACH (REAL_IMP oi, lmi.offset()) {
+        itreso = reso.insert(itreso, oi + (REAL_IMP) *itelem);
+        ++itreso;
+      }
+
+      itlmres = lmres.insert(itlmres, LM_IMP(lmi.gain(), reso)); 
+      ++itlmres;
+    }
+  } 
+
+  return PWLMapImp1(dom(), lmres);
+}
+
+// This operation adds two maps. In the
+// intersection of the domains, the linear map will be 
+// the substraction of both linear maps
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::addMap(PW_TEMP_TYPE pw2)
+{
+  Sets domres;
+  SetsIt itdom = domres.begin();
+  LMaps lmres;
+  LMapsIt itlm = lmres.begin(); 
+
+  if (ndim() == pw2.ndim()) {
+    LMapsIt itlm1 = lmap_ref().begin();
+
+    BOOST_FOREACH (SET_IMP d1, dom()) {
+      LMapsIt itlm2 = pw2.lmap_ref().begin();
+      BOOST_FOREACH (SET_IMP d2, pw2.dom()) {
+        SET_IMP domcap = d1.cap(d2);
+        LM_IMP add = (*itlm1).addLM(*itlm2);
+
+        if (!domcap.empty()) {
+          itdom = domres.insert(itdom, domcap);
+          ++itdom;
+          itlm = lmres.insert(itlm, add);
+          ++itlm;
+        }
+
+        ++itlm2;
+      }
+
+      ++itlm1;
+    }
+  }
+
+  return PWLMapImp1(domres, lmres);
+}
+
+// This operation substracts one map from another. In the
+// intersection of the domains, the linear map will be 
+// the substraction of both linear maps
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::diffMap(PW_TEMP_TYPE pw2)
+{
+  Sets domres;
+  SetsIt itdom = domres.begin();
+  LMaps lmres;
+  LMapsIt itlm = lmres.begin(); 
+
+  if (ndim() == pw2.ndim()) {
+    LMapsIt itlm1 = lmap_ref().begin();
+
+    BOOST_FOREACH (SET_IMP d1, dom()) {
+      LMapsIt itlm2 = pw2.lmap_ref().begin();
+      BOOST_FOREACH (SET_IMP d2, pw2.dom()) {
+        SET_IMP domcap = d1.cap(d2);
+        LM_IMP diff = (*itlm1).diffLM(*itlm2);
+
+        if (!domcap.empty()) {
+          itdom = domres.insert(itdom, domcap);
+          ++itdom;
+          itlm = lmres.insert(itlm, diff);
+          ++itlm;
+        }
+
+        ++itlm2;
+      }
+
+      ++itlm1;
+    }
+  }
+
+  return PWLMapImp1(domres, lmres);
+}
+
+// Transform each set in dom in a compact set (with only one atomic set)
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::atomize()
+{
+  Sets dres;
+  SetsIt itdres = dres.begin();
+  LMaps lres;
+  LMapsIt itlres = lres.begin();
+
+  LMapsIt itlm = lmap_ref().begin();
+  BOOST_FOREACH (SET_IMP d, dom()) {
+    BOOST_FOREACH (AS_IMP as, d.asets()) {
+      SET_IMP aux;
+      aux.addAtomSet(as);
+
+      itdres = dres.insert(itdres, aux);
+      ++itdres;
+      itlres = lres.insert(itlres, *itlm);
+      ++itlres;
+    }
+
+    ++itlm;
+  }
+
+  PWLMapImp1 res(dres, lres);
+  return res;
+}
+
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::normalize() 
+{
+  PWLMapImp1 res = *this, oldRes;
+
+  if (dom_ref().size() == 1) { 
+    PWLMapImp1 auxRes;
+    auxRes.addSetLM((*(dom_ref().begin())).normalize(), *(lmap_ref().begin()));
+    return auxRes;
+  }
+
+  do {
+    SetsIt itdom1 = res.dom_ref().begin(), itdom2;
+    LMapsIt itlm1 = res.lmap_ref().begin(), itlm2;
+
+    oldRes = res;
+    Sets toInsertDom;
+    SetsIt itIDom = toInsertDom.begin();
+    LMaps toInsertLM;
+    LMapsIt itILM = toInsertLM.begin();
+
+    for (unsigned int i = 0; i < res.dom_ref().size(); i++) {
+      itdom2 = itdom1;
+      itlm2 = itlm1;
+
+      for (unsigned int j = i; j < res.dom_ref().size(); j++) {
+        std::cout << *itdom1 << "\n";
+        std::cout << *itdom2 << "\n\n";
+        if (*itlm1 == *itlm2 && *itdom1 != *itdom2) {
+          SET_IMP normalized = (*itdom1).cup(*itdom2).normalize();
+
+          if (!normalized.empty()) {
+            itIDom = toInsertDom.insert(itIDom, normalized);
+            itILM = toInsertLM.insert(itILM, *itlm1);
+    
+            ++itIDom;
+            ++itILM;
+          }
+
+          else {
+            itIDom = toInsertDom.insert(itIDom, (*itdom1).normalize());
+            itILM = toInsertLM.insert(itILM, *itlm1);
+            ++itIDom;
+            ++itILM;
+
+            itIDom = toInsertDom.insert(itIDom, (*itdom2).normalize());
+            itILM = toInsertLM.insert(itILM, *itlm2);
+            ++itIDom;
+            ++itILM;
+          }
+        }
+
+        ++itdom2;
+        ++itlm2;
+      }
+
+      ++itdom1;
+      ++itlm1;
+    }
+
+    itIDom = toInsertDom.begin();
+    itILM = toInsertLM.begin();
+    PWLMap auxRes;
+    std::cout << "Llego\n\n";
+    while (itIDom != toInsertDom.end()) {
+      auxRes.addSetLM(*itIDom, *itILM);      
+ 
+      ++itIDom;
+      ++itILM;
+    }
+
+    res = auxRes;
+    std::cout << "Llego2\n\n";
+  }
+  while (!res.equivalentPW(oldRes));
+
+  return res;
+}
+
+// Return a PWLMap, with dom partitioned accordingly to return lm1 if
+// lm3.compose(lm1) < lm4.compose(lm2)
+// If lm3.compose(lm1) == lm4.compose(lm2), choose the minimum between lm1
+// and lm2
+// Else, return lm2
+PW_TEMPLATE
+void PW_TEMP_TYPE::minMapAtomSet(AS_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3, LM_IMP lm4)
+{
+  LM_IMP lm31 = lm3.compose(lm1);
+  LM_IMP lm42 = lm4.compose(lm2);
+
+  ORD_CT<REAL_IMP> g31 = lm31.gain();
+  ORD_CT<REAL_IMP> o31 = lm31.offset();
+  typename ORD_CT<REAL_IMP>::iterator ito31 = o31.begin();
+  ORD_CT<REAL_IMP> g42 = lm42.gain();
+  ORD_CT<REAL_IMP> o42 = lm42.offset();
+  typename ORD_CT<REAL_IMP>::iterator itg42 = g42.begin();
+  typename ORD_CT<REAL_IMP>::iterator ito42 = o42.begin();
   ORD_CT<INTER_IMP> ints = dom.aset_ref().inters();
   typename ORD_CT<INTER_IMP>::iterator itints = ints.begin();
 
   AS_IMP asAux = dom;
-  LM_IMP lmAux = lm1;
-  ORD_CT<REAL_IMP> resg = g1;
-  ORD_CT<REAL_IMP> reso = o1;
+  SET_IMP sAux = createSet(asAux);
+  LM_IMP lmAux = lm31;
+  ORD_CT<REAL_IMP> resg = g31;
+  ORD_CT<REAL_IMP> reso = o31;
   int count = 1;
 
-  ORD_CT<SET_IMP> domRes;
-  ORD_CT<LM_IMP> lmRes;
+  Sets domRes;
+  LMaps lmRes;
+  
+  // Base case
+  if (lm31 == lm42 && lm1 == lm2) {
+    domRes.insert(domRes.begin(), sAux);
+    lmRes.insert(lmRes.begin(), lm1);
+    PWLMapImp1 res(domRes, lmRes);
+    set_dom(res.dom());
+    set_lmap(res.lmap());
+    return;
+  }
 
-  if (lm1.ndim() == lm2.ndim()) {
-    BOOST_FOREACH (REAL_IMP g1i, g1) {
-      if (g1i != *itg2) {
-        REAL_IMP xinter = (*ito2 - *ito1) / (g1i - *itg2);
+  // Need to analyze gains and offsets of lm31 and lm42
+  if (lm31.ndim() == lm42.ndim() && lm1.ndim() == lm2.ndim()) {
+    BOOST_FOREACH (REAL_IMP g31i, g31) {
+      lmAux = lm1;
+
+      // Different gains, there's intersection
+      if (g31i != *itg42) {
+        REAL_IMP xinter = (*ito42 - *ito31) / (g31i - *itg42);
 
         // Intersection before domain
         if (xinter <= (*itints).lo()) {
-          if (*itg2 < g1i) lmAux = lm2;
-
-          SET_IMP sAux;
-          sAux.addAtomSet(asAux);
+          if (*itg42 < g31i) lmAux = lm2;
 
           domRes.insert(domRes.begin(), sAux);
           lmRes.insert(lmRes.begin(), lmAux);
@@ -505,10 +784,7 @@ PW_TEMP_TYPE MIN_MAP_ATOM_SET(AS_IMP &dom, LM_IMP &lm1, LM_IMP &lm2)
 
         // Intersection after domain
         else if (xinter >= (*itints).hi()) {
-          if (*itg2 > g1i) lmAux = lm2;
-
-          SET_IMP sAux;
-          sAux.addAtomSet(asAux);
+          if (*itg42 > g31i) lmAux = lm2;
 
           domRes.insert(domRes.begin(), sAux);
           lmRes.insert(lmRes.begin(), lmAux);
@@ -522,16 +798,13 @@ PW_TEMP_TYPE MIN_MAP_ATOM_SET(AS_IMP &dom, LM_IMP &lm1, LM_IMP &lm2)
           AS_IMP as1 = asAux.replace(i1, count);
           AS_IMP as2 = asAux.replace(i2, count);
 
-          SET_IMP d1;
-          d1.addAtomSet(as1);
-
-          SET_IMP d2;
-          d2.addAtomSet(as2);
+          SET_IMP d1 = createSet(as1);
+          SET_IMP d2 = createSet(as2);
 
           domRes.insert(domRes.end(), d1);
           domRes.insert(domRes.end(), d2);
 
-          if (g1i > *itg2) {
+          if (g31i > *itg42) {
             lmRes.insert(lmRes.end(), lm1);
             lmRes.insert(lmRes.end(), lm2);
           }
@@ -542,42 +815,57 @@ PW_TEMP_TYPE MIN_MAP_ATOM_SET(AS_IMP &dom, LM_IMP &lm1, LM_IMP &lm2)
           }
         }
 
-        PW_TEMP_TYPE auxRes(domRes, lmRes);
-        return auxRes;
+        PWLMapImp1 res(domRes, lmRes);
+        set_dom(res.dom());
+        set_lmap(res.lmap());
+        return;
       }
 
-      else if (*ito1 != *ito2) {
-        if (*ito2 < *ito1) lmAux = lm2;
+      // Same gain and different offset, no intersection
+      else if (*ito31 != *ito42) {
+        if (*ito42 < *ito31) lmAux = lm2;
 
-        SET_IMP sAux;
-        sAux.addAtomSet(asAux);
         domRes.insert(domRes.begin(), sAux);
         lmRes.insert(lmRes.begin(), lmAux);
 
-        PW_TEMP_TYPE auxRes(domRes, lmRes);
-        return auxRes;
+        PWLMapImp1 res(domRes, lmRes);
+        set_dom(res.dom());
+        set_lmap(res.lmap());
+        return;
       }
 
-      ++ito1;
-      ++itg2;
-      ++ito2;
+      ++ito31;
+      ++itg42;
+      ++ito42;
       ++itints;
       ++count;
     }
   }
 
-  SET_IMP sAux;
-  sAux.addAtomSet(dom);
-  domRes.insert(domRes.begin(), sAux);
-  lmRes.insert(lmRes.begin(), lm1);
-  PW_TEMP_TYPE auxRes(domRes, lmRes);
-  return auxRes;
+  // Same gain and offset, get the minimum: lm1 or lm2
+  LM_IMP id(lm1.ndim());
+  minMapAtomSet(dom, lm1, lm2, id, id);
+  return;
 }
 
-// Return a PWLMap, with dom partitioned accordingly to express the minimum
-// map between lm1 and lm2
 PW_TEMPLATE
-PW_TEMP_TYPE MIN_MAP_SET(SET_IMP &dom, LM_IMP &lm1, LM_IMP &lm2)
+void PW_TEMP_TYPE::minMapAtomSet(AS_IMP dom, LM_IMP lm1, LM_IMP lm2)
+{
+  PWLMapImp1 res;
+
+  if (lm1.ndim() == lm2.ndim()) {
+    LM_IMP idlm(lm1.ndim());
+    res.minMapAtomSet(dom, lm1, lm2, idlm, idlm); 
+  }
+
+  set_dom(res.dom());
+  set_lmap(res.lmap());
+}
+
+// Return a PWLMap, with dom partitioned accordingly to return lm1 if
+// lm3.compose(lm1) < lm4.compose(lm2); if not, lm2 is returned
+PW_TEMPLATE
+void PW_TEMP_TYPE::minMapSet(SET_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3, LM_IMP lm4)
 {
   ORD_CT<Set> sres;
   ORD_CT<LMap> lres;
@@ -591,9 +879,9 @@ PW_TEMP_TYPE MIN_MAP_SET(SET_IMP &dom, LM_IMP &lm1, LM_IMP &lm2)
   typename UNORD_CT<AS_IMP>::iterator itas = asets.begin();
 
   if (!dom.empty()) {
-    PW_TEMP_TYPE aux;
+    PWLMapImp1 aux;
     AS_IMP asAux = *itas;
-    aux = minMapAtomSet(asAux, lm1, lm2);
+    aux.minMapAtomSet(asAux, lm1, lm2, lm3, lm4);
     if (!aux.empty()) {
       sres1 = *(aux.dom_ref().begin());
       lres1 = *(aux.lmap_ref().begin());
@@ -605,7 +893,7 @@ PW_TEMP_TYPE MIN_MAP_SET(SET_IMP &dom, LM_IMP &lm1, LM_IMP &lm2)
       typename ORD_CT<LM_IMP>::iterator itl;
       while (itas != asets.end()) {
         asAux = *itas;
-        aux = minMapAtomSet(asAux, lm1, lm2);
+        aux.minMapAtomSet(asAux, lm1, lm2, lm3, lm4);
         d = aux.dom();
         itd = d.begin();
         l = aux.lmap();
@@ -644,8 +932,73 @@ PW_TEMP_TYPE MIN_MAP_SET(SET_IMP &dom, LM_IMP &lm1, LM_IMP &lm2)
     lres.insert(lres.end(), lres2);
   }
 
-  PW_TEMP_TYPE res(sres, lres);
-  return res;
+  PWLMapImp1 res(sres, lres);
+  set_dom(res.dom());
+  set_lmap(res.lmap());
+}
+
+PW_TEMPLATE
+void PW_TEMP_TYPE::minMapSet(SET_IMP dom, LM_IMP lm1, LM_IMP lm2, PWLMapImp1 pw3)
+{
+  PWLMapImp1 res;
+
+  Sets doms;
+  doms.insert(doms.begin(), dom);
+  LMaps lms1;
+  lms1.insert(lms1.begin(), lm1);
+  LMaps lms2;
+  lms2.insert(lms2.begin(), lm2);
+  PWLMapImp1 pw1(doms, lms1);
+  PWLMapImp1 pw2(doms, lms2);
+
+  LMapsIt itlm31 = pw3.lmap_ref().begin();
+  LMapsIt itlm32 = pw3.lmap_ref().begin();
+
+  SET_IMP im1 = pw1.image(dom);
+  SET_IMP im2 = pw2.image(dom);
+
+  BOOST_FOREACH (SET_IMP d1, pw3.dom()) {
+    itlm32 = pw3.lmap_ref().begin();
+
+    d1 = d1.cap(im1);
+    if (!d1.empty()) {
+      SET_IMP pre1 = pw1.preImage(d1);
+
+      BOOST_FOREACH (SET_IMP d2, pw3.dom()) {
+        d2 = d2.cap(im2);
+        if (!d2.empty()) { 
+          SET_IMP pre2 = pw2.preImage(d2);
+
+          SET_IMP d = pre1.cap(pre2).cap(dom);
+          if (!d.empty()) {
+            minMapSet(d, lm1, lm2, *itlm31, *itlm32); 
+            res = (*this).combine(res);
+          }
+        }
+
+        ++itlm32;
+      }
+    }
+
+    ++itlm31;
+  }
+
+  set_dom(res.dom());
+  set_lmap(res.lmap());
+}
+
+PW_TEMPLATE
+void PW_TEMP_TYPE::minMapSet(SET_IMP dom, LM_IMP lm1, LM_IMP lm2)
+{
+  PWLMapImp1 res;
+
+  if (lm1.ndim() == lm2.ndim()) {
+    LM_IMP idlm(lm1.ndim());
+    res.minMapSet(dom, lm1, lm2, idlm, idlm); 
+  }
+
+  set_dom(res.dom());
+  set_lmap(res.lmap());
 }
 
 // Minimum of PWLMaps
@@ -666,7 +1019,8 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minMap(PW_TEMP_TYPE pw2)
         SET_IMP dom = s1i.cap(s2j);
 
         if (!dom.empty()) {
-          PWLMapImp1 aux = minMapSet(dom, *itl1, *itl2);
+          PWLMapImp1 aux;
+          aux.minMapSet(dom, *itl1, *itl2);
 
           if (res.empty())
             res = aux;
@@ -685,294 +1039,40 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minMap(PW_TEMP_TYPE pw2)
   return res;
 }
 
-// Transform each set in dom in a compact set (with only one atomic set)
 PW_TEMPLATE
-PW_TEMP_TYPE PW_TEMP_TYPE::atomize()
+PW_TEMP_TYPE PW_TEMP_TYPE::minMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
 {
-  Sets dres;
-  SetsIt itdres = dres.begin();
-  LMaps lres;
-  LMapsIt itlres = lres.begin();
+  PWLMapImp1 res; 
 
-  LMapsIt itlm = lmap_ref().begin();
-  BOOST_FOREACH (SET_IMP d, dom()) {
-    BOOST_FOREACH (AS_IMP as, d.asets()) {
-      SET_IMP aux;
-      aux.addAtomSet(as);
+  LMaps lm1 = lmap();
+  LMapsIt itl1 = lm1.begin();
+  LMaps lm2 = pw2.lmap();
 
-      itdres = dres.insert(itdres, aux);
-      ++itdres;
-      itlres = lres.insert(itlres, *itlm);
-      ++itlres;
-    }
+  if (!empty() && !pw2.empty()) {
+    BOOST_FOREACH (SET_IMP s1i, dom()) {
+      LMapsIt itl2 = lm2.begin();
 
-    ++itlm;
-  }
+      BOOST_FOREACH (SET_IMP s2j, pw2.dom()) {
+        SET_IMP dom = s1i.cap(s2j);
 
-  PWLMapImp1 res(dres, lres);
-  return res;
-}
+        if (!dom.empty()) {
+          PWLMapImp1 aux;
+          aux.minMapSet(dom, *itl1, *itl2, pw1);
 
-// PWLMap reduction
-PW_TEMPLATE
-PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
-{
-  Sets sres = dom();
-  SetsIt itsres = sres.end();
-  LMaps lres = lmap();
-  LMapsIt itlres = lres.end();
+          if (res.empty()) { 
+            res.set_dom(aux.dom());
+            res.set_lmap(aux.lmap());
+          }
 
-  LMaps lm = lmap();
-  LMapsIt itlm = lm.begin();
-
-  unsigned int i = 1;
-  BOOST_FOREACH (SET_IMP di, dom()) {
-    int count1 = 1;
-
-    ORD_CT<REAL> g = (*itlm).gain();
-    typename ORD_CT<REAL>::iterator itg = g.begin();
-    ORD_CT<REAL> o = (*itlm).offset();
-    typename ORD_CT<REAL>::iterator ito = o.begin();
-    // Get the dim-th gain and offset
-    while (count1 < dim) {
-      ++itg;
-      ++ito;
-      ++count1;
-    }
-
-    if (*itg == 1 && *ito < 0) {
-      REAL off = -(*ito);
-
-      BOOST_FOREACH (AS_IMP adom, di.asets()) {
-        MI_IMP mi = adom.aset();
-        ORD_CT<INTER_IMP> inters = mi.inters();
-        typename ORD_CT<INTER_IMP>::iterator itints = inters.begin();
-
-        int count2 = 1;
-        while (count2 < dim) {
-          ++itints;
-          ++count2;
+          else 
+            res = aux.combine(res);
         }
 
-        INT loint = (*itints).lo();
-        INT hiint = (*itints).hi();
-
-        if ((hiint - loint) > (off * off)) {
-          Sets news;
-          SetsIt itnews = news.begin();
-          LMaps newl;
-          LMapsIt itnewl = newl.begin();
-
-          for (int k = 1; k <= off; k++) {
-            ORD_CT<REAL> newo = (*itlm).offset();
-            typename ORD_CT<REAL>::iterator itnewo = newo.begin();
-
-            ORD_CT<REAL> resg;
-            typename ORD_CT<REAL>::iterator itresg = resg.begin();
-            ORD_CT<REAL> reso;
-            typename ORD_CT<REAL>::iterator itreso = reso.begin();
-
-            int count3 = 1;
-            BOOST_FOREACH (REAL gi, (*itlm).gain()) {
-              if (count3 == dim) {
-                itresg = resg.insert(itresg, 0);
-                itreso = reso.insert(itreso, loint + k - off - 1);
-              }
-
-              else {
-                itresg = resg.insert(itresg, gi);
-                itreso = reso.insert(itreso, *itnewo);
-              }
-
-              ++itresg;
-              ++itreso;
-              ++itnewo;
-              ++count3;
-            }
-
-            LM_IMP newlmap(resg, reso);
-            INTER_IMP newinter(loint + k - 1, off, hiint);
-            AS_IMP auxas = adom.replace(newinter, dim);
-            SET_IMP newset;
-            newset.addAtomSet(auxas);
-
-            itnews = news.insert(itnews, newset);
-            ++itnews;
-            itnewl = newl.insert(itnewl, newlmap);
-            ++itnewl;
-          }
-
-          PWLMapImp1 newmap(news, newl);
-
-          UNORD_CT<AS_IMP> auxnewd;
-          BOOST_FOREACH (AS_IMP auxasi, di.asets()) {
-            if (auxasi != adom) auxnewd.insert(auxasi);
-          }
-
-          SET_IMP newdomi(auxnewd);
-
-          if (newdomi.empty()) {
-            itlres = lres.begin();
-
-            if (i < sres.size()) {
-              Sets auxs;
-              SetsIt itauxs = auxs.begin();
-              LMaps auxl;
-              LMapsIt itauxl = auxl.begin();
-
-              unsigned int count4 = 1;
-              BOOST_FOREACH (SET_IMP si, sres) {
-                if (count4 != i) {
-                  itauxs = auxs.insert(itauxs, si);
-                  ++itauxs;
-                  itauxl = auxl.insert(itauxl, *itlres);
-                  ++itauxl;
-                }
-
-                ++count4;
-                ++itlres;
-              }
-
-              sres = auxs;
-              lres = auxl;
-            }
-
-            else {
-              Sets auxs;
-              SetsIt itauxs = auxs.begin();
-              LMaps auxl;
-              LMapsIt itauxl = auxl.begin();
-
-              unsigned int count4 = 1;
-              BOOST_FOREACH (SET_IMP si, sres) {
-                if (count4 < i) {
-                  itauxs = auxs.insert(itauxs, si);
-                  ++itauxs;
-                  itauxl = auxl.insert(itauxl, *itlres);
-                  ++itauxl;
-                }
-
-                ++count4;
-                ++itlres;
-              }
-
-              sres = auxs;
-              lres = auxl;
-            }
-          }
-
-          else {
-            Sets auxs;
-            SetsIt itauxs = auxs.begin();
-            SetsIt itauxsres = sres.begin();
-            unsigned int count5 = 1;
-            while (itauxsres != sres.end()) {
-              if (count5 == i)
-                itauxs = auxs.insert(itauxs, newdomi);
-
-              else
-                itauxs = auxs.insert(itauxs, *itauxsres);
-
-              ++itauxs;
-              ++itauxsres;
-              ++count5;
-            }
-
-            sres = auxs;
-          }
-
-          BOOST_FOREACH (SET_IMP newi, newmap.dom()) {
-            itsres = sres.insert(itsres, newi);
-            ++itsres;
-          }
-
-          BOOST_FOREACH (LM_IMP newi, newmap.lmap()) {
-            itlres = lres.insert(itlres, newi);
-            ++itlres;
-          }
-        }
+        ++itl2;
       }
+
+      ++itl1;
     }
-
-    ++itlm;
-    ++i;
-  }
-
-  PWLMapImp1 res(sres, lres);
-  return res;
-}
-
-// PWLMap infinite composition
-PW_TEMPLATE
-PW_TEMP_TYPE PW_TEMP_TYPE::mapInf()
-{
-  PWLMapImp1 res;
-  if (!empty()) {
-    res = reduceMapN(1);
-
-    for (int i = 2; i <= res.ndim(); ++i) res = reduceMapN(i);
-
-    int maxit = 0;
-
-    Sets doms = res.dom();
-    SetsIt itdoms = doms.begin();
-    BOOST_FOREACH (LM_IMP lm, res.lmap()) {
-      ORD_CT<REAL> o = lm.offset();
-      typename ORD_CT<REAL>::iterator ito = o.begin();
-
-      REAL a = 0;
-      REAL b = *(lm.gain().begin());
-
-      BOOST_FOREACH (REAL gi, lm.gain()) {
-        a = std::max(a, gi * abs(*ito));
-        b = std::min(b, gi);
-
-        ++ito;
-      }
-
-      ito = o.begin();
-      if (a > 0) {
-        REAL its = 0;
-
-        ORD_CT<REAL> g = lm.gain();
-        typename ORD_CT<REAL>::iterator itg = g.begin();
-        // For intervals in which size <= off ^ 2 (check reduceMapN, this intervals are not "reduced")
-        for (int dim = 0; dim < res.ndim(); ++dim) {
-          if (*itg == 1 && *ito != 0) {
-            BOOST_FOREACH (AS_IMP asi, (*itdoms).asets()) {
-              MI_IMP mii = asi.aset();
-              ORD_CT<INTER_IMP> ii = mii.inters();
-              typename ORD_CT<INTER_IMP>::iterator itii = ii.begin();
-
-              for (int count = 0; count < dim; ++count) ++itii;
-
-              its = std::max(its, (REAL_IMP)(ceil(((*itii).hi() - (*itii).lo()) / abs(*ito))));
-            }
-          }
-
-          // else
-          //  ++maxit;
-
-          ++itg;
-          ++ito;
-        }
-
-        maxit += its;
-      }
-
-      else if (b == 0)
-        ++maxit;
-
-      ++itdoms;
-    }
-
-    if (maxit == 0)
-      return res;
-
-    else
-      maxit = floor(log2(maxit)) + 1;
-
-    for (int j = 0; j < maxit; ++j) res = res.compPW(res);
   }
 
   return res;
@@ -1110,7 +1210,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
       SET_IMP mins2 = pw1.preImage(scomp);
 
       // Choose minimum in min2
-      // Assign dom(pw1) this element as image
+      // Assign dom(pw3) this element as image
       ORD_CT<INT> min2 = mins2.minElem();
       typename ORD_CT<INT>::iterator itmin2 = min2.begin();
 
@@ -1198,8 +1298,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
       PWLMapImp1 map3i;
       map3i.addSetLM(*itdom, *itlm);
       minAdj = map3i.minAdjCompMap(pw2, pw1);
-      minM = res.minMap(minAdj);
-
+      minM = res.minMap(minAdj, pw1);
       res = minAdj.combine(res);
 
       if (!minM.empty()) res = minM.combine(res);
@@ -1219,7 +1318,201 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjMap(PW_TEMP_TYPE pw1)
   SET_IMP im1 = pw1.image(dom1);
   PWLMapImp1 idmap(im1);
 
-  return minAdjMap(pw1, idmap);
+  PWLMap res = minAdjMap(pw1, idmap);
+  return res;
+}
+
+// PWLMap reduction
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
+{
+  PWLMap res;
+
+  LMaps lm = lmap();
+  LMapsIt itlm = lm.begin();
+
+  unsigned int i = 1;
+  // Traverse dom. Reduce all possible intervals
+  BOOST_FOREACH (SET_IMP di, dom()) {
+    int count1 = 1;
+
+    ORD_CT<REAL> g = (*itlm).gain();
+    typename ORD_CT<REAL>::iterator itg = g.begin();
+    ORD_CT<REAL> o = (*itlm).offset();
+    typename ORD_CT<REAL>::iterator ito = o.begin();
+
+    // Get the dim-th gain and offset
+    while (count1 < dim) {
+      ++itg;
+      ++ito;
+      ++count1;
+    }
+
+    if (*itg == 1 && *ito != 0) {
+      REAL off = std::abs(*ito);
+
+      // Traverse dom
+      BOOST_FOREACH (AS_IMP adom, di.asets()) {
+        MI_IMP mi = adom.aset();
+        ORD_CT<INTER_IMP> inters = mi.inters();
+        typename ORD_CT<INTER_IMP>::iterator itints = inters.begin();
+
+        int count2 = 1;
+        // Get the dim-th interval
+        while (count2 < dim) {
+          ++itints;
+          ++count2;
+        }
+
+        INT loint = (*itints).lo();
+        INT stint = (*itints).step();
+        INT hiint = (*itints).hi();
+
+        // Map's image is in adom, reduction is plausible
+        if (INT_IMP(off) % stint == 0) {
+        // Is convenient to partition the interval?
+          if (((hiint - loint) / stint) > (off * off)) {
+            Sets news;
+            SetsIt itnews = news.begin();
+            LMaps newl;
+            LMapsIt itnewl = newl.begin();
+
+            // Partition of the interval
+            for (int k = 1; k <= off; k++) {
+              REAL_IMP newoff = loint + k + *ito - 1;
+              if (*ito > 0)
+                newoff = hiint + k + *ito - 1;
+
+              LM_IMP newlmap = (*itlm).replace(0, newoff, dim);
+              INTER_IMP newinter(loint + k - 1, off, hiint);
+              AS_IMP auxas = adom.replace(newinter, dim);
+              SET_IMP newset;
+              newset.addAtomSet(auxas);
+
+              itnews = news.insert(itnews, newset);
+              ++itnews;
+              itnewl = newl.insert(itnewl, newlmap);
+              ++itnewl;
+            }
+
+            PWLMapImp1 newmap(news, newl);
+            if (!newmap.empty())
+              res = res.concat(newmap);
+          }
+        }
+      }
+    }
+
+    ++itlm;
+    ++i;
+  }
+
+  // Add intervals that weren't reduced
+  SET_IMP reducedDom = res.wholeDom();
+  LMapsIt itlmNR = lmap_ref().begin();
+  BOOST_FOREACH (SET_IMP di, dom()) {
+    SET_IMP notReduced = di.diff(reducedDom);
+
+    if (!notReduced.empty()) {
+      PWLMapImp1 aux;
+      aux.addSetLM(notReduced, *itlmNR);
+      res.concat(aux);
+    }
+
+    ++itlmNR;
+  }
+
+  res.set_ndim(ndim());
+  return res;
+}
+
+// PWLMap infinite composition
+PW_TEMPLATE
+PW_TEMP_TYPE PW_TEMP_TYPE::mapInf(int pathLength)
+{
+  PWLMapImp1 res = *this;
+
+  if (!empty()) {
+    for (int i = 1; i <= res.ndim(); ++i) res = res.reduceMapN(i);
+    std::cout << "before: " << res << "\n\n";
+    res = res.normalize();
+    std::cout << "after: " << res << "\n\n";
+
+    int maxit = 0;
+
+    Sets doms = res.dom();
+    SetsIt itdoms = doms.begin();
+    BOOST_FOREACH (LM_IMP lm, res.lmap()) {
+      ORD_CT<REAL> o = lm.offset();
+      typename ORD_CT<REAL>::iterator ito = o.begin();
+
+      REAL a = 0;
+      REAL b = *(lm.gain().begin());
+
+      BOOST_FOREACH (REAL gi, lm.gain()) {
+        a = std::max(a, gi * abs(*ito));
+        b = std::min(b, gi);
+
+        ++ito;
+      }
+
+      ito = o.begin();
+      if (a > 0) {
+        REAL its = 1;
+
+        ORD_CT<REAL> g = lm.gain();
+        typename ORD_CT<REAL>::iterator itg = g.begin();
+        // For intervals in which size <= off ^ 2 (check reduceMapN, these intervals are not "reduced")
+        for (int dim = 0; dim < res.ndim(); ++dim) {
+          if (*itg == 1 && *ito != 0) {
+            BOOST_FOREACH (AS_IMP asi, (*itdoms).asets()) {
+              MI_IMP mii = asi.aset();
+              ORD_CT<INTER_IMP> ii = mii.inters();
+              typename ORD_CT<INTER_IMP>::iterator itii = ii.begin();
+
+              for (int count = 0; count < dim; ++count) ++itii;
+
+              its = std::max(its, (REAL_IMP)(ceil(((*itii).hi() - (*itii).lo()) / abs(*ito))));
+            }
+          }
+
+          ++itg;
+          ++ito;
+        }
+
+        maxit += its;
+      }
+
+      else if (b == 0)
+        ++maxit;
+
+      ++itdoms;
+    }
+
+    if (maxit == 0)
+      return res;
+
+    PWLMap originalRes = res;
+    PWLMap auxRes = res;
+    for (int j = 0; j < pathLength - 1; j++)
+      auxRes = originalRes.compPW(auxRes);
+
+    PWLMap oldRes;
+    for (int j = 0; j < maxit; ++j) {
+      if (!oldRes.equivalentPW(res)) {
+        oldRes = res;
+        res = res.compPW(auxRes);
+        //res = res.compPW(res);
+      
+        for (int i = 1; i <= res.ndim(); ++i) res = res.reduceMapN(i);
+        res = res.normalize();
+      }
+    }
+
+    res = res.compPW(res);
+  }
+
+  return res;
 }
 
 PW_TEMPLATE

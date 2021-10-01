@@ -229,6 +229,22 @@ ORD_CT<INT_IMP> MI_TEMP_TYPE::minElem()
 }
 
 MI_TEMPLATE
+ORD_CT<INT_IMP> MI_TEMP_TYPE::maxElem()
+{
+  ORD_CT<INT_IMP> res;
+  typename ORD_CT<INT_IMP>::iterator itres = res.begin();
+
+  BOOST_FOREACH (INTER_IMP i, inters()) {
+    if (i.empty()) return ORD_CT<INT_IMP>();
+
+    itres = res.insert(itres, i.maxElem());
+    ++itres;
+  }
+
+  return res;
+}
+
+MI_TEMPLATE
 MI_TEMP_TYPE MI_TEMP_TYPE::replace(INTER_IMP i, int dim)
 {
   Intervals res;
@@ -246,6 +262,43 @@ MI_TEMP_TYPE MI_TEMP_TYPE::replace(INTER_IMP i, int dim)
   }
 
   return MultiInterImp1(res);
+}
+
+// Two multi-intervals can be normalized only if their intervals are the
+// same for each dimension, except for one, in which their respective intervals
+// can be normalized
+MI_TEMPLATE
+MI_TEMP_TYPE MI_TEMP_TYPE::normalize(MI_TEMP_TYPE mi2)
+{
+  IntervalsIt it1 = inters_ref().begin();
+  IntervalsIt it2 = mi2.inters_ref().begin();
+
+  if (ndim() == mi2.ndim()) {
+    int diffCount = 0; // Count of different intervals through dimensions
+    int dimDiff = 0; // Last dimension with spoted difference
+    INTER_IMP i1;
+    INTER_IMP i2;
+    for (int j = 0; j < ndim(); j++) {
+      if (*it1 != *it2) {
+        ++diffCount;
+        dimDiff = j + 1;
+        i1 = *it1;
+        i2 = *it2;
+      }
+
+      ++it1;
+      ++it2;
+    }
+
+    if (diffCount == 1) {
+      INTER_IMP normalized = i1.normalize(i2);
+
+      if (!normalized.empty())
+        return mi2.replace(normalized, dimDiff);
+    }
+  }
+
+  return MultiInterImp1();
 }
 
 MI_TEMPLATE

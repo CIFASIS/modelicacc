@@ -65,439 +65,363 @@ PWLMap connectedComponents(SBGraph g)
 
       if (!oldres.equivalentPW(res)) {
         res = newRes;
-        res = res.mapInf();
+        res = res.mapInf(1);
       }
     }
   }
 
   return res;
+}
+
+// Minimum reachable ------------------------------------------------------------------------------
+
+// Emap, allVertices
+PWLMap recursion(int n, Set VR, Set E, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap)
+{
+  PWLMap newRmap;
+
+  Interval i(0, 1, 0);
+  MultiInterval mi;
+  for (int j = 0; j < map_D.ndim(); j++)
+    mi.addInter(i);
+  Set zero = createSet(mi);
+
+  Set ES = currentSmap.compPW(map_B).diffMap(map_D).preImage(zero);
+
+  PWLMap smapNth = currentSmap;
+  Set ER;
+  PWLMap originalSmap = currentSmap;
+  for (int i = 0; i < n - 1; i++) {
+    ER = ER.cup(map_B.preImage(smapNth.image(VR)));
+    smapNth = smapNth.compPW(originalSmap); 
+  }
+  ER = ER.cap(ES);
+
+  Set ERplus = Emap.preImage(Emap.image(ER));
+  ERplus = ERplus.cap(E);
+  
+  PWLMap tildeD = map_D.restrictMap(ERplus);
+  PWLMap tildeB = map_B.restrictMap(ERplus);
+  PWLMap smapPlus = tildeD.compPW(tildeB.minInv(tildeB.image()));
+
+  PWLMap finalsRec = currentSmap.restrictMap(smapNth.image(VR));
+  smapPlus = finalsRec.combine(smapPlus);
+  smapPlus = smapPlus.combine(currentSmap);
+
+  std::cout << "rec1\n";
+  PWLMap rmapPlus = currentRmap.compPW(smapPlus.mapInf(1));
+  std::cout << "rec2\n\n";
+  PWLMap tildeRmap = currentRmap.minMap(rmapPlus);
+  newRmap = tildeRmap.combine(currentRmap);
+
+  return newRmap;
+}
+
+bool notEqId(Set dom, LMap lm) 
+{
+  ORD_REALS::iterator itg = lm.gain_ref().begin();
+  ORD_REALS::iterator ito = lm.offset_ref().begin();
+
+  for (int i = 0; i < lm.ndim(); i++) 
+    if (*itg != 1 || *ito != 0)
+      return true;
+
+  return false;
+}
+
+std::pair<PWLMap, Set> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap)
+{
+  PWLMap newSmap;
+  PWLMap newRmap;
+
+  std::cout << "E: " << E << "\n\n";
+ 
+  Interval i(0, 1, 0);
+  MultiInterval mi;
+  for (int j = 0; j < map_D.ndim(); j++)
+    mi.addInter(i);
+  Set zero = createSet(mi);
+
+
+  map_D = map_D.restrictMap(E);
+  map_B = map_B.restrictMap(E);
+
+  PWLMap Vid(V);
+  newRmap = Vid;
+  newSmap = Vid;
+
+  PWLMap oldsmap = currentSmap;
+  PWLMap oldrmap = currentRmap;
+
+  Set Vc;
+
+  do {
+    oldsmap = newSmap;
+    newSmap = map_B.minAdjMap(map_D, newRmap);
+    newSmap = newSmap.combine(Vid);
+    newRmap = newSmap.mapInf(1);
+    PWLMap deltaSmap = newSmap.diffMap(oldsmap);
+    Vc = V.diff(deltaSmap.preImage(zero));
+
+    if (!Vc.empty()) {
+      int n = 0;
+      Set VR;
+      do {
+        n++;
+        PWLMap deltaVmap = Vmap.compPW(newSmap).diffMap(Vmap);
+        VR = deltaVmap.preImage(zero).cap(Vc);
+      }
+      while(VR.empty() && n < nmax);
+
+      if (!VR.empty()) 
+        newRmap = recursion(n, VR, E, Emap, map_D, map_B, newSmap, newRmap);
+    }
+  }
+  while (!Vc.empty());
+
+  PWLMap auxSmap = newSmap.filterMap(notEqId);
+
+  Set edgesB = map_B.preImage(auxSmap.wholeDom());
+  Set edgesD = map_D.preImage(auxSmap.image());
+  Set edgesBD = edgesB.cap(edgesD);
+  Set edges;
+
+  BOOST_FOREACH (AtomSet as, edgesBD.asets()) 
+    if (auxSmap.image(map_B.image(as)) == map_D.image(as))
+      edges.addAtomSet(as);
+
+  return std::pair<PWLMap, Set>(newRmap, edges);
 }
 
 // Matching ---------------------------------------------------------------------------------------
 
-VertexIt MatchingStruct::findSetVertex(Set matched)
-{
-  // Find the set-vertex where matched subset is included
-  VertexIt vi_start, vi_end;
-  boost::tie(vi_start, vi_end) = vertices(g);
-
-  for (; vi_start != vi_end; ++vi_start) {
-    SetVertex v = g[*vi_start];
-    Set vs = v.range();
-    Set inter = vs.cap(matched);
-    if (!inter.empty()) {
-      return vi_start;
-    }
-  }
-  // A given subset should be included in one of the graph vertex, this should never happen.
-  assert(false);
-  return vi_start;
-}
-
-Set MatchingStruct::wholeVertex(Set matched_subset)
-{
-  Set whole_vertex;
-  // Find the set-vertex where the matched subset is included
-  VertexIt matched_vertex = findSetVertex(matched_subset);
-  SetVertex v = g[*matched_vertex];
-  return v.range();
-}
-
-Set MatchingStruct::wholeEdge(Set matched_subset)
-{
-  Set whole_edge_split;
-  // Find set-edges connected to the set-vertex
-  VertexIt vi_start, vi_end;
-  boost::tie(vi_start, vi_end) = vertices(g);
-
-  for (; vi_start != vi_end; ++vi_start) {
-    OutEdgeIt ei_start, ei_end;
-    boost::tie(ei_start, ei_end) = boost::out_edges(*vi_start, g);
-    for (; ei_start != ei_end; ++ei_start) {
-      SetEdge e = g[*ei_start];
-      PWLMap map_u = e.map_u();
-      OrdCT<Set> dom = map_u.dom();
-
-      for (Set edge_dom : dom) {
-        Set inter = edge_dom.cap(matched_subset);
-        if (!inter.empty()) {
-          whole_edge_split = whole_edge_split.cup(edge_dom);
-        }
-      }
-      if (!whole_edge_split.empty()) {
-        return whole_edge_split;
-      }
-    }
-  }
-  return whole_edge_split;
-}
-
-Set MatchingStruct::matchedUVar(Set var)
-{
-  Set matched_u;
-  Set var_edges = mapU.preImage(var);
-  VertexIt matched_var = findSetVertex(var);
-
-  // Find set-edges connected to the set-vertex
-  OutEdgeIt ei_start, ei_end;
-  boost::tie(ei_start, ei_end) = boost::out_edges(*matched_var, g);
-  for (; ei_start != ei_end; ++ei_start) {
-    SetEdge e = g[*ei_start];
-    PWLMap map_u = e.map_u();
-    OrdCT<Set> map_u_dom = map_u.dom();
-    for (Set edge_dom : map_u_dom) {
-      Set matched_dom_edges = edge_dom.cap(matchedE);
-      Set map_u_image = map_u.image(matched_dom_edges); 
-      matched_u = matched_u.cup(map_u_image);
-    }
-  }
-  return matched_u;
-}
-
-bool MatchingStruct::checkRecursion(Set candidate_u)
-{
-  int path_item = 1;
-  Set whole_u = wholeVertex(candidate_u);
-  for (Set edge_set : Pmax) {
-    if ((path_item % 2) == 1) {
-      Set visited_node = wholeVertex(mapU.image(edge_set));
-      if (visited_node.subseteq(whole_u)) {
-        return true;  
-      }
-    }  
-    ++path_item;
-  }
-  return false;
-}
-
-int MatchingStruct::pathWidth()
-{
-  return Pmax.front().card();
-}
-
-bool MatchingStruct::matchingLookAhead(Set matched_f, Set matched_u)
-{
-  Set possible_match = wholeEdge(matched_f); 
-  Set whole_matched_u = matchedUVar(wholeVertex(matched_u));
-  return (possible_match.card() + pathWidth()) > whole_matched_u.card();
-}
-
-SetPath MatchingStruct::pathTo(Set var)
-{
-  SetPath path_to;
-  int path_item = 1;
-  Set whole_u = wholeVertex(var);
-  for (Set edge_set : Pmax) {
-    path_to.insert(path_to.end(), edge_set);
-    if ((path_item % 2) == 1) {
-      Set visited_node = wholeVertex(mapU.image(edge_set));
-      if (visited_node.subseteq(whole_u)) {
-        break;  
-      }
-    }  
-    ++path_item;
-  }
-  return path_to;
-}
-
-void MatchingStruct::updatePath(SetPath path)
-{
-  for(Set edges: path) {
-    Pmax.insert(Pmax.end(), edges);
-  }
-}
-
-UnordCT<Set> MatchingStruct::split(Set ftilde)
-{
-  UnordCT<Set> res;
-
-  // Find the set-vertex where ftilde is included
-  VertexIt vi_start = findSetVertex(ftilde);
-
-  // Find set-edges connected to the set-vertex
-  OutEdgeIt ei_start, ei_end;
-  boost::tie(ei_start, ei_end) = boost::out_edges(*vi_start, g);
-
-  Set aux = mapF.preImage(ftilde);
-  for (; ei_start != ei_end; ++ei_start) {
-    SetEdge e = g[*ei_start];
-
-    PWLMap es2 = e.map_u();
-    OrdCT<Set> dome2 = es2.dom();
-
-    BOOST_FOREACH (Set d2, dome2) {
-      Set etildei = d2.diff(matchedE);
-      Set etildej = etildei.cap(aux);
-      if (!etildej.empty()) res.insert(etildej);
-
-      // int sze = etilde.size();
-      // int szf = ftilde.size();
-
-      // if(sze != szf){
-      //  std::cerr << "Assumption 1 not true\n";
-      //  UnordCT<Set> emptyRes;
-      //  return emptyRes;
-      //}
-    }
-  }
-
-  return res;
-}
-
 MatchingStruct::MatchingStruct(SBGraph garg)
 {
-  g = garg;
+  g = garg; 
 
-  EdgeIt ei_start, ei_end;
-  boost::tie(ei_start, ei_end) = edges(g);
-
-  for (; ei_start != ei_end; ++ei_start) {
-    PWLMap fmap = (g[*ei_start]).map_f();
-    PWLMap umap = (g[*ei_start]).map_u();
+  BOOST_FOREACH (SetEdgeDesc ei, edges(g)) {
+    PWLMap fmap = (g[ei]).map_f();
+    PWLMap umap = (g[ei]).map_u();
 
     mapF = mapF.concat(fmap);
     mapU = mapU.concat(umap);
-
-    SetVertex s = g[source(*ei_start, g)];
-    Set vs = s.range();
-    SetVertex t = g[target(*ei_start, g)];
-    Set ts = t.range();
-
-    Set wDom = fmap.wholeDom();
-    Set im = fmap.image(wDom);
-
-    Set scap = vs.cap(im);
-    if (!scap.empty()) {  // Edges are undirected, therefore source or target can be the left side
-      auxF.insert(vs);
-    } else {
-      auxF.insert(ts);
-    }
   }
 
-  wmax = 0;
+  mapD = mapF;
+  mapB = mapU;
+
+  allEdges = mapF.wholeDom();
+  F = mapF.image(allEdges);
+  U = mapU.image(allEdges);
+  allVertices = F.cup(U);  
+  int dims = F.ndim();
+
+  PWLMap vmap;
+  BOOST_FOREACH (SetVertexDesc vdi, vertices(g)) {
+    SetVertex vi = g[vdi];
+
+    LMap lm;
+    for (int i = 0; i < dims; i++) 
+      lm.addGO(0, vi.id());
+    vmap.addSetLM(vi.range(), lm);
+  }
+  Vmap = vmap;
+
+  int eCount = 1;
+  PWLMap emap;
+  BOOST_FOREACH (SetEdgeDesc edi, edges(g)) {
+    SetEdge ei = g[edi];
+
+    BOOST_FOREACH (Set sf, ei.map_f_ref().dom()) {
+      BOOST_FOREACH (Set su, ei.map_u_ref().dom()) {
+        Set uf = sf.cap(su);
+ 
+        if (!uf.empty()) {
+          LMap lm;
+          for (int i = 0; i < dims; i++) 
+            lm.addGO(0, eCount);
+          emap.addSetLM(uf, lm);
+  
+          ++eCount;
+        }
+      }
+    }
+  }
+  Emap = emap;
 
   Set emptySet;
-
-  matchedF = emptySet;
-  matchedU = emptySet;
-
-  UnordCT<Set> emptyUnordSet;
-  visitedU = emptyUnordSet;
-
-  currentF = emptyUnordSet;
-
+  matchedV = emptySet;
+  unmatchedV = emptySet;
   matchedE = emptySet;
+  Ed = allEdges; 
 
-  SetPath emptyPath;
-  Pmax = emptyPath;
-}
+  PWLMap idMap(allVertices);
+  mmap = idMap;
 
-SetPath MatchingStruct::waspf(Set ftilde)
-{
-  SetPath pmax;
-
-  if (!ftilde.empty()) {
-    UnordCT<Set> etilde = split(ftilde);
-    
-    SetPath widest_path_from_split;
-    BOOST_FOREACH (Set eh, etilde) {
-      Set uh = mapU.image(eh);
-      Set uhn = uh.diff(matchedU);
-
-      int sz = uhn.card();
-      if (sz > wmax) {
-        wmax = sz;
-        widest_path_from_split.clear(); 
-        
-
-        PWLMap mapUaux = mapU.restrictMap(eh);
-        PWLMap auxinv = mapUaux.minInv(uhn);
-        Set auxinvim = auxinv.image(uhn);
-
-        widest_path_from_split.insert(widest_path_from_split.begin(), auxinvim);
-      }
-    }
-    if (!widest_path_from_split.empty()) {
-      return widest_path_from_split;
-    }
-
-    BOOST_FOREACH (Set eh, etilde) {
-      Set uh = mapU.image(eh);
-      Set uhn = uh.diff(matchedU);
-      Set uhm = uh.cap(matchedU);
-      bool completelyVisited = false;
-      BOOST_FOREACH (Set svisited, visitedU) {
-        if (uhm.subseteq(svisited)) completelyVisited = true;
-      }
-
-      if (!completelyVisited && uhm.card() > wmax) {
-        Pmax.insert(Pmax.end(), eh);
-        if (checkRecursion(uhm)) {
-          if (matchingLookAhead(ftilde, uhm)) {
-            Set whole_edge = wholeEdge(ftilde);
-            Set update_matching = matchedE.diff(whole_edge);
-            matchedE = update_matching;
-            PWLMap map_f = mapF.restrictMap(whole_edge);
-            Set matched_f = map_f.image(whole_edge);
-            auxF.insert(matched_f);
-            PWLMap map_u_var = mapU.restrictMap(whole_edge);
-            Set remove_matched_u = map_u_var.image(whole_edge);
-            Set update_matched_u = matchedU.diff(remove_matched_u);
-            matchedU = update_matched_u;
-            return pathTo(uhm); 
-          }
-        } else {
-          visitedU.insert(uhm);
-          SetPath phat = waspu(uhm);
-
-          if (!phat.empty()) {
-            Set p1 = *(phat.begin());
-
-            if (p1.card() >= wmax) {
-              wmax = uhm.card();
-              Set imp1 = mapU.image(p1);
-              PWLMap mapUaux = mapU.restrictMap(eh);
-              PWLMap auxinv = mapUaux.minInv(imp1);
-              Set auxinvim = auxinv.image(imp1);
-
-              phat.insert(phat.begin(), auxinvim);
-              pmax = phat;
-            }
-          }
-        }
-      }
-    }
-  }
-  return pmax;
-}
-
-SetPath MatchingStruct::waspu(Set utilde)
-{
-  SetPath pmax;
-
-  Set auxs1 = mapU.preImage(utilde);
-  Set auxs2 = auxs1.cap(matchedE);
-  Set Ftilde = mapF.image(auxs2);
-
-  VertexIt vi_start, vi_end;
-  boost::tie(vi_start, vi_end) = vertices(g);
-
-  for (; vi_start != vi_end; ++vi_start) {
-    SetVertex v = g[*vi_start];
-    Set vs = v.range();
-
-    Set auxFi = vs.cap(Ftilde);
-
-    if (auxFi.card() > wmax) {
-      bool notinpath = true;
-      BOOST_FOREACH (Set auxs, currentF) {
-        if (auxs == auxFi) {
-          notinpath = false;
-          break;
-        }
-      }
-
-      if (notinpath) {
-        currentF.insert(auxFi);
-        SetPath phat = waspf(auxFi);
-        currentF.erase(auxFi);
-
-        if (!phat.empty()) {
-          Set p1 = *(phat.begin());
-          int sz = p1.card();
-          if (sz >= wmax) {
-            wmax = sz;
-            Set imp1 = mapF.image(p1);
-            Set predom = mapF.preImage(imp1);
-            Set matchedom = predom.cap(matchedE);
-
-            phat.insert(phat.begin(), matchedom);
-            pmax = phat;
-            updatePath(pmax);
-          }
-        }
-      }
-    }
-  }
-
-  return pmax;
+  PWLMap emptyMap;
+  rmap = emptyMap;
+  smap = emptyMap;
 }
 
 Set MatchingStruct::SBGMatching()
 {
-  VertexIt vi_start, vi_end;
-  boost::tie(vi_start, vi_end) = vertices(g);
+  debug();
 
-  if (vi_start != vi_end) {
-    SetPath P;
-    Set wholeF = mapF.wholeDom();
+  int nmax = num_vertices(g);
 
-    UnordCT<Set> F = auxF;
+  Set tildeEd;
+  Set diffMatched;
 
-    do {
-      Set ftilde = *(auxF.begin());
-      int maxcard = ftilde.card();
+  Interval i(0, 1, 0);
+  MultiInterval mi;
+  for (int j = 0; j < mapF.ndim(); j++)
+    mi.addInter(i);
+  Set zero = createSet(mi);
 
-      BOOST_FOREACH (Set auxFi, auxF) {
-        int cardi = auxFi.card();
-        if (cardi > maxcard) {
-          maxcard = cardi;
-          ftilde = auxFi;
-        }
-      }
+  PWLMap oldVmap = Vmap;
 
-      UnordCT<Set> emptyUnordSet;
-      visitedU = emptyUnordSet;
+  std::cout << "\n";
+  do {
+    Ed = allEdges;
+    unmatchedV = allVertices.diff(matchedV);
+    OrdCT<INT> maxV = allVertices.maxElem();
 
-      wmax = 0;
+    // Forward direction
+    Set unmatchedRight = mapU.image(Ed);
+    unmatchedRight = unmatchedRight.cap(unmatchedV);
+    PWLMap offsetUD = mmap.restrictMap(unmatchedRight);
+    offsetUD = offsetUD.offsetImageMap(maxV);
 
-      emptyUnordSet.insert(ftilde);
-      currentF = emptyUnordSet;
+    PWLMap mmapD = offsetUD.combine(mmap);
+    PWLMap mmapInv = mmap.minInv(mmapD.image());
+  
+    Vmap = oldVmap.offsetDomMap(mmapD);
+    PWLMap map_D = mmapD.compPW(mapD);
+    PWLMap map_B = mmapD.compPW(mapB);
+    std::cout << "mmapD: " << mmapD << "\n\n";
+    std::pair<PWLMap, Set> p = minReachable(nmax, mmapD.image(allVertices), Ed, Vmap, Emap, map_D, map_B, smap, rmap);
+    PWLMap rmapD = std::get<0>(p);
+    rmapD = mmapInv.compPW(rmapD.compPW(mmapD));
 
-      SetPath emptyPath;
-      Pmax = emptyPath;
-      P = waspf(ftilde);
+    Set tildeV = rmapD.preImage(F.cap(unmatchedV));
+    tildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
+    tildeEd = tildeEd.cap(Ed);
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
 
-      if (!P.empty()) {
-        Set p1 = *(P.begin());
-        Set newFm = mapF.image(p1);
-        Set Fm = matchedF.cup(newFm);
-        matchedF = Fm;
+    PWLMap edgesRmapD = rmapD.compPW(mapD);
+    PWLMap edgesRmapB = rmapD.compPW(mapB);
+    PWLMap mapd = edgesRmapD.diffMap(edgesRmapB);
+    Set auxEd = mapd.preImage(zero);
+    tildeEd = auxEd.cap(tildeEd); 
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
 
-        OrdCT<Set>::iterator Pend = P.end();
-        Pend--;
-        Set pn = *Pend;
-        Set newUm = mapU.image(pn);
-        Set Um = matchedU.cup(newUm);
-        matchedU = Um;
+    // Only one outing edge
+    //tildeEd = tildeEd.cap(std::get<1>(p));
+    /*
+    PWLMap mapBEd = mapB.restrictMap(tildeEd);
+    PWLMap invB = mapBEd.minInv(mapB.image(tildeEd));
+    Set auxtildeEd = invB.compPW(mapBEd).image(tildeEd);
+    tildeEd = auxtildeEd.cap(tildeEd);
+    PWLMap mapBEd = mapB.restrictMap(tildeEd);
+    PWLMap invB = mapBEd.restrictInv(mapB.image(tildeEd), std::get<1>(p));
+    std::cout << "invB: " << invB << "\n\n";
+    Set auxtildeEd = invB.compPW(mapBEd).image(tildeEd);
+    tildeEd = auxtildeEd.cap(tildeEd);
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
+    */
+    PWLMap mapBEd = mapB.restrictMap(tildeEd);
+    PWLMap invB = mapB.restrictMap(std::get<1>(p)).minInv(mapB.image(tildeEd));
+    Set auxtildeEd = invB.compPW(mapBEd).image(tildeEd);
+    tildeEd = auxtildeEd.cap(tildeEd);
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
 
-        int l = 1;
-        BOOST_FOREACH (Set Pl, P) {
-          if ((l % 2) == 1) {
-            Set Em = matchedE.cup(Pl);
-            matchedE = Em;
-            Set currentf = mapF.image(Pl);
-            UnordCT<Set> auxFaux = auxF;
-            BOOST_FOREACH (Set auxFi, auxFaux) {
-              if (currentf.subset(auxFi)) {
-                auxF.erase(auxFi);
-                Set fiDiff = auxFi.diff(currentf);
-                auxF.insert(fiDiff);
-              } else {
-                auxF.erase(currentf);
-              }
-            }
-          } else {
-            Set Em = matchedE.diff(Pl);
-            matchedE = Em;
-          }
-          ++l;
-        }
-      } else {
-        auxF.erase(ftilde);
-      }
-    } while (!auxF.empty());
+    // Backward direction
+    Set unmatchedLeft = mapF.image(tildeEd);
+    unmatchedLeft = unmatchedLeft.cap(unmatchedV);
+    PWLMap offsetUB = mmap.restrictMap(unmatchedLeft);
+    offsetUB = offsetUB.offsetImageMap(maxV);
+
+    PWLMap mmapB = offsetUB.combine(mmap);
+    mmapInv = mmap.minInv(mmapB.image());
+    
+    Vmap = oldVmap.offsetDomMap(mmapB);
+    map_D = mmapB.compPW(mapB);
+    map_B = mmapB.compPW(mapD); 
+    std::cout << "mmapB: " << mmapB << "\n\n";
+    p = minReachable(nmax, mmapB.image(allVertices), tildeEd, Vmap, Emap, map_D, map_B, smap, rmap);
+    PWLMap rmapB = std::get<0>(p);
+    rmapB = mmapInv.compPW(rmapB.compPW(mmapB));
+
+    tildeV = rmapB.preImage(U.cap(unmatchedV));
+    Set auxTildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
+    tildeEd = auxTildeEd.cap(tildeEd);
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
+
+    edgesRmapD = rmapB.compPW(mapD);
+    edgesRmapB = rmapB.compPW(mapB);
+    mapd = edgesRmapB.diffMap(edgesRmapD);
+    auxTildeEd = mapd.preImage(zero);
+    tildeEd = auxTildeEd.cap(tildeEd); 
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
+
+    // Only one outing edge
+    /*
+    PWLMap mapDEd = mapD.restrictMap(tildeEd);
+    PWLMap invD = mapDEd.minInv(mapD.image(tildeEd));
+    auxtildeEd = invD.compPW(mapDEd).image(tildeEd);
+    tildeEd = auxtildeEd.cap(tildeEd);
+    std::cout << "tildeEd: " << tildeEd << "\n\n";
+    */
+    //tildeEd = tildeEd.cap(std::get<1>(p));
+    //std::cout << "tildeEd: " << tildeEd << "\n\n";
+
+    // Update matched vertices
+
+    // Revert matched and unmatched edges
+    PWLMap mapDEd = mapD.restrictMap(tildeEd);
+    mapBEd = mapB.restrictMap(tildeEd);
+    mapD = mapBEd.combine(mapD);
+    map_D = map_D;
+    mapB = mapDEd.combine(mapB);
+    map_B = map_B;
+
+    matchedE = mapD.preImage(U);
+    matchedV = mapD.image(matchedE);
+    matchedV = matchedV.cup(mapB.image(matchedE));
+    diffMatched = U.diff(matchedV);
+
+    // Update mmap
+    PWLMap auxM = mmap.restrictMap(matchedV);
+    auxM = auxM.offsetImageMap(maxV);
+    auxM = auxM.offsetImageMap(maxV);
+    mmap = auxM.combine(mmap);
+
+    unmatchedV = allVertices.diff(matchedV);
+    PWLMap idUnmatched(unmatchedV);
+    mmap = idUnmatched.combine(mmap);
+
+    bool den = diffMatched.empty();
+    std::cout << "matchedE: " << matchedE << "\n";
+    std::cout << "matchedV: " << matchedV << "\n";
+    std::cout << "den: " << den << "\n\n";
   }
+  while (!diffMatched.empty() && !tildeEd.empty());
 
+  matchedE = mapD.preImage(U);
   return matchedE;
+}
+
+void MatchingStruct::debug()
+{
+  BOOST_FOREACH (SetVertexDesc vi, vertices(g)) {
+    SetVertex v = g[vi];
+    Set vs = v.range();
+
+    Set e1 = mapF.preImage(vs);
+    Set e2 = mapU.preImage(vs);
+
+    std::cout << "-------\n";
+    std::cout << vs << " | " << e1 << " | " << e2 << "\n";
+  }
+  std::cout << "\n";
 }
