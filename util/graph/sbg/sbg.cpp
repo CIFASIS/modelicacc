@@ -45,6 +45,8 @@ std::ostream &operator<<(std::ostream &out, const SETV_TEMP_TYPE &v)
   return out;
 }
 
+template std::ostream &operator<<(std::ostream &out, const SetVertex &v);
+
 // Set-edge ----------------------------------------------------------------------------------------
 
 SET_EDGE_TEMPLATE
@@ -86,8 +88,10 @@ template struct SetEdgeImp<SEDesc>;
 SET_EDGE_TEMPLATE
 std::ostream &operator<<(std::ostream &out, const SETE_TEMP_TYPE &E)
 {
-  std::string Enm = E.name_();
-  OrdCT<Set> dom = E.es1_().dom();
+  SetEdge auxE = E;
+
+  std::string Enm = E.name();
+  OrdCT<Set> dom = auxE.map_f_ref().dom();
   OrdCT<Set>::iterator itdom = dom.begin();
 
   out << Enm << " dom: ";
@@ -96,9 +100,9 @@ std::ostream &operator<<(std::ostream &out, const SETE_TEMP_TYPE &E)
     out << *itdom << ", ";
   out << *itdom << "]\n";
 
-  OrdCT<LMap> lmleft = E.es1_().lmap();
+  OrdCT<LMap> lmleft = auxE.map_f_ref().lmap();
   OrdCT<LMap>::iterator itleft = lmleft.begin();
-  OrdCT<LMap> lmright = E.es2_().lmap();
+  OrdCT<LMap> lmright = auxE.map_u_ref().lmap();
   OrdCT<LMap>::iterator itright = lmright.begin();
 
   out << Enm << " left | right: ";
@@ -114,5 +118,7 @@ std::ostream &operator<<(std::ostream &out, const SETE_TEMP_TYPE &E)
 
   return out;
 }
+
+template std::ostream &operator<<(std::ostream &out, const SetEdge &e);
 
 }  // namespace SBG

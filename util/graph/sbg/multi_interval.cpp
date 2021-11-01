@@ -194,25 +194,6 @@ UNORD_CT<MI_TEMP_TYPE> MI_TEMP_TYPE::diff(MI_TEMP_TYPE mi2)
 }
 
 MI_TEMPLATE
-MI_TEMP_TYPE MI_TEMP_TYPE::crossProd(MI_TEMP_TYPE mi2)
-{
-  Intervals res;
-  IntervalsIt itres = res.begin();
-
-  BOOST_FOREACH (INTER_IMP i, inters()) {
-    itres = res.insert(itres, i);
-    ++itres;
-  }
-
-  BOOST_FOREACH (INTER_IMP i, mi2.inters()) {
-    itres = res.insert(itres, i);
-    ++itres;
-  }
-
-  return MultiInterImp1(res);
-}
-
-MI_TEMPLATE
 ORD_CT<INT_IMP> MI_TEMP_TYPE::minElem()
 {
   ORD_CT<INT_IMP> res;
@@ -242,26 +223,6 @@ ORD_CT<INT_IMP> MI_TEMP_TYPE::maxElem()
   }
 
   return res;
-}
-
-MI_TEMPLATE
-MI_TEMP_TYPE MI_TEMP_TYPE::replace(INTER_IMP i, int dim)
-{
-  Intervals res;
-  IntervalsIt itres = res.begin();
-  int count = 1;
-
-  BOOST_FOREACH (INTER_IMP ii, inters()) {
-    if (dim == count)
-      itres = res.insert(itres, i);
-    else
-      itres = res.insert(itres, ii);
-
-    ++itres;
-    ++count;
-  }
-
-  return MultiInterImp1(res);
 }
 
 // Two multi-intervals can be normalized only if their intervals are the
@@ -299,6 +260,45 @@ MI_TEMP_TYPE MI_TEMP_TYPE::normalize(MI_TEMP_TYPE mi2)
   }
 
   return MultiInterImp1();
+}
+
+MI_TEMPLATE
+MI_TEMP_TYPE MI_TEMP_TYPE::crossProd(MI_TEMP_TYPE mi2)
+{
+  Intervals res;
+  IntervalsIt itres = res.begin();
+
+  BOOST_FOREACH (INTER_IMP i, inters()) {
+    itres = res.insert(itres, i);
+    ++itres;
+  }
+
+  BOOST_FOREACH (INTER_IMP i, mi2.inters()) {
+    itres = res.insert(itres, i);
+    ++itres;
+  }
+
+  return MultiInterImp1(res);
+}
+
+MI_TEMPLATE
+MI_TEMP_TYPE MI_TEMP_TYPE::replace(INTER_IMP i, int dim)
+{
+  Intervals res;
+  IntervalsIt itres = res.begin();
+  int count = 1;
+
+  BOOST_FOREACH (INTER_IMP ii, inters()) {
+    if (dim == count)
+      itres = res.insert(itres, i);
+    else
+      itres = res.insert(itres, ii);
+
+    ++itres;
+    ++count;
+  }
+
+  return MultiInterImp1(res);
 }
 
 MI_TEMPLATE

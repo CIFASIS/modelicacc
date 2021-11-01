@@ -89,14 +89,13 @@ struct PWLMapImp1 {
   PWLMapImp1 minMap(PWLMapImp1 pw2, PWLMapImp1 pw1); 
   PWLMapImp1 minMap(PWLMapImp1 pw2); 
 
-  PWLMapImp1 adjMap(PWLMapImp1 pw2);
   PWLMapImp1 minAdjCompMap(PWLMapImp1 pw2, PWLMapImp1 pw1);
   PWLMapImp1 minAdjCompMap(PWLMapImp1 pw1);
   PWLMapImp1 minAdjMap(PWLMapImp1 pw2, PWLMapImp1 pw1);
   PWLMapImp1 minAdjMap(PWLMapImp1 pw1);
 
   PWLMapImp1 reduceMapN(int dim);
-  PWLMapImp1 mapInf(int mapLength);
+  PWLMapImp1 mapInf();
 
   eq_class(PWLMapImp1);
 };

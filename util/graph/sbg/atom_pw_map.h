@@ -31,6 +31,7 @@ struct AtomPWLMapImp1 {
 
   AtomPWLMapImp1(); 
   AtomPWLMapImp1(AS_IMP d, LM_IMP l);
+  AtomPWLMapImp1(AS_IMP dom, AS_IMP image);
 
   bool empty();
 

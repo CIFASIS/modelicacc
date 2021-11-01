@@ -21,18 +21,17 @@ PWLMap connectedComponents(SBGraph g);
 
 // Minimum reachable -----------------------------------------------------------------------------
 
-PWLMap recursion(int n, Set VR, Set E, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap);
-std::pair<PWLMap, Set> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap);
+std::pair<PWLMap, PWLMap> recursion(int n, Set VR, Set E, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap);
+PWLMap minReach1(Set V, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap);
+std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap);
 
 // Matching of undirected SBGraphs ---------------------------------------------------------------
 
 struct MatchingStruct{
   MatchingStruct(SBGraph g);
 
-  void debug();
 
   Set SBGMatching();
-
 
   private:
   SBGraph g;
@@ -52,10 +51,14 @@ struct MatchingStruct{
   Set matchedV;
   Set unmatchedV;
   Set matchedE; 
-  Set Ed;
 
-  PWLMap mmap;
+  PWLMap mmap; // Offset map
 
   PWLMap rmap; // Map of reachable vertices
   PWLMap smap; // Map of successors
+
+  void debugInit();
+  void debugStep();
+
+  Set filterSuccsEdges(PWLMap map_D, PWLMap map_B, PWLMap s_map);
 };

@@ -189,10 +189,10 @@ int INTER_TEMP_TYPE::maxElem() { return hi(); }
 INTER_TEMPLATE
 INTER_TEMP_TYPE INTER_TEMP_TYPE::normalize(INTER_TEMP_TYPE i2)
 {
-  int st = step();
   int l = lo();
-  int l2 = i2.lo();
+  int st = step();
   int h = hi();
+  int l2 = i2.lo();
   int h2 = i2.hi();
 
   if (st == i2.step()) {

@@ -5,6 +5,7 @@
 ******************************************************************************/
 
 #include <utility>
+#include <omp.h>
 
 #include <boost/foreach.hpp>
 
@@ -162,12 +163,10 @@ SET_IMP PW_TEMP_TYPE::preImage(SET_IMP s)
   BOOST_FOREACH (SET_IMP ss, dom()) {
     SET_IMP partialRes;
 
-    UNORD_CT<AS_IMP> ssas = ss.asets();
-    BOOST_FOREACH (AS_IMP as1, ssas) {
-     APW_IMP auxMap(as1, *itl);
+    BOOST_FOREACH (AS_IMP as1, ss.asets()) {
+      APW_IMP auxMap(as1, *itl);
 
-      UNORD_CT<AS_IMP> sas = s.asets();
-      BOOST_FOREACH (AS_IMP as2, sas) {
+      BOOST_FOREACH (AS_IMP as2, s.asets()) {
         AS_IMP aux2 = auxMap.preImage(as2);
         partialRes.addAtomSet(aux2);
       }
@@ -646,82 +645,51 @@ PW_TEMP_TYPE PW_TEMP_TYPE::atomize()
 }
 
 PW_TEMPLATE
-PW_TEMP_TYPE PW_TEMP_TYPE::normalize() 
+PW_TEMP_TYPE PW_TEMP_TYPE::normalize()
 {
-  PWLMapImp1 res = *this, oldRes;
+  Sets domres;
+  LMaps lmres;
 
-  if (dom_ref().size() == 1) { 
-    PWLMapImp1 auxRes;
-    auxRes.addSetLM((*(dom_ref().begin())).normalize(), *(lmap_ref().begin()));
-    return auxRes;
-  }
+  SetsIt itdom1 = dom_ref().begin(), itdom2, itdomres = domres.begin();
+  LMapsIt itlm1 = lmap_ref().begin(), itlm2, itlmres = lmres.begin();
 
-  do {
-    SetsIt itdom1 = res.dom_ref().begin(), itdom2;
-    LMapsIt itlm1 = res.lmap_ref().begin(), itlm2;
+  Set notRepeat;
 
-    oldRes = res;
-    Sets toInsertDom;
-    SetsIt itIDom = toInsertDom.begin();
-    LMaps toInsertLM;
-    LMapsIt itILM = toInsertLM.begin();
+  while (itdom1 != dom_ref().end()) {
+    itdom2 = itdom1;
+    ++itdom2;
+    itlm2 = itlm1;
+    ++itlm2;
 
-    for (unsigned int i = 0; i < res.dom_ref().size(); i++) {
-      itdom2 = itdom1;
-      itlm2 = itlm1;
+    Set newDom;
 
-      for (unsigned int j = i; j < res.dom_ref().size(); j++) {
-        std::cout << *itdom1 << "\n";
-        std::cout << *itdom2 << "\n\n";
-        if (*itlm1 == *itlm2 && *itdom1 != *itdom2) {
-          SET_IMP normalized = (*itdom1).cup(*itdom2).normalize();
+    if ((*itdom1).cap(notRepeat).empty()) {
+      newDom = *itdom1;
 
-          if (!normalized.empty()) {
-            itIDom = toInsertDom.insert(itIDom, normalized);
-            itILM = toInsertLM.insert(itILM, *itlm1);
-    
-            ++itIDom;
-            ++itILM;
-          }
-
-          else {
-            itIDom = toInsertDom.insert(itIDom, (*itdom1).normalize());
-            itILM = toInsertLM.insert(itILM, *itlm1);
-            ++itIDom;
-            ++itILM;
-
-            itIDom = toInsertDom.insert(itIDom, (*itdom2).normalize());
-            itILM = toInsertLM.insert(itILM, *itlm2);
-            ++itIDom;
-            ++itILM;
-          }
-        }
+      while (itdom2 != dom_ref().end()) {
+        if (*itlm1 == *itlm2) 
+            newDom = newDom.cup(*itdom2);
 
         ++itdom2;
         ++itlm2;
       }
-
-      ++itdom1;
-      ++itlm1;
     }
 
-    itIDom = toInsertDom.begin();
-    itILM = toInsertLM.begin();
-    PWLMap auxRes;
-    std::cout << "Llego\n\n";
-    while (itIDom != toInsertDom.end()) {
-      auxRes.addSetLM(*itIDom, *itILM);      
- 
-      ++itIDom;
-      ++itILM;
+    notRepeat = notRepeat.cup(newDom);
+
+    if (!newDom.empty()) {
+      itdomres = domres.insert(itdomres, newDom);
+      itlmres = lmres.insert(itlmres, *itlm1);
+
+      ++itdomres;
+      ++itlmres;
     }
 
-    res = auxRes;
-    std::cout << "Llego2\n\n";
+    ++itdom1;
+    ++itlm1;
   }
-  while (!res.equivalentPW(oldRes));
 
-  return res;
+  return PWLMapImp1(domres, lmres);
 }
 
 // Return a PWLMap, with dom partitioned accordingly to return lm1 if
@@ -1129,6 +1097,8 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
         SET_IMP scomp;
         scomp.addAtomSet(ascomp);
         SET_IMP mins2 = pw1.preImage(scomp);
+        mins2 = mins2.cap(im2);
+        //std::cout << "mins2: " << mins2 << "\n";
 
         // Choose minimum in mins2, and assign dom(pw1) this element as image
         ORD_CT<INT> min2 = mins2.minElem();
@@ -1256,6 +1226,9 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
       res = replacedpw;
     }
   }
+
+  //std::cout << *this << "\n" << pw2 << "\n" << pw1 << "\n";
+  //std::cout << "res: " << res << "\n\n";
 
   return res;
 }
@@ -1428,88 +1401,27 @@ PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
 
 // PWLMap infinite composition
 PW_TEMPLATE
-PW_TEMP_TYPE PW_TEMP_TYPE::mapInf(int pathLength)
+PW_TEMP_TYPE PW_TEMP_TYPE::mapInf()
 {
   PWLMapImp1 res = *this;
 
   if (!empty()) {
     for (int i = 1; i <= res.ndim(); ++i) res = res.reduceMapN(i);
-    std::cout << "before: " << res << "\n\n";
     res = res.normalize();
-    std::cout << "after: " << res << "\n\n";
 
-    int maxit = 0;
-
-    Sets doms = res.dom();
-    SetsIt itdoms = doms.begin();
-    BOOST_FOREACH (LM_IMP lm, res.lmap()) {
-      ORD_CT<REAL> o = lm.offset();
-      typename ORD_CT<REAL>::iterator ito = o.begin();
-
-      REAL a = 0;
-      REAL b = *(lm.gain().begin());
-
-      BOOST_FOREACH (REAL gi, lm.gain()) {
-        a = std::max(a, gi * abs(*ito));
-        b = std::min(b, gi);
-
-        ++ito;
-      }
-
-      ito = o.begin();
-      if (a > 0) {
-        REAL its = 1;
-
-        ORD_CT<REAL> g = lm.gain();
-        typename ORD_CT<REAL>::iterator itg = g.begin();
-        // For intervals in which size <= off ^ 2 (check reduceMapN, these intervals are not "reduced")
-        for (int dim = 0; dim < res.ndim(); ++dim) {
-          if (*itg == 1 && *ito != 0) {
-            BOOST_FOREACH (AS_IMP asi, (*itdoms).asets()) {
-              MI_IMP mii = asi.aset();
-              ORD_CT<INTER_IMP> ii = mii.inters();
-              typename ORD_CT<INTER_IMP>::iterator itii = ii.begin();
-
-              for (int count = 0; count < dim; ++count) ++itii;
-
-              its = std::max(its, (REAL_IMP)(ceil(((*itii).hi() - (*itii).lo()) / abs(*ito))));
-            }
-          }
-
-          ++itg;
-          ++ito;
-        }
-
-        maxit += its;
-      }
-
-      else if (b == 0)
-        ++maxit;
-
-      ++itdoms;
-    }
-
-    if (maxit == 0)
-      return res;
-
-    PWLMap originalRes = res;
-    PWLMap auxRes = res;
-    for (int j = 0; j < pathLength - 1; j++)
-      auxRes = originalRes.compPW(auxRes);
-
-    PWLMap oldRes;
-    for (int j = 0; j < maxit; ++j) {
-      if (!oldRes.equivalentPW(res)) {
-        oldRes = res;
-        res = res.compPW(auxRes);
-        //res = res.compPW(res);
+    PWLMap originalRes = res, oldReducedRes = res, newReducedRes = res;
+    do {
+      oldReducedRes = res.compPW(oldReducedRes);
+      res = res.compPW(originalRes);
       
-        for (int i = 1; i <= res.ndim(); ++i) res = res.reduceMapN(i);
-        res = res.normalize();
-      }
-    }
+      for (int j = 1; j <= res.ndim(); ++j) res = res.reduceMapN(j);
+      res = res.normalize();
 
-    res = res.compPW(res);
+      newReducedRes = res.compPW(newReducedRes);
+    }
+    while (!oldReducedRes.equivalentPW(newReducedRes));
+
+    res = newReducedRes;
   }
 
   return res;

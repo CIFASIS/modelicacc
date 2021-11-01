@@ -53,12 +53,13 @@ struct SetImp1 {
   ORD_CT<INT_IMP> minElem();
   ORD_CT<INT_IMP> maxElem();
 
-  SetImp1 crossProd(SetImp1 set2);
-
   SetImp1 normalize();
+
+  SetImp1 crossProd(SetImp1 set2);
 
   eq_class(SetImp1);
   neq_class(SetImp1);
+  lt_class(SetImp1);
 
   size_t hash();
 };

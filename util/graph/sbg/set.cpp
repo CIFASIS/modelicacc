@@ -224,21 +224,6 @@ ORD_CT<INT_IMP> SET_TEMP_TYPE::maxElem()
 } 
 
 SET_TEMPLATE
-SET_TEMP_TYPE SET_TEMP_TYPE::crossProd(SET_TEMP_TYPE set2)
-{
-  AtomSets res;
-
-  BOOST_FOREACH (AS_IMP as1, asets()) {
-    BOOST_FOREACH (AS_IMP as2, set2.asets()) {
-      AS_IMP auxres = as1.crossProd(as2);
-      res.insert(auxres);
-    }
-  }
-
-  return SetImp1(res);
-}
-
-SET_TEMPLATE
 SET_TEMP_TYPE SET_TEMP_TYPE::normalize()
 {
   UNORD_CT<AS_IMP> res = asets();
@@ -266,23 +251,28 @@ SET_TEMP_TYPE SET_TEMP_TYPE::normalize()
       }
     }
 
-    std::cout << "res1: " << res << "\n\n";
-
-    BOOST_FOREACH (AS_IMP ins, toInsert) {
-      std::cout << "ins: " << ins << "\n";
+    BOOST_FOREACH (AS_IMP ins, toInsert) 
       res.insert(ins);
-      std::cout << "resn1: " << res << "\n\n";
-    }
 
-    BOOST_FOREACH (AS_IMP del, toDelete) {
-      std::cout << "del: " << del << "\n";
+    BOOST_FOREACH (AS_IMP del, toDelete) 
       res.erase(del);
-      std::cout << "resn2: " << res << "\n\n";
-    }
-
-    std::cout << "\nres2: " << res << "\n\n";
   }
   while (!toDelete.empty());
+
+  return SetImp1(res);
+}
+
+SET_TEMPLATE
+SET_TEMP_TYPE SET_TEMP_TYPE::crossProd(SET_TEMP_TYPE set2)
+{
+  AtomSets res;
+
+  BOOST_FOREACH (AS_IMP as1, asets()) {
+    BOOST_FOREACH (AS_IMP as2, set2.asets()) {
+      AS_IMP auxres = as1.crossProd(as2);
+      res.insert(auxres);
+    }
+  }
 
   return SetImp1(res);
 }
@@ -305,6 +295,29 @@ SET_TEMPLATE
 bool SET_TEMP_TYPE::operator!=(const SET_TEMP_TYPE &other) const
 {
   return !(*this == other); 
+}
+
+SET_TEMPLATE
+bool SET_TEMP_TYPE::operator<(const SET_TEMP_TYPE &other) const 
+{
+  SetImp1 aux1 = *this;
+  SetImp1 aux2 = other;
+
+  if (!aux1.empty() && !aux2.empty()) {
+    AS_IMP minAs1 = *(aux1.asets_ref().begin());
+
+    BOOST_FOREACH (AS_IMP as, aux1.asets())
+      if (as < minAs1) minAs1 = as;
+
+    AS_IMP minAs2 = *(aux2.asets_ref().begin());
+
+    BOOST_FOREACH (AS_IMP as, aux2.asets())
+      if (as < minAs2) minAs2 = as;
+
+    return minAs1 < minAs2;
+  }
+
+  return false;
 }
 
 SET_TEMPLATE

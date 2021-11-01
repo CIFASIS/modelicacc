@@ -233,20 +233,6 @@ void TestIntMin1()
   BOOST_REQUIRE_MESSAGE(res1 == 10, "\n" << "min(" << i << ")" << " = " << res1 << "\nExpected: " << 10);
 }
 
-void TestIntNormalize1()
-{
-  Interval i1(10, 3, 40);
-  Interval i2(43, 3, 100);
-
-  Interval res1 = i1.normalize(i2);
-  Interval res2 = i2.normalize(i1);
-
-  Interval res3(10, 3, 100);
-
-  BOOST_CHECK(res1 == res2 && res2 == res3);
-  BOOST_REQUIRE_MESSAGE(res1 == res2 && res2 == res3, "\nShould be: " << res1 << " == " << res2 << " && " << res2 << " == " << res3);
-}
-
 // -- MultiIntervals --------------------------------------------------------------//
 
 void TestMultiCreation1()
@@ -819,34 +805,6 @@ void TestMultiReplace2()
   BOOST_REQUIRE_MESSAGE(res1 == res2, "\nreplace(" << mi1 << ", 4) = " << res1 << "\nExpected: " << res2);
 }
 
-void TestMultiNormalize1() 
-{
-  Interval i1(1, 1, 10);
-
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  mi1.addInter(i1);
-  mi1.addInter(i1);
-
-  Interval i2(11, 1, 20);
-
-  MultiInterval mi2;
-  mi2.addInter(i1);
-  mi2.addInter(i2);
-  mi2.addInter(i1);
-
-  MultiInterval res1 = mi1.normalize(mi2);
-
-  Interval i3(1, 1, 20);
-
-  MultiInterval res2;
-  res2.addInter(i1);
-  res2.addInter(i3);
-  res2.addInter(i1);
-
-  BOOST_REQUIRE_MESSAGE(res1 == res2, "\nnormalize(" << mi1 << ", "<< mi2 <<") = " << res1 << "\nExpected: " << res2);
-}
-
 // -- AtomicSets --------------------------------------------------------------//
 
 void TestASetCreation1()
@@ -1308,7 +1266,6 @@ void TestSetCap3()
   res3.addAtomSet(as4);
   res3.addAtomSet(as5);
 
-  BOOST_CHECK(res1 == res2 && res2 == res3);
   BOOST_REQUIRE_MESSAGE(res1 == res2 && res2 == res3
                         , "\n" << s1 << "\ncap\n" << s2 << "\n=\n" << res1 << "\nExpected: " << res3);
 }
@@ -1466,7 +1423,6 @@ void TestSetDiff2()
   res2.addAtomSet(as8);
   res2.addAtomSet(as9);
 
-  BOOST_CHECK(res1 == res2);
   BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << s1 << "\n-\n" << s2 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
@@ -2086,6 +2042,38 @@ void TestAtomPWPre4()
                         "\npre(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
+void TestAtomPWPre5()
+{
+  Interval i1(32, 1, 32);
+  
+  MultiInterval mi1;
+  mi1.addInter(i1);
+  mi1.addInter(i1);
+
+  AtomSet as1(mi1);
+
+  LMap lm1;
+  lm1.addGO(-1, 32);
+  lm1.addGO(-1, 32);
+ 
+  AtomPWLMap pwatom1(as1, lm1);
+
+  Interval zero(0, 1, 0);
+  
+  MultiInterval mi2;
+  mi2.addInter(zero);
+  mi2.addInter(zero);
+
+  AtomSet as2(mi2);
+
+  AtomSet res1  = pwatom1.preImage(as2);
+
+  AtomSet res2 = as1;
+
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\npre(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
+}
+
 // -- Piece wise linear maps -------------------------------------------------//
 
 void TestPWLMapCreation1()
@@ -2373,6 +2361,55 @@ void TestPWLMapPre1()
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, 
                         "\npre(" << pw1 << ", " << s3 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
+}
+
+void TestPWLMapPre2()
+{
+  Interval i1(32, 1, 32);
+
+  MultiInterval mi1;
+  mi1.addInter(i1);
+  mi1.addInter(i1);
+
+  AtomSet as1(mi1);
+
+  Interval i2(50, 2, 100);
+
+  MultiInterval mi2;
+  mi2.addInter(i1);
+  mi2.addInter(i2);
+
+  AtomSet as2(mi2);
+
+  Set s1;
+  s1.addAtomSet(as1);
+  s1.addAtomSet(as2);
+
+  LMap lm1;
+  lm1.addGO(1, -32);
+  lm1.addGO(1, -32);
+
+  PWLMap pw1;
+  pw1.addSetLM(s1, lm1);
+
+  Interval zero(0, 1, 0);
+
+  MultiInterval mi3;
+  mi3.addInter(zero);
+  mi3.addInter(zero);
+
+  AtomSet as3(mi3);
+
+  Set s2;
+  s2.addAtomSet(as3);
+
+  Set res1 = pw1.preImage(s2);
+
+  Set res2;
+  res2.addAtomSet(as1);
+
+  BOOST_REQUIRE_MESSAGE(res1 == res2, 
+                        "\npre(" << pw1 << ", " << s2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestPWLMapComp1()
@@ -5003,6 +5040,511 @@ void TestMatching3()
   BOOST_CHECK(true);
 } 
 
+// A case that with the v10 implementation of matching,
+// there are cycles, and the algorithm doesn't converge
+void TestMatching4()
+{
+  SBGraph g;
+
+  SetVertexDesc v1 = boost::add_vertex(g);
+  SetVertexDesc v2 = boost::add_vertex(g);
+  SetVertexDesc v3 = boost::add_vertex(g);
+  SetVertexDesc v4 = boost::add_vertex(g);
+  SetVertexDesc v5 = boost::add_vertex(g);
+  SetVertexDesc v6 = boost::add_vertex(g);
+  SetVertexDesc v7 = boost::add_vertex(g);
+  SetVertexDesc v8 = boost::add_vertex(g);
+
+  SetEdgeDesc e1;
+  bool b1;
+  boost::tie(e1, b1) = boost::add_edge(v3, v6, g);
+  SetEdgeDesc e2;
+  bool b2;
+  boost::tie(e2, b2) = boost::add_edge(v2, v6, g);
+  SetEdgeDesc e3;
+  bool b3;
+  boost::tie(e3, b3) = boost::add_edge(v1, v7, g);
+  SetEdgeDesc e4;
+  bool b4;
+  boost::tie(e4, b4) = boost::add_edge(v4, v6, g);
+  SetEdgeDesc e5;
+  bool b5;
+  boost::tie(e5, b5) = boost::add_edge(v4, v5, g);
+  SetEdgeDesc e6;
+  bool b6;
+  boost::tie(e6, b6) = boost::add_edge(v3, v5, g);
+  SetEdgeDesc e7;
+  bool b7;
+  boost::tie(e7, b7) = boost::add_edge(v2, v5, g);
+  SetEdgeDesc e8;
+  bool b8;
+  boost::tie(e8, b8) = boost::add_edge(v2, v7, g);
+  SetEdgeDesc e9;
+  bool b9;
+  boost::tie(e9, b9) = boost::add_edge(v3, v8, g);
+  SetEdgeDesc e10;
+  bool b10;
+  boost::tie(e10, b10) = boost::add_edge(v1, v8, g);
+
+  Interval i1(2, 1, 2);
+  Set s1 = createSet(i1);
+  SetVertex V1("v1", 1, s1, 0);
+
+  Interval i2(3, 1, 3);
+  Set s2 = createSet(i2);
+  SetVertex V2("v2", 2, s2, 0);
+
+  Interval i3(4, 1, 4);
+  Set s3 = createSet(i3);
+  SetVertex V3("v3", 3, s3, 0);
+
+  Interval i4(5, 1, 5);
+  Set s4 = createSet(i4);
+  SetVertex V4("v4", 4, s4, 0);
+
+  Interval i5(9, 1, 9);
+  Set s5 = createSet(i5);
+  SetVertex V5("v5", 5, s5, 0);
+
+  Interval i6(10, 1, 10);
+  Set s6 = createSet(i6);
+  SetVertex V6("v6", 6, s6, 0);
+
+  Interval i7(11, 1, 11);
+  Set s7 = createSet(i7);
+  SetVertex V7("v7", 7, s7, 0);
+
+  Interval i8(12, 1, 12);
+  Set s8 = createSet(i8);
+  SetVertex V8("v8", 8, s8, 0);
+
+  g[v1] = V1;
+  g[v2] = V2;
+  g[v3] = V3;
+  g[v4] = V4;
+  g[v5] = V5;
+  g[v6] = V6;
+  g[v7] = V7;
+  g[v8] = V8;
+
+  Interval i9(1, 1, 1);
+  Set s9 = createSet(i9);
+  LMap lm1;
+  lm1.addGO(1, 9);
+  LMap lm2;
+  lm2.addGO(1, 3);
+  PWLMap mapE1f;
+  mapE1f.addSetLM(s9, lm1);
+  PWLMap mapE1u;
+  mapE1u.addSetLM(s9, lm2);
+  SetEdge E1("E1", 1, mapE1f, mapE1u, 0);
+
+  Interval i10(2, 1, 2);
+  Set s10 = createSet(i10);
+  LMap lm3;
+  lm3.addGO(1, 8);
+  LMap lm4;
+  lm4.addGO(1, 1);
+  PWLMap mapE2f;
+  mapE2f.addSetLM(s10, lm3);
+  PWLMap mapE2u;
+  mapE2u.addSetLM(s10, lm4);
+  SetEdge E2("E2", 2, mapE2f, mapE2u, 0);
+
+  Interval i11(3, 1, 3);
+  Set s11 = createSet(i11);
+  LMap lm5;
+  lm5.addGO(1, 8);
+  LMap lm6;
+  lm6.addGO(1, -1);
+  PWLMap mapE3f;
+  mapE3f.addSetLM(s11, lm5);
+  PWLMap mapE3u;
+  mapE3u.addSetLM(s11, lm6);
+  SetEdge E3("E3", 3, mapE3f, mapE3u, 0);
+
+  Interval i12(4, 1, 4);
+  Set s12 = createSet(i12);
+  LMap lm7;
+  lm7.addGO(1, 6);
+  LMap lm8;
+  lm8.addGO(1, 1);
+  PWLMap mapE4f;
+  mapE4f.addSetLM(s12, lm7);
+  PWLMap mapE4u;
+  mapE4u.addSetLM(s12, lm8);
+  SetEdge E4("E4", 4, mapE4f, mapE4u, 0);
+
+  Interval i13(5, 1, 5);
+  Set s13 = createSet(i13);
+  LMap lm9;
+  lm9.addGO(1, 4);
+  LMap lm10;
+  lm10.addGO(1, 0);
+  PWLMap mapE5f;
+  mapE5f.addSetLM(s13, lm9);
+  PWLMap mapE5u;
+  mapE5u.addSetLM(s13, lm10);
+  SetEdge E5("E5", 5, mapE5f, mapE5u, 0);
+
+  Interval i14(6, 1, 6);
+  Set s14 = createSet(i14);
+  LMap lm11;
+  lm11.addGO(1, 3);
+  LMap lm12;
+  lm12.addGO(1, -2);
+  PWLMap mapE6f;
+  mapE6f.addSetLM(s14, lm11);
+  PWLMap mapE6u;
+  mapE6u.addSetLM(s14, lm12);
+  SetEdge E6("E6", 6, mapE6f, mapE6u, 0);
+
+  Interval i15(7, 1, 7);
+  Set s15 = createSet(i15);
+  LMap lm13;
+  lm13.addGO(1, 2);
+  LMap lm14;
+  lm14.addGO(1, -4);
+  PWLMap mapE7f;
+  mapE7f.addSetLM(s15, lm13);
+  PWLMap mapE7u;
+  mapE7u.addSetLM(s15, lm14);
+  SetEdge E7("E7", 7, mapE7f, mapE7u, 0);
+
+  Interval i16(8, 1, 8);
+  Set s16 = createSet(i16);
+  LMap lm15;
+  lm15.addGO(1, 3);
+  LMap lm16;
+  lm16.addGO(1, -5);
+  PWLMap mapE8f;
+  mapE8f.addSetLM(s16, lm15);
+  PWLMap mapE8u;
+  mapE8u.addSetLM(s16, lm16);
+  SetEdge E8("E8", 8, mapE8f, mapE8u, 0);
+
+  Interval i17(9, 1, 9);
+  Set s17 = createSet(i17);
+  LMap lm17;
+  lm17.addGO(1, 3);
+  LMap lm18;
+  lm18.addGO(1, -5);
+  PWLMap mapE9f;
+  mapE9f.addSetLM(s17, lm17);
+  PWLMap mapE9u;
+  mapE9u.addSetLM(s17, lm18);
+  SetEdge E9("E9", 9, mapE9f, mapE9u, 0);
+
+  Interval i18(10, 1, 10);
+  Set s18 = createSet(i18);
+  LMap lm19;
+  lm19.addGO(1, 2);
+  LMap lm20;
+  lm20.addGO(1, -8);
+  PWLMap mapE10f;
+  mapE10f.addSetLM(s18, lm19);
+  PWLMap mapE10u;
+  mapE10u.addSetLM(s18, lm20);
+  SetEdge E10("E10", 10, mapE10f, mapE10u, 0);
+
+  g[e1] = E1; 
+  g[e2] = E2; 
+  g[e3] = E3; 
+  g[e4] = E4; 
+  g[e5] = E5; 
+  g[e6] = E6; 
+  g[e7] = E7; 
+  g[e8] = E8; 
+  g[e9] = E9; 
+  g[e10] = E10; 
+
+  MatchingStruct match(g);
+  Set res = match.SBGMatching();
+}
+
+// Advection 2D test case
+// The equations are numbered according to the order of appereance in the model
+void TestMatching5()
+{
+  int N = 3;
+
+  SBGraph g;
+
+  SetVertexDesc v1 = boost::add_vertex(g); // u[i, j]
+  SetVertexDesc v2 = boost::add_vertex(g); // eq1[1, 1]
+  SetVertexDesc v3 = boost::add_vertex(g); // eq2[i, 1]
+  SetVertexDesc v4 = boost::add_vertex(g); // eq3[1, j]
+  SetVertexDesc v5 = boost::add_vertex(g); // eq4[i, j]
+
+  SetEdgeDesc e1; // u[1, 1] <-> eq1[1, 1]
+  bool b1;
+  boost::tie(e1, b1) = boost::add_edge(v1, v2, g);
+  SetEdgeDesc e2; // u[i, 1] <-> eq2[i, 1] U u[i-1, 1] <-> eq2[i, 1]
+  bool b2;
+  boost::tie(e2, b2) = boost::add_edge(v1, v3, g);
+  SetEdgeDesc e3; // u[1, j] <-> eq3[1, j] U u[1, j-1] <-> eq3[1, j]
+  bool b3;
+  boost::tie(e3, b3) = boost::add_edge(v1, v4, g);
+  SetEdgeDesc e4; // u[i, j] <-> eq4[i, j] U u[i-1, j] <-> eq4[i, j] U u[i, j-1] <-> eq4[i, j]
+  bool b4;
+  boost::tie(e4, b4) = boost::add_edge(v1, v5, g);
+
+  int offV1 = 1;
+  int szV1 = N - 1;
+
+  int offEq1 = offV1 + szV1 + 1;
+  int szEq1 = 0;
+
+  int offEq2i = offEq1 + szEq1 + 1;
+  int szEq2i = N - 2;
+  int offEq2j = offEq1 + szEq1 + 1; 
+  int szEq2j = 0;
+
+  int offEq3i = offEq2i + szEq2i + 1;
+  int szEq3i = 0; 
+  int offEq3j = offEq2j + szEq2j + 1;
+  int szEq3j = N - 2;
+
+  int offEq4 = offEq3i + szEq3i + 1; 
+  int szEq4 = N - 2;
+ 
+  // u[i, j] 
+  Interval i1(offV1, 1, offV1 + szV1);
+  MultiInterval mi1;
+  mi1.addInter(i1);
+  mi1.addInter(i1);
+  Set s1 = createSet(mi1);
+  SetVertex V1("u", 1, s1, 0);
+
+  // eq1[1, 1]
+  Interval i2(offEq1, 1, offEq1 + szEq1);
+  MultiInterval mi2;
+  mi2.addInter(i2);
+  mi2.addInter(i2);
+  Set s2 = createSet(mi2);
+  SetVertex V2("eq1", 2, s2, 0);
+
+  // eq2[i, 1]
+  Interval i3(offEq2i, 1, offEq2i + szEq2i);
+  Interval i4(offEq2j, 1, offEq2j + szEq2j);
+  MultiInterval mi3;
+  mi3.addInter(i3);
+  mi3.addInter(i4);
+  Set s3 = createSet(mi3);
+  SetVertex V3("eq2", 3, s3, 0);
+
+  // eq3[1, j]
+  Interval i5(offEq3i, 1, offEq3i + szEq3i);
+  Interval i6(offEq3j, 1, offEq3j + szEq3j);
+  MultiInterval mi4;
+  mi4.addInter(i5);
+  mi4.addInter(i6);
+  Set s4 = createSet(mi4);
+  SetVertex V4("eq3", 4, s4, 0);
+
+  // eq4[i, j]
+  Interval i7(offEq4, 1, offEq4 + szEq4);
+  MultiInterval mi5;
+  mi5.addInter(i7);
+  mi5.addInter(i7);
+  Set s5 = createSet(mi5);
+  SetVertex V5("eq4", 5, s5, 0);
+
+  g[v1] = V1;
+  g[v2] = V2;
+  g[v3] = V3;
+  g[v4] = V4;
+  g[v5] = V5;
+
+  int offE1 = 1;
+  int szE1 = 0;
+
+  int offE2i_1 = offE1 + szE1 + 1;
+  int szE2i_1 = N - 2;
+  int offE2j_1 = offE1 + szE1 + 1;
+  int szE2j_1 = 0;
+
+  int offE2i_2 = offE2i_1 + szE2i_1 + 1;
+  int szE2i_2 = N - 2;
+  int offE2j_2 = offE2j_1 + szE2j_1 + 1;
+  int szE2j_2 = 0;
+
+  int offE3i_1 = offE2i_2 + szE2i_2 + 1;
+  int szE3i_1 = 0;
+  int offE3j_1 = offE2j_2 + szE2j_2 + 1;
+  int szE3j_1 = N - 2;
+
+  int offE3i_2 = offE3i_1 + szE3i_1 + 1;
+  int szE3i_2 = 0;
+  int offE3j_2 = offE3j_1 + szE3j_1 + 1;
+  int szE3j_2 = N - 2;
+
+  int offE4i_1 = offE3i_2 + szE3i_2 + 1;
+  int szE4i_1 = N - 2;
+  int offE4j_1 = offE3j_2 + szE3j_2 + 1;
+  int szE4j_1 = N - 2;
+
+  int offE4i_2 = offE4i_1 + szE4i_1 + 1;
+  int szE4i_2 = N - 2;
+  int offE4j_2 = offE4j_1 + szE4j_1 + 1;
+  int szE4j_2 = N - 2;
+
+  int offE4i_3 = offE4i_2 + szE4i_2 + 1;
+  int szE4i_3 = N - 2;
+  int offE4j_3 = offE4j_2 + szE4j_2 + 1;
+  int szE4j_3 = N - 2;
+
+  // u[1, 1] <-> eq1[1, 1]
+  Interval i8(offE1, 1, offE1 + szE1);
+  MultiInterval mi6;
+  mi6.addInter(i8);
+  mi6.addInter(i8);
+  Set s6 = createSet(mi6);
+  LMap lm1;
+  lm1.addGO(1, offEq1 - offE1);
+  lm1.addGO(1, offEq1 - offE1);
+  LMap lm2;
+  lm2.addGO(1, offV1 - offE1);
+  lm2.addGO(1, offV1 - offE1);
+  PWLMap mapE1f;
+  mapE1f.addSetLM(s6, lm1);
+  PWLMap mapE1u;
+  mapE1u.addSetLM(s6, lm2);
+  SetEdge E1("E1", 1, mapE1f, mapE1u, 0);
+
+  // u[i, 1] <-> eq2[i, 1]
+  Interval i9(offE2i_1, 1, offE2i_1 + szE2i_1);
+  Interval i10(offE2j_1, 1, offE2j_1 + szE2j_1);
+  MultiInterval mi7;
+  mi7.addInter(i9);
+  mi7.addInter(i10);
+  Set s7 = createSet(mi7);
+  LMap lm3; // to eq2[i, 1]
+  lm3.addGO(1, offEq2i - offE2i_1);
+  lm3.addGO(1, offEq2j - offE2j_1);
+  LMap lm4; // to u[i, 1]
+  lm4.addGO(1, offV1 + 1 - offE2i_1);
+  lm4.addGO(1, offV1 - offE2j_1);
+
+  // u[i-1, j] <-> eq2[i, 1]
+  Interval i11(offE2i_2, 1, offE2i_2 + szE2i_2);
+  Interval i12(offE2j_2, 1, offE2j_2 + szE2j_2);
+  MultiInterval mi8;
+  mi8.addInter(i11);
+  mi8.addInter(i12);
+  Set s8 = createSet(mi8);
+  LMap lm5; // to eq2[i, 1] 
+  lm5.addGO(1, offEq2i - offE2i_2);
+  lm5.addGO(1, offEq2j - offE2j_2);
+  LMap lm6; // to u[i-1, j]
+  lm6.addGO(1, offV1 - offE2i_2);
+  lm6.addGO(1, offV1 - offE2j_2);
+
+  PWLMap mapE2f;
+  mapE2f.addSetLM(s7, lm3);
+  mapE2f.addSetLM(s8, lm5);
+  PWLMap mapE2u;
+  mapE2u.addSetLM(s7, lm4);
+  mapE2u.addSetLM(s8, lm6);
+  SetEdge E2("E2", 2, mapE2f, mapE2u, 0);
+
+  // u[1, j] <-> eq3[1, j]
+  Interval i13(offE3i_1, 1, offE3i_1 + szE3i_1);
+  Interval i14(offE3j_1, 1, offE3j_1 + szE3j_1);
+  MultiInterval mi9;
+  mi9.addInter(i13);
+  mi9.addInter(i14);
+  Set s9 = createSet(mi9);
+  LMap lm7; // to eq3[1, j]
+  lm7.addGO(1, offEq3i - offE3i_1);
+  lm7.addGO(1, offEq3j - offE3j_1);
+  LMap lm8; // to u[1, j]
+  lm8.addGO(1, offV1 - offE3i_1);
+  lm8.addGO(1, offV1 + 1 - offE3j_1);
+
+  // u[1, j-1] <-> eq3[1, j]
+  Interval i15(offE3i_2, 1, offE3i_2 + szE3i_2);
+  Interval i16(offE3j_2, 1, offE3j_2 + szE3j_2);
+  MultiInterval mi10;
+  mi10.addInter(i15);
+  mi10.addInter(i16);
+  Set s10 = createSet(mi10);
+  LMap lm9; // to eq3[1, j]
+  lm9.addGO(1, offEq3i - offE3i_2); 
+  lm9.addGO(1, offEq3j - offE3j_2);
+  LMap lm10; // to u[1, j-1]
+  lm10.addGO(1, offV1 - offE3i_2);
+  lm10.addGO(1, offV1 - offE3j_2);
+
+  PWLMap mapE3f;
+  mapE3f.addSetLM(s9, lm7);
+  mapE3f.addSetLM(s10, lm9);
+  PWLMap mapE3u;
+  mapE3u.addSetLM(s9, lm8);
+  mapE3u.addSetLM(s10, lm10);
+  SetEdge E3("E3", 3, mapE3f, mapE3u, 0);
+
+  // u[i, j] <-> eq4[i, j]
+  Interval i17(offE4i_1, 1, offE4i_1 + szE4i_1);
+  Interval i18(offE4j_1, 1, offE4j_1 + szE4j_1);
+  MultiInterval mi11;
+  mi11.addInter(i17);
+  mi11.addInter(i18);
+  Set s11 = createSet(mi11);
+  LMap lm11; // to eq4[i, j]
+  lm11.addGO(1, offEq4 - offE4i_1);
+  lm11.addGO(1, offEq4 - offE4j_1);
+  LMap lm12; // to u[i, j]
+  lm12.addGO(1, offV1 + 1 - offE4i_1);
+  lm12.addGO(1, offV1 + 1 - offE4j_1);
+
+  // u[i-1, j] <-> eq4[i, j]
+  Interval i19(offE4i_2, 1, offE4i_2 + szE4i_2);
+  Interval i20(offE4j_2, 1, offE4j_2 + szE4j_2);
+  MultiInterval mi12;
+  mi12.addInter(i19);
+  mi12.addInter(i20);
+  Set s12 = createSet(mi12);
+  LMap lm13; // to eq4[i, j]
+  lm13.addGO(1, offEq4 - offE4i_2);
+  lm13.addGO(1, offEq4 - offE4j_2);
+  LMap lm14; // to u[i-1, j]
+  lm14.addGO(1, offV1 - offE4i_2);
+  lm14.addGO(1, offV1 + 1 - offE4j_2);
+
+  // u[i, j-1] <-> eq4[i, j]
+  Interval i21(offE4i_3, 1, offE4i_3 + szE4i_3);
+  Interval i22(offE4j_3, 1, offE4j_3 + szE4j_3);
+  MultiInterval mi13;
+  mi13.addInter(i21);
+  mi13.addInter(i22);
+  Set s13 = createSet(mi13);
+  LMap lm15; // to eq4[i, j]
+  lm15.addGO(1, offEq4 - offE4i_3);
+  lm15.addGO(1, offEq4 - offE4j_3);
+  LMap lm16; // to u[i, j-1]
+  lm16.addGO(1, offV1 + 1 - offE4i_3);
+  lm16.addGO(1, offV1 - offE4j_3);
+
+  PWLMap mapE4f;
+  mapE4f.addSetLM(s11, lm11);
+  mapE4f.addSetLM(s12, lm13);
+  mapE4f.addSetLM(s13, lm15);
+  PWLMap mapE4u;
+  mapE4u.addSetLM(s11, lm12); 
+  mapE4u.addSetLM(s12, lm14); 
+  mapE4u.addSetLM(s13, lm16); 
+  SetEdge E4("E4", 4, mapE4f, mapE4u, 0);
+
+  g[e1] = E1; 
+  g[e2] = E2; 
+  g[e3] = E3; 
+  g[e4] = E4; 
+
+  MatchingStruct match(g);
+  Set res = match.SBGMatching();
+}
+
 //____________________________________________________________________________//
 
 test_suite *init_unit_test_suite(int, char *[])
@@ -5028,7 +5570,6 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntDiff3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntDiff4));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntMin1));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntNormalize1));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiCreation2));
@@ -5053,7 +5594,6 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiMin1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiReplace1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiReplace2));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMultiNormalize1));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestASetCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestASetEmpty1));
@@ -5094,11 +5634,13 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWPre2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWPre3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWPre4));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestAtomPWPre5));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapImage1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapImage2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapPre1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapPre2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapComp1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapComp2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapCombine1));
@@ -5120,8 +5662,10 @@ test_suite *init_unit_test_suite(int, char *[])
   //framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
 
   //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching1));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching2));
+  //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching2));
   //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching3));
+  //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching4));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching5));
 
   return 0;
 }
