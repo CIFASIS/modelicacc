@@ -94,6 +94,7 @@ void PW_TEMP_TYPE::addSetLM(SET_IMP s, LM_IMP lm)
 
   dom_ = auxpw.dom();
   lmap_ = auxpw.lmap();
+  ndim_ = auxpw.ndim();
 }
 
 PW_TEMPLATE
@@ -105,6 +106,7 @@ void PW_TEMP_TYPE::addLMSet(LM_IMP lm, SET_IMP s)
 
   dom_ = auxpw.dom();
   lmap_ = auxpw.lmap();
+  ndim_ = auxpw.ndim();
 }
 
 PW_TEMPLATE
@@ -1098,7 +1100,6 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
         scomp.addAtomSet(ascomp);
         SET_IMP mins2 = pw1.preImage(scomp);
         mins2 = mins2.cap(im2);
-        //std::cout << "mins2: " << mins2 << "\n";
 
         // Choose minimum in mins2, and assign dom(pw1) this element as image
         ORD_CT<INT> min2 = mins2.minElem();
@@ -1226,9 +1227,6 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
       res = replacedpw;
     }
   }
-
-  //std::cout << *this << "\n" << pw2 << "\n" << pw1 << "\n";
-  //std::cout << "res: " << res << "\n\n";
 
   return res;
 }

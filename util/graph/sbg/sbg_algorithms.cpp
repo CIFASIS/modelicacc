@@ -6,6 +6,9 @@
 
 #include <util/graph/sbg/sbg_algorithms.h>
 
+#include <chrono>
+#include <time.h>
+
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 // SB-Graphs algorithms
@@ -75,52 +78,16 @@ PWLMap connectedComponents(SBGraph g)
 
 // Minimum reachable ------------------------------------------------------------------------------
 
-std::pair<PWLMap, PWLMap> recursion(int n, Set VR, Set E, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap)
+bool eqId(Set dom, LMap lm) 
 {
-  // *** Initialization
+  ORD_REALS::iterator itg = lm.gain_ref().begin();
+  ORD_REALS::iterator ito = lm.offset_ref().begin();
 
-  PWLMap newSmap;
-  PWLMap newRmap; // Minimum reachable map
+  for (int i = 0; i < lm.ndim(); i++) 
+    if (*itg != 1 || *ito != 0)
+      return false;
 
-  Interval i(0, 1, 0);
-  MultiInterval mi;
-  for (int j = 0; j < map_D.ndim(); j++)
-    mi.addInter(i);
-  Set zero = createSet(mi);
-
-  // *** Traverse graph
-
-  Set ES = currentSmap.compPW(map_B).diffMap(map_D).preImage(zero); // Edges that connect vertices with successors
-
-  Set currentVertex = VR;
-  PWLMap smapNth = currentSmap; // Map of nth successor
-  Set ER; // Edges in recursive paths
-  PWLMap originalSmap = currentSmap;
-  for (int i = 0; i < n; i++) {
-    ER = ER.cup(map_D.preImage(smapNth.image(VR)).cap(map_B.preImage(currentVertex)));
-    currentVertex = smapNth.image(VR);
-    smapNth = smapNth.compPW(originalSmap); 
-  }
-  ER = ER.cap(ES);
-
-  Set ERplus = Emap.preImage(Emap.image(ER)); // Edges that share sub-set-edges with those in ER
-  ERplus = ERplus.cap(E);
-  
-  PWLMap tildeD = map_D.restrictMap(ERplus);
-  PWLMap tildeB = map_B.restrictMap(ERplus);
-  PWLMap smapPlus = tildeD.compPW(tildeB.minInv(tildeB.image())); // Successor map through ERplus
-
-  PWLMap finalsRec = smapNth.restrictMap(smapNth.image(VR));
-  smapPlus = finalsRec.combine(smapPlus); // Preserve the successors of the final vertices
-  smapPlus = smapPlus.combine(currentSmap);
-
-  PWLMap rmapPlus = currentRmap.compPW(smapPlus.mapInf()); // Minimum reachable through ERplus
-  PWLMap tildeRmap = currentRmap.minMap(rmapPlus); // New minimum reachable map
-  newRmap = tildeRmap.combine(currentRmap);
-
-  newSmap = smapPlus.minMap(currentSmap, newRmap);
-
-  return std::pair<PWLMap, PWLMap>(newSmap, newRmap);
+  return true;
 }
 
 bool notEqId(Set dom, LMap lm) 
@@ -133,6 +100,88 @@ bool notEqId(Set dom, LMap lm)
       return true;
 
   return false;
+}
+
+// Use result of newMap if offMap(newMap(v)) < offMap(currentMap(v))
+// (In the minReachable context, is used to select a new successor
+//  only if the new successor has a "<" representative than the old
+//  successor)
+PWLMap updateMap(Set V, PWLMap currentMap, PWLMap newMap, PWLMap offMap)
+{
+  Interval i(0, 1, 0);
+  MultiInterval mi;
+  for (int j = 0; j < currentMap.ndim(); j++)
+    mi.addInter(i);
+  Set zero = createSet(mi);
+
+  PWLMap offCurrent = offMap.compPW(currentMap);
+  PWLMap offNew = offMap.compPW(newMap);
+
+  PWLMap deltaMap = offCurrent.diffMap(offNew);
+  Set notUpdateVerts = deltaMap.preImage(zero);
+  Set updateVerts = V.diff(notUpdateVerts);
+ 
+  PWLMap resMap = newMap.restrictMap(updateVerts);
+  resMap = resMap.combine(currentMap.restrictMap(notUpdateVerts));
+
+  return resMap;
+}
+
+std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentSEmap, PWLMap currentRmap)
+{
+  // *** Initialization
+
+  std::cout << "ER: " << ER << "\n\n";
+
+  PWLMap Vid(V);
+
+  PWLMap newSmap;
+  PWLMap newRmap; // Minimum reachable map
+
+  Interval i(0, 1, 0);
+  MultiInterval mi;
+  for (int j = 0; j < map_D.ndim(); j++)
+    mi.addInter(i);
+  Set zero = createSet(mi);
+
+  // *** Traverse graph
+
+  PWLMap smapNth = currentSmap;
+  PWLMap semapNth = currentSEmap;
+  Set Erec = ER;
+  PWLMap originalSmap = currentSmap;
+  PWLMap originalSEmap = currentSEmap;
+  for (int i = 0; i < n; i++) {
+    Erec = Erec.cup(semapNth.image(ER));
+    semapNth = semapNth.compPW(originalSEmap);
+    smapNth = smapNth.compPW(originalSmap);
+  }
+
+  Set ERplus = Emap.preImage(Emap.image(Erec)); // Edges that share sub-set-edges with those in Erec
+  ERplus = ERplus.cap(E);
+  
+  PWLMap tildeD = map_D.restrictMap(ERplus);
+  PWLMap tildeB = map_B.restrictMap(ERplus);
+  PWLMap smapPlus = tildeD.compPW(tildeB.minInv(tildeB.image())); // Successor map through ERplus
+
+  PWLMap finalsRec = currentSmap.restrictMap(map_D.image(semapNth.image(ER)));
+  smapPlus = finalsRec.combine(smapPlus); // Preserve the successors of the final vertices
+  smapPlus = smapPlus.combine(currentSmap);
+
+  PWLMap rmapPlus = currentRmap.compPW(smapPlus.mapInf()); // Minimum reachable through ERplus
+  newRmap = currentRmap.minMap(rmapPlus); // New minimum reachable map
+
+  PWLMap idCurrentSmap = currentSmap.filterMap(eqId);
+  Set idVerts = idCurrentSmap.diffMap(newRmap).preImage(zero); // Vertices where rmap(v) = smap(v) = v
+  Set usableVerts = idVerts.cup(currentSmap.filterMap(notEqId).wholeDom());
+  newSmap = smapPlus.minMap(currentSmap.restrictMap(usableVerts), newRmap);
+  newSmap = updateMap(V, currentSmap, newSmap, currentRmap);
+  newSmap = newSmap.combine(smapPlus);
+
+  //std::cout << "smap rec: " << newSmap << "\n\n";
+  //std::cout << "rmap rec: " << newRmap << "\n\n";
+
+  return std::pair<PWLMap, PWLMap>(newSmap, newRmap);
 }
 
 // Find min reachable in 1 step
@@ -148,23 +197,16 @@ PWLMap minReach1(Set V, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap c
 
   PWLMap Vid(V);
 
-  PWLMap auxSmap = map_B.minAdjMap(map_D, currentRmap); // Get minimum adjacent vertex with minimum representative
-  auxSmap = auxSmap.combine(Vid);
-  PWLMap newSmap = currentSmap.minMap(auxSmap, currentRmap); // Old successor vs new successor  
+  PWLMap adjSmap = map_B.minAdjMap(map_D, currentRmap); // Get minimum adjacent vertex with minimum representative
+  PWLMap newSmap = adjSmap.minMap(currentSmap, currentRmap); // Old successor vs new successor  
+  newSmap = updateMap(V, currentSmap, newSmap, currentRmap);
+  newSmap = newSmap.combine(currentSmap);
 
-  PWLMap oldSuccRep = currentRmap.compPW(currentSmap);
-  PWLMap newSuccRep = currentRmap.compPW(newSmap);
-
-  PWLMap deltaSmap = newSuccRep.diffMap(oldSuccRep); // Difference of representatives of old and new succesor (always non positive)
-  Set updateVerts = V.diff(deltaSmap.preImage(zero)); // Vertices "v" for which rmap(smap_new(v)) < rmap(smap_old(v)) 
-
-  finalSmap = newSmap.restrictMap(updateVerts).combine(currentSmap);
-
-  return finalSmap;
+  return newSmap;
 }
 
 // Minimum reachable in several steps
-std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap)
+std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B)
 {
   // *** Initialization
 
@@ -180,45 +222,82 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
   map_D = map_D.restrictMap(E);
   map_B = map_B.restrictMap(E);
 
+  PWLMap oldSmap;
+  PWLMap oldSEmap;
+
   PWLMap Vid(V);
   newRmap = Vid;
   newSmap = Vid;
 
-  PWLMap oldsmap = currentSmap;
-  PWLMap oldrmap = currentRmap;
+  PWLMap Eid(E);
+  PWLMap newSEmap = Eid;
 
   Set Vc; // Vertices that changed its successor
+  Set Ec; // Edges that changed its successor
 
   // *** Traverse graph
   do {
-    oldsmap = newSmap;
+    auto start = std::chrono::system_clock::now();
+
+    oldSmap = newSmap;
+    auto start_1 = std::chrono::system_clock::now();
     newSmap = minReach1(V, map_D, map_B, newSmap, newRmap); // Get successor
+    std::cout << "newSmap: " << newSmap << "\n\n"; 
+    auto end_1 = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds_1 = end_1 - start_1;
+    std::cout << "reach1: " << elapsed_seconds_1.count() << "\n\n";
+
+    auto start_inf = std::chrono::system_clock::now();
     newRmap = newSmap.mapInf(); // Get representative
+    auto end_inf = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds_inf = end_inf - start_inf;
+    std::cout << "time inf: " << elapsed_seconds_inf.count() << "\n\n";
 
-    PWLMap deltaSmap = newSmap.diffMap(oldsmap); 
+    PWLMap deltaSmap = newSmap.diffMap(oldSmap); 
     Vc = V.diff(deltaSmap.preImage(zero)); // Vertices that changed its successor
-
+  
     if (!Vc.empty()) {
+      std::cout << "Vc: " << Vc << "\n\n";
+      oldSEmap = newSEmap;
+      Set Esucc = newSmap.compPW(map_B).diffMap(map_D).preImage(zero); // Edges that connect vertices with successors
+      newSEmap = (map_B.restrictMap(Esucc).minInv(newSmap.image())).compPW(map_D.restrictMap(Esucc));
+      newSEmap = newSEmap.combine(oldSEmap);
+
       int n = 0;
-      Set VR; // Recursive vertices that changed its successor 
-      PWLMap smapNth = newSmap;
+      Set ER; // Recursive edges that changed its successor
+      PWLMap se2map = newSEmap.compPW(newSEmap);
+      PWLMap semapNth = se2map;
+      auto start_loop = std::chrono::system_clock::now();
       do {
-        PWLMap deltaVmap = Vmap.compPW(smapNth).diffMap(Vmap);
-        VR = deltaVmap.preImage(zero).cap(Vc);
+        PWLMap deltaEmap = Emap.compPW(semapNth.filterMap(notEqId)).diffMap(Emap);
+        ER = deltaEmap.preImage(zero);
+        semapNth = semapNth.compPW(se2map);
+
         n++;
-        smapNth = smapNth.compPW(newSmap);
       }
-      while(VR.empty() && n < nmax);
+      while(ER.empty() && n < nmax);
+      auto end_loop = std::chrono::system_clock::now();
+      std::chrono::duration<double> elapsed_seconds_loop = end_loop - start_loop;
+      std::cout << "time loop: " << elapsed_seconds_loop.count() << "\n\n";
 
       // *** Handle recursion
-      if (!VR.empty()) { 
-        std::pair<PWLMap, PWLMap> p = recursion(n, VR, E, Emap, map_D, map_B, newSmap, newRmap);
+      if (!ER.empty()) { 
+        auto start_rec = std::chrono::system_clock::now();
+        std::pair<PWLMap, PWLMap> p = recursion(n * 2, ER, V, E, Emap, map_D, map_B, newSmap, newSEmap, newRmap);
+        auto end_rec = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds_rec = end_rec - start_rec;
+        std::cout << "time rec: " << elapsed_seconds_rec.count() << "\n\n";
+
+        newSmap = std::get<0>(p);
         newRmap = std::get<1>(p);
       }
     }
+
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::cout << "time iter: " << elapsed_seconds.count() << "\n\n";
   }
   while (!Vc.empty());
- 
 
   return std::pair<PWLMap, PWLMap> (newSmap, newRmap);
 }
@@ -241,14 +320,19 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   mapB = mapU;
 
   allEdges = mapF.wholeDom();
+  Ed = allEdges;
+
+  Set emptySet;
+  allVertices = emptySet;
   F = mapF.image(allEdges);
   U = mapU.image(allEdges);
-  allVertices = F.cup(U);  
+  nmax = num_vertices(g) / 2;
   int dims = F.ndim();
 
   PWLMap vmap;
   BOOST_FOREACH (SetVertexDesc vdi, vertices(g)) {
     SetVertex vi = g[vdi];
+    allVertices.addAtomSets(vi.range_ref().asets());
 
     LMap lm;
     for (int i = 0; i < dims; i++) 
@@ -256,6 +340,7 @@ MatchingStruct::MatchingStruct(SBGraph garg)
     vmap.addSetLM(vi.range(), lm);
   }
   Vmap = vmap;
+  maxV = allVertices.maxElem();
 
   int eCount = 1;
   PWLMap emap;
@@ -279,7 +364,6 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   }
   Emap = emap;
 
-  Set emptySet;
   matchedV = emptySet;
   unmatchedV = emptySet;
   matchedE = emptySet;
@@ -292,31 +376,40 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   smap = emptyMap;
 }
 
-// Get edges used to get to successors
-Set MatchingStruct::filterSuccsEdges(PWLMap map_D, PWLMap map_B, PWLMap s_map)
+void MatchingStruct::directedMinReach(PWLMap sideMap)
 {
-  Set resEdges;
+  // Offset unmatched vertices on the opposite side of the search
+  Set unmatchedSide = sideMap.image(Ed);
+  unmatchedSide = unmatchedSide.cap(unmatchedV);
+  PWLMap offsetUS = mmap.restrictMap(unmatchedSide);
+  offsetUS = offsetUS.offsetImageMap(maxV);
 
-  PWLMap auxSmap = s_map.filterMap(notEqId);
+  PWLMap mmapSide = offsetUS.combine(mmap);
+  Set VSide = mmapSide.image(allVertices);
+  PWLMap mmapSideInv = mmapSide.minInv(mmapSide.image());
 
-  Set edgesB = map_B.preImage(auxSmap.wholeDom());
-  Set edgesD = map_D.preImage(auxSmap.image());
-  Set edgesBD = edgesB.cap(edgesD);
+  std::cout << "mmap: " << mmapSide << "\n\n";
 
-  BOOST_FOREACH (AtomSet as, edgesBD.asets()) 
-    if (auxSmap.image(map_B.image(as)) == map_D.image(as))
-      resEdges.addAtomSet(as);
+  // Offset image of Vmap, mapD and mapB according to mmapSide 
+  PWLMap VmapSide = Vmap.offsetDomMap(mmapSide);
+  PWLMap mapDSide = mmapSide.compPW(mapD);
+  PWLMap mapBSide = mmapSide.compPW(mapB);
 
-  return resEdges;
+  // Get minimum reachable
+  std::pair<PWLMap, PWLMap> p = minReachable(nmax, VSide, Ed, VmapSide, Emap, mapDSide, mapBSide);
+  PWLMap directedSmap = std::get<0>(p);
+  smap = mmapSideInv.compPW(directedSmap.compPW(mmapSide));
+  PWLMap directedRmap = std::get<1>(p);
+  rmap = mmapSideInv.compPW(directedRmap.compPW(mmapSide));
+
+  std::cout << "smap: " << smap << "\n\n";
+  std::cout << "rmap: " << rmap << "\n\n";
 }
 
 Set MatchingStruct::SBGMatching()
 {
   debugInit();
 
-  int nmax = num_vertices(g);
-
-  Set tildeEd;
   Set diffMatched;
 
   Interval i(0, 1, 0);
@@ -330,71 +423,44 @@ Set MatchingStruct::SBGMatching()
   PWLMap oldVmap = Vmap;
 
   do {
-    tildeEd = allEdges;
+    Ed = allEdges;
     unmatchedV = allVertices.diff(matchedV);
-    OrdCT<INT> maxV = allVertices.maxElem();
 
     // *** Forward direction
 
-    // Offset vertices that are the image of edges in the backward direction
-    Set unmatchedRight = mapU.image(tildeEd);
-    unmatchedRight = unmatchedRight.cap(unmatchedV);
-    PWLMap offsetUD = mmap.restrictMap(unmatchedRight);
-    offsetUD = offsetUD.offsetImageMap(maxV);
-
-    PWLMap mmapD = offsetUD.combine(mmap);
-    PWLMap mmapInv = mmap.minInv(mmapD.image());
-  
-    Vmap = oldVmap.offsetDomMap(mmapD);
-    PWLMap map_D = mmapD.compPW(mapD);
-    PWLMap map_B = mmapD.compPW(mapB);
-
-    // Get minimum reachable
-    std::pair<PWLMap, PWLMap> p = minReachable(nmax, mmapD.image(allVertices), tildeEd, Vmap, Emap, map_D, map_B, smap, rmap);
-    PWLMap rmapD = std::get<1>(p);
-    rmapD = mmapInv.compPW(rmapD.compPW(mmapD));
-    rmapD = rmapD.combine(idMap);
+    directedMinReach(mapU);
 
     // Get edges that reach unmatched vertices in forward direction
-    Set tildeV = rmapD.preImage(F.cap(unmatchedV));
-    Set auxTildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
-    Set edgesInPaths = filterSuccsEdges(map_D, map_B, std::get<0>(p));
-    tildeEd = edgesInPaths.cap(auxTildeEd);
+    Set tildeV = rmap.preImage(F.cap(unmatchedV));
+    Set tildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
+
+    // Leave edges in paths that reach unmatched left vertices
+    Set edgesInPaths = smap.compPW(mapB).diffMap(mapD).preImage(zero); // Edges that connect vertices with successors
+    Ed = edgesInPaths.cap(tildeEd);
 
     // *** Backward direction
 
-    // Offset vertices that are the image of edges in the forward direction
-    Set unmatchedLeft = mapF.image(tildeEd);
-    unmatchedLeft = unmatchedLeft.cap(unmatchedV);
-    PWLMap offsetUB = mmap.restrictMap(unmatchedLeft);
-    offsetUB = offsetUB.offsetImageMap(maxV);
-
-    PWLMap mmapB = offsetUB.combine(mmap);
-    mmapInv = mmap.minInv(mmapB.image());
-    
-    Vmap = oldVmap.offsetDomMap(mmapB);
-    map_D = mmapB.compPW(mapB);
-    map_B = mmapB.compPW(mapD); 
-
-    // Get minimum reachable
-    p = minReachable(nmax, mmapB.image(allVertices), tildeEd, Vmap, Emap, map_D, map_B, smap, rmap);
-    PWLMap rmapB = std::get<1>(p);
-    rmapB = mmapInv.compPW(rmapB.compPW(mmapB));
-    rmapB = rmapB.combine(idMap);
+    PWLMap auxMapD = mapD;
+    mapD = mapB;
+    mapB = auxMapD;
+    directedMinReach(mapF);
 
     // Get edges that reach unmatched vertices in backward direction
-    tildeV = rmapB.preImage(U.cap(unmatchedV));
-    auxTildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
-    edgesInPaths = filterSuccsEdges(map_D, map_B, std::get<0>(p));
-    tildeEd = auxTildeEd.cap(edgesInPaths).cap(tildeEd);
+    tildeV = rmap.preImage(U.cap(unmatchedV));
+    tildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
+
+    // Leave edges in paths that reach unmatched left and right vertices
+    edgesInPaths = smap.compPW(mapB).diffMap(mapD).preImage(zero); // Edges that connect vertices with successors
+    Ed = Ed.cap(edgesInPaths).cap(tildeEd);
+
+    mapB = mapD;
+    mapD = auxMapD;
 
     // *** Revert matched and unmatched edges in augmenting paths
-    PWLMap mapDEd = mapD.restrictMap(tildeEd);
-    PWLMap mapBEd = mapB.restrictMap(tildeEd);
+    PWLMap mapDEd = mapD.restrictMap(Ed);
+    PWLMap mapBEd = mapB.restrictMap(Ed);
     mapD = mapBEd.combine(mapD);
-    map_D = map_D;
     mapB = mapDEd.combine(mapB);
-    map_B = map_B;
 
     // *** Update matched edges and vertices
     matchedE = mapD.preImage(U);
@@ -414,7 +480,7 @@ Set MatchingStruct::SBGMatching()
 
     debugStep();
   }
-  while (!diffMatched.empty() && !tildeEd.empty());
+  while (!diffMatched.empty() && !Ed.empty());
 
   matchedE = mapD.preImage(U);
   return matchedE;
@@ -445,7 +511,7 @@ void MatchingStruct::debugStep()
 {
   bool diffMatched = (U.diff(matchedV)).empty();
   std::cout << "matchedE: " << matchedE << "\n";
-  std::cout << "matched all unknwons: " << diffMatched << "\n\n";
+  std::cout << "matched all unknowns: " << diffMatched << "\n\n";
 
   BOOST_FOREACH (AtomSet as1, matchedE.asets()) {
     BOOST_FOREACH (AtomSet as2, matchedE.asets()) {

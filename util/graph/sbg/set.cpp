@@ -228,25 +228,25 @@ SET_TEMP_TYPE SET_TEMP_TYPE::normalize()
 {
   UNORD_CT<AS_IMP> res = asets();
   UNORD_CT<AS_IMP> toInsert, toDelete;
+
+  UNORD_CT<AS_IMP> empty;
   
   do {
-    UNORD_CT<AS_IMP> empty;
+    bool first = true;
     toInsert = empty;
     toDelete = empty;
-
+ 
+    SetImp1 aux(res);
     BOOST_FOREACH (AS_IMP as1, res) {
       BOOST_FOREACH (AS_IMP as2, res) {
         AS_IMP normalized = as1.normalize(as2);
 
-        if (!normalized.empty()) {
+        if (!normalized.empty() && first && as1 != as2) {
           toInsert.insert(normalized);
           toDelete.insert(as1);
           toDelete.insert(as2);
-        }
-
-        else {
-          toInsert.insert(as1);
-          toInsert.insert(as2);
+ 
+          first = false;
         }
       }
     }

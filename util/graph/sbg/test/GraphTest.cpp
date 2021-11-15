@@ -4507,6 +4507,8 @@ void Test2D()
 
 // -- Matching ---------------------------------------------------------------//
 
+// RC circuit whose variables are iR, vA, vB, der(vC)
+// Taken from "Set-Based Graph Methods for Fast Equation Sorting in Large DAE Systems Example"
 void TestMatching1()
 {
   float n = 100;
@@ -4826,9 +4828,10 @@ void TestMatching1()
   BOOST_CHECK(res1 == res2);
 }
 
+// Example with recursive path that starts at the "middle" 
 void TestMatching2()
 {
-  INT N = 200000;
+  INT N = 10000;
 
   // Vertices
   Interval i1(1, 1, 1);
@@ -4926,123 +4929,12 @@ void TestMatching2()
 
   MatchingStruct match(g);
   Set res = match.SBGMatching();
-
-  cout << "\n\nTest matching 2:\n";
-  cout << res << "\n\n";
-
-  BOOST_CHECK(true);
-} 
-
-void TestMatching3()
-{
-  INT N = 500;
-
-  // Vertices
-  Interval i1(1, 1, 1);
-  MultiInterval mi1;
-  mi1.addInter(i1);
-  AtomSet as1(mi1);
-  Set s1;
-  s1.addAtomSet(as1);
-  SetVertex F1("eq1", 1, s1, 0);
-
-  Interval i2(2, 1, N);
-  MultiInterval mi2;
-  mi2.addInter(i2);
-  AtomSet as2(mi2);
-  Set s2;
-  s2.addAtomSet(as2);
-  SetVertex F2("eqloop", 2, s2, 0);
-
-  Interval i3(N + 1, 1, 2 * N);
-  MultiInterval mi3;
-  mi3.addInter(i3);
-  AtomSet as3(mi3);
-  Set s3;
-  s3.addAtomSet(as3);
-  SetVertex U("u", 3, s3, 0);
-
-  // Edges
-  Interval i4(1, 1, 1);
-  MultiInterval mi4;
-  mi4.addInter(i4);
-  AtomSet as4(mi4);
-  Set domE1;
-  domE1.addAtomSet(as4);
-  LMap lm1;
-  lm1.addGO(0, 1);
-  LMap lm2;
-  lm2.addGO(0, N + 1);
-  PWLMap mapE1f;
-  mapE1f.addSetLM(domE1, lm1);
-  PWLMap mapE1u;
-  mapE1u.addSetLM(domE1, lm2);
-  SetEdge E1("E1", 1, mapE1f, mapE1u, 0);
-
-  Interval i5(2, 1, N);
-  MultiInterval mi5;
-  mi5.addInter(i5);
-  AtomSet as5(mi5);
-  Set domE2a;
-  domE2a.addAtomSet(as5); 
-
-  Interval i6(N + 1, 1, 2 * N - 1);
-  MultiInterval mi6;
-  mi6.addInter(i6);
-  AtomSet as6(mi6);
-  Set domE2b;
-  domE2b.addAtomSet(as6);
-
-  LMap lm3;
-  lm3.addGO(1, 0);
-  LMap lm4;
-  lm4.addGO(1, N - 1);
-  
-  LMap lm5;
-  lm5.addGO(1, (-N) + 1);
-  LMap lm6;
-  lm6.addGO(1, 1);
-
-  PWLMap mapE2f;
-  mapE2f.addSetLM(domE2a, lm3);
-  mapE2f.addSetLM(domE2b, lm5);
-  PWLMap mapE2u;
-  mapE2u.addSetLM(domE2a, lm4);
-  mapE2u.addSetLM(domE2b, lm6);
-  SetEdge E2("E2", 2, mapE2f, mapE2u, 0);
-
-  SBGraph g;
-
-  SetVertexDesc v1 = boost::add_vertex(g);
-  SetVertexDesc v2 = boost::add_vertex(g);
-  SetVertexDesc v3 = boost::add_vertex(g);
-
-  g[v1] = F1;
-  g[v2] = F2;
-  g[v3] = U;
-
-  SetEdgeDesc e1;
-  bool b1;
-  boost::tie(e1, b1) = boost::add_edge(v1, v3, g);
-  SetEdgeDesc e2;
-  bool b2;
-  boost::tie(e2, b2) = boost::add_edge(v2, v3, g);
-
-  g[e1] = E1;
-  g[e2] = E2;
-
-  MatchingStruct match(g);
-  Set res = match.SBGMatching();
-
-  cout << "\n\nTest matching 3:\n";
-  cout << res << "\n";
-
-  BOOST_CHECK(true);
 } 
 
 // A case that with the v10 implementation of matching,
 // there are cycles, and the algorithm doesn't converge
-void TestMatching4()
+// (solved in v11)
+void TestMatching3()
 {
   SBGraph g;
 
@@ -5264,7 +5156,7 @@ void TestMatching4()
 
 // Advection 2D test case
 // The equations are numbered according to the order of appereance in the model
-void TestMatching5()
+void TestMatching4()
 {
   int N = 3;
 
@@ -5661,11 +5553,10 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
   //framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
 
-  //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching1));
-  //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching2));
-  //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching3));
-  //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching4));
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching5));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching2));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching3));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching4));
 
   return 0;
 }
