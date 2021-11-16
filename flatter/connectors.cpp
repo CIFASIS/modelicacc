@@ -33,8 +33,8 @@ member_imp(Connectors, MMO_Class, mmoclass);
 
 member_imp(Connectors, SBGraph, G)
 member_imp(Connectors, int, maxdim)
-member_imp(Connectors, vector<int>, vCount);
-member_imp(Connectors, vector<int>, eCount);
+member_imp(Connectors, vector<INT>, vCount);
+member_imp(Connectors, vector<INT>, eCount);
 member_imp(Connectors, int, ECount);
 member_imp(Connectors, PWLMap, ccG);
 
@@ -107,7 +107,7 @@ bool Connectors::init()
       Option<ExpList> oinds = vi.indices();
       if (oinds) {
         ExpList inds = *oinds;
-        set_maxdim(max(maxdim_, (INT) inds.size()));
+        set_maxdim(max((INT) maxdim_, (INT) inds.size()));
       }
     }
 
@@ -633,7 +633,7 @@ MultiInterval Connectors::subscriptMI(MultiInterval mi, ExpOptList r)
   if (r) {
     foreach_ (Expression ri, *r) {
       Interval ndim = Apply(evexp, ri);
-      int offset = (*itmi).lo();
+      INT offset = (*itmi).lo();
       Interval res(ndim.lo() + offset - 1, ndim.step(), ndim.hi() + offset - 1);
       itmires = mires.insert(itmires, (*itmi).cap(res));
 
@@ -1238,7 +1238,7 @@ Indexes Connectors::buildIndex(Set connected)
     foreach_ (Interval i, c.aset_ref().inters()) {
       int elems = i.card();
       if (*itElems)
-        elems = max(*itElems, elems);
+        elems = max(*itElems, (INT) elems);
 
       itAux = nElemsAux.insert(itAux, elems);
       ++itAux;
@@ -1250,7 +1250,7 @@ Indexes Connectors::buildIndex(Set connected)
 
   // Traverse dimensions
   foreach_ (INT n, nElems) {
-    Range r(Expression(1), Expression(1), Expression(n));
+    Range r(Expression(1), Expression(1), Expression((int) n));
     Expression er(r);
     Option<Expression> oer(er);
 
@@ -1451,9 +1451,9 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
       INT lo = (*itas).lo() - iori.lo() + 1;
       INT st = (*itas).step();
       INT hi = (*itas).hi() - iori.lo() + 1;
-      Expression elo(lo);
-      Expression est(st);
-      Expression ehi(hi);
+      Expression elo((int) lo);
+      Expression est((int) st);
+      Expression ehi((int) hi);
       Range r(elo, est, ehi);
       Expression expr(r);
 
@@ -1468,7 +1468,7 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
   else {
     foreach_(Interval iori, original.aset_ref().inters()) {
       INT lo = (*itas).lo() - iori.lo() + 1;
-      Expression expr(lo);
+      Expression expr((int) lo);
 
       itres = res.insert(itres, expr);
       ++itres;
@@ -1517,7 +1517,7 @@ ExpList Connectors::buildAddExpr(AtomSet atomRept, AtomSet as)
         ExpList::iterator itsubs = subs.begin();
 
         foreach_ (INT lo, minOriginal) {
-          itsubs = subs.insert(itsubs, *itMinAs - lo + 1);
+          itsubs = subs.insert(itsubs, ((int) *itMinAs) - ((int) lo) + 1);
           ++itsubs;
           ++itMinAs;
         }

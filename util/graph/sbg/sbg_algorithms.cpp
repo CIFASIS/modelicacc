@@ -147,18 +147,23 @@ std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PW
   // *** Traverse graph
 
   PWLMap smapNth = currentSmap;
+  smapNth = smapNth.normalize();
   PWLMap semapNth = currentSEmap;
+  semapNth = semapNth.normalize();
   Set Erec = ER;
   PWLMap originalSmap = currentSmap;
   PWLMap originalSEmap = currentSEmap;
   for (int i = 0; i < n; i++) {
     Erec = Erec.cup(semapNth.image(ER));
     semapNth = semapNth.compPW(originalSEmap);
+    semapNth = semapNth.normalize();
     smapNth = smapNth.compPW(originalSmap);
+    smapNth = smapNth.normalize();
   }
 
   Set ERplus = Emap.preImage(Emap.image(Erec)); // Edges that share sub-set-edges with those in Erec
   ERplus = ERplus.cap(E);
+  std::cout << "ERplus: " << ERplus << "\n\n";
   
   PWLMap tildeD = map_D.restrictMap(ERplus);
   PWLMap tildeB = map_B.restrictMap(ERplus);
@@ -168,15 +173,9 @@ std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PW
   smapPlus = finalsRec.combine(smapPlus); // Preserve the successors of the final vertices
   smapPlus = smapPlus.combine(currentSmap);
 
+  smapPlus = smapPlus.normalize();
   PWLMap rmapPlus = currentRmap.compPW(smapPlus.mapInf()); // Minimum reachable through ERplus
   newRmap = currentRmap.minMap(rmapPlus); // New minimum reachable map
-
-  PWLMap idCurrentSmap = currentSmap.filterMap(eqId);
-  Set idVerts = idCurrentSmap.diffMap(newRmap).preImage(zero); // Vertices where rmap(v) = smap(v) = v
-  Set usableVerts = idVerts.cup(currentSmap.filterMap(notEqId).wholeDom());
-  newSmap = smapPlus.minMap(currentSmap.restrictMap(usableVerts), newRmap);
-  newSmap = updateMap(V, currentSmap, newSmap, currentRmap);
-  newSmap = newSmap.combine(smapPlus);
 
   //std::cout << "smap rec: " << newSmap << "\n\n";
   //std::cout << "rmap rec: " << newRmap << "\n\n";
@@ -197,9 +196,14 @@ PWLMap minReach1(Set V, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap c
 
   PWLMap Vid(V);
 
+  PWLMap idCurrentSmap = currentSmap.filterMap(eqId);
+  Set idVerts = idCurrentSmap.diffMap(currentRmap).preImage(zero);
+  Set usableVerts = idVerts.cup(currentSmap.filterMap(notEqId).wholeDom());
+
   PWLMap adjSmap = map_B.minAdjMap(map_D, currentRmap); // Get minimum adjacent vertex with minimum representative
-  PWLMap newSmap = adjSmap.minMap(currentSmap, currentRmap); // Old successor vs new successor  
+  PWLMap newSmap = adjSmap.minMap(currentSmap.restrictMap(usableVerts), currentRmap); // Old successor vs new successor  
   newSmap = updateMap(V, currentSmap, newSmap, currentRmap);
+  newSmap = newSmap.combine(adjSmap);
   newSmap = newSmap.combine(currentSmap);
 
   return newSmap;
@@ -237,27 +241,15 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
 
   // *** Traverse graph
   do {
-    auto start = std::chrono::system_clock::now();
-
     oldSmap = newSmap;
-    auto start_1 = std::chrono::system_clock::now();
     newSmap = minReach1(V, map_D, map_B, newSmap, newRmap); // Get successor
-    std::cout << "newSmap: " << newSmap << "\n\n"; 
-    auto end_1 = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds_1 = end_1 - start_1;
-    std::cout << "reach1: " << elapsed_seconds_1.count() << "\n\n";
-
-    auto start_inf = std::chrono::system_clock::now();
+    newSmap = newSmap.normalize();
     newRmap = newSmap.mapInf(); // Get representative
-    auto end_inf = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds_inf = end_inf - start_inf;
-    std::cout << "time inf: " << elapsed_seconds_inf.count() << "\n\n";
 
     PWLMap deltaSmap = newSmap.diffMap(oldSmap); 
     Vc = V.diff(deltaSmap.preImage(zero)); // Vertices that changed its successor
   
     if (!Vc.empty()) {
-      std::cout << "Vc: " << Vc << "\n\n";
       oldSEmap = newSEmap;
       Set Esucc = newSmap.compPW(map_B).diffMap(map_D).preImage(zero); // Edges that connect vertices with successors
       newSEmap = (map_B.restrictMap(Esucc).minInv(newSmap.image())).compPW(map_D.restrictMap(Esucc));
@@ -267,35 +259,25 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
       Set ER; // Recursive edges that changed its successor
       PWLMap se2map = newSEmap.compPW(newSEmap);
       PWLMap semapNth = se2map;
-      auto start_loop = std::chrono::system_clock::now();
+      semapNth = semapNth.normalize();
       do {
         PWLMap deltaEmap = Emap.compPW(semapNth.filterMap(notEqId)).diffMap(Emap);
         ER = deltaEmap.preImage(zero);
         semapNth = semapNth.compPW(se2map);
+        semapNth = semapNth.normalize();
 
         n++;
       }
       while(ER.empty() && n < nmax);
-      auto end_loop = std::chrono::system_clock::now();
-      std::chrono::duration<double> elapsed_seconds_loop = end_loop - start_loop;
-      std::cout << "time loop: " << elapsed_seconds_loop.count() << "\n\n";
 
       // *** Handle recursion
       if (!ER.empty()) { 
-        auto start_rec = std::chrono::system_clock::now();
+        ER = ER.normalize();
+        ER = createSet(*(ER.asets().begin()));
         std::pair<PWLMap, PWLMap> p = recursion(n * 2, ER, V, E, Emap, map_D, map_B, newSmap, newSEmap, newRmap);
-        auto end_rec = std::chrono::system_clock::now();
-        std::chrono::duration<double> elapsed_seconds_rec = end_rec - start_rec;
-        std::cout << "time rec: " << elapsed_seconds_rec.count() << "\n\n";
-
-        newSmap = std::get<0>(p);
         newRmap = std::get<1>(p);
       }
     }
-
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end - start;
-    std::cout << "time iter: " << elapsed_seconds.count() << "\n\n";
   }
   while (!Vc.empty());
 
@@ -378,6 +360,7 @@ MatchingStruct::MatchingStruct(SBGraph garg)
 
 void MatchingStruct::directedMinReach(PWLMap sideMap)
 {
+  auto start = std::chrono::system_clock::now();
   // Offset unmatched vertices on the opposite side of the search
   Set unmatchedSide = sideMap.image(Ed);
   unmatchedSide = unmatchedSide.cap(unmatchedV);
@@ -387,8 +370,6 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
   PWLMap mmapSide = offsetUS.combine(mmap);
   Set VSide = mmapSide.image(allVertices);
   PWLMap mmapSideInv = mmapSide.minInv(mmapSide.image());
-
-  std::cout << "mmap: " << mmapSide << "\n\n";
 
   // Offset image of Vmap, mapD and mapB according to mmapSide 
   PWLMap VmapSide = Vmap.offsetDomMap(mmapSide);
@@ -401,6 +382,9 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
   smap = mmapSideInv.compPW(directedSmap.compPW(mmapSide));
   PWLMap directedRmap = std::get<1>(p);
   rmap = mmapSideInv.compPW(directedRmap.compPW(mmapSide));
+  auto end = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end - start;
+  std::cout << "time iter: " << elapsed_seconds.count() << "\n\n";
 
   std::cout << "smap: " << smap << "\n\n";
   std::cout << "rmap: " << rmap << "\n\n";

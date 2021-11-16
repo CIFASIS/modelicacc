@@ -4511,7 +4511,7 @@ void Test2D()
 // Taken from "Set-Based Graph Methods for Fast Equation Sorting in Large DAE Systems Example"
 void TestMatching1()
 {
-  float n = 100;
+  float n = 100000;
 
   // Equations
 
@@ -4831,7 +4831,7 @@ void TestMatching1()
 // Example with recursive path that starts at the "middle" 
 void TestMatching2()
 {
-  INT N = 10000;
+  INT N = 100000;
 
   // Vertices
   Interval i1(1, 1, 1);
@@ -5158,7 +5158,7 @@ void TestMatching3()
 // The equations are numbered according to the order of appereance in the model
 void TestMatching4()
 {
-  int N = 3;
+  int N = 100000;
 
   SBGraph g;
 

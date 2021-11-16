@@ -1,5 +1,5 @@
 model rlc_loop
-    constant Integer N = 5;
+    constant Integer N = 100000;
     parameter Real R1=1,R2=1,L=1,C1=1,C2=1,Vs=1,R=1;
     Real IR2[N], IL[N], UC1[N], Ua[N], IR1[N], UC2[N];
     Real VR, IR;

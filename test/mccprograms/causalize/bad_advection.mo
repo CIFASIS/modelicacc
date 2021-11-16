@@ -1,6 +1,6 @@
 model bad_advection
   parameter Real alpha=0.5,mu=1000;
-  constant Integer N = 5;
+  constant Integer N = 10;
   Real u[N];
   initial algorithm
   for i in 1:N/3 loop
@@ -8,7 +8,8 @@ model bad_advection
   end for;
 
   equation
-    0 = u[2] + u[3] + u[4] + u[5];
+    //0 = u[2] + u[3] + u[4] + u[5];
+    0 = u[2] + u[3] + u[4] + u[5] + u[6] + u[7] + u[8] + u[9] + u[10];
     for j in 2:N loop
       der(u[j+(1-1)])=(-u[j+(1-1)]+u[j-1])*N-mu*u[j+(1-1)]*(u[j+(1-1)]-alpha)*(u[j+(1-1)]-1);
     end for;

@@ -20,7 +20,7 @@ INTER_TEMPLATE
 INTER_TEMP_TYPE::IntervalImp1(bool empty) : lo_(-1), step_(-1), hi_(-1), empty_(empty) {};
 
 INTER_TEMPLATE
-INTER_TEMP_TYPE::IntervalImp1(int lo, int step, int hi)
+INTER_TEMP_TYPE::IntervalImp1(INT lo, INT step, INT hi)
 {
   if (lo >= 0 && step > 0 && hi >= 0) {
     empty_ = false;
@@ -55,15 +55,15 @@ INTER_TEMP_TYPE::IntervalImp1(int lo, int step, int hi)
   }
 };
 
-member_imp_temp(INTER_TEMPLATE, INTER_TEMP_TYPE, int, lo);
-member_imp_temp(INTER_TEMPLATE, INTER_TEMP_TYPE, int, step);
-member_imp_temp(INTER_TEMPLATE, INTER_TEMP_TYPE, int, hi);
+member_imp_temp(INTER_TEMPLATE, INTER_TEMP_TYPE, INT, lo);
+member_imp_temp(INTER_TEMPLATE, INTER_TEMP_TYPE, INT, step);
+member_imp_temp(INTER_TEMPLATE, INTER_TEMP_TYPE, INT, hi);
 member_imp_temp(INTER_TEMPLATE, INTER_TEMP_TYPE, bool, empty);
 
 INTER_TEMPLATE
-int INTER_TEMP_TYPE::gcd(int a, int b)
+INT INTER_TEMP_TYPE::gcd(INT a, INT b)
 {
-  int c;
+  INT c;
 
   do {
     c = a % b;
@@ -77,7 +77,7 @@ int INTER_TEMP_TYPE::gcd(int a, int b)
 }
 
 INTER_TEMPLATE
-int INTER_TEMP_TYPE::lcm(int a, int b)
+INT INTER_TEMP_TYPE::lcm(INT a, INT b)
 {
   if (a < 0 || b < 0) return -1;
 
@@ -85,7 +85,7 @@ int INTER_TEMP_TYPE::lcm(int a, int b)
 }
 
 INTER_TEMPLATE
-bool INTER_TEMP_TYPE::isIn(int x)
+bool INTER_TEMP_TYPE::isIn(INT x)
 {
   if (x < lo() || x > hi() || empty()) return false;
 
@@ -119,13 +119,13 @@ INTER_TEMP_TYPE INTER_TEMP_TYPE::offset(int off)
 INTER_TEMPLATE
 INTER_TEMP_TYPE INTER_TEMP_TYPE::cap(INTER_TEMP_TYPE i2)
 {
-  int maxLo = std::max(lo(), i2.lo()), newLo = -1;
-  int newStep = lcm(step(), i2.step());
-  int newEnd = std::min(hi(), i2.hi());
+  INT maxLo = std::max(lo(), i2.lo()), newLo = -1;
+  INT newStep = lcm(step(), i2.step());
+  INT newEnd = std::min(hi(), i2.hi());
 
   if (!empty() && !i2.empty())
-    for (int i = 0; i < newStep; i++) {
-      int res1 = maxLo + i;
+    for (INT i = 0; i < newStep; i++) {
+      INT res1 = maxLo + i;
 
       if (isIn(res1) && i2.isIn(res1)) {
         newLo = res1;
@@ -181,19 +181,19 @@ UNORD_CT<INTER_TEMP_TYPE> INTER_TEMP_TYPE::diff(INTER_TEMP_TYPE i2)
 }
 
 INTER_TEMPLATE
-int INTER_TEMP_TYPE::minElem() { return lo(); }
+INT INTER_TEMP_TYPE::minElem() { return lo(); }
 
 INTER_TEMPLATE
-int INTER_TEMP_TYPE::maxElem() { return hi(); }
+INT INTER_TEMP_TYPE::maxElem() { return hi(); }
 
 INTER_TEMPLATE
 INTER_TEMP_TYPE INTER_TEMP_TYPE::normalize(INTER_TEMP_TYPE i2)
 {
-  int l = lo();
-  int st = step();
-  int h = hi();
-  int l2 = i2.lo();
-  int h2 = i2.hi();
+  INT l = lo();
+  INT st = step();
+  INT h = hi();
+  INT l2 = i2.lo();
+  INT h2 = i2.hi();
 
   if (st == i2.step()) {
     if (h + st == l2 || isIn(l2)) 

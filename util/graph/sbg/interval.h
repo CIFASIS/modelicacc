@@ -24,27 +24,27 @@ namespace SBG {
 
 INTER_TEMPLATE
 struct IntervalImp1 {
-  member_class(int, lo);
-  member_class(int, step);
-  member_class(int, hi);
+  member_class(INT, lo);
+  member_class(INT, step);
+  member_class(INT, hi);
   member_class(bool, empty);
 
   IntervalImp1();
   IntervalImp1(bool isEmpty);
-  IntervalImp1(int vlo, int vstep, int vhi);
+  IntervalImp1(INT vlo, INT vstep, INT vhi);
 
-  int gcd(int a, int b);
-  int lcm(int a, int b);
+  INT gcd(INT a, INT b);
+  INT lcm(INT a, INT b);
 
-  bool isIn(int x);
+  bool isIn(INT x);
   int card();
   IntervalImp1 cap(IntervalImp1 i2);
   UNORD_CT<IntervalImp1> diff(IntervalImp1 i2);
 
   IntervalImp1 offset(int off);
 
-  int minElem();
-  int maxElem();
+  INT minElem();
+  INT maxElem();
 
   IntervalImp1 normalize(IntervalImp1 i2);
 

@@ -680,7 +680,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::normalize()
     notRepeat = notRepeat.cup(newDom);
 
     if (!newDom.empty()) {
-      itdomres = domres.insert(itdomres, newDom);
+      itdomres = domres.insert(itdomres, newDom.normalize());
       itlmres = lmres.insert(itlmres, *itlm1);
 
       ++itdomres;
@@ -1408,16 +1408,23 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf()
     res = res.normalize();
 
     PWLMap originalRes = res, oldReducedRes = res, newReducedRes = res;
+    int i = 0;
     do {
       oldReducedRes = res.compPW(oldReducedRes);
+      oldReducedRes = oldReducedRes.normalize();
       res = res.compPW(originalRes);
+      res = res.normalize();
       
       for (int j = 1; j <= res.ndim(); ++j) res = res.reduceMapN(j);
       res = res.normalize();
 
       newReducedRes = res.compPW(newReducedRes);
+      newReducedRes = newReducedRes.normalize();
+      i++;
     }
     while (!oldReducedRes.equivalentPW(newReducedRes));
+
+    std::cout << "count: " << i << "\n\n";
 
     res = newReducedRes;
   }
