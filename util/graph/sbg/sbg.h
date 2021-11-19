@@ -7,6 +7,7 @@
 #pragma once
 
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/subgraph.hpp>
 
 #include <util/graph/sbg/descs.h>
 #include <util/graph/sbg/defs.h>

@@ -2590,6 +2590,7 @@ void TestPWLMapComp2()
                         "\n" << pw1 << "\n°\n" << pw1 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
+
 void TestPWLMapCombine1()
 {
   Interval i1(1, 1, 10);
@@ -3626,6 +3627,51 @@ void TestMinAdj1()
                         "\nminAdj(" << pw1 << ",\n" << pw2 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
+void TestPWLMapInf1()
+{
+  int N = 180;
+  int sz = 10;
+
+  PWLMap pw;
+
+  for (int i = 0; i < N; i += 6) {
+    Interval i1(i * sz + 1, 1, (i + 1) * sz);
+    Interval i2((i + 1) * sz + 1, 1, (i + 2) * sz);
+    Interval i3((i + 2) * sz + 1, 1, (i + 3) * sz);
+    Interval i4((i + 3) * sz + 1, 1, (i + 4) * sz);
+    Interval i5((i + 4) * sz + 1, 1, (i + 5) * sz);
+    Interval i6((i + 5) * sz + 1, 1, (i + 6) * sz);
+
+    Set s1 = createSet(i1);
+    Set s2 = createSet(i2);
+    Set s3 = createSet(i3);
+    Set s4 = createSet(i4);
+    Set s5 = createSet(i5);
+    Set s6 = createSet(i6);
+
+    LMap lm1;
+    lm1.addGO(1, sz);
+    LMap lm2;
+    lm2.addGO(1, sz);
+    LMap lm3;
+    lm3.addGO(1, sz);
+    LMap lm4;
+    lm4.addGO(1, sz);
+    LMap lm5;
+    lm5.addGO(1, sz);
+    LMap lm6(1);
+
+    pw.addSetLM(s1, lm1);
+    pw.addSetLM(s2, lm2);
+    pw.addSetLM(s3, lm3);
+    pw.addSetLM(s4, lm4);
+    pw.addSetLM(s5, lm5);
+    pw.addSetLM(s6, lm6);
+  }
+
+  PWLMap res = pw.mapInf(1);
+}
+
 // -- Connected component-----------------------------------------------------//
 
 void TestRC1()
@@ -4511,7 +4557,7 @@ void Test2D()
 // Taken from "Set-Based Graph Methods for Fast Equation Sorting in Large DAE Systems Example"
 void TestMatching1()
 {
-  float n = 100000;
+  float n = 10000;
 
   // Equations
 
@@ -4831,7 +4877,7 @@ void TestMatching1()
 // Example with recursive path that starts at the "middle" 
 void TestMatching2()
 {
-  INT N = 100000;
+  INT N = 1000000000;
 
   // Vertices
   Interval i1(1, 1, 1);
@@ -5443,6 +5489,7 @@ test_suite *init_unit_test_suite(int, char *[])
 {
   framework::master_test_suite().p_name.value = "Set Based Graphs";
 
+  /*
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation3));
@@ -5548,7 +5595,10 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp4));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdj1));
+  */
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapInf1));
 
+  /*
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestRC1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
   //framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
@@ -5557,6 +5607,7 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching4));
+  */
 
   return 0;
 }

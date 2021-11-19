@@ -11,10 +11,10 @@
 
 namespace SBG {
 
-#define Inf std::numeric_limits<int>::max()
-
 typedef int INT;
-typedef float REAL;
+typedef double REAL;
+
+#define Inf std::numeric_limits<INT>::max()
 
 template <typename T, class = std::allocator<T>>
 using OrdCT = std::list<T>; // Ord stands for ordered container

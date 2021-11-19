@@ -31,6 +31,7 @@ struct MatchingStruct{
   MatchingStruct(SBGraph g);
 
   void directedMinReach(PWLMap sideMap);
+  Set SBGComponentMatching();
   Set SBGMatching();
 
   private:
