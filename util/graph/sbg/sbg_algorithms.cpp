@@ -297,6 +297,7 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
 
 MatchingStruct::MatchingStruct(SBGraph garg)
 {
+  std::cout << "\nLlego constructor\n";
   g = garg; 
 
   BOOST_FOREACH (SetEdgeDesc ei, edges(g)) {
@@ -332,7 +333,6 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   }
   Vmap = vmap;
   maxV = allVertices.maxElem();
-  std::cout << "\nLlego1\n";
 
   int eCount = 1;
   PWLMap emap;
@@ -405,6 +405,7 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
 
 Set MatchingStruct::SBGComponentMatching()
 {
+  std::cout << "Llego2\n";
   debugInit();
 
   Set diffMatched;
@@ -507,25 +508,36 @@ Set MatchingStruct::SBGMatching()
           if (!vs.cap(repds).empty()) {
             SetVertexDesc viComponent = boost::add_vertex(gComponent);
             gComponent[viComponent] = g[vi];
+            visitedNodes.insert(vi);
 
-            BOOST_FOREACH (SetVertexDesc vj, adjacent_vertices(vi, g)) {
+            BOOST_FOREACH (SetEdgeDesc ej, out_edges(vi, g)) {
+              SetVertexDesc vj = source(ej, g);
+              if (source(ej, g) == vi)
+                vj = target(ej, g);
+
               SetVertexDesc vjComponent = vj;
  
-              if (visitedNodes.find(vj) == visitedNodes.end()) {
+              if (visitedNodes.find(vjComponent) == visitedNodes.end()) {
                 SetVertexDesc vjComp = boost::add_vertex(gComponent);
-                vjComponent = vjComp;
-                gComponent[vjComp] = g[vi];
+                gComponent[vjComp] = g[vj];
                 visitedNodes.insert(vj);
+                vjComponent = vjComp;
+              }
+
+              else {
+                BOOST_FOREACH (SetVertexDesc vComponent, vertices(gComponent)) {
+                  if (!gComponent[vComponent].range().cap(g[vj].range()).empty())
+                    vjComponent = vComponent;
+                }
               }
 
               SetEdgeDesc eiComponent;
               bool b;
               boost::tie(eiComponent, b) = boost::add_edge(viComponent, vjComponent, gComponent);
+              gComponent[eiComponent] = g[ej];
             }
           }
         }
-
-        visitedNodes.insert(vi);
       }
 
       MatchingStruct matchingComponent(gComponent);
