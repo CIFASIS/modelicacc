@@ -172,6 +172,7 @@ std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PW
   PWLMap finalsRec = currentSmap.restrictMap(map_D.image(semapNth.image(ER)));
   smapPlus = finalsRec.combine(smapPlus); // Preserve the successors of the final vertices
   smapPlus = smapPlus.combine(currentSmap);
+  newSmap = smapPlus;
 
   auto start_inf = std::chrono::system_clock::now();
   std::cout << "n: " << n << "\n";
@@ -180,9 +181,10 @@ std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PW
   std::chrono::duration<double> elapsed_seconds_inf = end_inf - start_inf;
   std::cout << "time inf rec: " << elapsed_seconds_inf.count() << "\n\n";
   newRmap = currentRmap.minMap(rmapPlus); // New minimum reachable map
+  newRmap = newRmap.combine(currentRmap);
 
-  //std::cout << "smap rec: " << newSmap << "\n\n";
-  //std::cout << "rmap rec: " << newRmap << "\n\n";
+  std::cout << "smap rec: " << newSmap << "\n\n";
+  std::cout << "rmap rec: " << newRmap << "\n\n";
 
   return std::pair<PWLMap, PWLMap>(newSmap, newRmap);
 }
@@ -270,7 +272,7 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
       do {
         PWLMap deltaEmap = Emap.compPW(semapNth.filterMap(notEqId)).diffMap(Emap);
         ER = deltaEmap.preImage(zero);
-        semapNth = semapNth.compPW(se2map);
+        semapNth = semapNth.compPW(newSEmap);
 
         n++;
       }
@@ -403,9 +405,9 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
   std::cout << "rmap: " << rmap << "\n\n";
 }
 
-Set MatchingStruct::SBGComponentMatching()
+//Set MatchingStruct::SBGComponentMatching()
+Set MatchingStruct::SBGMatching()
 {
-  std::cout << "Llego2\n";
   debugInit();
 
   Set diffMatched;
@@ -442,7 +444,6 @@ Set MatchingStruct::SBGComponentMatching()
     mapD = mapB;
     mapB = auxMapD;
     directedMinReach(mapF);
-    std::cout << "Llego2\n";
 
     // Get edges that reach unmatched vertices in backward direction
     tildeV = rmap.preImage(U.cap(unmatchedV));
@@ -485,6 +486,7 @@ Set MatchingStruct::SBGComponentMatching()
   return matchedE;
 }
 
+/*
 Set MatchingStruct::SBGMatching()
 {
   PWLMap cc = connectedComponents(g);
@@ -549,6 +551,7 @@ Set MatchingStruct::SBGMatching()
 
   return Set();
 }
+*/
 
 void MatchingStruct::debugInit()
 {
