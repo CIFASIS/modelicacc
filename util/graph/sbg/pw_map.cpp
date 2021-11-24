@@ -371,22 +371,27 @@ bool PW_TEMP_TYPE::equivalentPW(PW_TEMP_TYPE pw2)
       BOOST_FOREACH (SET_IMP d2, pw2.dom()) { 
         SET_IMP domcap = d1.cap(d2);
 
-        PWLMapImp1 auxpw1;
-        auxpw1.addSetLM(domcap, *itlm1);
-        PWLMapImp1 auxpw2;
-        auxpw2.addSetLM(domcap, *itlm2);
+        if (!domcap.empty()) {
+          PWLMapImp1 auxpw1;
+          auxpw1.addSetLM(domcap, *itlm1);
+          PWLMapImp1 auxpw2;
+          auxpw2.addSetLM(domcap, *itlm2);
+          //std::cout << auxpw1 << " |\n" << auxpw2 << "\n\n";
 
-        SET_IMP im1 = auxpw1.image(domcap);
-        SET_IMP im2 = auxpw2.image(domcap);
+          SET_IMP im1 = auxpw1.image(domcap);
+          SET_IMP im2 = auxpw2.image(domcap);
 
-        if (im1 != im2)
-          return false;
+          if (im1 != im2)
+            return false;
+        }
 
         ++itlm2;
       }
 
       ++itlm1;
     }
+
+    //std::cout << "*************\n\n";
 
     return true;
   }
@@ -1402,7 +1407,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
 
 // PWLMap infinite composition
 PW_TEMPLATE
-PW_TEMP_TYPE PW_TEMP_TYPE::mapInf(int n)
+PW_TEMP_TYPE PW_TEMP_TYPE::mapInf()
 {
   PWLMapImp1 res = *this;
 
@@ -1418,9 +1423,11 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf(int n)
      
       for (int j = 1; j <= res.ndim(); ++j) res = res.reduceMapN(j);
       res = res.normalize();
-
+ 
       newReducedRes = res.compPW(newReducedRes);
       newReducedRes = newReducedRes.normalize();
+      std::cout << "old: " << oldReducedRes << "\n\n";
+      std::cout << "new: " << newReducedRes << "\n\n";
     }
     while (!oldReducedRes.equivalentPW(newReducedRes));
 
@@ -1430,40 +1437,39 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf(int n)
   return res;
 }
 
-/*
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::mapInf(int n)
 {
   PWLMapImp1 res = *this;
 
   if (!empty()) {
-    for (int i = 1; i <= res.ndim(); ++i) res = res.reduceMapN(i);
-    res = res.normalize();
-    std::cout << "original res: " << res << "\n\n";
-
-    int i = 2;
+    int i = 1;
     PWLMap originalRes = res, oldRes;
-    do {
+    while (!oldRes.equivalentPW(res) && i < n) {
       oldRes = res;
       res = res.compPW(originalRes);
-     
-      std::cout << "before reduce res: " << res << "\n\n";
-      if (i % n == 0) {
-        for (int j = 1; j <= res.ndim(); ++j) res = res.reduceMapN(j);
-        n = 1;
-      }
-      res = res.normalize();
-
-      std::cout << "reduced res: " << res << "\n\n";
-
       i++;
     }
-    while (!oldRes.equivalentPW(res));
+
+    if (oldRes.equivalentPW(res))
+      return res;
+
+    else {
+      for (int j = 1; j <= res.ndim(); ++j) res = res.reduceMapN(j);
+      
+      do {
+        oldRes = res;
+        res = res.compPW(res);
+
+        for (int j = 1; j <= res.ndim(); ++j) res = res.reduceMapN(j);
+        //res = res.normalize();
+      }
+      while (!oldRes.equivalentPW(res));
+    }
   }
 
   return res;
 }
-*/
 
 PW_TEMPLATE
 bool PW_TEMP_TYPE::operator==(const PW_TEMP_TYPE &other) const

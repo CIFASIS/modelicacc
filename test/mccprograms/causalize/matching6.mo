@@ -1,6 +1,6 @@
 model test6
   //Model with possibly wrong initial matchingTest
-  constant Integer N=10;
+  constant Integer N=10000;
   Real x1,a1[N], x2, a2[N];
 equation 
   der(x1)=1-a1[1];

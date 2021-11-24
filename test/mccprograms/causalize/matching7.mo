@@ -1,6 +1,6 @@
 model test7
   //Model with possibly wrong initial matchingTest
-  constant Integer N=15;
+  constant Integer N=100000;
   Real x[N],a[N];
 equation 
   for i in 2:N-1 loop

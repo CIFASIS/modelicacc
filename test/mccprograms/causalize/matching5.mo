@@ -1,7 +1,7 @@
 model test5
   //Model with a large algebraic loop
-  constant Integer N=100;
-  Real x1[N], a1[N], x2[N], a2[N];//, x3[N], a3[N], x4[N], a4[N];
+  constant Integer N=1000;
+  Real x1[N], a1[N];//, x2[N], a2[N];//, x3[N], a3[N], x4[N], a4[N];
 equation
   a1[1]=x1[1]-a1[N];
   der(x1[1])=1-a1[1];

@@ -3669,7 +3669,7 @@ void TestPWLMapInf1()
     pw.addSetLM(s6, lm6);
   }
 
-  PWLMap res = pw.mapInf(1);
+  PWLMap res = pw.mapInf();
 }
 
 // -- Connected component-----------------------------------------------------//
@@ -4877,7 +4877,7 @@ void TestMatching1()
 // Example with recursive path that starts at the "middle" 
 void TestMatching2()
 {
-  INT N = 1000000000;
+  INT N = 1000000;
 
   // Vertices
   Interval i1(1, 1, 1);
@@ -5489,7 +5489,6 @@ test_suite *init_unit_test_suite(int, char *[])
 {
   framework::master_test_suite().p_name.value = "Set Based Graphs";
 
-  /*
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation3));
@@ -5595,10 +5594,8 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp4));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdj1));
-  */
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapInf1));
 
-  /*
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestRC1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
   //framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
@@ -5607,7 +5604,6 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching4));
-  */
 
   return 0;
 }

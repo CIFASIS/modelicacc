@@ -95,6 +95,7 @@ struct PWLMapImp1 {
   PWLMapImp1 minAdjMap(PWLMapImp1 pw1);
 
   PWLMapImp1 reduceMapN(int dim);
+  PWLMapImp1 mapInf();
   PWLMapImp1 mapInf(int n);
 
   eq_class(PWLMapImp1);

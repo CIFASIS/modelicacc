@@ -132,7 +132,7 @@ std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PW
 {
   // *** Initialization
 
-  std::cout << "ER: " << ER << "\n\n";
+  std::cout << "ER: " << ER << " | " << n << "\n\n";
 
   PWLMap Vid(V);
 
@@ -147,7 +147,6 @@ std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PW
 
   // *** Traverse graph
 
-  PWLMap smapNth = currentSmap;
   PWLMap semapNth = currentSEmap;
   Set Erec = ER;
   PWLMap originalSmap = currentSmap;
@@ -156,7 +155,6 @@ std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PW
   for (int i = 0; i < n; i++) {
     Erec = Erec.cup(semapNth.image(ER));
     semapNth = semapNth.compPW(originalSEmap);
-    smapNth = smapNth.compPW(originalSmap);
   }
   auto end_loop = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds_loop = end_loop - start_loop;
@@ -171,12 +169,11 @@ std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PW
 
   PWLMap finalsRec = currentSmap.restrictMap(map_D.image(semapNth.image(ER)));
   smapPlus = finalsRec.combine(smapPlus); // Preserve the successors of the final vertices
-  smapPlus = smapPlus.combine(currentSmap);
   newSmap = smapPlus;
 
   auto start_inf = std::chrono::system_clock::now();
-  std::cout << "n: " << n << "\n";
-  PWLMap rmapPlus = currentRmap.compPW(smapPlus.mapInf(n)); // Minimum reachable through ERplus
+  PWLMap rmapPlus = currentRmap.compPW(newSmap.mapInf(n)); // Minimum reachable through ERplus
+  newSmap = newSmap.combine(currentSmap);
   auto end_inf = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds_inf = end_inf - start_inf;
   std::cout << "time inf rec: " << elapsed_seconds_inf.count() << "\n\n";
@@ -264,7 +261,7 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
       newSEmap = (map_B.restrictMap(Esucc).minInv(newSmap.image())).compPW(map_D.restrictMap(Esucc));
       newSEmap = newSEmap.combine(oldSEmap);
 
-      int n = 0;
+      int n = 1;
       Set ER; // Recursive edges that changed its successor
       PWLMap se2map = newSEmap.compPW(newSEmap);
       PWLMap semapNth = se2map;
@@ -284,8 +281,8 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
       // *** Handle recursion
       if (!ER.empty()) { 
         ER = ER.normalize();
-        ER = createSet(*(ER.asets().begin()));
-        std::pair<PWLMap, PWLMap> p = recursion(n * 2, ER, V, E, Emap, map_D, map_B, newSmap, newSEmap, newRmap);
+        //ER = createSet(*(ER.asets().begin()));
+        std::pair<PWLMap, PWLMap> p = recursion(n, ER, V, E, Emap, map_D, map_B, newSmap, newSEmap, newRmap);
         newRmap = std::get<1>(p);
       }
     }
@@ -299,7 +296,6 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
 
 MatchingStruct::MatchingStruct(SBGraph garg)
 {
-  std::cout << "\nLlego constructor\n";
   g = garg; 
 
   BOOST_FOREACH (SetEdgeDesc ei, edges(g)) {
@@ -320,7 +316,7 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   allVertices = emptySet;
   F = mapF.image(allEdges);
   U = mapU.image(allEdges);
-  nmax = num_vertices(g) / 2;
+  nmax = num_vertices(g);
   int dims = F.ndim();
 
   PWLMap vmap;
@@ -372,7 +368,6 @@ MatchingStruct::MatchingStruct(SBGraph garg)
 
 void MatchingStruct::directedMinReach(PWLMap sideMap)
 {
-  std::cout << "sideMap: " << sideMap << "\n\n";
   // Offset unmatched vertices on the opposite side of the search
   Set unmatchedSide = sideMap.image(Ed);
   unmatchedSide = unmatchedSide.cap(unmatchedV);
