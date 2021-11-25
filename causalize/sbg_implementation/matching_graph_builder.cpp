@@ -288,7 +288,7 @@ SBGraph MatchingGraphBuilder::makeGraph()
     {
       SetVertex unknown_vertex = graph[unknown_vertex_desc];
       SBG::Set unk_dom = unknown_vertex.range();       
-      MatchingExps matching_exps(unknown_vertex.name());
+      MatchingExps matching_exps(unknown_vertex.name(), isState(unknown_vertex.name(), symbols));
       Apply(matching_exps, left);
       Apply(matching_exps, right);
       std::set<Expression> matched_exps = matching_exps.matchedExps();
