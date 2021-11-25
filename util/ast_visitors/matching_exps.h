@@ -60,6 +60,7 @@ class MatchingExps : public boost::static_visitor<bool> {
   std::string _variable_name;
   bool _state_var;
   mutable bool _der_call;
+  mutable bool _has_der;
 };
 
 }  // namespace Modelica

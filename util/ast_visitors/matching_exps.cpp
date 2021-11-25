@@ -25,7 +25,7 @@
 using namespace std;
 
 namespace Modelica {
-MatchingExps::MatchingExps(string variable_name, bool state_var) : _matched_exps(), _variable_name(variable_name), _state_var(state_var), _der_call(false) {};
+MatchingExps::MatchingExps(string variable_name, bool state_var) : _matched_exps(), _variable_name(variable_name), _state_var(state_var), _der_call(false), _has_der(false) {};
 
 bool MatchingExps::operator()(Integer v) const { return false; }
 
@@ -87,6 +87,7 @@ bool MatchingExps::operator()(Call v) const
 {
   if (v.name() == "der") {
     _der_call = true;
+    _has_der = true;
   }
   bool matched = false;
   foreach_(Expression e, v.args()) { matched = matched || ApplyThis(e); }
@@ -120,10 +121,16 @@ bool MatchingExps::operator()(Reference v) const
       _matched_exps.insert(v);
       return true;      
     }
-  }
+  } 
   return false;
 }
 
-set<Expression> MatchingExps::matchedExps() const { return _matched_exps; }
+set<Expression> MatchingExps::matchedExps() const
+{
+  if (!_state_var && _has_der) {
+    return set<Expression>();
+  } 
+  return _matched_exps; 
+}
 
 }  // namespace Modelica
