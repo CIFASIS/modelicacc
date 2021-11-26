@@ -23,6 +23,7 @@
 #include <causalize/sbg_implementation/matching_graph_builder.h>
 #include <mmo/mmo_class.h>
 #include <parser/parser.h>
+#include <util/ast_visitors/state_variables_finder.h>
 #include <util/debug.h>
 #include <util/graph/sbg/sbg.h>
 #include <util/graph/sbg/sbg_algorithms.h>
@@ -100,7 +101,10 @@ int main(int argc, char **argv)
 
   Class ast_c = boost::get<Class>(stored_def.classes().front());
   MMO_Class mmo_class(ast_c);
-  
+  StateVariablesFinder setup_state_var(mmo_class);
+  setup_state_var.findStateVariables();
+
+
   MatchingGraphBuilder matching_graph_builder(mmo_class);
 
   SBG::SBGraph matching_graph = matching_graph_builder.makeGraph();

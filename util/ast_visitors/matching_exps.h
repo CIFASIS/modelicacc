@@ -31,7 +31,7 @@ using namespace Modelica::AST;
 
 class MatchingExps : public boost::static_visitor<bool> {
   public:
-  MatchingExps(std::string variable_name);
+  MatchingExps(std::string variable_name, bool state_var);
   bool operator()(Integer v) const;
   bool operator()(Boolean v) const;
   bool operator()(AddAll v) const;
@@ -58,6 +58,9 @@ class MatchingExps : public boost::static_visitor<bool> {
   private:
   mutable std::set<Expression> _matched_exps;
   std::string _variable_name;
+  bool _state_var;
+  mutable bool _der_call;
+  mutable bool _has_der;
 };
 
 }  // namespace Modelica
