@@ -1218,7 +1218,7 @@ vector<Name> Connectors::getFlowVars(Set connector)
   return res;
 }
 
-// Given a representant of a connected component, build the loop indexes 
+// Given an atomic set of a connected component, build the loop indexes 
 // that will be used to write the flattened equations.
 // In each dimension the counter will set its bounds according to
 // the maximum number of elements in that dimension in all subsets of set-vertices.
@@ -1266,8 +1266,9 @@ Indexes Connectors::buildIndex(Set connected)
   return res;
 }
 
-// Get atom sets that are in the dom of ccG_, and whose image
-// is equal to atomRept (represented vertices)
+// Get atom sets that are in the dom of ccG_, 
+// that don't have an intersection with atomRept
+// and whose image is contained by atomRept (represented vertices)
 Set Connectors::getRepd(AtomSet atomRept) 
 {
   UnordCT<AtomSet> atomRes;
@@ -1279,21 +1280,23 @@ Set Connectors::getRepd(AtomSet atomRept)
   if (diff.empty())
     return rept;
 
+  /*
   OrdCT<LMap> lm = ccG_.lmap();
   OrdCT<LMap>::iterator itlm = lm.begin();
 
   foreach_ (Set d, ccG_.dom()) {
     AtomSet atomD = *(d.asets_ref().begin()); // ccG_ is atomized 
-    AtomPWLMap atomPW(atomD, *itlm);
+    Set auxD = createSet(atomD).cap(pre);
 
-    diff = d.diff(rept);
-    if (atomPW.image(atomD) == atomRept && !diff.empty() && atomD != atomRept)
+    if (!auxD.empty()) {
       atomRes.insert(atomD);
+    }
 
     ++itlm;
   }
+  */
 
-  return Set(atomRes);
+  return diff;
 }
 
 // The sub-set "as" of a connector will be part of some equations in a loop
@@ -1717,35 +1720,34 @@ EquationList Connectors::generateCode()
   OrdCT<LMap> lmapccG = ccG_.lmap();
   OrdCT<LMap>::iterator itLMapccG = lmapccG.begin();
 
-  Set wDom = ccG_.wholeDom();
-  Set im = ccG_.image(wDom);
+  Set repts = ccG_.image();
 
   Set flowVertices; // Flow variables already in an equation
   Set effReps;
 
   // Traverse connected components
-  foreach_ (Set repd, ccG_.dom()) {
-    AtomSet atomRepd = *(repd.asets_ref().begin());
-    AtomPWLMap atomMap(atomRepd, *itLMapccG);
-    AtomSet atomRept = atomMap.image(atomRepd);
-    Set rept(atomRept);
-    repd = ccG_.preImage(rept);
+  foreach_ (AtomSet rept, repts.asets()) {
+    //AtomSet atomRepd = *(repd.asets_ref().begin());
+    //AtomPWLMap atomMap(atomRepd, *itLMapccG);
+    //AtomSet atomRept = atomMap.image(atomRepd);
+    //Set rept(atomRept);
+    //repd = ccG_.preImage(rept);
 
+
+    Set repd = getRepd(rept);
     Indexes indexes = buildIndex(repd);
-
-    repd = getRepd(atomRept);
-    if (!isIdMap(*itLMapccG)) {
+    //if (!isIdMap(*itLMapccG)) {
       // Effort equations
-      EquationList effEqs = buildEffEquations(indexes, atomRept, repd);
+      EquationList effEqs = buildEffEquations(indexes, rept, repd);
 
       foreach_ (Equation e, effEqs) {
         itres = res.insert(itres, e);
         ++itres;
       }
-    }
+    //}
 
     // Flow equations
-    EquationList flowEqs = buildFlowEquations(indexes, atomRept, repd);
+    EquationList flowEqs = buildFlowEquations(indexes, rept, repd);
 
     foreach_ (Equation e, flowEqs) {
       itres = res.insert(itres, e);

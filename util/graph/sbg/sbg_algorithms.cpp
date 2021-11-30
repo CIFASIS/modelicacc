@@ -132,8 +132,6 @@ std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PW
 {
   // *** Initialization
 
-  std::cout << "ER: " << ER << " | " << n << "\n\n";
-
   PWLMap Vid(V);
 
   PWLMap newSmap;
@@ -151,14 +149,10 @@ std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PW
   Set Erec = ER;
   PWLMap originalSmap = currentSmap;
   PWLMap originalSEmap = currentSEmap;
-  auto start_loop = std::chrono::system_clock::now();
   for (int i = 0; i < n; i++) {
     Erec = Erec.cup(semapNth.image(ER));
     semapNth = semapNth.compPW(originalSEmap);
   }
-  auto end_loop = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_seconds_loop = end_loop - start_loop;
-  std::cout << "time loop rec: " << elapsed_seconds_loop.count() << "\n\n";
 
   Set ERplus = Emap.preImage(Emap.image(Erec)); // Edges that share sub-set-edges with those in Erec
   ERplus = ERplus.cap(E);
@@ -167,21 +161,14 @@ std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PW
   PWLMap tildeB = map_B.restrictMap(ERplus);
   PWLMap smapPlus = tildeD.compPW(tildeB.minInv(tildeB.image())); // Successor map through ERplus
 
-  PWLMap finalsRec = currentSmap.restrictMap(map_D.image(semapNth.image(ER)));
-  smapPlus = finalsRec.combine(smapPlus); // Preserve the successors of the final vertices
-  newSmap = smapPlus;
+  Set finalsRec = map_D.image(semapNth.image(ER));
+  PWLMap finalsRecMap(finalsRec);
+  smapPlus = finalsRecMap.combine(smapPlus); // Preserve the successors of the final vertices
 
-  auto start_inf = std::chrono::system_clock::now();
-  PWLMap rmapPlus = currentRmap.compPW(newSmap.mapInf(n)); // Minimum reachable through ERplus
-  newSmap = newSmap.combine(currentSmap);
-  auto end_inf = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_seconds_inf = end_inf - start_inf;
-  std::cout << "time inf rec: " << elapsed_seconds_inf.count() << "\n\n";
+  PWLMap rmapPlus = currentRmap.compPW(smapPlus.mapInf(n)); // Minimum reachable through ERplus
+  newSmap = smapPlus.combine(currentSmap);
   newRmap = currentRmap.minMap(rmapPlus); // New minimum reachable map
   newRmap = newRmap.combine(currentRmap);
-
-  std::cout << "smap rec: " << newSmap << "\n\n";
-  std::cout << "rmap rec: " << newRmap << "\n\n";
 
   return std::pair<PWLMap, PWLMap>(newSmap, newRmap);
 }
@@ -246,11 +233,7 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
   do {
     oldSmap = newSmap;
     newSmap = minReach1(V, map_D, map_B, newSmap, newRmap); // Get successor
-    auto start_inf = std::chrono::system_clock::now();
     newRmap = newSmap.mapInf(1); // Get representative
-    auto end_inf = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds_inf = end_inf - start_inf;
-    std::cout << "time inf minreach: " << elapsed_seconds_inf.count() << "\n\n";
 
     PWLMap deltaSmap = newSmap.diffMap(oldSmap); 
     Vc = V.diff(deltaSmap.preImage(zero)); // Vertices that changed its successor
@@ -261,11 +244,13 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
       newSEmap = (map_B.restrictMap(Esucc).minInv(newSmap.image())).compPW(map_D.restrictMap(Esucc));
       newSEmap = newSEmap.combine(oldSEmap);
 
+      PWLMap deltaSEmap = newSEmap.diffMap(oldSEmap);
+      Ec = E.diff(deltaSEmap.preImage(zero));
+
       int n = 1;
       Set ER; // Recursive edges that changed its successor
       PWLMap se2map = newSEmap.compPW(newSEmap);
       PWLMap semapNth = se2map;
-      auto start_loop = std::chrono::system_clock::now();
       do {
         PWLMap deltaEmap = Emap.compPW(semapNth.filterMap(notEqId)).diffMap(Emap);
         ER = deltaEmap.preImage(zero);
@@ -274,14 +259,11 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
         n++;
       }
       while(ER.empty() && n < nmax);
-      auto end_loop = std::chrono::system_clock::now();
-      std::chrono::duration<double> elapsed_seconds_loop = end_loop - start_loop;
-      std::cout << "time loop minreach: " << elapsed_seconds_loop.count() << "\n\n";
 
       // *** Handle recursion
       if (!ER.empty()) { 
-        ER = ER.normalize();
-        //ER = createSet(*(ER.asets().begin()));
+        ER = ER.cap(Ec);
+        ER = createSet(*(ER.asets().begin()));
         std::pair<PWLMap, PWLMap> p = recursion(n, ER, V, E, Emap, map_D, map_B, newSmap, newSEmap, newRmap);
         newRmap = std::get<1>(p);
       }
@@ -383,14 +365,8 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
   PWLMap mapDSide = mmapSide.compPW(mapD);
   PWLMap mapBSide = mmapSide.compPW(mapB);
 
-  std::cout << "mmap: " << mmapSide << "\n\n";
-
   // Get minimum reachable
-  auto start = std::chrono::system_clock::now();
   std::pair<PWLMap, PWLMap> p = minReachable(nmax, VSide, Ed, VmapSide, Emap, mapDSide, mapBSide);
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_seconds = end - start;
-  std::cout << "time minreach: " << elapsed_seconds.count() << "\n\n";
   PWLMap directedSmap = std::get<0>(p);
   smap = mmapSideInv.compPW(directedSmap.compPW(mmapSide));
   PWLMap directedRmap = std::get<1>(p);
