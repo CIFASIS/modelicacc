@@ -33,7 +33,7 @@ PW_TEMP_TYPE::PWLMapImp1(SETS_TYPE dom, LMAPS_TYPE lmap)
 
   if (dom.size() == lmap.size()) {
     BOOST_FOREACH (SET_IMP set, dom) {
-      BOOST_FOREACH (AS_IMP as, set.asets()) {
+      BOOST_FOREACH (MI_IMP as, set.asets()) {
         APW_IMP pwatom(as, *itl);
 
         if (pwatom.empty()) different = true;
@@ -134,11 +134,9 @@ SET_IMP PW_TEMP_TYPE::image(SET_IMP s)
     SET_IMP aux1 = ss.cap(s);
     SET_IMP partialRes;
 
-    UNORD_CT<AS_IMP> aux1as = aux1.asets();
-    BOOST_FOREACH (AS_IMP as, aux1as) {
+    BOOST_FOREACH (MI_IMP as, aux1.asets()) {
       APW_IMP auxMap(as, *itl);
-      AS_IMP aux2 = auxMap.image(as);
-      partialRes.addAtomSet(aux2);
+      partialRes.addAtomSet(auxMap.image(as));
     }
 
     res = res.cup(partialRes);
@@ -165,13 +163,11 @@ SET_IMP PW_TEMP_TYPE::preImage(SET_IMP s)
   BOOST_FOREACH (SET_IMP ss, dom()) {
     SET_IMP partialRes;
 
-    BOOST_FOREACH (AS_IMP as1, ss.asets()) {
+    BOOST_FOREACH (MI_IMP as1, ss.asets()) {
       APW_IMP auxMap(as1, *itl);
 
-      BOOST_FOREACH (AS_IMP as2, s.asets()) {
-        AS_IMP aux2 = auxMap.preImage(as2);
-        partialRes.addAtomSet(aux2);
-      }
+      BOOST_FOREACH (MI_IMP as2, s.asets())
+        partialRes.addAtomSet(auxMap.preImage(as2));
     }
 
     res = res.cup(partialRes);
@@ -634,7 +630,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::atomize()
 
   LMapsIt itlm = lmap_ref().begin();
   BOOST_FOREACH (SET_IMP d, dom()) {
-    BOOST_FOREACH (AS_IMP as, d.asets()) {
+    BOOST_FOREACH (MI_IMP as, d.asets()) {
       SET_IMP aux;
       aux.addAtomSet(as);
 
@@ -647,8 +643,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::atomize()
     ++itlm;
   }
 
-  PWLMapImp1 res(dres, lres);
-  return res;
+  return PWLMapImp1(dres, lres);
 }
 
 PW_TEMPLATE
@@ -705,7 +700,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::normalize()
 // and lm2
 // Else, return lm2
 PW_TEMPLATE
-void PW_TEMP_TYPE::minMapAtomSet(AS_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3, LM_IMP lm4)
+void PW_TEMP_TYPE::minMapAtomSet(MI_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3, LM_IMP lm4)
 {
   LM_IMP lm31 = lm3.compose(lm1);
   LM_IMP lm42 = lm4.compose(lm2);
@@ -717,11 +712,12 @@ void PW_TEMP_TYPE::minMapAtomSet(AS_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3,
   ORD_CT<REAL_IMP> o42 = lm42.offset();
   typename ORD_CT<REAL_IMP>::iterator itg42 = g42.begin();
   typename ORD_CT<REAL_IMP>::iterator ito42 = o42.begin();
-  ORD_CT<INTER_IMP> ints = dom.aset_ref().inters();
+  ORD_CT<INTER_IMP> ints = dom.inters();
   typename ORD_CT<INTER_IMP>::iterator itints = ints.begin();
 
-  AS_IMP asAux = dom;
-  SET_IMP sAux = createSet(asAux);
+  MI_IMP asAux = dom;
+  SET_IMP sAux;
+  sAux.addAtomSet(asAux);
   LM_IMP lmAux = lm31;
   ORD_CT<REAL_IMP> resg = g31;
   ORD_CT<REAL_IMP> reso = o31;
@@ -770,11 +766,13 @@ void PW_TEMP_TYPE::minMapAtomSet(AS_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3,
           INTER_IMP i1((*itints).lo(), (*itints).step(), floor(xinter));
           INTER_IMP i2(i1.hi() + i1.step(), (*itints).step(), (*itints).hi());
 
-          AS_IMP as1 = asAux.replace(i1, count);
-          AS_IMP as2 = asAux.replace(i2, count);
+          MI_IMP as1 = asAux.replace(i1, count);
+          MI_IMP as2 = asAux.replace(i2, count);
 
-          SET_IMP d1 = createSet(as1);
-          SET_IMP d2 = createSet(as2);
+          SET_IMP d1;
+          d1.addAtomSet(as1);
+          SET_IMP d2;
+          d2.addAtomSet(as2);
 
           domRes.insert(domRes.end(), d1);
           domRes.insert(domRes.end(), d2);
@@ -824,7 +822,7 @@ void PW_TEMP_TYPE::minMapAtomSet(AS_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3,
 }
 
 PW_TEMPLATE
-void PW_TEMP_TYPE::minMapAtomSet(AS_IMP dom, LM_IMP lm1, LM_IMP lm2)
+void PW_TEMP_TYPE::minMapAtomSet(MI_IMP dom, LM_IMP lm1, LM_IMP lm2)
 {
   PWLMapImp1 res;
 
@@ -850,12 +848,12 @@ void PW_TEMP_TYPE::minMapSet(SET_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3, LM
   LM_IMP lres1;
   LM_IMP lres2;
 
-  UNORD_CT<AS_IMP> asets = dom.asets();
-  typename UNORD_CT<AS_IMP>::iterator itas = asets.begin();
+  UNORD_CT<MI_IMP> asets = dom.asets();
+  typename UNORD_CT<MI_IMP>::iterator itas = asets.begin();
 
   if (!dom.empty()) {
     PWLMapImp1 aux;
-    AS_IMP asAux = *itas;
+    MI_IMP asAux = *itas;
     aux.minMapAtomSet(asAux, lm1, lm2, lm3, lm4);
     if (!aux.empty()) {
       sres1 = *(aux.dom_ref().begin());
@@ -1100,7 +1098,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
           INTER_IMP i(mincompi, 1, mincompi);
           micomp.addInter(i);
         }
-        AS_IMP ascomp(micomp);
+        MI_IMP ascomp(micomp);
         SET_IMP scomp;
         scomp.addAtomSet(ascomp);
         SET_IMP mins2 = pw1.preImage(scomp);
@@ -1180,7 +1178,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
         INTER_IMP i(mincompi, 1, mincompi);
         micomp.addInter(i);
       }
-      AS_IMP ascomp(micomp);
+      MI_IMP ascomp(micomp);
       SET_IMP scomp;
       scomp.addAtomSet(ascomp);
       SET_IMP mins2 = pw1.preImage(scomp);
@@ -1328,8 +1326,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
       REAL off = std::abs(*ito);
 
       // Traverse dom
-      BOOST_FOREACH (AS_IMP adom, di.asets()) {
-        MI_IMP mi = adom.aset();
+      BOOST_FOREACH (MI_IMP mi, di.asets()) {
         ORD_CT<INTER_IMP> inters = mi.inters();
         typename ORD_CT<INTER_IMP>::iterator itints = inters.begin();
 
@@ -1361,7 +1358,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
 
               LM_IMP newlmap = (*itlm).replace(0, newoff, dim);
               INTER_IMP newinter(loint + k - 1, off, hiint);
-              AS_IMP auxas = adom.replace(newinter, dim);
+              MI_IMP auxas = mi.replace(newinter, dim);
               SET_IMP newset;
               newset.addAtomSet(auxas);
 
@@ -1443,7 +1440,7 @@ bool PW_TEMP_TYPE::operator==(const PW_TEMP_TYPE &other) const
   return dom() == other.dom() && lmap() == other.lmap();
 }
 
-template struct PWLMapImp1<OrdCT, UnordCT, AtomPWLMap, LMap, Set, AtomSet, MultiInterval, Interval, INT, REAL>;
+template struct PWLMapImp1<OrdCT, UnordCT, AtomPWLMap, LMap, Set, MultiInterval, Interval, INT, REAL>;
 
 PW_TEMPLATE
 std::ostream &operator<<(std::ostream &out, const PW_TEMP_TYPE &pw)

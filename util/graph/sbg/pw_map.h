@@ -29,11 +29,11 @@ namespace SBG {
                       typename Alloc = std::allocator<Value>>                \
             class UNORD_CT,                                                  \
             typename APW_IMP, typename LM_IMP, typename SET_IMP,             \
-            typename AS_IMP, typename MI_IMP, typename INTER_IMP,            \
+            typename MI_IMP, typename INTER_IMP,                             \
             typename INT_IMP, typename REAL_IMP>
 
 #define PW_TEMP_TYPE                                        \
-  PWLMapImp1<ORD_CT, UNORD_CT, APW_IMP, LM_IMP, SET_IMP, AS_IMP, MI_IMP, INTER_IMP, INT_IMP, REAL_IMP>
+  PWLMapImp1<ORD_CT, UNORD_CT, APW_IMP, LM_IMP, SET_IMP, MI_IMP, INTER_IMP, INT_IMP, REAL_IMP>
 
 PW_TEMPLATE
 struct PWLMapImp1 {
@@ -81,8 +81,8 @@ struct PWLMapImp1 {
   PWLMapImp1 atomize();
   PWLMapImp1 normalize();
 
-  void minMapAtomSet(AS_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3, LM_IMP lm4); 
-  void minMapAtomSet(AS_IMP dom, LM_IMP lm1, LM_IMP lm2); 
+  void minMapAtomSet(MI_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3, LM_IMP lm4); 
+  void minMapAtomSet(MI_IMP dom, LM_IMP lm1, LM_IMP lm2); 
   void minMapSet(SET_IMP dom, LM_IMP lm1, LM_IMP lm2, LM_IMP lm3, LM_IMP lm4);
   void minMapSet(SET_IMP dom, LM_IMP lm1, LM_IMP lm2, PWLMapImp1 pw3); 
   void minMapSet(SET_IMP dom, LM_IMP lm1, LM_IMP lm2);
@@ -100,7 +100,7 @@ struct PWLMapImp1 {
   eq_class(PWLMapImp1);
 };
 
-typedef PWLMapImp1<OrdCT, UnordCT, AtomPWLMap, LMap, Set, AtomSet, MultiInterval, Interval, INT, REAL> PWLMap;
+typedef PWLMapImp1<OrdCT, UnordCT, AtomPWLMap, LMap, Set, MultiInterval, Interval, INT, REAL> PWLMap;
 
 printable_temp(PW_TEMPLATE, PW_TEMP_TYPE);
 

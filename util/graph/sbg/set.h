@@ -20,24 +20,24 @@ namespace SBG {
                       typename Pred = std::equal_to<Value>,                    \
                       typename Alloc = std::allocator<Value>>                  \
             class UNORD_CT,                                                    \
-            typename AS_IMP, typename INT_IMP>
+            typename MI_IMP, typename INT_IMP>
 
 #define SET_TEMP_TYPE                                        \
-  SetImp1<ORD_CT, UNORD_CT, AS_IMP, INT_IMP>
+  SetImp1<ORD_CT, UNORD_CT, MI_IMP, INT_IMP>
 
 SET_TEMPLATE
 struct SetImp1 {
-  typedef UNORD_CT<AS_IMP> AtomSets;
+  typedef UNORD_CT<MI_IMP> AtomSets;
   typedef typename AtomSets::iterator AtomSetsIt;
 
   member_class(AtomSets, asets);
   member_class(int, ndim);
 
   SetImp1();
-  SetImp1(AS_IMP as);
+  SetImp1(MI_IMP as);
   SetImp1(AtomSets ss);
 
-  void addAtomSet(AS_IMP aset2);
+  void addAtomSet(MI_IMP aset2);
   void addAtomSets(AtomSets sets2);
 
   bool empty();
@@ -64,13 +64,12 @@ struct SetImp1 {
   size_t hash();
 };
 
-typedef SetImp1<OrdCT, UnordCT, AtomSet, INT> Set;
+typedef SetImp1<OrdCT, UnordCT, MultiInterval, INT> Set;
 size_t hash_value(const Set &set);
 
 printable_temp(SET_TEMPLATE, SET_TEMP_TYPE);
 
 Set createSet(Interval i);
 Set createSet(MultiInterval mi);
-Set createSet(AtomSet as);
 
 } // namespace SBG

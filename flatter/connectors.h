@@ -98,22 +98,22 @@ class Connectors {
   Pair<bool, EquationList> buildGraph(EquationList &eqs);
 
   // Code generation helpers
-  Name getName(AtomSet as);
-  AtomSet getAtomSet(AtomSet as);
+  Name getName(MultiInterval as);
+  MultiInterval getAtomSet(MultiInterval as);
   bool isIdMap(LMap lm);
   Indexes buildIndex(Set connected);
   vector<Name> getEffVars(Set connector);
   vector<Name> getFlowVars(Set connector);
-  Set getRepd(AtomSet atomRept);
-  ExpList buildSubscripts(Indexes indexes, AtomSet original, AtomSet as, int dims);
-  ExpList buildRanges(AtomSet original, AtomSet as);
-  ExpList buildLoopExpr(Indexes indexes, AtomSet as, vector<Name> vars);
-  ExpList buildAddExpr(AtomSet atomRept, AtomSet as);
+  Set getRepd(MultiInterval atomRept);
+  ExpList buildSubscripts(Indexes indexes, MultiInterval original, MultiInterval as, int dims);
+  ExpList buildRanges(MultiInterval original, MultiInterval as);
+  ExpList buildLoopExpr(Indexes indexes, MultiInterval as, vector<Name> vars);
+  ExpList buildAddExpr(MultiInterval atomRept, MultiInterval as);
   EquationList buildLoop(Indexes indexes, EquationList eqs);
 
   // Effort and flow equations
-  EquationList buildEffEquations(Indexes indexes, AtomSet atomRept, Set repd);
-  EquationList buildFlowEquations(Indexes indexes, AtomSet atomRept, Set repd);
+  EquationList buildEffEquations(Indexes indexes, MultiInterval atomRept, Set repd);
+  EquationList buildFlowEquations(Indexes indexes, MultiInterval atomRept, Set repd);
 
   // Code generation
   EquationList generateCode();

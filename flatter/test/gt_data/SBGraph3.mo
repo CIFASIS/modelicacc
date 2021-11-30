@@ -36,16 +36,16 @@ equation
   for i in 1:1:1000,j in 1:1:999 loop
     C_l_fl[i,j+1]+C_r_fl[i,j] = 0;
   end for;
-  for i in 1:1:1000,j in 1:1:1 loop
-    C_l_eff[i,1] = C_r_eff[i,1000];
-  end for;
-  for i in 1:1:1000,j in 1:1:1 loop
-    C_l_fl[i,1]+C_r_fl[i,1000] = 0;
-  end for;
   for i in 1:1:999,j in 1:1:1000 loop
     C_d_eff[i,j] = C_u_eff[i+1,j];
   end for;
   for i in 1:1:999,j in 1:1:1000 loop
     C_d_fl[i,j]+C_u_fl[i+1,j] = 0;
+  end for;
+  for i in 1:1:1000,j in 1:1:1 loop
+    C_l_eff[i,1] = C_r_eff[i,1000];
+  end for;
+  for i in 1:1:1000,j in 1:1:1 loop
+    C_l_fl[i,1]+C_r_fl[i,1000] = 0;
   end for;
 end SBGraph3;

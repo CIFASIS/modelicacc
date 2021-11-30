@@ -484,8 +484,8 @@ void MatchingStruct::debugStep()
   std::cout << "matchedE: " << matchedE << "\n";
   std::cout << "matched all unknowns: " << diffMatched << "\n\n";
 
-  BOOST_FOREACH (AtomSet as1, matchedE.asets()) {
-    BOOST_FOREACH (AtomSet as2, matchedE.asets()) {
+  BOOST_FOREACH (MultiInterval as1, matchedE.asets()) {
+    BOOST_FOREACH (MultiInterval as2, matchedE.asets()) {
       if (as1 != as2) {
         Set s1 = createSet(as1);
         Set s2 = createSet(as2);

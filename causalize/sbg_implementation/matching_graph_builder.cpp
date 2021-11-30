@@ -58,14 +58,6 @@ void MatchingGraphBuilder::addDims(size_t max_dim, size_t exp_dim, ORD_REALS& co
   }
 }
 
-SBG::Set MatchingGraphBuilder::buildSet(MultiInterval intervals)
-{
-  SBG::Set set;
-  AtomSet node_set(intervals);
-  set.addAtomSet(node_set);
-  return set;
-}
-
 SBG::Set MatchingGraphBuilder::buildSet(VarInfo variable, int offset, size_t max_dim)
 {
   Option<ExpList> dims = variable.indices();
@@ -80,7 +72,7 @@ SBG::Set MatchingGraphBuilder::buildSet(VarInfo variable, int offset, size_t max
   } else {
     addDims(max_dim, 0, variable_intervals, offset);
   }
-  return buildSet(variable_intervals);
+  return createSet(variable_intervals);
 }
 
 SBG::Set MatchingGraphBuilder::buildSet(Equation eq, std::string eq_id, int offset, size_t max_dim)
@@ -112,7 +104,7 @@ SBG::Set MatchingGraphBuilder::buildSet(Equation eq, std::string eq_id, int offs
   } else {
     addDims(max_dim, 0, equation_intervals, offset);
   }
-  return buildSet(equation_intervals);
+  return createSet(equation_intervals);
 }
 
 /**
@@ -125,16 +117,15 @@ SBG::Set MatchingGraphBuilder::buildSet(Equation eq, std::string eq_id, int offs
 SBG::Set MatchingGraphBuilder::generateMapDom(SBG::Set dom, SBG::Set unk_dom, int offset, size_t max_dim)
 {
   MultiInterval edge_set_intervals;
-  SBG::UNORD_AS atom_sets = dom.asets(); 
-  foreach_(AtomSet atom_set, atom_sets) {
-    MultiInterval dom_intervals = atom_set.aset();
+  SBG::UNORD_MI atom_sets = dom.asets(); 
+  foreach_(MultiInterval dom_intervals, atom_sets) {
     foreach_(Interval inter, dom_intervals.inters()) {
       Real end = inter.card() + offset - 1;
       edge_set_intervals.addInter(Interval(offset, inter.step(), end));
     }
     addDims(max_dim, dom_intervals.inters().size(), edge_set_intervals, offset);
   }
-  return buildSet(edge_set_intervals);
+  return createSet(edge_set_intervals);
 }
 
 SetVertexDesc MatchingGraphBuilder::addVertex(std::string vertex_name, SBG::Set set, SBGraph& graph)

@@ -16,9 +16,9 @@ APW_TEMPLATE
 APW_TEMP_TYPE::AtomPWLMapImp1() {}
 
 APW_TEMPLATE
-APW_TEMP_TYPE::AtomPWLMapImp1(AS_IMP dom, LM_IMP lmap)
+APW_TEMP_TYPE::AtomPWLMapImp1(MI_IMP dom, LM_IMP lmap)
 {
-  AS_IMP emptyAS;
+  MI_IMP emptyAS;
   LM_IMP emptyLM;
 
   if (dom.ndim() != lmap.ndim()) {
@@ -27,7 +27,7 @@ APW_TEMP_TYPE::AtomPWLMapImp1(AS_IMP dom, LM_IMP lmap)
   }
 
   else {
-    ORD_CT<INTER_IMP> inters = dom.aset_ref().inters();
+    ORD_CT<INTER_IMP> inters = dom.inters();
     ORD_CT<REAL_IMP> g = lmap.gain();
     typename ORD_CT<REAL_IMP>::iterator itg = g.begin();
     ORD_CT<REAL_IMP> o = lmap.offset();
@@ -67,21 +67,21 @@ APW_TEMP_TYPE::AtomPWLMapImp1(AS_IMP dom, LM_IMP lmap)
 }
 
 APW_TEMPLATE
-APW_TEMP_TYPE::AtomPWLMapImp1(AS_IMP dom, AS_IMP image)
+APW_TEMP_TYPE::AtomPWLMapImp1(MI_IMP dom, MI_IMP image)
 {
   dom_ = dom;
   lmap_ = LM_IMP();
 
   if (!dom.empty()) {
-    typename ORD_CT<INTER_IMP>::iterator itdom = dom.aset_ref().inters_ref().begin(); 
-    typename ORD_CT<INTER_IMP>::iterator itim = image.aset_ref().inters_ref().begin(); 
+    typename ORD_CT<INTER_IMP>::iterator itdom = dom.inters_ref().begin(); 
+    typename ORD_CT<INTER_IMP>::iterator itim = image.inters_ref().begin(); 
 
     ORD_CT<REAL_IMP> g;
     typename ORD_CT<REAL_IMP>::iterator itg = g.begin();
     ORD_CT<REAL_IMP> o;
     typename ORD_CT<REAL_IMP>::iterator ito = o.begin();
 
-    while (itdom != dom.aset_ref().inters_ref().end()) {
+    while (itdom != dom.inters_ref().end()) {
       if ((*itdom).card() == (*itim).card()) {
         REAL_IMP transformGain = (*itim).step() / (*itdom).step(); 
         REAL_IMP transformOff = (*itim).lo() - transformGain * (*itdom).lo(); 
@@ -103,16 +103,16 @@ APW_TEMP_TYPE::AtomPWLMapImp1(AS_IMP dom, AS_IMP image)
   }
 }
 
-member_imp_temp(APW_TEMPLATE, APW_TEMP_TYPE, AS_IMP, dom);
+member_imp_temp(APW_TEMPLATE, APW_TEMP_TYPE, MI_IMP, dom);
 member_imp_temp(APW_TEMPLATE, APW_TEMP_TYPE, LM_IMP, lmap);
 
 APW_TEMPLATE
 bool APW_TEMP_TYPE::empty() { return dom_ref().empty() && lmap_ref().empty(); }
 
 APW_TEMPLATE
-AS_IMP APW_TEMP_TYPE::image(AS_IMP as)
+MI_IMP APW_TEMP_TYPE::image(MI_IMP as)
 {
-  ORD_CT<INTER_IMP> inters = (as.cap(dom())).aset_ref().inters();
+  ORD_CT<INTER_IMP> inters = (as.cap(dom())).inters();
   ORD_CT<REAL_IMP> g = lmap_ref().gain();
   typename ORD_CT<REAL_IMP>::iterator itg = g.begin();
   ORD_CT<REAL_IMP> o = lmap_ref().offset();
@@ -121,10 +121,7 @@ AS_IMP APW_TEMP_TYPE::image(AS_IMP as)
   ORD_CT<INTER_IMP> res;
   typename ORD_CT<INTER_IMP>::iterator itres = res.begin();
 
-  if (dom_ref().empty()) {
-    AS_IMP aux2;
-    return aux2;
-  }
+  if (dom_ref().empty()) return MI_IMP();
 
   BOOST_FOREACH (INTER_IMP capi, inters) {
     INT_IMP newLo;
@@ -169,25 +166,24 @@ AS_IMP APW_TEMP_TYPE::image(AS_IMP as)
     ++ito;
   }
 
-  MI_IMP aux2(res);
-  return AS_IMP(aux2);
+  return MI_IMP(res);
 }
 
 APW_TEMPLATE
-AS_IMP APW_TEMP_TYPE::preImage(AS_IMP as)
+MI_IMP APW_TEMP_TYPE::preImage(MI_IMP as)
 {
-  AS_IMP fullIm = image(dom());
-  AS_IMP actualIm = fullIm.cap(as);
+  MI_IMP fullIm = image(dom());
+  MI_IMP actualIm = fullIm.cap(as);
 
   if (!actualIm.empty()) {
     AtomPWLMapImp1 inv(actualIm, lmap_ref().invLMap());
 
-    AS_IMP aux = inv.image(actualIm);
+    MI_IMP aux = inv.image(actualIm);
     return dom_ref().cap(aux);
   }
 
   else
-    return AS_IMP();
+    return MI_IMP();
 }
 
 APW_TEMPLATE
@@ -196,15 +192,12 @@ bool APW_TEMP_TYPE::operator==(const APW_TEMP_TYPE &other) const
   return dom() == other.dom() && lmap() == other.lmap();
 }
 
-template struct AtomPWLMapImp1<OrdCT, LMap, AtomSet, MultiInterval, Interval, INT, REAL>;
+template struct AtomPWLMapImp1<OrdCT, LMap, MultiInterval, Interval, INT, REAL>;
 
 APW_TEMPLATE
 std::ostream &operator<<(std::ostream &out, const APW_TEMP_TYPE &atompw)
 {
-  AS_IMP d = atompw.dom();
-  LM_IMP lm = atompw.lmap();
-
-  out << "(" << d << ", " << lm << ")";
+  out << "(" << atompw.dom() << ", " << atompw.lmap() << ")";
   return out;
 }
 

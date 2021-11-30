@@ -300,16 +300,6 @@ Real Connectors::getValue(Expression exp)
   return Apply(eval_exp, exp);
 }
 
-// Helper to write less
-Set Connectors::buildSet(MultiInterval mi)
-{
-  AtomSet as(mi);
-  Set s;
-  s.addAtomSet(as);
-
-  return s;
-}
-
 // Build a Set from a variable. All variables are updated to 
 // have the maximum number of dimensions according to the model.
 // To be used in buildVertex
@@ -355,7 +345,7 @@ Set Connectors::buildSet(VarInfo v)
   }
 
   set_vCount(newVCount);
-  return buildSet(v_intervals);
+  return createSet(v_intervals);
 }
 
 // Create a set vertex for each variable in a connect,
@@ -563,7 +553,7 @@ Set Connectors::buildEdgeDom(ExpOptList r)
     }
   }
 
-  return buildSet(miCounters);
+  return createSet(miCounters);
 }
 
 // Returns a linear map lm, for which im(lm, i1) = i2
@@ -661,13 +651,10 @@ PWLMap Connectors::buildEdgeMap(Set dom, Set im, ExpOptList r)
   }
 
   else {
-    AtomSet domas = *(dom.asets_ref().begin());
-    AtomSet imas = *(im.asets_ref().begin());
+    MultiInterval domas = *(dom.asets_ref().begin());
+    MultiInterval imas = *(im.asets_ref().begin());
 
-    MultiInterval dommi = domas.aset();
-    MultiInterval immi = imas.aset();
-
-    LMap lm = buildLM(dommi, subscriptMI(immi, r));
+    LMap lm = buildLM(domas, subscriptMI(imas, r));
     res.addSetLM(dom, lm);
   }
 
@@ -1100,12 +1087,11 @@ Pair<bool, EquationList> Connectors::buildGraph(EquationList &eqs)
 // Code generation helpers -----------------------------------------------------------------------
 
 // Given a set-vertex, returns its name
-Name Connectors::getName(AtomSet as)
+Name Connectors::getName(MultiInterval as)
 {
   Name nm;
 
-  Set auxas;
-  auxas.addAtomSet(as);
+  Set auxas = createSet(as);
 
   foreach_ (SetVertexDesc vi, vertices(G_)) {
     Set vs = G_[vi].range();
@@ -1119,18 +1105,19 @@ Name Connectors::getName(AtomSet as)
 
 // Given a subset of a set-vertex, returns the set which contains
 // all the vertices in the set-vertex
-AtomSet Connectors::getAtomSet(AtomSet as) 
+MultiInterval Connectors::getAtomSet(MultiInterval as) 
 {
-  AtomSet res;
+  MultiInterval res;
 
-  Set auxas;
-  auxas.addAtomSet(as);
+  Set auxas = createSet(as);
 
   foreach_ (SetVertexDesc vi, vertices(G_)) {
     Set vs = G_[vi].range();
 
-    if (!auxas.cap(vs).empty()) 
-      res = *(vs.asets_ref().begin());
+    if (!auxas.cap(vs).empty()) {
+      foreach_ (MultiInterval asvs, vs.asets())
+        if (!asvs.cap(as).empty()) res = asvs;
+    }
   }
 
   return res;
@@ -1230,12 +1217,12 @@ Indexes Connectors::buildIndex(Set connected)
   ExpList::iterator itCG = countersCG_.begin();
 
   OrdCT<INT> nElems; // Maximum number of elements in each dimension
-  foreach_ (AtomSet c, connected.asets()) {
+  foreach_ (MultiInterval c, connected.asets()) {
     // Traverse dimensions
     OrdCT<INT>::iterator itElems = nElems.begin();
     OrdCT<INT> nElemsAux;
     OrdCT<INT>::iterator itAux = nElemsAux.begin();
-    foreach_ (Interval i, c.aset_ref().inters()) {
+    foreach_ (Interval i, c.inters()) {
       int elems = i.card();
       if (*itElems)
         elems = max(*itElems, (INT) elems);
@@ -1269,9 +1256,9 @@ Indexes Connectors::buildIndex(Set connected)
 // Get atom sets that are in the dom of ccG_, 
 // that don't have an intersection with atomRept
 // and whose image is contained by atomRept (represented vertices)
-Set Connectors::getRepd(AtomSet atomRept) 
+Set Connectors::getRepd(MultiInterval atomRept) 
 {
-  UnordCT<AtomSet> atomRes;
+  UnordCT<MultiInterval> atomRes;
 
   Set rept(atomRept);
   Set pre = ccG_.preImage(rept);
@@ -1279,22 +1266,6 @@ Set Connectors::getRepd(AtomSet atomRept)
 
   if (diff.empty())
     return rept;
-
-  /*
-  OrdCT<LMap> lm = ccG_.lmap();
-  OrdCT<LMap>::iterator itlm = lm.begin();
-
-  foreach_ (Set d, ccG_.dom()) {
-    AtomSet atomD = *(d.asets_ref().begin()); // ccG_ is atomized 
-    Set auxD = createSet(atomD).cap(pre);
-
-    if (!auxD.empty()) {
-      atomRes.insert(atomD);
-    }
-
-    ++itlm;
-  }
-  */
 
   return diff;
 }
@@ -1309,14 +1280,14 @@ Set Connectors::getRepd(AtomSet atomRept)
 // v[i+1] = ...
 // ...
 // end for;
-ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet as, int dims)
+ExpList Connectors::buildSubscripts(Indexes indexes, MultiInterval original, MultiInterval as, int dims)
 {
   ExpList res;
   ExpList::iterator itres = res.begin();
 
-  OrdCT<Interval> miori = original.aset_ref().inters();
+  OrdCT<Interval> miori = original.inters();
   OrdCT<Interval>::iterator itmiori = miori.begin();
-  OrdCT<Interval> mias = as.aset_ref().inters();
+  OrdCT<Interval> mias = as.inters();
   OrdCT<Interval>::iterator itmias = mias.begin();
 
   const VarSymbolTable auxsyms = mmoclass_.syms();
@@ -1407,13 +1378,12 @@ ExpList Connectors::buildSubscripts(Indexes indexes, AtomSet original, AtomSet a
 
 // Build expressions for variables used in equations in a loop
 // The third argument is to restrict use to either effort or flow variables
-ExpList Connectors::buildLoopExpr(Indexes indexes, AtomSet as, vector<Name> vars) 
+ExpList Connectors::buildLoopExpr(Indexes indexes, MultiInterval as, vector<Name> vars) 
 {
   ExpList res;
   ExpList::iterator itres = res.begin();
 
-  Set auxas;
-  auxas.addAtomSet(as);
+  Set auxas = createSet(as);
 
   // Traverse variables in the loop
   foreach_ (Name nmas, vars) {
@@ -1440,17 +1410,17 @@ ExpList Connectors::buildLoopExpr(Indexes indexes, AtomSet as, vector<Name> vars
 }
 
 // Build ranges for sums in flow equations
-ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
+ExpList Connectors::buildRanges(MultiInterval original, MultiInterval as)
 {
   ExpList res;
   ExpList::iterator itres = res.begin();
 
-  OrdCT<Interval> intersas = as.aset_ref().inters();
+  OrdCT<Interval> intersas = as.inters();
   OrdCT<Interval>::iterator itas = intersas.begin();
 
   // A range is needed in the sum
   if (as.card() != 1) {
-    foreach_(Interval iori, original.aset_ref().inters()) {
+    foreach_(Interval iori, original.inters()) {
       INT lo = (*itas).lo() - iori.lo() + 1;
       INT st = (*itas).step();
       INT hi = (*itas).hi() - iori.lo() + 1;
@@ -1469,7 +1439,7 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
 
   // No need of range, just a constant
   else {
-    foreach_(Interval iori, original.aset_ref().inters()) {
+    foreach_(Interval iori, original.inters()) {
       INT lo = (*itas).lo() - iori.lo() + 1;
       Expression expr((int) lo);
 
@@ -1484,13 +1454,12 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
 }
 
 // Build the sums needed for a flow equation
-ExpList Connectors::buildAddExpr(AtomSet atomRept, AtomSet as) 
+ExpList Connectors::buildAddExpr(MultiInterval atomRept, MultiInterval as) 
 {
   ExpList res;
   ExpList::iterator itres = res.begin();
 
-  Set auxas;
-  auxas.addAtomSet(as);
+  Set auxas = createSet(as);
 
   foreach_ (Name nmas, getFlowVars(auxas)) {
     // A sum is needed
@@ -1502,7 +1471,7 @@ ExpList Connectors::buildAddExpr(AtomSet atomRept, AtomSet as)
     }
 
     else {
-      AtomSet original = getAtomSet(as);
+      MultiInterval original = getAtomSet(as);
 
       // No need of subscript
       if (varsDims_[nmas] == 0) {
@@ -1592,7 +1561,7 @@ EquationList Connectors::buildLoop(Indexes indexes, EquationList eqs)
 // Effort ----------------------------------------------------------------------------------------
 
 // Create effort equations for a given representant
-EquationList Connectors::buildEffEquations(Indexes indexes, AtomSet atomRept, Set repd) 
+EquationList Connectors::buildEffEquations(Indexes indexes, MultiInterval atomRept, Set repd) 
 {
   EquationList effEqs;
   EquationList::iterator itEffEqs = effEqs.begin();
@@ -1618,7 +1587,7 @@ EquationList Connectors::buildEffEquations(Indexes indexes, AtomSet atomRept, Se
   }
 
   // Traverse represented connectors
-  foreach_ (AtomSet atomRepd, repd.asets()) {
+  foreach_ (MultiInterval atomRepd, repd.asets()) {
     ExpList effRepd = buildLoopExpr(indexes, atomRepd, getEffVars(Set(atomRepd)));
     // Represented variables in connector
     foreach_ (Expression eRepd, effRepd) {
@@ -1637,7 +1606,7 @@ EquationList Connectors::buildEffEquations(Indexes indexes, AtomSet atomRept, Se
 // Flow ------------------------------------------------------------------------------------------
 
 // Create effort equations for a given representant
-EquationList Connectors::buildFlowEquations(Indexes indexes, AtomSet atomRept, Set repd) 
+EquationList Connectors::buildFlowEquations(Indexes indexes, MultiInterval atomRept, Set repd) 
 {
   EquationList res;
 
@@ -1669,7 +1638,7 @@ EquationList Connectors::buildFlowEquations(Indexes indexes, AtomSet atomRept, S
     }
 
     // Traverse represented connectors
-    foreach_ (AtomSet atomRepd, repd.asets()) {
+    foreach_ (MultiInterval atomRepd, repd.asets()) {
       ExpList flowRepd = buildLoopExpr(indexes, atomRepd, getFlowVars(Set(atomRepd)));
       // Represented variables in connector
       foreach_ (Expression expRepd, flowRepd) {
@@ -1694,7 +1663,7 @@ EquationList Connectors::buildFlowEquations(Indexes indexes, AtomSet atomRept, S
     }
 
     // Traverse represented connectors
-    foreach_ (AtomSet atomRepd, repd.asets()) {
+    foreach_ (MultiInterval atomRepd, repd.asets()) {
       ExpList add = buildAddExpr(atomRept, atomRepd);
 
       foreach_ (Expression e, add) 
@@ -1726,25 +1695,17 @@ EquationList Connectors::generateCode()
   Set effReps;
 
   // Traverse connected components
-  foreach_ (AtomSet rept, repts.asets()) {
-    //AtomSet atomRepd = *(repd.asets_ref().begin());
-    //AtomPWLMap atomMap(atomRepd, *itLMapccG);
-    //AtomSet atomRept = atomMap.image(atomRepd);
-    //Set rept(atomRept);
-    //repd = ccG_.preImage(rept);
-
-
+  foreach_ (MultiInterval rept, repts.asets()) {
     Set repd = getRepd(rept);
     Indexes indexes = buildIndex(repd);
-    //if (!isIdMap(*itLMapccG)) {
-      // Effort equations
-      EquationList effEqs = buildEffEquations(indexes, rept, repd);
 
-      foreach_ (Equation e, effEqs) {
-        itres = res.insert(itres, e);
-        ++itres;
-      }
-    //}
+    // Effort equations
+    EquationList effEqs = buildEffEquations(indexes, rept, repd);
+
+    foreach_ (Equation e, effEqs) {
+      itres = res.insert(itres, e);
+      ++itres;
+    }
 
     // Flow equations
     EquationList flowEqs = buildFlowEquations(indexes, rept, repd);
