@@ -33,8 +33,8 @@ member_imp(Connectors, MMO_Class, mmoclass);
 
 member_imp(Connectors, SBGraph, G)
 member_imp(Connectors, int, maxdim)
-member_imp(Connectors, vector<int>, vCount);
-member_imp(Connectors, vector<int>, eCount);
+member_imp(Connectors, vector<INT>, vCount);
+member_imp(Connectors, vector<INT>, eCount);
 member_imp(Connectors, int, ECount);
 member_imp(Connectors, PWLMap, ccG);
 
@@ -107,7 +107,7 @@ bool Connectors::init()
       Option<ExpList> oinds = vi.indices();
       if (oinds) {
         ExpList inds = *oinds;
-        set_maxdim(max(maxdim_, (INT) inds.size()));
+        set_maxdim(max((INT) maxdim_, (INT) inds.size()));
       }
     }
 
@@ -633,7 +633,7 @@ MultiInterval Connectors::subscriptMI(MultiInterval mi, ExpOptList r)
   if (r) {
     foreach_ (Expression ri, *r) {
       Interval ndim = Apply(evexp, ri);
-      int offset = (*itmi).lo();
+      INT offset = (*itmi).lo();
       Interval res(ndim.lo() + offset - 1, ndim.step(), ndim.hi() + offset - 1);
       itmires = mires.insert(itmires, (*itmi).cap(res));
 
@@ -1218,7 +1218,7 @@ vector<Name> Connectors::getFlowVars(Set connector)
   return res;
 }
 
-// Given a representant of a connected component, build the loop indexes 
+// Given an atomic set of a connected component, build the loop indexes 
 // that will be used to write the flattened equations.
 // In each dimension the counter will set its bounds according to
 // the maximum number of elements in that dimension in all subsets of set-vertices.
@@ -1238,7 +1238,7 @@ Indexes Connectors::buildIndex(Set connected)
     foreach_ (Interval i, c.aset_ref().inters()) {
       int elems = i.card();
       if (*itElems)
-        elems = max(*itElems, elems);
+        elems = max(*itElems, (INT) elems);
 
       itAux = nElemsAux.insert(itAux, elems);
       ++itAux;
@@ -1250,7 +1250,7 @@ Indexes Connectors::buildIndex(Set connected)
 
   // Traverse dimensions
   foreach_ (INT n, nElems) {
-    Range r(Expression(1), Expression(1), Expression(n));
+    Range r(Expression(1), Expression(1), Expression((int) n));
     Expression er(r);
     Option<Expression> oer(er);
 
@@ -1266,8 +1266,9 @@ Indexes Connectors::buildIndex(Set connected)
   return res;
 }
 
-// Get atom sets that are in the dom of ccG_, and whose image
-// is equal to atomRept (represented vertices)
+// Get atom sets that are in the dom of ccG_, 
+// that don't have an intersection with atomRept
+// and whose image is contained by atomRept (represented vertices)
 Set Connectors::getRepd(AtomSet atomRept) 
 {
   UnordCT<AtomSet> atomRes;
@@ -1279,21 +1280,23 @@ Set Connectors::getRepd(AtomSet atomRept)
   if (diff.empty())
     return rept;
 
+  /*
   OrdCT<LMap> lm = ccG_.lmap();
   OrdCT<LMap>::iterator itlm = lm.begin();
 
   foreach_ (Set d, ccG_.dom()) {
     AtomSet atomD = *(d.asets_ref().begin()); // ccG_ is atomized 
-    AtomPWLMap atomPW(atomD, *itlm);
+    Set auxD = createSet(atomD).cap(pre);
 
-    diff = d.diff(rept);
-    if (atomPW.image(atomD) == atomRept && !diff.empty() && atomD != atomRept)
+    if (!auxD.empty()) {
       atomRes.insert(atomD);
+    }
 
     ++itlm;
   }
+  */
 
-  return Set(atomRes);
+  return diff;
 }
 
 // The sub-set "as" of a connector will be part of some equations in a loop
@@ -1451,9 +1454,9 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
       INT lo = (*itas).lo() - iori.lo() + 1;
       INT st = (*itas).step();
       INT hi = (*itas).hi() - iori.lo() + 1;
-      Expression elo(lo);
-      Expression est(st);
-      Expression ehi(hi);
+      Expression elo((int) lo);
+      Expression est((int) st);
+      Expression ehi((int) hi);
       Range r(elo, est, ehi);
       Expression expr(r);
 
@@ -1468,7 +1471,7 @@ ExpList Connectors::buildRanges(AtomSet original, AtomSet as)
   else {
     foreach_(Interval iori, original.aset_ref().inters()) {
       INT lo = (*itas).lo() - iori.lo() + 1;
-      Expression expr(lo);
+      Expression expr((int) lo);
 
       itres = res.insert(itres, expr);
       ++itres;
@@ -1517,7 +1520,7 @@ ExpList Connectors::buildAddExpr(AtomSet atomRept, AtomSet as)
         ExpList::iterator itsubs = subs.begin();
 
         foreach_ (INT lo, minOriginal) {
-          itsubs = subs.insert(itsubs, *itMinAs - lo + 1);
+          itsubs = subs.insert(itsubs, ((int) *itMinAs) - ((int) lo) + 1);
           ++itsubs;
           ++itMinAs;
         }
@@ -1717,35 +1720,34 @@ EquationList Connectors::generateCode()
   OrdCT<LMap> lmapccG = ccG_.lmap();
   OrdCT<LMap>::iterator itLMapccG = lmapccG.begin();
 
-  Set wDom = ccG_.wholeDom();
-  Set im = ccG_.image(wDom);
+  Set repts = ccG_.image();
 
   Set flowVertices; // Flow variables already in an equation
   Set effReps;
 
   // Traverse connected components
-  foreach_ (Set repd, ccG_.dom()) {
-    AtomSet atomRepd = *(repd.asets_ref().begin());
-    AtomPWLMap atomMap(atomRepd, *itLMapccG);
-    AtomSet atomRept = atomMap.image(atomRepd);
-    Set rept(atomRept);
-    repd = ccG_.preImage(rept);
+  foreach_ (AtomSet rept, repts.asets()) {
+    //AtomSet atomRepd = *(repd.asets_ref().begin());
+    //AtomPWLMap atomMap(atomRepd, *itLMapccG);
+    //AtomSet atomRept = atomMap.image(atomRepd);
+    //Set rept(atomRept);
+    //repd = ccG_.preImage(rept);
 
+
+    Set repd = getRepd(rept);
     Indexes indexes = buildIndex(repd);
-
-    repd = getRepd(atomRept);
-    if (!isIdMap(*itLMapccG)) {
+    //if (!isIdMap(*itLMapccG)) {
       // Effort equations
-      EquationList effEqs = buildEffEquations(indexes, atomRept, repd);
+      EquationList effEqs = buildEffEquations(indexes, rept, repd);
 
       foreach_ (Equation e, effEqs) {
         itres = res.insert(itres, e);
         ++itres;
       }
-    }
+    //}
 
     // Flow equations
-    EquationList flowEqs = buildFlowEquations(indexes, atomRept, repd);
+    EquationList flowEqs = buildFlowEquations(indexes, rept, repd);
 
     foreach_ (Equation e, flowEqs) {
       itres = res.insert(itres, e);

@@ -113,9 +113,11 @@ int main(int argc, char **argv)
   printer.printGraph(output_path+mmo_class.name()+".dot");
   
   MatchingStruct match(matching_graph);
-  SBG::Set res = match.SBGMatching();
+  pair<SBG::Set, bool> res = match.SBGMatching();
   cout << "Generated matching:\n";
-  cout << res << "\n";
+  cout << get<0>(res) << "\n\n";
+  if (get<1>(res))
+     cout << ">>> Matched all unknowns\n";
 
   return 0;
 }

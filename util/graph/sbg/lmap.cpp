@@ -77,6 +77,37 @@ bool LM_TEMP_TYPE::empty()
 }
 
 LM_TEMPLATE
+LM_TEMP_TYPE LM_TEMP_TYPE::replace(REAL_IMP g, REAL_IMP o, int dim)
+{
+  OrdNumeric resg;
+  OrdNumericIt itresg = resg.begin();
+  OrdNumeric reso;
+  OrdNumericIt itreso = reso.begin();
+
+  OrdNumericIt itg = gain_ref().begin();
+  OrdNumericIt ito = offset_ref().begin();
+
+  for (int i = 1; i <= ndim(); i++) {
+    if (i == dim) {
+      itresg = resg.insert(itresg, g);
+      itreso = reso.insert(itreso, o);
+    }
+
+    else {
+      itresg = resg.insert(itresg, *itg);
+      itreso = reso.insert(itreso, *ito);
+    }
+
+    ++itg;
+    ++ito;
+    ++itresg;
+    ++itreso;
+  }
+
+  return LMapImp1(resg, reso);
+}
+
+LM_TEMPLATE
 LM_TEMP_TYPE LM_TEMP_TYPE::compose(LM_TEMP_TYPE lm2)
 {
   OrdNumeric resg;
@@ -140,6 +171,64 @@ LM_TEMP_TYPE LM_TEMP_TYPE::invLMap()
   }
 
   return LMapImp1(resg, reso);
+}
+
+LM_TEMPLATE
+LM_TEMP_TYPE LM_TEMP_TYPE::addLM(LM_TEMP_TYPE lm2)
+{
+  OrdNumeric resg;
+  OrdNumericIt itresg = resg.begin();
+  OrdNumeric reso;
+  OrdNumericIt itreso = reso.begin();
+
+  if (ndim() == lm2.ndim()) {
+    OrdNumericIt ito = offset_ref().begin();
+    OrdNumericIt itg2 = lm2.gain_ref().begin();
+    OrdNumericIt ito2 = lm2.offset_ref().begin();
+
+    BOOST_FOREACH (REAL_IMP gi, gain()) {
+      itresg = resg.insert(itresg, gi + *itg2);
+      ++itresg;
+      itreso = reso.insert(itreso, *ito + *ito2);
+      ++itreso;
+
+      ++ito;
+      ++itg2;
+      ++ito2;
+    } 
+  }
+
+  LMapImp1 aux(resg, reso);
+  return LMapImp1(resg, reso);  
+}
+
+LM_TEMPLATE
+LM_TEMP_TYPE LM_TEMP_TYPE::diffLM(LM_TEMP_TYPE lm2)
+{
+  OrdNumeric resg;
+  OrdNumericIt itresg = resg.begin();
+  OrdNumeric reso;
+  OrdNumericIt itreso = reso.begin();
+
+  if (ndim() == lm2.ndim()) {
+    OrdNumericIt ito = offset_ref().begin();
+    OrdNumericIt itg2 = lm2.gain_ref().begin();
+    OrdNumericIt ito2 = lm2.offset_ref().begin();
+
+    BOOST_FOREACH (REAL_IMP gi, gain()) {
+      itresg = resg.insert(itresg, gi - *itg2);
+      ++itresg;
+      itreso = reso.insert(itreso, *ito - *ito2);
+      ++itreso;
+
+      ++ito;
+      ++itg2;
+      ++ito2;
+    } 
+  }
+
+  LMapImp1 aux(resg, reso);
+  return LMapImp1(resg, reso);  
 }
 
 LM_TEMPLATE

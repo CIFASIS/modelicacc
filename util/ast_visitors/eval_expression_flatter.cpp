@@ -48,7 +48,7 @@ EvalExpFlatter::EvalExpFlatter(const VarSymbolTable &v, Name n, Real r)
   : vtable(v), name(n), val(r){};
 
 Interval EvalExpFlatter::operator()(Integer v) const{
-  Interval i(v, 1, v);
+  Interval i((INT) v, 1, (INT) v);
   return i;
 }
 

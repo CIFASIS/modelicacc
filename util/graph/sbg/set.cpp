@@ -4,6 +4,8 @@
 
 ******************************************************************************/
 
+#include <iostream>
+
 #include <boost/foreach.hpp>
 
 #include <util/graph/sbg/set.h>
@@ -207,6 +209,60 @@ ORD_CT<INT_IMP> SET_TEMP_TYPE::minElem()
 } 
 
 SET_TEMPLATE
+ORD_CT<INT_IMP> SET_TEMP_TYPE::maxElem()
+{
+  ORD_CT<INT_IMP> res;
+
+  if (empty()) return res;
+
+  AS_IMP max = *(asets_ref().begin());
+
+  BOOST_FOREACH (AS_IMP as1, asets()) 
+    if (max.maxElem() < as1.aset_ref().maxElem()) max = as1;
+
+  return max.maxElem();
+} 
+
+SET_TEMPLATE
+SET_TEMP_TYPE SET_TEMP_TYPE::normalize()
+{
+  UNORD_CT<AS_IMP> res = asets();
+  UNORD_CT<AS_IMP> toInsert, toDelete;
+
+  UNORD_CT<AS_IMP> empty;
+  
+  do {
+    bool first = true;
+    toInsert = empty;
+    toDelete = empty;
+ 
+    SetImp1 aux(res);
+    BOOST_FOREACH (AS_IMP as1, res) {
+      BOOST_FOREACH (AS_IMP as2, res) {
+        AS_IMP normalized = as1.normalize(as2);
+
+        if (!normalized.empty() && first && as1 != as2) {
+          toInsert.insert(normalized);
+          toDelete.insert(as1);
+          toDelete.insert(as2);
+ 
+          first = false;
+        }
+      }
+    }
+
+    BOOST_FOREACH (AS_IMP ins, toInsert) 
+      res.insert(ins);
+
+    BOOST_FOREACH (AS_IMP del, toDelete) 
+      res.erase(del);
+  }
+  while (!toDelete.empty());
+
+  return SetImp1(res);
+}
+
+SET_TEMPLATE
 SET_TEMP_TYPE SET_TEMP_TYPE::crossProd(SET_TEMP_TYPE set2)
 {
   AtomSets res;
@@ -239,6 +295,29 @@ SET_TEMPLATE
 bool SET_TEMP_TYPE::operator!=(const SET_TEMP_TYPE &other) const
 {
   return !(*this == other); 
+}
+
+SET_TEMPLATE
+bool SET_TEMP_TYPE::operator<(const SET_TEMP_TYPE &other) const 
+{
+  SetImp1 aux1 = *this;
+  SetImp1 aux2 = other;
+
+  if (!aux1.empty() && !aux2.empty()) {
+    AS_IMP minAs1 = *(aux1.asets_ref().begin());
+
+    BOOST_FOREACH (AS_IMP as, aux1.asets())
+      if (as < minAs1) minAs1 = as;
+
+    AS_IMP minAs2 = *(aux2.asets_ref().begin());
+
+    BOOST_FOREACH (AS_IMP as, aux2.asets())
+      if (as < minAs2) minAs2 = as;
+
+    return minAs1 < minAs2;
+  }
+
+  return false;
 }
 
 SET_TEMPLATE

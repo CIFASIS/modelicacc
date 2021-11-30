@@ -139,7 +139,7 @@ SBG::Set MatchingGraphBuilder::generateMapDom(SBG::Set dom, SBG::Set unk_dom, in
 
 SetVertexDesc MatchingGraphBuilder::addVertex(std::string vertex_name, SBG::Set set, SBGraph& graph)
 {
-  SetVertex V(vertex_name, set);
+  SetVertex V(vertex_name, num_vertices(graph) + 1, set, 0);
   SetVertexDesc v = boost::add_vertex(graph); 
   graph[v] = V;
   return v;
@@ -302,7 +302,7 @@ SBGraph MatchingGraphBuilder::makeGraph()
         std::string edge_name = "E_" + std::to_string(edge_id++);
         std::cout << "MapF: " << maps.first << std::endl;
         std::cout << "MapU: " << maps.second << std::endl;
-        SetEdge edge(edge_name, maps.first, maps.second);
+        SetEdge edge(edge_name, num_edges(graph) + 1, maps.first, maps.second, 0);
         SetEdgeDesc e;
         bool b;
         boost::tie(e, b) = boost::add_edge(eq_vertex_desc, unknown_vertex_desc, graph);

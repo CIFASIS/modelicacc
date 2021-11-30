@@ -14,27 +14,27 @@ model SBGraph4
   Real C2_p_fl[N];
 equation
   for i in 1:1:100000 loop
-    C1_n_fl[i]+R_n_fl[2*i] = 0;
-  end for;
-  for i in 1:1:100000 loop
-    C1_p_fl[i]+R_p_fl[2*i] = 0;
-  end for;
-  for i in 1:1:100000 loop
-    C2_n_fl[i]+R_n_fl[2*i-1] = 0;
+    C2_p_eff[i] = R_p_eff[2*i-1];
   end for;
   for i in 1:1:100000 loop
     C2_p_fl[i]+R_p_fl[2*i-1] = 0;
   end for;
   for i in 1:1:100000 loop
-    C2_p_eff[i] = R_p_eff[2*i-1];
+    C1_p_eff[i] = R_p_eff[2*i];
+  end for;
+  for i in 1:1:100000 loop
+    C1_p_fl[i]+R_p_fl[2*i] = 0;
+  end for;
+  for i in 1:1:100000 loop
+    C1_n_eff[i] = R_n_eff[2*i];
+  end for;
+  for i in 1:1:100000 loop
+    C1_n_fl[i]+R_n_fl[2*i] = 0;
   end for;
   for i in 1:1:100000 loop
     C2_n_eff[i] = R_n_eff[2*i-1];
   end for;
   for i in 1:1:100000 loop
-    C1_p_eff[i] = R_p_eff[2*i];
-  end for;
-  for i in 1:1:100000 loop
-    C1_n_eff[i] = R_n_eff[2*i];
+    C2_n_fl[i]+R_n_fl[2*i-1] = 0;
   end for;
 end SBGraph4;

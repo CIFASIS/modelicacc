@@ -11,7 +11,7 @@ model bad_advection
     der(u[1])=(-u[1]+1)*N-mu*u[1]*(u[1]-alpha)*(u[1]-1);
     for j in 2:N loop
       der(u[j+(1-1)])=(-u[j+(1-1)]+u[j-1])*N-mu*u[j+(1-1)]*(u[j+(1-1)]-alpha)*(u[j+(1-1)]-1);
-  end for;
+    end for;
 	annotation(
 
 	experiment(

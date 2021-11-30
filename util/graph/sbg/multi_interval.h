@@ -45,6 +45,9 @@ struct MultiInterImp1 {
   UNORD_CT<MultiInterImp1> diff(MultiInterImp1 mi2);
 
   ORD_CT<INT_IMP> minElem();
+  ORD_CT<INT_IMP> maxElem();
+
+  MultiInterImp1 normalize(MultiInterImp1 mi2);
 
   MultiInterImp1 crossProd(MultiInterImp1 mi2);
 
