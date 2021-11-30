@@ -33,7 +33,6 @@ FLATTER_SRC := \
 	$(UTIL_DIR)/graph/sbg/descs.cpp \
   $(UTIL_DIR)/graph/sbg/interval.cpp \
   $(UTIL_DIR)/graph/sbg/multi_interval.cpp \
-  $(UTIL_DIR)/graph/sbg/atomic_set.cpp \
   $(UTIL_DIR)/graph/sbg/set.cpp \
   $(UTIL_DIR)/graph/sbg/lmap.cpp \
   $(UTIL_DIR)/graph/sbg/atom_pw_map.cpp \
