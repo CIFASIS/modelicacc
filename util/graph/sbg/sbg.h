@@ -13,7 +13,6 @@
 #include <util/graph/sbg/defs.h>
 #include <util/graph/sbg/interval.h>
 #include <util/graph/sbg/multi_interval.h>
-#include <util/graph/sbg/atomic_set.h>
 #include <util/graph/sbg/set.h>
 #include <util/graph/sbg/lmap.h>
 #include <util/graph/sbg/atom_pw_map.h>
