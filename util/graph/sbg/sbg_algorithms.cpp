@@ -131,6 +131,7 @@ PWLMap updateMap(Set V, PWLMap currentMap, PWLMap newMap, PWLMap offMap)
 std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentSEmap, PWLMap currentRmap)
 {
   // *** Initialization
+  std::cout << "ER: " << ER << "\n\n";
 
   PWLMap Vid(V);
 
@@ -261,11 +262,17 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
       while(ER.empty() && n < nmax);
 
       // *** Handle recursion
+      ER = ER.cap(Ec);
       if (!ER.empty()) { 
-        ER = ER.cap(Ec);
         ER = createSet(*(ER.asets().begin()));
-        std::pair<PWLMap, PWLMap> p = recursion(n, ER, V, E, Emap, map_D, map_B, newSmap, newSEmap, newRmap);
-        newRmap = std::get<1>(p);
+
+        Set oldSubsetEdge = Emap.image(ER);
+        Set succSubsetEdge = Emap.image(newSEmap.image(ER));
+
+        if (oldSubsetEdge.cap(succSubsetEdge).empty()) {
+          std::pair<PWLMap, PWLMap> p = recursion(n, ER, V, E, Emap, map_D, map_B, newSmap, newSEmap, newRmap);
+          newRmap = std::get<1>(p);
+        }
       }
     }
   }
@@ -406,7 +413,8 @@ std::pair<Set, bool> MatchingStruct::SBGMatching()
     Set tildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
 
     // Leave edges in paths that reach unmatched left vertices
-    Set edgesInPaths = smap.compPW(mapB).diffMap(mapD).preImage(zero); // Edges that connect vertices with successors
+    PWLMap auxB = mapB.restrictMap(mapD.preImage(smap.filterMap(notEqId).image()));
+    Set edgesInPaths = smap.compPW(auxB).diffMap(mapD).preImage(zero); // Edges that connect vertices with successors
     Ed = edgesInPaths.cap(tildeEd);
 
     // *** Backward direction
@@ -421,7 +429,8 @@ std::pair<Set, bool> MatchingStruct::SBGMatching()
     tildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
 
     // Leave edges in paths that reach unmatched left and right vertices
-    edgesInPaths = smap.compPW(mapB).diffMap(mapD).preImage(zero); // Edges that connect vertices with successors
+    auxB = mapB.restrictMap(mapD.preImage(smap.filterMap(notEqId).image()));
+    edgesInPaths = smap.compPW(auxB).diffMap(mapD).preImage(zero); // Edges that connect vertices with successors
     Ed = Ed.cap(edgesInPaths).cap(tildeEd);
 
     mapB = mapD;
