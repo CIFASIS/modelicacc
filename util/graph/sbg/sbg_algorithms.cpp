@@ -372,6 +372,8 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
   PWLMap mapDSide = mmapSide.compPW(mapD);
   PWLMap mapBSide = mmapSide.compPW(mapB);
 
+  std::cout << "mmap: " << mmapSide << "\n\n";
+
   Set auxEd = Ed.diff(getManyToOne());
 
   // Get minimum reachable
@@ -385,6 +387,7 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
   std::cout << "rmap: " << rmap << "\n\n";
 }
 
+// Find sub-set edges with a 1:N connection in some dimension
 Set MatchingStruct::getManyToOne()
 {
   Set res;
@@ -395,12 +398,16 @@ Set MatchingStruct::getManyToOne()
   while (itdom != mapD.dom_ref().end()) {
     BOOST_FOREACH (MultiInterval as, (*itdom).asets()) {
       AtomPWLMap auxmap(as, *itlmap);
-      Set edgesIn = auxmap.image();
+      Set oneVertex = auxmap.image();
       Set sas = createSet(as);
-      Set edgesOut = mapB.image(as);
-      if (edgesOut.card() > edgesIn.card()) {
-        Set unmatchedOut = mapB.image(sas).diff(matchedV);
-        res = res.cup(mapB.preImage(unmatchedOut).cap(sas));
+      Set NVertices = mapB.image(sas);
+      if (NVertices.card() > oneVertex.card()) { // N:1 connection in some dimension
+        Set unmatchedNVertices = NVertices.diff(matchedV);
+        Set unmatchedOut = mapB.preImage(unmatchedNVertices).cap(sas);
+        Set imageOneVertex = mapD.image(unmatchedOut);
+
+        if (unmatchedOut.card() > imageOneVertex.card())
+          res = res.cup(unmatchedOut);
       }
     } 
 
