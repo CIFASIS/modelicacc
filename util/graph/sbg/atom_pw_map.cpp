@@ -170,6 +170,12 @@ MI_IMP APW_TEMP_TYPE::image(MI_IMP as)
 }
 
 APW_TEMPLATE
+MI_IMP APW_TEMP_TYPE::image()
+{
+  return image(dom());
+}
+
+APW_TEMPLATE
 MI_IMP APW_TEMP_TYPE::preImage(MI_IMP as)
 {
   MI_IMP fullIm = image(dom());

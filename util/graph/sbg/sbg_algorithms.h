@@ -31,13 +31,14 @@ struct MatchingStruct{
   MatchingStruct(SBGraph g);
 
   void directedMinReach(PWLMap sideMap);
-  Set SBGComponentMatching();
+  Set getManyToOne();
   std::pair<Set, bool> SBGMatching();
 
   private:
   SBGraph g;
   Set F;
   Set U;
+  Set initU;
   PWLMap Vmap; // Map from vertices to set-vertices
   PWLMap Emap; // Map from edges to set-edges
 

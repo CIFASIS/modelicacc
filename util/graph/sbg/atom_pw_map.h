@@ -35,6 +35,7 @@ struct AtomPWLMapImp1 {
   bool empty();
 
   MI_IMP image(MI_IMP as);
+  MI_IMP image();
   MI_IMP preImage(MI_IMP as);
 
   eq_class(AtomPWLMapImp1);

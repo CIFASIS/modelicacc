@@ -209,7 +209,13 @@ INTER_TEMP_TYPE INTER_TEMP_TYPE::normalize(INTER_TEMP_TYPE i2)
 INTER_TEMPLATE
 bool INTER_TEMP_TYPE::operator==(const INTER_TEMP_TYPE &other) const 
 {
-  return (lo() == other.lo()) && (step() == other.step()) && (hi() == other.hi()) && (empty() == other.empty());
+  INT l = lo(), ol = other.lo();
+  INT s = step(), os = other.step();
+  INT h = hi(), oh = other.hi();
+  
+  bool cond1 = l == h && l == ol && h == oh;
+  bool cond2 = (l == ol) && (s == os) && (h == oh) && (empty() == other.empty());
+  return cond1 || cond2;
 }
 
 INTER_TEMPLATE

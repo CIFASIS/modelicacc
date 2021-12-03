@@ -131,7 +131,6 @@ PWLMap updateMap(Set V, PWLMap currentMap, PWLMap newMap, PWLMap offMap)
 std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentSEmap, PWLMap currentRmap)
 {
   // *** Initialization
-  std::cout << "ER: " << ER << "\n\n";
 
   PWLMap Vid(V);
 
@@ -305,6 +304,7 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   allVertices = emptySet;
   F = mapF.image(allEdges);
   U = mapU.image(allEdges);
+  initU = U;
   nmax = num_vertices(g);
   int dims = F.ndim();
 
@@ -372,8 +372,10 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
   PWLMap mapDSide = mmapSide.compPW(mapD);
   PWLMap mapBSide = mmapSide.compPW(mapB);
 
+  Set auxEd = Ed.diff(getManyToOne());
+
   // Get minimum reachable
-  std::pair<PWLMap, PWLMap> p = minReachable(nmax, VSide, Ed, VmapSide, Emap, mapDSide, mapBSide);
+  std::pair<PWLMap, PWLMap> p = minReachable(nmax, VSide, auxEd, VmapSide, Emap, mapDSide, mapBSide);
   PWLMap directedSmap = std::get<0>(p);
   smap = mmapSideInv.compPW(directedSmap.compPW(mmapSide));
   PWLMap directedRmap = std::get<1>(p);
@@ -383,7 +385,32 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
   std::cout << "rmap: " << rmap << "\n\n";
 }
 
-//Set MatchingStruct::SBGComponentMatching()
+Set MatchingStruct::getManyToOne()
+{
+  Set res;
+
+  OrdCT<Set>::iterator itdom = mapD.dom_ref().begin();
+  OrdCT<LMap>::iterator itlmap = mapD.lmap_ref().begin();
+
+  while (itdom != mapD.dom_ref().end()) {
+    BOOST_FOREACH (MultiInterval as, (*itdom).asets()) {
+      AtomPWLMap auxmap(as, *itlmap);
+      Set edgesIn = auxmap.image();
+      Set sas = createSet(as);
+      Set edgesOut = mapB.image(as);
+      if (edgesOut.card() > edgesIn.card()) {
+        Set unmatchedOut = mapB.image(sas).diff(matchedV);
+        res = res.cup(mapB.preImage(unmatchedOut).cap(sas));
+      }
+    } 
+
+    ++itdom;
+    ++itlmap;
+  }
+
+  return res;
+}
+
 std::pair<Set, bool> MatchingStruct::SBGMatching()
 {
   debugInit();
@@ -446,7 +473,7 @@ std::pair<Set, bool> MatchingStruct::SBGMatching()
     matchedE = mapD.preImage(U);
     matchedV = mapD.image(matchedE);
     matchedV = matchedV.cup(mapB.image(matchedE));
-    diffMatched = U.diff(matchedV);
+    diffMatched = initU.diff(matchedV);
 
     // *** Update mmap for matched vertices
     PWLMap auxM = mmap.restrictMap(matchedV);
@@ -458,12 +485,25 @@ std::pair<Set, bool> MatchingStruct::SBGMatching()
     PWLMap idUnmatched(unmatchedV);
     mmap = idUnmatched.combine(mmap);
 
+    // *** Swap directions
+    PWLMap auxD = mapD;
+    mapD = mapB;
+    mapB = auxD; 
+
+    PWLMap auxF = mapF;
+    mapF = mapU;
+    mapU = auxF;
+
+    Set aF = F;
+    F = U;
+    U = aF;
+
     debugStep();
   }
   while (!diffMatched.empty() && !Ed.empty());
 
   matchedE = mapD.preImage(U);
-  return std::pair<Set, bool>(matchedE, U.diff(matchedV).empty());
+  return std::pair<Set, bool>(matchedE, initU.diff(matchedV).empty());
 }
 
 void MatchingStruct::debugInit()
@@ -489,7 +529,7 @@ void MatchingStruct::debugInit()
 
 void MatchingStruct::debugStep()
 {
-  bool diffMatched = (U.diff(matchedV)).empty();
+  bool diffMatched = (initU.diff(matchedV)).empty();
   std::cout << "matchedE: " << matchedE << "\n";
   std::cout << "matched all unknowns: " << diffMatched << "\n\n";
 
