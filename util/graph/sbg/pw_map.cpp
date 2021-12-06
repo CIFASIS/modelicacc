@@ -22,10 +22,10 @@ namespace SBG {
    typename PW_TEMP_TYPE::LMaps
 
 PW_TEMPLATE
-PW_TEMP_TYPE::PWLMapImp1() {}
+PW_TEMP_TYPE::PWLMapImp1() : ndim_(0) {}
 
 PW_TEMPLATE
-PW_TEMP_TYPE::PWLMapImp1(SETS_TYPE dom, LMAPS_TYPE lmap)
+PW_TEMP_TYPE::PWLMapImp1(SETS_TYPE dom, LMAPS_TYPE lmap) : ndim_(0)
 {
   LMapsIt itl = lmap.begin();
   int dim1 = (*(dom.begin())).ndim();
@@ -396,29 +396,32 @@ bool PW_TEMP_TYPE::equivalentPW(PW_TEMP_TYPE pw2)
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::restrictMap(SET_IMP newdom)
 {
-  Sets resdom;
-  SetsIt itresdom = resdom.begin();
-  LMaps reslm;
-  LMapsIt itreslm = reslm.begin();
+  if (!newdom.empty()) {
+    Sets resdom;
+    SetsIt itresdom = resdom.begin();
+    LMaps reslm;
+    LMapsIt itreslm = reslm.begin();
 
-  SetsIt itdom = dom_ref().begin();
-  LMapsIt itlm = lmap_ref().begin();
+    SetsIt itdom = dom_ref().begin();
+    LMapsIt itlm = lmap_ref().begin();
 
-  for (; itdom != dom_ref().end(); ++itdom) {
-    SET_IMP scap = newdom.cap(*itdom);
+    for (; itdom != dom_ref().end(); ++itdom) {
+      SET_IMP scap = newdom.cap(*itdom);
 
-    if (!scap.empty()) {
-      itresdom = resdom.insert(itresdom, scap);
-      ++itresdom;
-      itreslm = reslm.insert(itreslm, *itlm);
-      ++itreslm;
+      if (!scap.empty()) {
+        itresdom = resdom.insert(itresdom, scap);
+        ++itresdom;
+        itreslm = reslm.insert(itreslm, *itlm);
+        ++itreslm;
+      }
+
+      ++itlm;
     }
 
-    ++itlm;
+    return PWLMapImp1(resdom, reslm);
   }
 
-  PWLMapImp1 res(resdom, reslm);
-  return res;
+  return PWLMapImp1();
 }
 
 // Append doms and maps of arguments to the current PWLMap

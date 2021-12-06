@@ -371,9 +371,7 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
   PWLMap VmapSide = Vmap.offsetDomMap(mmapSide);
   PWLMap mapDSide = mmapSide.compPW(mapD);
   PWLMap mapBSide = mmapSide.compPW(mapB);
-
-  std::cout << "mmap: " << mmapSide << "\n\n";
-
+ 
   Set auxEd = Ed.diff(getManyToOne());
 
   // Get minimum reachable
@@ -392,14 +390,17 @@ Set MatchingStruct::getManyToOne()
 {
   Set res;
 
-  OrdCT<Set>::iterator itdom = mapD.dom_ref().begin();
-  OrdCT<LMap>::iterator itlmap = mapD.lmap_ref().begin();
+  PWLMap auxD = mapD.atomize();
 
-  while (itdom != mapD.dom_ref().end()) {
+  OrdCT<Set>::iterator itdom = auxD.dom_ref().begin();
+  OrdCT<LMap>::iterator itlmap = auxD.lmap_ref().begin();
+
+  while (itdom != auxD.dom_ref().end()) {
     BOOST_FOREACH (MultiInterval as, (*itdom).asets()) {
-      AtomPWLMap auxmap(as, *itlmap);
+      Set sas = createSet(as).cap(Ed);
+      PWLMap auxmap;
+      auxmap.addSetLM(sas, *itlmap);
       Set oneVertex = auxmap.image();
-      Set sas = createSet(as);
       Set NVertices = mapB.image(sas);
       if (NVertices.card() > oneVertex.card()) { // N:1 connection in some dimension
         Set unmatchedNVertices = NVertices.diff(matchedV);
@@ -434,6 +435,7 @@ std::pair<Set, bool> MatchingStruct::SBGMatching()
 
   PWLMap oldVmap = Vmap;
 
+  int count = 0;
   do {
     Ed = allEdges;
     unmatchedV = allVertices.diff(matchedV);
@@ -506,8 +508,9 @@ std::pair<Set, bool> MatchingStruct::SBGMatching()
     U = aF;
 
     debugStep();
+    ++count;
   }
-  while (!diffMatched.empty() && !Ed.empty());
+  while ((!diffMatched.empty() && !Ed.empty()) || (Ed.empty() && count % 2 == 1));
 
   matchedE = mapD.preImage(U);
   return std::pair<Set, bool>(matchedE, initU.diff(matchedV).empty());

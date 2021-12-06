@@ -5224,7 +5224,7 @@ void TestMatching4()
 // and has a value lower to all the other vertices of the left side
 void TestMatching5()
 {
-  int N = 10;
+  int N = 1000;
 
   SBGraph g;
 
