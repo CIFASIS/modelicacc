@@ -32,6 +32,7 @@ struct MatchingStruct{
 
   void directedMinReach(PWLMap sideMap);
   Set getManyToOne();
+  void SBGMatchingStep(Set E);
   std::pair<Set, bool> SBGMatching();
 
   private:

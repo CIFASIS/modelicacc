@@ -5549,6 +5549,151 @@ void TestMatching6()
   BOOST_CHECK(std::get<1>(res));
 }
 
+// Graph with just only a N:1 connection
+void TestMatching7()
+{
+  int N = 1000;
+
+  SBGraph g;
+
+  SetVertexDesc v1 = boost::add_vertex(g); // 1 vertex (left side)
+  SetVertexDesc v2 = boost::add_vertex(g); // N vertices (right side)
+
+  SetEdgeDesc e1;
+  bool b1;
+  boost::tie(e1, b1) = boost::add_edge(v1, v2, g);
+
+  int offV1 = 1;
+  int szV1 = N - 1;
+
+  int offV2 = offV1 + szV1 + 1; 
+  int szV2 = N - 1;
+
+  // 1 vertex on the left side
+  Interval i1(offV1, 1, offV1 + szV1);
+  MultiInterval mi1;
+  mi1.addInter(i1);
+  Set s1 = createSet(mi1);
+  SetVertex V1("one", 1, s1, 0);
+
+  // N vertices on the right side
+  Interval i2(offV2, 1, offV2 + szV2);
+  MultiInterval mi2;
+  mi2.addInter(i2);
+  Set s2 = createSet(mi2);
+  SetVertex V2("N", 2, s2, 0);
+
+  g[v1] = V1;
+  g[v2] = V2;
+
+  int offE1 = 1;
+  int szE1 = N - 1;
+
+  // N:1 map from right to left
+  Interval i3(offE1, 1, offE1 + szE1);
+  MultiInterval mi3;
+  mi3.addInter(i3);
+  Set s3 = createSet(mi3);
+  LMap lm1;
+  lm1.addGO(0, offV1);
+  LMap lm2;
+  lm2.addGO(1, 1);
+  PWLMap mapE1f;
+  mapE1f.addSetLM(s3, lm1);
+  PWLMap mapE1u;
+  mapE1u.addSetLM(s3, lm2);
+  SetEdge E1("E1", 1, mapE1f, mapE1u, 0);
+
+  g[e1] = E1; 
+
+  MatchingStruct match(g);
+  std::pair<Set, bool> res = match.SBGMatching();
+
+  BOOST_CHECK(!std::get<1>(res));
+}
+
+// Graph with just only a N:1 connection, with 2 dimensions
+void TestMatching8()
+{
+  int M = 300; // Rows
+  int N = 1000; // Columns
+
+  SBGraph g;
+
+  SetVertexDesc v1 = boost::add_vertex(g); // 1 vertex (left side)
+  SetVertexDesc v2 = boost::add_vertex(g); // N vertices (right side)
+
+  SetEdgeDesc e1;
+  bool b1;
+  boost::tie(e1, b1) = boost::add_edge(v1, v2, g);
+
+  int offV1i = 1;
+  int szV1i = M - 1;
+
+  int offV1j = 1;
+  int szV1j = N - 1;
+
+  int offV2i = offV1i + szV1i + 1; 
+  int szV2i = M - 1;
+
+  int offV2j = offV1j + szV1j + 1;
+  int szV2j = 0;
+
+  // 1 vertex on the left side
+  Interval i1(offV1i, 1, offV1i + szV1i);
+  Interval i2(offV1j, 1, offV1j + szV1j);
+  MultiInterval mi1;
+  mi1.addInter(i1);
+  mi1.addInter(i2);
+  Set s1 = createSet(mi1);
+  SetVertex V1("one", 1, s1, 0);
+
+  // N vertices on the right side
+  Interval i3(offV2i, 1, offV2i + szV2i);
+  Interval i4(offV2j, 1, offV2j + szV2j);
+  MultiInterval mi2;
+  mi2.addInter(i3);
+  mi2.addInter(i4);
+  Set s2 = createSet(mi2);
+  SetVertex V2("N", 2, s2, 0);
+
+  g[v1] = V1;
+  g[v2] = V2;
+
+  int offE1i = 1;
+  int szE1i = M - 1;
+
+  int offE1j = 1;
+  int szE1j = N - 1;
+
+  // N:1 map from right to left
+  Interval i5(offE1i, 1, offE1i + szE1i);
+  Interval i6(offE1j, 1, offE1j + szE1j);
+  MultiInterval mi5;
+  mi5.addInter(i5);
+  mi5.addInter(i6);
+  Set s5 = createSet(mi5);
+
+  LMap lm1;
+  lm1.addGO(1, 0);
+  lm1.addGO(1, 0);
+  LMap lm2;
+  lm2.addGO(1, offV2i - offV1i);
+  lm2.addGO(0, offV2j);
+  PWLMap mapE1u;
+  mapE1u.addSetLM(s5, lm1);
+  PWLMap mapE1f;
+  mapE1f.addSetLM(s5, lm2);
+  SetEdge E1("E1", 1, mapE1f, mapE1u, 0);
+
+  g[e1] = E1; 
+
+  MatchingStruct match(g);
+  std::pair<Set, bool> res = match.SBGMatching();
+
+  BOOST_CHECK(!std::get<1>(res));
+}
+
 //____________________________________________________________________________//
 
 test_suite *init_unit_test_suite(int, char *[])
@@ -5663,6 +5808,8 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching4));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching5));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching6));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching7));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching8));
 
   return 0;
 }
