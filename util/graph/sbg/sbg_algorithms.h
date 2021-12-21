@@ -23,7 +23,7 @@ PWLMap connectedComponents(SBGraph g);
 
 std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentSEmap, PWLMap currentRmap);
 PWLMap minReach1(Set V, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentRmap);
-std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B);
+std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B);
 
 // Matching of undirected SBGraphs ---------------------------------------------------------------
 
@@ -32,7 +32,7 @@ struct MatchingStruct{
 
   void directedMinReach(PWLMap sideMap);
   Set getManyToOne();
-  void SBGMatchingStep(Set E);
+  Set SBGMatchingStep(Set E);
   std::pair<Set, bool> SBGMatching();
 
   private:
@@ -59,6 +59,7 @@ struct MatchingStruct{
   Set matchedE; 
 
   PWLMap smap; // Successors map
+  PWLMap semap; // Edge's successors map
   PWLMap rmap; // Representatives map
   PWLMap mmap; // Offset map
 

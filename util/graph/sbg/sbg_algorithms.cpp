@@ -200,7 +200,7 @@ PWLMap minReach1(Set V, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap c
 }
 
 // Minimum reachable in several steps
-std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B)
+std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B)
 {
   // *** Initialization
 
@@ -277,7 +277,7 @@ std::pair<PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLM
   }
   while (!Vc.empty());
 
-  return std::pair<PWLMap, PWLMap> (newSmap, newRmap);
+  return std::tuple<PWLMap, PWLMap, PWLMap> (newSmap, newSEmap, newRmap);
 }
 
 // Matching ---------------------------------------------------------------------------------------
@@ -351,8 +351,9 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   mmap = idMap;
 
   PWLMap emptyMap;
-  rmap = emptyMap;
   smap = emptyMap;
+  semap = emptyMap;
+  rmap = emptyMap;
 }
 
 void MatchingStruct::directedMinReach(PWLMap sideMap)
@@ -373,10 +374,11 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
   PWLMap mapBSide = mmapSide.compPW(mapB);
  
   // Get minimum reachable
-  std::pair<PWLMap, PWLMap> p = minReachable(nmax, VSide, Ed, VmapSide, Emap, mapDSide, mapBSide);
-  PWLMap directedSmap = std::get<0>(p);
+  std::tuple<PWLMap, PWLMap, PWLMap> t = minReachable(nmax, VSide, Ed, VmapSide, Emap, mapDSide, mapBSide);
+  PWLMap directedSmap = std::get<0>(t);
   smap = mmapSideInv.compPW(directedSmap.compPW(mmapSide));
-  PWLMap directedRmap = std::get<1>(p);
+  semap = std::get<1>(t);
+  PWLMap directedRmap = std::get<2>(t);
   rmap = mmapSideInv.compPW(directedRmap.compPW(mmapSide));
 
   std::cout << "smap: " << smap << "\n\n";
@@ -418,7 +420,7 @@ Set MatchingStruct::getManyToOne()
 }
 
 
-void MatchingStruct::SBGMatchingStep(Set E)
+Set MatchingStruct::SBGMatchingStep(Set E)
 {
   Interval i(0, 1, 0);
   MultiInterval mi;
@@ -483,28 +485,27 @@ void MatchingStruct::SBGMatchingStep(Set E)
   mmap = idUnmatched.combine(mmap);
 
   debugStep();
+
+  return Ed;
 }
 
 std::pair<Set, bool> MatchingStruct::SBGMatching()
 {
   debugInit();
 
-  Set diffMatched;
+  Set takeOut, emptySet, auxEd, diffMatched;
 
   do {
-    SBGMatchingStep(allEdges.diff(getManyToOne()));
-    diffMatched = U.diff(matchedV);
-  }
-  while (!diffMatched.empty() && !Ed.empty());
- 
-  // Add N:1 connections
-  if (!diffMatched.empty() && Ed.empty()) {
+    takeOut = emptySet;
+
     do {
-      SBGMatchingStep(allEdges);
+      auxEd = SBGMatchingStep(allEdges.diff(takeOut));
+      takeOut = takeOut.cup(auxEd);
       diffMatched = U.diff(matchedV);
     }
-    while (!diffMatched.empty() && !Ed.empty());
+    while (!diffMatched.empty() && !auxEd.empty());
   }
+  while (!diffMatched.empty() && !takeOut.empty());
 
   matchedE = mapD.preImage(U);
   return std::pair<Set, bool>(matchedE, U.diff(matchedV).empty());
@@ -533,7 +534,7 @@ void MatchingStruct::debugInit()
 
 void MatchingStruct::debugStep()
 {
-  bool diffMatched = (initU.diff(matchedV)).empty();
+  bool diffMatched = U.diff(matchedV).empty();
   std::cout << "matchedE: " << matchedE << "\n";
   std::cout << "matched all unknowns: " << diffMatched << "\n\n";
 
