@@ -131,6 +131,12 @@ MI_IMP APW_TEMP_TYPE::image(MI_IMP as)
     REAL_IMP auxLo = capi.lo() * (*itg) + (*ito);
     REAL_IMP auxStep = capi.step() * (*itg);
     REAL_IMP auxHi = capi.hi() * (*itg) + (*ito);
+
+    if (*itg < 0) {
+      auxLo = capi.hi() * (*itg) + (*ito);
+      auxStep = capi.step() * (-*itg);
+      auxHi = capi.lo() * (*itg) + (*ito);
+    }
   
     if (auxLo == auxHi)
       auxStep = 1;
