@@ -443,6 +443,7 @@ Set MatchingStruct::SBGMatchingStep(Set E)
   PWLMap auxB = mapB.restrictMap(mapD.preImage(smap.filterMap(notEqId).image()));
   Set edgesInPaths = smap.compPW(auxB).diffMap(mapD).preImage(zero); // Edges that connect vertices with successors
   Ed = edgesInPaths.cap(tildeEd);
+  std::cout << "Ed: " << Ed << "\n\n";
 
   // *** Backward direction
 

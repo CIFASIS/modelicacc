@@ -4607,7 +4607,7 @@ void TestMatching1()
 // Example with recursive path that starts at the "middle" 
 void TestMatching2()
 {
-  INT N = 100;
+  INT N = 1000;
 
   // Vertices
   Interval i1(1, 1, 1);
@@ -6098,17 +6098,407 @@ void TestMatching10()
   mapE5u.addSetLM(s12, lm12);
   SetEdge E5("E5", 5, mapE5f, mapE5u, 0);
 
+  g[e1] = E1; 
+  g[e2] = E2; 
+  g[e3] = E3; 
+  g[e4] = E4; 
+  g[e5] = E5; 
+
+  MatchingStruct match(g);
+  std::pair<Set, bool> res = match.SBGMatching();
+
+  BOOST_CHECK(std::get<1>(res));
+}
+
+void TestMatching11()
+{
+  int N = 1000;
+
+  SBGraph g;
+
+  SetVertexDesc v1 = boost::add_vertex(g); // Right recursion
+  SetVertexDesc v2 = boost::add_vertex(g); // Left recursion
+  SetVertexDesc v3 = boost::add_vertex(g); // Left start
+  SetVertexDesc v4 = boost::add_vertex(g); // Right start
+
+  SetEdgeDesc e1;
+  bool b1;
+  boost::tie(e1, b1) = boost::add_edge(v1, v3, g);
+  SetEdgeDesc e2;
+  bool b2;
+  boost::tie(e2, b2) = boost::add_edge(v1, v2, g);
+  SetEdgeDesc e3;
+  bool b3;
+  boost::tie(e3, b3) = boost::add_edge(v2, v4, g);
+
+  int offV1 = 1;
+  int szV1 = N - 1;
+
+  int offV2 = offV1 + szV1 + 1; 
+  int szV2 = N - 1;
+
+  int offV3 = offV2 + szV2 + 1;
+  int szV3 = N - 1;
+
+  int offV4 = offV3 + szV3 + 1;
+  int szV4 = N - 1;
+
+  // Right recursion
+  Interval i1(offV1, 1, offV1 + szV1);
+  MultiInterval mi1;
+  mi1.addInter(i1);
+  Set s1 = createSet(mi1);
+  SetVertex V1("rrec", 1, s1, 0);
+
+  // Left recursion
+  Interval i2(offV2, 1, offV2 + szV2);
+  MultiInterval mi2;
+  mi2.addInter(i2);
+  Set s2 = createSet(mi2);
+  SetVertex V2("lrec", 2, s2, 0);
+
+  // Left start
+  Interval i3(offV3, 1, offV3 + szV3);
+  MultiInterval mi3;
+  mi3.addInter(i3);
+  Set s3 = createSet(mi3);
+  SetVertex V3("lstart", 3, s3, 0);
+
+  // Right start
+  Interval i4(offV4, 1, offV4 + szV4);
+  MultiInterval mi4;
+  mi4.addInter(i4);
+  Set s4 = createSet(mi4);
+  SetVertex V4("rstart", 4, s4, 0);
+
+  g[v1] = V1;
+  g[v2] = V2;
+  g[v3] = V3;
+  g[v4] = V4;
+
+  int offE1 = 1;
+  int szE1 = N - 1;
+
+  int offE2_1 = offE1 + szE1 + 1;
+  int szE2_1 = N - 1;
+  
+  int offE2_2 = offE2_1 + szE2_1 + 1;
+  int szE2_2 = N - 2;
+
+  int offE2_3 = offE2_2 + szE2_2 + 1;
+  int szE2_3 = N - 2;
+
+  int offE3 = offE2_3 + szE2_3 + 1;
+  int szE3 = N - 1;
+
+  // Left start <-> Right recursion
+  Interval i7(offE1, 1, offE1 + szE1);
+  MultiInterval mi7;
+  mi7.addInter(i7);
+  Set s7 = createSet(mi7);
+  LMap lm1;
+  lm1.addGO(1, offV3 - offE1);
+  LMap lm2;
+  lm2.addGO(1, offV1 - offE1);
+  PWLMap mapE1f;
+  mapE1f.addSetLM(s7, lm1);
+  PWLMap mapE1u;
+  mapE1u.addSetLM(s7, lm2);
+  SetEdge E1("E1", 1, mapE1f, mapE1u, 0);
+ 
+  // Recursion
+  Interval i8(offE2_1, 1, offE2_1 + szE2_1);
+  MultiInterval mi8;
+  mi8.addInter(i8);
+  Set s8 = createSet(mi8);
+  LMap lm3;
+  lm3.addGO(1, offV2 - offE2_1);
+  LMap lm4;
+  lm4.addGO(1, offV1 - offE2_1);
+
+  Interval i9(offE2_2, 1, offE2_2 + szE2_2);
+  MultiInterval mi9;
+  mi9.addInter(i9);
+  Set s9 = createSet(mi9);
+  LMap lm5;
+  lm5.addGO(1, offV2 - offE2_2);
+  LMap lm6;
+  lm6.addGO(1, offV1 - offE2_2 + 1);
+
+  Interval i10(offE2_3, 1, offE2_3 + szE2_3);
+  MultiInterval mi10;
+  mi10.addInter(i10);
+  Set s10 = createSet(mi10);
+  LMap lm7;
+  lm7.addGO(1, offV2 - offE2_3 + 1);
+  LMap lm8;
+  lm8.addGO(1, offV1 - offE2_3);
+
+  PWLMap mapE2f;
+  mapE2f.addSetLM(s8, lm3);
+  mapE2f.addSetLM(s9, lm5);
+  mapE2f.addSetLM(s10, lm7);
+  PWLMap mapE2u;
+  mapE2u.addSetLM(s8, lm4);
+  mapE2u.addSetLM(s9, lm6);
+  mapE2u.addSetLM(s10, lm8);
+  SetEdge E2("E2", 2, mapE2f, mapE2u, 0);
+
+  // Right start <-> Left recursion
+  Interval i11(offE3, 1, offE3 + szE3);
+  MultiInterval mi11;
+  mi11.addInter(i11);
+  Set s11 = createSet(mi11);
+  LMap lm9;
+  lm9.addGO(1, offV2 - offE3);
+  LMap lm10;
+  lm10.addGO(-1, offV4 + szV4 + offE3);
+  PWLMap mapE3f;
+  mapE3f.addSetLM(s11, lm9);
+  PWLMap mapE3u;
+  mapE3u.addSetLM(s11, lm10);
+  SetEdge E3("E3", 3, mapE3f, mapE3u, 0);
+
+  std::cout << E1 << "\n\n";
+  std::cout << E2 << "\n\n";
+  std::cout << E3 << "\n\n";
+
+  g[e1] = E1; 
+  g[e2] = E2; 
+  g[e3] = E3; 
+
+  MatchingStruct match(g);
+  std::pair<Set, bool> res = match.SBGMatching();
+
+  BOOST_CHECK(std::get<1>(res));
+}
+
+void TestMatching12()
+{
+  int N = 10;
+
+  SBGraph g;
+
+  SetVertexDesc v1 = boost::add_vertex(g); // Right recursion
+  SetVertexDesc v2 = boost::add_vertex(g); // Left recursion
+  SetVertexDesc v3 = boost::add_vertex(g); // Left start
+  SetVertexDesc v4 = boost::add_vertex(g); // Right start
+  SetVertexDesc v5 = boost::add_vertex(g); // Left pred
+  SetVertexDesc v6 = boost::add_vertex(g); // Right pred
+
+  SetEdgeDesc e1;
+  bool b1;
+  boost::tie(e1, b1) = boost::add_edge(v1, v3, g);
+  SetEdgeDesc e2;
+  bool b2;
+  boost::tie(e2, b2) = boost::add_edge(v1, v2, g);
+  SetEdgeDesc e3;
+  bool b3;
+  boost::tie(e3, b3) = boost::add_edge(v2, v4, g);
+  SetEdgeDesc e4;
+  bool b4;
+  boost::tie(e4, b4) = boost::add_edge(v3, v6, g);
+  SetEdgeDesc e5;
+  bool b5;
+  boost::tie(e5, b5) = boost::add_edge(v4, v5, g);
+
+  int offV1 = 1;
+  int szV1 = N - 1;
+
+  int offV2 = offV1 + szV1 + 1; 
+  int szV2 = N - 1;
+
+  int offV3 = offV2 + szV2 + 1;
+  int szV3 = N - 1;
+
+  int offV4 = offV3 + szV3 + 1;
+  int szV4 = N - 1;
+
+  int offV5 = offV4 + szV4 + 1;
+  int szV5 = N - 1;
+
+  int offV6 = offV5 + szV5 + 1;
+  int szV6 = N - 1;
+
+  // Right recursion
+  Interval i1(offV1, 1, offV1 + szV1);
+  MultiInterval mi1;
+  mi1.addInter(i1);
+  Set s1 = createSet(mi1);
+  SetVertex V1("rrec", 1, s1, 0);
+
+  // Left recursion
+  Interval i2(offV2, 1, offV2 + szV2);
+  MultiInterval mi2;
+  mi2.addInter(i2);
+  Set s2 = createSet(mi2);
+  SetVertex V2("lrec", 2, s2, 0);
+
+  // Left start
+  Interval i3(offV3, 1, offV3 + szV3);
+  MultiInterval mi3;
+  mi3.addInter(i3);
+  Set s3 = createSet(mi3);
+  SetVertex V3("lstart", 3, s3, 0);
+
+  // Right start
+  Interval i4(offV4, 1, offV4 + szV4);
+  MultiInterval mi4;
+  mi4.addInter(i4);
+  Set s4 = createSet(mi4);
+  SetVertex V4("rstart", 4, s4, 0);
+
+  // Left pred
+  Interval i5(offV5, 1, offV5 + szV5);
+  MultiInterval mi5;
+  mi5.addInter(i5);
+  Set s5 = createSet(mi5);
+  SetVertex V5("lpred", 5, s5, 0);
+
+  // Right pred
+  Interval i6(offV6, 1, offV6 + szV6);
+  MultiInterval mi6;
+  mi6.addInter(i6);
+  Set s6 = createSet(mi6);
+  SetVertex V6("rpred", 6, s6, 0);
+
+  g[v1] = V1;
+  g[v2] = V2;
+  g[v3] = V3;
+  g[v4] = V4;
+  g[v5] = V5;
+  g[v6] = V6;
+
+  int offE1 = 1;
+  int szE1 = N - 1;
+
+  int offE2_1 = offE1 + szE1 + 1;
+  int szE2_1 = N - 1;
+  
+  int offE2_2 = offE2_1 + szE2_1 + 1;
+  int szE2_2 = N - 2;
+
+  int offE2_3 = offE2_2 + szE2_2 + 1;
+  int szE2_3 = N - 2;
+
+  int offE3 = offE2_3 + szE2_3 + 1;
+  int szE3 = N - 1;
+
+  int offE4 = offE3 + szE3 + 1;
+  int szE4 = N - 1;
+
+  int offE5 = offE4 + szE4 + 1;
+  int szE5 = N - 1;
+
+  // Right start <-> Left recursion
+  Interval i7(offE1, 1, offE1 + szE1);
+  MultiInterval mi7;
+  mi7.addInter(i7);
+  Set s7 = createSet(mi7);
+  LMap lm1;
+  lm1.addGO(1, offV3 - offE1);
+  LMap lm2;
+  lm2.addGO(1, offV1 - offE1);
+  PWLMap mapE1f;
+  mapE1f.addSetLM(s7, lm1);
+  PWLMap mapE1u;
+  mapE1u.addSetLM(s7, lm2);
+  SetEdge E1("E1", 1, mapE1f, mapE1u, 0);
+ 
+  // Recursion
+  Interval i8(offE2_1, 1, offE2_1 + szE2_1);
+  MultiInterval mi8;
+  mi8.addInter(i8);
+  Set s8 = createSet(mi8);
+  LMap lm3;
+  lm3.addGO(1, offV2 - offE2_1);
+  LMap lm4;
+  lm4.addGO(1, offV1 - offE2_1);
+
+  Interval i9(offE2_2, 1, offE2_2 + szE2_2);
+  MultiInterval mi9;
+  mi9.addInter(i9);
+  Set s9 = createSet(mi9);
+  LMap lm5;
+  lm5.addGO(1, offV2 - offE2_2);
+  LMap lm6;
+  lm6.addGO(1, offV1 - offE2_2 + 1);
+
+  Interval i10(offE2_3, 1, offE2_3 + szE2_3);
+  MultiInterval mi10;
+  mi10.addInter(i10);
+  Set s10 = createSet(mi10);
+  LMap lm7;
+  lm7.addGO(1, offV2 - offE2_3 + 1);
+  LMap lm8;
+  lm8.addGO(1, offV1 - offE2_3);
+
+  PWLMap mapE2f;
+  mapE2f.addSetLM(s8, lm3);
+  mapE2f.addSetLM(s9, lm5);
+  mapE2f.addSetLM(s10, lm7);
+  PWLMap mapE2u;
+  mapE2u.addSetLM(s8, lm4);
+  mapE2u.addSetLM(s9, lm6);
+  mapE2u.addSetLM(s10, lm8);
+  SetEdge E2("E2", 2, mapE2f, mapE2u, 0);
+
+  // Left start <-> Recursion
+  Interval i11(offE3, 1, offE3 + szE3);
+  MultiInterval mi11;
+  mi11.addInter(i11);
+  Set s11 = createSet(mi11);
+  LMap lm9;
+  lm9.addGO(1, offV2 - offE3);
+  LMap lm10;
+  lm10.addGO(-1, offV4 + szV4 + offE3);
+  PWLMap mapE3f;
+  mapE3f.addSetLM(s11, lm9);
+  PWLMap mapE3u;
+  mapE3u.addSetLM(s11, lm10);
+  SetEdge E3("E3", 3, mapE3f, mapE3u, 0);
+
+  // Left start <-> Right pred
+  Interval i12(offE4, 1, offE4 + szE4);
+  MultiInterval mi12;
+  mi12.addInter(i12);
+  Set s12 = createSet(mi12);
+  LMap lm11;
+  lm11.addGO(1, offV3 - offE4);
+  LMap lm12;
+  lm12.addGO(1, offV6 - offE4);
+  PWLMap mapE4f;
+  mapE4f.addSetLM(s12, lm11);
+  PWLMap mapE4u;
+  mapE4u.addSetLM(s12, lm12);
+  SetEdge E4("E4", 4, mapE4f, mapE4u, 0);
+
+  // Right start <-> Left pred
+  Interval i13(offE5, 1, offE5 + szE5);
+  MultiInterval mi13;
+  mi13.addInter(i13);
+  Set s13 = createSet(mi13);
+  LMap lm13;
+  lm13.addGO(-1, offV5 + szV5 + offE5);
+  LMap lm14;
+  lm14.addGO(-1, offV4 + szV4 + offE5);
+  PWLMap mapE5f;
+  mapE5f.addSetLM(s13, lm13);
+  PWLMap mapE5u;
+  mapE5u.addSetLM(s13, lm14);
+  SetEdge E5("E5", 5, mapE5f, mapE5u, 0);
+
   std::cout << E1 << "\n\n";
   std::cout << E2 << "\n\n";
   std::cout << E3 << "\n\n";
   std::cout << E4 << "\n\n";
   std::cout << E5 << "\n\n";
 
-  g[e1] = E1; 
-  g[e2] = E2; 
-  g[e3] = E3; 
-  g[e4] = E4; 
-  g[e5] = E5; 
+  g[e1] = E1;
+  g[e2] = E2;
+  g[e3] = E3;
+  g[e4] = E4;
+  g[e5] = E5;
 
   MatchingStruct match(g);
   std::pair<Set, bool> res = match.SBGMatching();
@@ -6224,6 +6614,7 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
   //framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
 
+  /*
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching3));
@@ -6234,6 +6625,9 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching8));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching9));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching10));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching11));
+  */
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching12));
 
   return 0;
 }
