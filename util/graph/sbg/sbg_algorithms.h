@@ -30,9 +30,13 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
 struct MatchingStruct{
   MatchingStruct(SBGraph g);
 
+  void offsetMaps(PWLMap sideMap);
+  void shortPaths(PWLMap sideMap);
   void directedMinReach(PWLMap sideMap);
-  Set getManyToOne();
-  Set SBGMatchingStep(Set E);
+  Set SBGMatchingShortStep(Set E);
+  Set SBGMatchingMinStep(Set E);
+  void SBGMatchingShort();
+  void SBGMatchingMin();
   std::pair<Set, bool> SBGMatching();
 
   private:
@@ -46,8 +50,8 @@ struct MatchingStruct{
   Set allEdges;
   Set Ed; // Allowed edges in each step
   Set allVertices;
-  int nmax;
-  OrdCT<INT> maxV;
+  int nmax; // Number of set-vertices of the SBG
+  OrdCT<INT> maxV; // Value of maximum vertex of the SBG
 
   PWLMap mapF; // "Left" maps
   PWLMap mapU; // "Right" maps
@@ -62,6 +66,14 @@ struct MatchingStruct{
   PWLMap semap; // Edge's successors map
   PWLMap rmap; // Representatives map
   PWLMap mmap; // Offset map
+
+  // Auxiliary maps and sets, that are used to offset vertices for the search
+  Set VSide;
+  PWLMap mmapSide;
+  PWLMap mmapSideInv;
+  PWLMap VmapSide;
+  PWLMap mapDSide;
+  PWLMap mapBSide;
 
   void debugInit();
   void debugStep();
