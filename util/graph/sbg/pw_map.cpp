@@ -1355,15 +1355,16 @@ PW_TEMP_TYPE PW_TEMP_TYPE::reduceMapN(int dim)
 
             // Partition of the interval
             for (int k = 1; k <= off; k++) {
-              REAL_IMP newoff = loint + k + *ito - 1;
-              if (*ito > 0)
-                newoff = hiint + k + *ito - 1;
-
-              LM_IMP newlmap = (*itlm).replace(0, newoff, dim);
               INTER_IMP newinter(loint + k - 1, off, hiint);
               MI_IMP auxas = mi.replace(newinter, dim);
               SET_IMP newset;
               newset.addAtomSet(auxas);
+
+              REAL_IMP newoff = newinter.lo() + *ito;
+              if (*ito > 0)
+                newoff = newinter.hi() + *ito;
+
+              LM_IMP newlmap = (*itlm).replace(0, newoff, dim);
 
               itnews = news.insert(itnews, newset);
               ++itnews;
@@ -1428,7 +1429,6 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf(int n)
         res = res.compPW(res);
 
         for (int j = 1; j <= res.ndim(); ++j) res = res.reduceMapN(j);
-        //res = res.normalize();
       }
       while (!oldRes.equivalentPW(res));
     }
