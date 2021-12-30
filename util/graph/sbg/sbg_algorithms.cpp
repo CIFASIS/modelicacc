@@ -129,11 +129,14 @@ PWLMap updateMap(Set V, PWLMap currentMap, PWLMap newMap, PWLMap offMap)
 }
 
 // Solve recursion in constant time. For recursive paths
-std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentSEmap, PWLMap currentRmap)
+std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap currentSEmap, PWLMap currentRmap, PWLMap m_map)
 {
   // *** Initialization
+  std::cout << "ER: " << ER << "\n\n";
 
   PWLMap Vid(V);
+
+  PWLMap m_mapInv = m_map.minInv(m_map.image());
 
   PWLMap newSmap;
   PWLMap newRmap; // Minimum reachable map
@@ -162,7 +165,7 @@ std::pair<PWLMap, PWLMap> recursion(int n, Set ER, Set V, Set E, PWLMap Emap, PW
   PWLMap tildeB = map_B.restrictMap(ERplus);
   PWLMap smapPlus = tildeD.compPW(tildeB.minInv(tildeB.image())); // Successor map through ERplus
 
-  Set finalsRec = map_D.image(semapNth.image(ER));
+  Set finalsRec = map_B.image(semapNth.image(ER));
   PWLMap finalsRecMap(finalsRec);
   smapPlus = finalsRecMap.combine(smapPlus); // Preserve the successors of the final vertices
 
@@ -201,7 +204,7 @@ PWLMap minReach1(Set V, PWLMap map_D, PWLMap map_B, PWLMap currentSmap, PWLMap c
 }
 
 // Minimum reachable in several steps
-std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B)
+std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap Vmap, PWLMap Emap, PWLMap map_D, PWLMap map_B, PWLMap m_map)
 {
   // *** Initialization
 
@@ -226,6 +229,8 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
 
   PWLMap Eid(E);
   PWLMap newSEmap = Eid;
+
+  PWLMap m_mapInv = m_map.minInv(m_map.image());
 
   Set Vc; // Vertices that changed its successor
   Set Ec; // Edges that changed its successor
@@ -270,7 +275,7 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
         Set succSubsetEdge = Emap.image(newSEmap.image(ER));
 
         if (oldSubsetEdge.cap(succSubsetEdge).empty()) {
-          std::pair<PWLMap, PWLMap> p = recursion(n, ER, V, E, Emap, map_D, map_B, newSmap, newSEmap, newRmap);
+          std::pair<PWLMap, PWLMap> p = recursion(n, ER, V, E, Emap, map_D, map_B, newSmap, newSEmap, newRmap, m_map);
           newRmap = std::get<1>(p);
         }
       }
@@ -388,8 +393,9 @@ void MatchingStruct::shortPaths(PWLMap sideMap)
 {
   offsetMaps(sideMap);
 
-  Set unmatchedLeft = allVertices.diff(sideMap.image()).cap(unmatchedV);
-  Set unmatchedRight = sideMap.image().cap(unmatchedV);
+  Set sideImage = mmapSide.image(sideMap.image());
+  Set unmatchedLeft = VSide.diff(sideImage).cap(mmapSide.image(unmatchedV));
+  Set unmatchedRight = sideImage.cap(mmapSide.image(unmatchedV));
   Set reachUnmatchedLeft = unmatchedLeft; // Vertices that reach unmatched left vertices
   Set reachULLast = unmatchedLeft;  // Vertices that reach unmatched left vertices in the last step
 
@@ -398,9 +404,10 @@ void MatchingStruct::shortPaths(PWLMap sideMap)
 
   int n = 0;
   do {
-    Set EReachULLast = mapD.restrictMap(Ed).preImage(reachULLast); // Edges that reach reachLULast
-    Set reachULLast = mapB.restrictMap(Ed).image(EReachULLast).diff(reachUnmatchedLeft); // Vertices that aren't in reachUnmatchedLeft and have edges pointing to reachLULast
-    newSmap = minReach1(VSide, mapDSide.restrictMap(Ed), mapBSide.restrictMap(Ed), newSmap, newRmap);
+    Set EReachULLast = mapDSide.restrictMap(Ed).preImage(reachULLast); // Edges that reach reachLULast
+    Set reachULLast = mapBSide.restrictMap(Ed).image(EReachULLast).diff(reachUnmatchedLeft); // Vertices that aren't in reachUnmatchedLeft and have edges pointing to reachULLast
+    PWLMap auxSmap = minReach1(VSide, mapDSide.restrictMap(Ed), mapBSide.restrictMap(Ed), newSmap, newRmap);
+    newSmap = auxSmap.restrictMap(reachULLast).combine(newSmap);
     newRmap = newRmap.compPW(newSmap);
 
     reachUnmatchedLeft = reachUnmatchedLeft.cup(reachULLast);
@@ -418,7 +425,7 @@ void MatchingStruct::shortPaths(PWLMap sideMap)
 void MatchingStruct::directedMinReach(PWLMap sideMap)
 {
   offsetMaps(sideMap);
-  std::tuple<PWLMap, PWLMap, PWLMap> t = minReachable(nmax, VSide, Ed, VmapSide, Emap, mapDSide, mapBSide);
+  std::tuple<PWLMap, PWLMap, PWLMap> t = minReachable(nmax, VSide, Ed, VmapSide, Emap, mapDSide, mapBSide, mmapSide);
   PWLMap directedSmap = std::get<0>(t);
   smap = mmapSideInv.compPW(directedSmap.compPW(mmapSide));
   semap = std::get<1>(t);
@@ -579,7 +586,6 @@ void MatchingStruct::SBGMatchingShort()
       auxEd = SBGMatchingShortStep(allEdges.diff(takeOut));
       takeOut = takeOut.cup(auxEd);
       diffMatched = U.diff(matchedV);
-      std::cout << "auxEd: " << auxEd << "\n\n";
     }
     while (!diffMatched.empty() && !auxEd.empty());
   }
@@ -588,8 +594,11 @@ void MatchingStruct::SBGMatchingShort()
   if (diffMatched.empty())
     return;
 
+  std::cout << "matchedshort: " << matchedE << "\n\n";
+
   // Didn't find any path, use minreach
-  SBGMatchingMin();
+  if (takeOut.empty())
+    SBGMatchingMin();
 }
 
 void MatchingStruct::SBGMatchingMin()
@@ -609,11 +618,9 @@ void MatchingStruct::SBGMatchingMin()
   }
   while (!diffMatched.empty() && !takeOut.empty());
 
-  if (diffMatched.empty())
-    return;
+  std::cout << "matchedmin: " << matchedE << "\n\n";
 
-  // Didn't find any path, return to search short paths
-  SBGMatchingShort();
+  return;
 }
 
 std::pair<Set, bool> MatchingStruct::SBGMatching()

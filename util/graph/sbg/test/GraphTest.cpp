@@ -6275,7 +6275,7 @@ void TestMatching11()
 
 void TestMatching12()
 {
-  int N = 10;
+  int N = 1000000;
 
   SBGraph g;
 
@@ -6614,7 +6614,6 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
   //framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
 
-  /*
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching3));
@@ -6626,7 +6625,6 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching9));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching10));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching11));
-  */
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching12));
 
   return 0;
