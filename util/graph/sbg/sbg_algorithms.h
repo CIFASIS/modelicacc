@@ -33,8 +33,7 @@ struct MatchingStruct{
   void offsetMaps(PWLMap sideMap);
   void shortPaths(PWLMap sideMap);
   void directedMinReach(PWLMap sideMap);
-  Set SBGMatchingShortStep(Set E);
-  Set SBGMatchingMinStep(Set E);
+  Set SBGMatchingStep(Set E, void (MatchingStruct::*pathFinder)(PWLMap sideMap));
   void SBGMatchingShort();
   void SBGMatchingMin();
   std::pair<Set, bool> SBGMatching();
