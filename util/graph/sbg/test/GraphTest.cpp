@@ -6502,6 +6502,7 @@ void TestMatching12()
 
   MatchingStruct match(g);
   std::pair<Set, bool> res = match.SBGMatching();
+  std::cout << std::get<0>(res) << "\n\n";
 
   BOOST_CHECK(std::get<1>(res));
 }
@@ -6511,7 +6512,7 @@ void TestMatching12()
 test_suite *init_unit_test_suite(int, char *[])
 {
   framework::master_test_suite().p_name.value = "Set Based Graphs";
-
+/*
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation3));
@@ -6625,6 +6626,7 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching9));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching10));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching11));
+  */
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching12));
 
   return 0;

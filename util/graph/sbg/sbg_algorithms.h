@@ -30,10 +30,12 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
 struct MatchingStruct{
   MatchingStruct(SBGraph g);
 
+  Set getManyToOne();
   void offsetMaps(PWLMap sideMap);
-  void shortPaths(PWLMap sideMap);
+  void shortPaths(Set U);
   void directedMinReach(PWLMap sideMap);
-  Set SBGMatchingStep(Set E, void (MatchingStruct::*pathFinder)(PWLMap sideMap));
+  void SBGMatchingShortStep(Set E);
+  void SBGMatchingMinStep(Set E);
   void SBGMatchingShort();
   void SBGMatchingMin();
   std::pair<Set, bool> SBGMatching();

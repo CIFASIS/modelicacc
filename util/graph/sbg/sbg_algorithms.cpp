@@ -371,6 +371,40 @@ MatchingStruct::MatchingStruct(SBGraph garg)
   mapBSide = emptyMap;
 }
 
+// Find sub-set edges with a 1:N connection in some dimension
+Set MatchingStruct::getManyToOne()
+{
+  Set res;
+
+  PWLMap auxD = mapD.atomize();
+
+  OrdCT<Set>::iterator itdom = auxD.dom_ref().begin();
+  OrdCT<LMap>::iterator itlmap = auxD.lmap_ref().begin();
+
+  while (itdom != auxD.dom_ref().end()) {
+    BOOST_FOREACH (MultiInterval as, (*itdom).asets()) {
+      Set sas = createSet(as).cap(Ed);
+      PWLMap auxmap;
+      auxmap.addSetLM(sas, *itlmap);
+      Set oneVertex = auxmap.image();
+      Set NVertices = mapB.image(sas);
+      if (NVertices.card() > oneVertex.card()) { // N:1 connection in some dimension
+        Set unmatchedNVertices = NVertices.diff(matchedV);
+        Set unmatchedOut = mapB.preImage(unmatchedNVertices).cap(sas);
+        Set imageOneVertex = mapD.image(unmatchedOut);
+
+        if (unmatchedOut.card() > imageOneVertex.card())
+          res = res.cup(unmatchedOut);
+      }
+    } 
+
+    ++itdom;
+    ++itlmap;
+  }
+
+  return res;
+}
+
 void MatchingStruct::offsetMaps(PWLMap sideMap)
 {
   // Offset unmatched vertices on the opposite side of the search
@@ -389,34 +423,30 @@ void MatchingStruct::offsetMaps(PWLMap sideMap)
   mapBSide = mmapSide.compPW(mapB);
 }
 
-void MatchingStruct::shortPaths(PWLMap sideMap)
+void MatchingStruct::shortPaths(Set U)
 {
-  offsetMaps(sideMap);
+  PWLMap idMap(allVertices);
+  
+  smap = idMap;
+  rmap = idMap;
 
-  Set sideImage = mmapSide.image(sideMap.image());
-  Set unmatchedLeft = VSide.diff(sideImage).cap(mmapSide.image(unmatchedV));
-  Set unmatchedRight = sideImage.cap(mmapSide.image(unmatchedV));
-  Set reachUnmatchedLeft = unmatchedLeft; // Vertices that reach unmatched left vertices
-  Set reachULLast = unmatchedLeft;  // Vertices that reach unmatched left vertices in the last step
+  Set C = U; // Vertices that reach U
+  int k = 0;
 
-  PWLMap newSmap(VSide);
-  PWLMap newRmap(VSide);
+  Set P;
 
-  int n = 0;
   do {
-    Set EReachULLast = mapDSide.restrictMap(Ed).preImage(reachULLast); // Edges that reach reachLULast
-    Set reachULLast = mapBSide.restrictMap(Ed).image(EReachULLast).diff(reachUnmatchedLeft); // Vertices that aren't in reachUnmatchedLeft and have edges pointing to reachULLast
-    PWLMap auxSmap = minReach1(VSide, mapDSide.restrictMap(Ed), mapBSide.restrictMap(Ed), newSmap, newRmap);
-    newSmap = auxSmap.restrictMap(reachULLast).combine(newSmap);
-    newRmap = newRmap.compPW(newSmap);
+    Set P = mapB.image(mapD.preImage(C)).diff(C);
+    Set EP = mapD.preImage(C).cap(mapB.preImage(P));
+    PWLMap mapBP = mapB.restrictMap(EP);
+    PWLMap smapP = mapD.compPW(mapBP.minInv(mapBP.image()));
+    smap = smapP.combine(smap);
+    PWLMap rmapP = rmap.compPW(smapP);
+    rmap = rmapP.combine(rmap);
 
-    reachUnmatchedLeft = reachUnmatchedLeft.cup(reachULLast);
-    n++;
+    k++;
   }
-  while(!unmatchedRight.subseteq(reachUnmatchedLeft) && !reachULLast.empty() && n < nmax);
-
-  smap = mmapSideInv.compPW(newSmap.compPW(mmapSide));
-  rmap = mmapSideInv.compPW(newRmap.compPW(mmapSide));
+  while (k < nmax || !P.empty()); 
 
   std::cout << "smapshort: " << smap << "\n\n";
   std::cout << "rmapshort: " << rmap << "\n\n";
@@ -436,7 +466,7 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
   std::cout << "rmapmin: " << rmap << "\n\n";
 }
 
-Set MatchingStruct::SBGMatchingStep(Set E, void (MatchingStruct::*pathFinder)(PWLMap sideMap))
+void MatchingStruct::SBGMatchingShortStep(Set E)
 {
   Interval i(0, 1, 0);
   MultiInterval mi;
@@ -449,7 +479,67 @@ Set MatchingStruct::SBGMatchingStep(Set E, void (MatchingStruct::*pathFinder)(PW
 
   // *** Forward direction
 
-  (this->*pathFinder)(mapU);
+  shortPaths(unmatchedV.cap(F));
+
+  // Get edges that reach unmatched vertices in forward direction
+  //Set tildeV = rmap.preImage(F.cap(unmatchedV));
+  //Set tildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
+
+  // Leave edges in paths that reach unmatched left vertices
+  PWLMap auxB = mapB.restrictMap(mapD.preImage(smap.filterMap(notEqId).image()));
+  Ed = smap.compPW(auxB).diffMap(mapD).preImage(zero); // Edges that connect vertices with successors
+  //Ed = edgesInPaths.cap(tildeEd);
+
+  // *** Backward direction
+
+  PWLMap auxMapD = mapD;
+  mapD = mapB;
+  mapB = auxMapD;
+  shortPaths(unmatchedV.cap(U));
+
+  // Get edges that reach unmatched vertices in backward direction
+  //tildeV = rmap.preImage(U.cap(unmatchedV));
+  //tildeEd = mapU.preImage(tildeV).cup(mapF.preImage(tildeV));
+
+  // Leave edges in paths that reach unmatched left and right vertices
+  auxB = mapB.restrictMap(mapD.preImage(smap.filterMap(notEqId).image()));
+  Set edgesInPaths = smap.compPW(auxB).diffMap(mapD).preImage(zero); // Edges that connect vertices with successors
+  Ed = Ed.cap(edgesInPaths);
+
+  mapB = mapD;
+  mapD = auxMapD;
+
+  // *** Revert matched and unmatched edges in augmenting paths
+  PWLMap mapDEd = mapD.restrictMap(Ed);
+  PWLMap mapBEd = mapB.restrictMap(Ed);
+  mapD = mapBEd.combine(mapD);
+  mapB = mapDEd.combine(mapB);
+
+  // *** Update matched edges and vertices
+  matchedE = mapD.preImage(U);
+  matchedV = mapD.image(matchedE);
+  matchedV = matchedV.cup(mapB.image(matchedE));
+
+  unmatchedV = allVertices.diff(matchedV);
+  PWLMap idUnmatched(unmatchedV);
+
+  debugStep();
+}
+
+void MatchingStruct::SBGMatchingMinStep(Set E)
+{
+  Interval i(0, 1, 0);
+  MultiInterval mi;
+  for (int j = 0; j < mapF.ndim(); j++)
+    mi.addInter(i);
+  Set zero = createSet(mi);
+
+  Ed = E;
+  unmatchedV = allVertices.diff(matchedV);
+
+  // *** Forward direction
+
+  directedMinReach(mapU);
 
   // Get edges that reach unmatched vertices in forward direction
   Set tildeV = rmap.preImage(F.cap(unmatchedV));
@@ -465,7 +555,7 @@ Set MatchingStruct::SBGMatchingStep(Set E, void (MatchingStruct::*pathFinder)(PW
   PWLMap auxMapD = mapD;
   mapD = mapB;
   mapB = auxMapD;
-  (this->*pathFinder)(mapF);
+  directedMinReach(mapF);
 
   // Get edges that reach unmatched vertices in backward direction
   tildeV = rmap.preImage(U.cap(unmatchedV));
@@ -501,53 +591,37 @@ Set MatchingStruct::SBGMatchingStep(Set E, void (MatchingStruct::*pathFinder)(PW
   mmap = idUnmatched.combine(mmap);
 
   debugStep();
-
-  return Ed;
 }
 
 void MatchingStruct::SBGMatchingShort()
 {
-
-  Set takeOut, emptySet, auxEd, diffMatched;
+  Set diffMatched, allowedEdges = allEdges.diff(getManyToOne());
 
   do {
-    takeOut = emptySet;
-
-    do {
-      auxEd = SBGMatchingStep(allEdges.diff(takeOut), &MatchingStruct::shortPaths);
-      takeOut = takeOut.cup(auxEd);
-      diffMatched = U.diff(matchedV);
-    }
-    while (!diffMatched.empty() && !auxEd.empty());
+    SBGMatchingShortStep(allowedEdges);
+    diffMatched = U.diff(matchedV);
   }
-  while (!diffMatched.empty() && !takeOut.empty());
+  while (!diffMatched.empty() && !Ed.empty());
+
+  std::cout << "matchedshort: " << matchedE << "\n\n";
 
   if (diffMatched.empty())
     return;
 
-  std::cout << "matchedshort: " << matchedE << "\n\n";
-
   // Didn't find any path, use minreach
-  if (takeOut.empty())
-    SBGMatchingMin();
+  SBGMatchingMin();
 }
 
 void MatchingStruct::SBGMatchingMin()
 {
-
-  Set takeOut, emptySet, auxEd, diffMatched;
+  Set diffMatched;
 
   do {
-    takeOut = emptySet;
-
-    do {
-      auxEd = SBGMatchingStep(allEdges.diff(takeOut), &MatchingStruct::directedMinReach);
-      takeOut = takeOut.cup(auxEd);
-      diffMatched = U.diff(matchedV);
-    }
-    while (!diffMatched.empty() && !auxEd.empty());
+    SBGMatchingMinStep(allEdges);
+    diffMatched = U.diff(matchedV);
+    std::cout << diffMatched << "\n\n";
   }
-  while (!diffMatched.empty() && !takeOut.empty());
+  while (!diffMatched.empty() && !Ed.empty());
 
   std::cout << "matchedmin: " << matchedE << "\n\n";
 
