@@ -423,9 +423,11 @@ void MatchingStruct::offsetMaps(PWLMap sideMap)
   mapBSide = mmapSide.compPW(mapB);
 }
 
-void MatchingStruct::shortPaths(Set U)
+void MatchingStruct::shortPaths(Set U, Set E)
 {
   PWLMap idMap(allVertices);
+  PWLMap map_D = mapD.restrictMap(E);
+  PWLMap map_B = mapB.restrictMap(E);
   
   smap = idMap;
   rmap = idMap;
@@ -436,14 +438,15 @@ void MatchingStruct::shortPaths(Set U)
   Set P;
 
   do {
-    Set P = mapB.image(mapD.preImage(C)).diff(C);
-    Set EP = mapD.preImage(C).cap(mapB.preImage(P));
-    PWLMap mapBP = mapB.restrictMap(EP);
-    PWLMap smapP = mapD.compPW(mapBP.minInv(mapBP.image()));
+    Set P = map_B.image(map_D.preImage(C)).diff(C);
+    Set EP = map_D.preImage(C).cap(map_B.preImage(P));
+    PWLMap mapBP = map_B.restrictMap(EP);
+    PWLMap smapP = map_D.compPW(mapBP.minInv(mapBP.image()));
     smap = smapP.combine(smap);
     PWLMap rmapP = rmap.compPW(smapP);
     rmap = rmapP.combine(rmap);
 
+    C = C.cup(P);
     k++;
   }
   while (k < nmax || !P.empty()); 
@@ -479,7 +482,7 @@ void MatchingStruct::SBGMatchingShortStep(Set E)
 
   // *** Forward direction
 
-  shortPaths(unmatchedV.cap(F));
+  shortPaths(unmatchedV.cap(F), Ed);
 
   // Get edges that reach unmatched vertices in forward direction
   //Set tildeV = rmap.preImage(F.cap(unmatchedV));
@@ -495,7 +498,7 @@ void MatchingStruct::SBGMatchingShortStep(Set E)
   PWLMap auxMapD = mapD;
   mapD = mapB;
   mapB = auxMapD;
-  shortPaths(unmatchedV.cap(U));
+  shortPaths(unmatchedV.cap(U), Ed);
 
   // Get edges that reach unmatched vertices in backward direction
   //tildeV = rmap.preImage(U.cap(unmatchedV));
@@ -607,6 +610,16 @@ void MatchingStruct::SBGMatchingShort()
 
   if (diffMatched.empty())
     return;
+
+  // Update mmap for matched vertices
+  PWLMap auxM = mmap.restrictMap(matchedV);
+  auxM = auxM.offsetImageMap(maxV);
+  auxM = auxM.offsetImageMap(maxV);
+  mmap = auxM.combine(mmap);
+
+  unmatchedV = allVertices.diff(matchedV);
+  PWLMap idUnmatched(unmatchedV);
+  mmap = idUnmatched.combine(mmap);
 
   // Didn't find any path, use minreach
   SBGMatchingMin();

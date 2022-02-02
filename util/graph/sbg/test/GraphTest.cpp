@@ -4315,7 +4315,7 @@ void Test2D()
 // Taken from "Set-Based Graph Methods for Fast Equation Sorting in Large DAE Systems Example"
 void TestMatching1()
 {
-  float n = 100;
+  float n = 10000;
 
   // Equations
 
@@ -5224,7 +5224,7 @@ void TestMatching4()
 // and has a value lower to all the other vertices of the left side
 void TestMatching5()
 {
-  int N = 10;
+  int N = 100000;
 
   SBGraph g;
 
@@ -5700,7 +5700,7 @@ void TestMatching8()
 // of the matching
 void TestMatching9()
 {
-  int N = 7;
+  int N = 10000;
 
   SBGraph g;
 
@@ -6275,7 +6275,7 @@ void TestMatching11()
 
 void TestMatching12()
 {
-  int N = 1000000;
+  int N = 10000;
 
   SBGraph g;
 
@@ -6512,7 +6512,7 @@ void TestMatching12()
 test_suite *init_unit_test_suite(int, char *[])
 {
   framework::master_test_suite().p_name.value = "Set Based Graphs";
-/*
+
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation3));
@@ -6626,7 +6626,6 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching9));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching10));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching11));
-  */
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching12));
 
   return 0;

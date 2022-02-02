@@ -32,7 +32,7 @@ struct MatchingStruct{
 
   Set getManyToOne();
   void offsetMaps(PWLMap sideMap);
-  void shortPaths(Set U);
+  void shortPaths(Set U, Set E);
   void directedMinReach(PWLMap sideMap);
   void SBGMatchingShortStep(Set E);
   void SBGMatchingMinStep(Set E);
