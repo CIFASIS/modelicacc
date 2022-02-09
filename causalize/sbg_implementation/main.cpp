@@ -19,6 +19,8 @@
 
 #include <boost/variant/get.hpp>
 #include <getopt.h>
+#include <chrono>
+#include <bits/stdc++.h>
 
 #include <causalize/sbg_implementation/matching_graph_builder.h>
 #include <mmo/mmo_class.h>
@@ -104,7 +106,6 @@ int main(int argc, char **argv)
   StateVariablesFinder setup_state_var(mmo_class);
   setup_state_var.findStateVariables();
 
-
   MatchingGraphBuilder matching_graph_builder(mmo_class);
 
   SBG::SBGraph matching_graph = matching_graph_builder.makeGraph();
@@ -113,7 +114,18 @@ int main(int argc, char **argv)
   printer.printGraph(output_path+mmo_class.name()+".dot");
   
   MatchingStruct match(matching_graph);
+
+  auto start = chrono::high_resolution_clock::now();
   pair<SBG::Set, bool> res = match.SBGMatching();
+  auto end = chrono::high_resolution_clock::now();
+
+  double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+  time_taken *= 1e-9;
+
+  std::cout << std::endl;
+  std::cout << "Time taken by program is: " << fixed << time_taken << setprecision(9);
+  std::cout << " sec" << std::endl << std::endl;
+
   cout << "Generated matching:\n";
   cout << get<0>(res) << "\n\n";
   if (get<1>(res))

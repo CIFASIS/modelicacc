@@ -818,8 +818,6 @@ void TestSetCreation1()
   mi1.addInter(i2);
   mi1.addInter(i3);
 
-  MultiInterval as1(mi1);
-
   Interval i4(0, 1, 10);
 
   MultiInterval mi2;
@@ -827,15 +825,13 @@ void TestSetCreation1()
   mi2.addInter(i4);
   mi2.addInter(i4);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   UNORD_MI res2;
-  res2.insert(as1);
-  res2.insert(as2);
+  res2.insert(mi1);
+  res2.insert(mi2);
 
   Set s2(res2);
 
@@ -849,20 +845,16 @@ void TestCompSets1()
   MultiInterval mi1;
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Set s1;
-  s1.addAtomSet(as1);
+  s1.addAtomSet(mi1);
 
   Interval i2(0, 1, 20);
 
   MultiInterval mi2;
   mi2.addInter(i2);
 
-  MultiInterval as2(mi2);
-
   Set s2;
-  s2.addAtomSet(as2);
+  s2.addAtomSet(mi2);
 
   BOOST_REQUIRE_MESSAGE(s1 != s2, "\n" << s1 << "\nshouldn't be equal to\n" << s2);
 }
@@ -878,10 +870,8 @@ void TestSetEmpty1()
   mi3.addInter(i8);
   mi3.addInter(i9);
 
-  MultiInterval as3(mi3);
-
   Set s2;
-  s2.addAtomSet(as3);
+  s2.addAtomSet(mi3);
 
   BOOST_REQUIRE_MESSAGE(!s2.empty(), "\n" << s2 << " shouldn't be empty");
 }
@@ -906,17 +896,14 @@ void TestAddASets1()
   mi2.addInter(i5);
   mi2.addInter(i6);
 
-  MultiInterval as1(mi1);
-  MultiInterval as2(mi2);
-
   Set s1;
 
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   UNORD_MI aux;
   UNORD_MI::iterator itaux = aux.begin();
-  aux.insert(itaux, as1);
+  aux.insert(itaux, mi1);
 
   Set s2(aux);
 
@@ -947,11 +934,9 @@ void TestSetCap2()
   mi1.addInter(i2);
   mi1.addInter(i3);
 
-  MultiInterval as1(mi1);
-
   Set s2;
 
-  s2.addAtomSet(as1);
+  s2.addAtomSet(mi1);
 
   Set res1 = s1.cap(s2);
   Set res2 = s2.cap(s1);
@@ -980,12 +965,9 @@ void TestSetCap3()
   mi2.addInter(i5);
   mi2.addInter(i6);
 
-  MultiInterval as1(mi1);
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   Interval i7(0, 1, Inf);
   Interval i8(20, 3, 50);
@@ -996,10 +978,8 @@ void TestSetCap3()
   mi3.addInter(i8);
   mi3.addInter(i9);
 
-  MultiInterval as3(mi3);
-
   Set s2;
-  s2.addAtomSet(as3);
+  s2.addAtomSet(mi3);
 
   Set res1 = s1.cap(s2);
   Set res2 = s2.cap(s1);
@@ -1017,13 +997,10 @@ void TestSetCap3()
   mi5.addInter(i5);
   mi5.addInter(i9);
 
-  MultiInterval as4(mi4);
-  MultiInterval as5(mi5);
-
   Set res3;
 
-  res3.addAtomSet(as4);
-  res3.addAtomSet(as5);
+  res3.addAtomSet(mi4);
+  res3.addAtomSet(mi5);
 
   BOOST_REQUIRE_MESSAGE(res1 == res2 && res2 == res3
                         , "\n" << s1 << "\ncap\n" << s2 << "\n=\n" << res1 << "\nExpected: " << res3);
@@ -1038,8 +1015,6 @@ void TestSetCap4()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(15, 1, 20);
 
   MultiInterval mi2;
@@ -1047,11 +1022,9 @@ void TestSetCap4()
   mi2.addInter(i2);
   mi2.addInter(i2);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   Set s2 = s1.cap(s1);
 
@@ -1067,10 +1040,8 @@ void TestSetDiff1()
   mi1.addInter(i1);
   mi1.addInter(i2);
 
-  MultiInterval as1(mi1);
-
   Set s1;
-  s1.addAtomSet(as1);
+  s1.addAtomSet(mi1);
 
   Interval i3(0, 1, 10);
   Interval i4(0, 3, 9);
@@ -1079,10 +1050,8 @@ void TestSetDiff1()
   mi2.addInter(i3);
   mi2.addInter(i4);
 
-  MultiInterval as2(mi2);
-
   Set s2;
-  s2.addAtomSet(as2);
+  s2.addAtomSet(mi2);
 
   Set res1 = s1.diff(s2);
   Set res2;
@@ -1098,19 +1067,15 @@ void TestSetDiff2()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(150, 5, 250);
 
   MultiInterval mi2;
   mi2.addInter(i1);
   mi2.addInter(i2);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   Interval i3(3, 3, 30);
 
@@ -1118,7 +1083,6 @@ void TestSetDiff2()
   mi3.addInter(i3);
   mi3.addInter(i3);
 
-  MultiInterval as3(mi3);
 
   Interval i4(75, 8, 100);
   Interval i5(100, 1, 200);
@@ -1127,11 +1091,9 @@ void TestSetDiff2()
   mi4.addInter(i4);
   mi4.addInter(i5);
 
-  MultiInterval as4(mi4);
-
   Set s2;
-  s2.addAtomSet(as3);
-  s2.addAtomSet(as4);
+  s2.addAtomSet(mi3);
+  s2.addAtomSet(mi4);
 
   Set res1 = s2.diff(s1);
 
@@ -1141,15 +1103,11 @@ void TestSetDiff2()
   mi5.addInter(i4);
   mi5.addInter(i6);
 
-  MultiInterval as5(mi5);
-
   Interval i7(151, 5, 200);
 
   MultiInterval mi6;
   mi6.addInter(i4);
   mi6.addInter(i7);
-
-  MultiInterval as6(mi6);
 
   Interval i8(152, 5, 200);
 
@@ -1157,15 +1115,11 @@ void TestSetDiff2()
   mi7.addInter(i4);
   mi7.addInter(i8);
 
-  MultiInterval as7(mi7);
-
   Interval i9(153, 5, 200);
 
   MultiInterval mi8;
   mi8.addInter(i4);
   mi8.addInter(i9);
-
-  MultiInterval as8(mi8);
 
   Interval i10(154, 5, 200);
 
@@ -1173,14 +1127,12 @@ void TestSetDiff2()
   mi9.addInter(i4);
   mi9.addInter(i10);
 
-  MultiInterval as9(mi9);
-
   Set res2;
-  res2.addAtomSet(as5);
-  res2.addAtomSet(as6);
-  res2.addAtomSet(as7);
-  res2.addAtomSet(as8);
-  res2.addAtomSet(as9);
+  res2.addAtomSet(mi5);
+  res2.addAtomSet(mi6);
+  res2.addAtomSet(mi7);
+  res2.addAtomSet(mi8);
+  res2.addAtomSet(mi9);
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, "\n" << s1 << "\n-\n" << s2 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
@@ -1194,16 +1146,12 @@ void TestSetMin1()
   mi1.addInter(i1);
   mi1.addInter(i2);
 
-  MultiInterval as1(mi1);
-
   Interval i3(20, 20, 80);
   Interval i4(1, 1, 500);
 
   MultiInterval mi2;
   mi2.addInter(i3);
   mi2.addInter(i4);
-
-  MultiInterval as2(mi2);
 
   Interval i5(30, 5, 36);
   Interval i6(42, 3, 57);
@@ -1212,12 +1160,10 @@ void TestSetMin1()
   mi3.addInter(i5);
   mi3.addInter(i6);
 
-  MultiInterval as3(mi3);
-
   Set s;
-  s.addAtomSet(as1);
-  s.addAtomSet(as2);
-  s.addAtomSet(as3);
+  s.addAtomSet(mi1);
+  s.addAtomSet(mi2);
+  s.addAtomSet(mi3);
 
   ORD_INTS res1 = s.minElem();
 
@@ -1236,16 +1182,12 @@ void TestSetMin2()
   mi1.addInter(i1);
   mi1.addInter(i2);
 
-  MultiInterval as1(mi1);
-
   Interval i3(20, 20, 80);
   Interval i4(1, 1, 500);
 
   MultiInterval mi2;
   mi2.addInter(i3);
   mi2.addInter(i4);
-
-  MultiInterval as2(mi2);
 
   Interval i5(30, 5, 36);
   Interval i6(42, 3, 57);
@@ -1254,12 +1196,10 @@ void TestSetMin2()
   mi3.addInter(i5);
   mi3.addInter(i6);
 
-  MultiInterval as3(mi3);
-
   Set s;
-  s.addAtomSet(as1);
-  s.addAtomSet(as2);
-  s.addAtomSet(as3);
+  s.addAtomSet(mi1);
+  s.addAtomSet(mi2);
+  s.addAtomSet(mi3);
 
   ORD_INTS res1 = s.minElem();
 
@@ -1279,16 +1219,12 @@ void TestSetNormalize1()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(11, 1, 20);
 
   MultiInterval mi2;
   mi2.addInter(i1);
   mi2.addInter(i2);
   mi2.addInter(i1);
-
-  MultiInterval as2(mi2);
 
   Interval i3(500, 3, 1000);
 
@@ -1297,8 +1233,6 @@ void TestSetNormalize1()
   mi3.addInter(i3);
   mi3.addInter(i1);
  
-  MultiInterval as3(mi3);
-
   Interval i4(21, 1, 80);
 
   MultiInterval mi4;
@@ -1306,13 +1240,11 @@ void TestSetNormalize1()
   mi4.addInter(i4);
   mi4.addInter(i1);
 
-  MultiInterval as4(mi4);
-
   Set s;
-  s.addAtomSet(as1);
-  s.addAtomSet(as2);
-  s.addAtomSet(as3);
-  s.addAtomSet(as4);
+  s.addAtomSet(mi1);
+  s.addAtomSet(mi2);
+  s.addAtomSet(mi3);
+  s.addAtomSet(mi4);
 
   Set res1 = s.normalize();
 
@@ -1323,11 +1255,9 @@ void TestSetNormalize1()
   mi5.addInter(i5);
   mi5.addInter(i1);
 
-  MultiInterval as5(mi5);
-
   Set res2;
-  res2.addAtomSet(as3);
-  res2.addAtomSet(as5);
+  res2.addAtomSet(mi3);
+  res2.addAtomSet(mi5);
 
   BOOST_CHECK(res1 == res2);
 }
@@ -1420,14 +1350,12 @@ void TestAtomPWCreation1()
   mi1.addInter(i2);
   mi1.addInter(i3);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
 
   lm1.addGO(1.0, 1.0);
   lm1.addGO(1.0, 1.0);
 
-  AtomPWLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(mi1, lm1);
 
   BOOST_REQUIRE_MESSAGE(pwatom1.empty(), "\n" << pwatom1 << " should be empty");
 }
@@ -1441,13 +1369,11 @@ void TestAtomPWCreation2()
   mi1.addInter(i1);
   mi1.addInter(i2);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
   lm1.addGO(0.5, 0.0);
   lm1.addGO(0.5, 0.0);
 
-  AtomPWLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(mi1, lm1);
 
   BOOST_REQUIRE_MESSAGE(pwatom1.empty(), "\n" << pwatom1 << " should be empty");
 }
@@ -1461,13 +1387,11 @@ void TestAtomPWCreation3()
   mi1.addInter(i1);
   mi1.addInter(i2);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
   lm1.addGO(0.5, 0.0);
   lm1.addGO(0.5, 0.0);
 
-  AtomPWLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(mi1, lm1);
 
   BOOST_REQUIRE_MESSAGE(!pwatom1.empty(), "\n" << pwatom1 << " shouldn't be empty");
 }
@@ -1483,31 +1407,27 @@ void TestAtomPWImage1()
   mi1.addInter(i2);
   mi1.addInter(i3);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
 
   lm1.addGO(2.0, 0.0);
   lm1.addGO(3.0, 0.0);
   lm1.addGO(1.0, 0.0);
 
-  AtomPWLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(mi1, lm1);
 
-  MultiInterval res1 = pwatom1.image(as1);
+  MultiInterval res1 = pwatom1.image(mi1);
 
   Interval i4(2, 2, 20);
   Interval i5(3, 3, 30);
   Interval i6(1, 1, 10);
 
-  MultiInterval mi2;
-  mi2.addInter(i4);
-  mi2.addInter(i5);
-  mi2.addInter(i6);
-
-  MultiInterval res2(mi2);
+  MultiInterval res2;
+  res2.addInter(i4);
+  res2.addInter(i5);
+  res2.addInter(i6);
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, 
-                        "\nimage(" << pwatom1 << ", " << as1 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
+                        "\nimage(" << pwatom1 << ", " << mi1 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWImage2()
@@ -1521,15 +1441,13 @@ void TestAtomPWImage2()
   mi1.addInter(i2);
   mi1.addInter(i3);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
 
   lm1.addGO(2.0, 0.0);
   lm1.addGO(3.0, 0.0);
   lm1.addGO(1.0, 0.0);
 
-  AtomPWLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(mi1, lm1);
 
   Interval i4(20, 5, 30);
   Interval i5(5, 1, 10);
@@ -1540,14 +1458,12 @@ void TestAtomPWImage2()
   mi2.addInter(i5);
   mi2.addInter(i6);
 
-  MultiInterval as2(mi2);
-
-  MultiInterval res1 = pwatom1.image(as2);
+  MultiInterval res1 = pwatom1.image(mi2);
 
   MultiInterval res2;
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, 
-                        "\nimage(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
+                        "\nimage(" << pwatom1 << ", " << mi2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWImage3()
@@ -1561,15 +1477,13 @@ void TestAtomPWImage3()
   mi1.addInter(i2);
   mi1.addInter(i3);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
 
   lm1.addGO(2.0, 0.0);
   lm1.addGO(3.0, 0.0);
   lm1.addGO(1.0, 0.0);
 
-  AtomPWLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(mi1, lm1);
 
   Interval i4(1, 5, 30);
   Interval i5(5, 1, 10);
@@ -1580,23 +1494,19 @@ void TestAtomPWImage3()
   mi2.addInter(i5);
   mi2.addInter(i6);
 
-  MultiInterval as2(mi2);
-
-  MultiInterval res1 = pwatom1.image(as2);
+  MultiInterval res1 = pwatom1.image(mi2);
 
   Interval i7(2, 10, 12);
   Interval i8(15, 3, 30);
   Interval i9(5, 1, 10);
 
-  MultiInterval mi3;
-  mi3.addInter(i7);
-  mi3.addInter(i8);
-  mi3.addInter(i9);
-
-  MultiInterval res2(mi3);
+  MultiInterval res2;
+  res2.addInter(i7);
+  res2.addInter(i8);
+  res2.addInter(i9);
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, 
-                        "\nimage(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
+                        "\nimage(" << pwatom1 << ", " << mi2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWImage4()
@@ -1607,27 +1517,23 @@ void TestAtomPWImage4()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
   lm1.addGO(0.0, 1.0);
   lm1.addGO(0.0, 1.0);
 
-  AtomPWLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(mi1, lm1);
 
-  MultiInterval res1 = pwatom1.image(as1);
+  MultiInterval res1 = pwatom1.image(mi1);
 
   Interval i2(1, 0, 1);
 
-  MultiInterval mi2;
-  mi2.addInter(i2);
-  mi2.addInter(i2);
-
-  MultiInterval res2(mi2);
+  MultiInterval res2;
+  res2.addInter(i2);
+  res2.addInter(i2);
 
   BOOST_CHECK(res1 == res2);
   BOOST_REQUIRE_MESSAGE(res1 == res2, 
-                        "\nimage(" << pwatom1 << ", " << as1 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
+                        "\nimage(" << pwatom1 << ", " << mi1 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWPre1()
@@ -1641,15 +1547,13 @@ void TestAtomPWPre1()
   mi1.addInter(i2);
   mi1.addInter(i3);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
 
   lm1.addGO(2.0, 0.0);
   lm1.addGO(3.0, 0.0);
   lm1.addGO(1.0, 0.0);
 
-  AtomPWLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(mi1, lm1);
 
   Interval i4(2, 2, 20);
   Interval i5(3, 3, 30);
@@ -1660,23 +1564,19 @@ void TestAtomPWPre1()
   mi2.addInter(i5);
   mi2.addInter(i6);
 
-  MultiInterval as2(mi2);
-
-  MultiInterval res1 = pwatom1.preImage(as2);
+  MultiInterval res1 = pwatom1.preImage(mi2);
 
   Interval i7(1, 1, 10);
   Interval i8(1, 1, 10);
   Interval i9(1, 1, 10);
 
-  MultiInterval mi3;
-  mi3.addInter(i7);
-  mi3.addInter(i8);
-  mi3.addInter(i8);
-
-  MultiInterval res2(mi3);
+  MultiInterval res2;
+  res2.addInter(i7);
+  res2.addInter(i8);
+  res2.addInter(i8);
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, 
-                        "\npre(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
+                        "\npre(" << pwatom1 << ", " << mi2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWPre2()
@@ -1690,15 +1590,13 @@ void TestAtomPWPre2()
   mi1.addInter(i2);
   mi1.addInter(i3);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
 
   lm1.addGO(2.0, 0.0);
   lm1.addGO(3.0, 0.0);
   lm1.addGO(1.0, 0.0);
 
-  AtomPWLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(mi1, lm1);
 
   Interval i4(1, 1, 10);
   Interval i5(1, 1, 10);
@@ -1709,23 +1607,19 @@ void TestAtomPWPre2()
   mi2.addInter(i5);
   mi2.addInter(i6);
 
-  MultiInterval as2(mi2);
-
-  MultiInterval res1 = pwatom1.preImage(as2);
+  MultiInterval res1 = pwatom1.preImage(mi2);
 
   Interval i7(1, 1, 5);
   Interval i8(1, 1, 3);
   Interval i9(1, 1, 10);
 
-  MultiInterval mi3;
-  mi3.addInter(i7);
-  mi3.addInter(i8);
-  mi3.addInter(i9);
-
-  MultiInterval res2(mi3);
+  MultiInterval res2;
+  res2.addInter(i7);
+  res2.addInter(i8);
+  res2.addInter(i9);
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, 
-                        "\npre(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
+                        "\npre(" << pwatom1 << ", " << mi2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWPre3()
@@ -1739,15 +1633,13 @@ void TestAtomPWPre3()
   mi1.addInter(i2);
   mi1.addInter(i3);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
 
   lm1.addGO(2.0, 0.0);
   lm1.addGO(3.0, 0.0);
   lm1.addGO(1.0, 0.0);
 
-  AtomPWLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(mi1, lm1);
 
   Interval i4(100, 1, 1000);
   Interval i5(1, 1, 10);
@@ -1758,14 +1650,12 @@ void TestAtomPWPre3()
   mi2.addInter(i5);
   mi2.addInter(i6);
 
-  MultiInterval as2(mi2);
-
-  MultiInterval res1 = pwatom1.preImage(as2);
+  MultiInterval res1 = pwatom1.preImage(mi2);
 
   MultiInterval res2;
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, 
-                        "\npre(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
+                        "\npre(" << pwatom1 << ", " << mi2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWPre4()
@@ -1776,13 +1666,11 @@ void TestAtomPWPre4()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
   lm1.addGO(0.0, 3.0);
   lm1.addGO(0.0, 3.0);
 
-  AtomPWLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(mi1, lm1);
 
   Interval i2(1, 1, 5);
 
@@ -1790,14 +1678,12 @@ void TestAtomPWPre4()
   mi2.addInter(i2);
   mi2.addInter(i2);
 
-  MultiInterval as2(mi2);
+  MultiInterval res1 = pwatom1.preImage(mi2);
 
-  MultiInterval res1 = pwatom1.preImage(as2);
-
-  MultiInterval res2 = as1;
+  MultiInterval res2 = mi1;
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, 
-                        "\npre(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
+                        "\npre(" << pwatom1 << ", " << mi2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestAtomPWPre5()
@@ -1808,13 +1694,11 @@ void TestAtomPWPre5()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
   lm1.addGO(-1, 32);
   lm1.addGO(-1, 32);
  
-  AtomPWLMap pwatom1(as1, lm1);
+  AtomPWLMap pwatom1(mi1, lm1);
 
   Interval zero(0, 1, 0);
   
@@ -1822,14 +1706,12 @@ void TestAtomPWPre5()
   mi2.addInter(zero);
   mi2.addInter(zero);
 
-  MultiInterval as2(mi2);
+  MultiInterval res1  = pwatom1.preImage(mi2);
 
-  MultiInterval res1  = pwatom1.preImage(as2);
-
-  MultiInterval res2 = as1;
+  MultiInterval res2 = mi1;
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, 
-                        "\npre(" << pwatom1 << ", " << as2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
+                        "\npre(" << pwatom1 << ", " << mi2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 // -- Piece wise linear maps -------------------------------------------------//
@@ -1843,8 +1725,6 @@ void TestPWLMapCreation1()
   mi1.addInter(i1);
   mi1.addInter(i2);
 
-  MultiInterval as1(mi1);
-
   Interval i3(20, 3, 30);
   Interval i4(20, 3, 30);
 
@@ -1852,11 +1732,9 @@ void TestPWLMapCreation1()
   mi2.addInter(i3);
   mi2.addInter(i4);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   LMap lm1;
   lm1.addGO(1.0, 0.0);
@@ -1890,8 +1768,6 @@ void TestPWLMapImage1()
   mi1.addInter(i1);
   mi1.addInter(i2);
 
-  MultiInterval as1(mi1);
-
   Interval i3(10, 1, 15);
   Interval i4(10, 1, 15);
 
@@ -1899,11 +1775,9 @@ void TestPWLMapImage1()
   mi2.addInter(i3);
   mi2.addInter(i4);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   Interval i5(20, 3, 30);
   Interval i6(20, 3, 30);
@@ -1912,8 +1786,6 @@ void TestPWLMapImage1()
   mi3.addInter(i5);
   mi3.addInter(i6);
 
-  MultiInterval as3(mi3);
-
   Interval i7(45, 5, 50);
   Interval i8(45, 5, 50);
 
@@ -1921,11 +1793,9 @@ void TestPWLMapImage1()
   mi4.addInter(i7);
   mi4.addInter(i8);
 
-  MultiInterval as4(mi4);
-
   Set s2;
-  s2.addAtomSet(as3);
-  s2.addAtomSet(as4);
+  s2.addAtomSet(mi3);
+  s2.addAtomSet(mi4);
 
   LMap lm1;
   lm1.addGO(1.0, 0.0);
@@ -1949,8 +1819,6 @@ void TestPWLMapImage1()
   mi5.addInter(i9);
   mi5.addInter(i10);
 
-  MultiInterval as5(mi5);
-
   Interval i11(90, 10, 100);
   Interval i12(90, 10, 100);
 
@@ -1958,11 +1826,9 @@ void TestPWLMapImage1()
   mi6.addInter(i11);
   mi6.addInter(i12);
 
-  MultiInterval as6(mi6);
-
   Set s3;
-  s3.addAtomSet(as5);
-  s3.addAtomSet(as6);
+  s3.addAtomSet(mi5);
+  s3.addAtomSet(mi6);
 
   Set res2 = s1.cup(s3);
 
@@ -1979,8 +1845,6 @@ void TestPWLMapImage2()
   mi1.addInter(i1);
   mi1.addInter(i2);
 
-  MultiInterval as1(mi1);
-
   Interval i3(10, 1, 15);
   Interval i4(10, 1, 15);
 
@@ -1988,11 +1852,9 @@ void TestPWLMapImage2()
   mi2.addInter(i3);
   mi2.addInter(i4);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   Interval i5(20, 3, 30);
   Interval i6(20, 3, 30);
@@ -2001,8 +1863,6 @@ void TestPWLMapImage2()
   mi3.addInter(i5);
   mi3.addInter(i6);
 
-  MultiInterval as3(mi3);
-
   Interval i7(45, 5, 50);
   Interval i8(45, 5, 50);
 
@@ -2010,11 +1870,9 @@ void TestPWLMapImage2()
   mi4.addInter(i7);
   mi4.addInter(i8);
 
-  MultiInterval as4(mi4);
-
   Set s2;
-  s2.addAtomSet(as3);
-  s2.addAtomSet(as4);
+  s2.addAtomSet(mi3);
+  s2.addAtomSet(mi4);
 
   LMap lm1;
   lm1.addGO(1.0, 0.0);
@@ -2044,27 +1902,21 @@ void TestPWLMapPre1()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(20, 5, 30);
 
   MultiInterval mi2;
   mi2.addInter(i2);
   mi2.addInter(i2);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   Interval i3(11, 1, 14);
 
   MultiInterval mi3;
   mi3.addInter(i3);
   mi3.addInter(i3);
-
-  MultiInterval as3(mi3);
 
   Interval i4(1, 1, 10);
   Interval i5(50, 5, 70);
@@ -2073,11 +1925,9 @@ void TestPWLMapPre1()
   mi4.addInter(i4);
   mi4.addInter(i5);
 
-  MultiInterval as4(mi4);
-
   Set s2;
-  s2.addAtomSet(as3);
-  s2.addAtomSet(as4);
+  s2.addAtomSet(mi3);
+  s2.addAtomSet(mi4);
 
   LMap lm1;
   lm1.addGO(0.0, 3.0);
@@ -2097,10 +1947,7 @@ void TestPWLMapPre1()
   mi5.addInter(i6);
   mi5.addInter(i6);
 
-  MultiInterval as5(mi5);
-
-  Set s3;
-  s3.addAtomSet(as5);
+  Set s3 = createSet(mi5);
 
   Set res1 = pw1.preImage(s3);
 
@@ -2110,12 +1957,10 @@ void TestPWLMapPre1()
   mi6.addInter(i7);
   mi6.addInter(i7);
 
-  MultiInterval as6(mi6);
-
   Set res2;
-  res2.addAtomSet(as1);
-  res2.addAtomSet(as2);
-  res2.addAtomSet(as6);
+  res2.addAtomSet(mi1);
+  res2.addAtomSet(mi2);
+  res2.addAtomSet(mi6);
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, 
                         "\npre(" << pw1 << ", " << s3 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
@@ -2129,19 +1974,15 @@ void TestPWLMapPre2()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(50, 2, 100);
 
   MultiInterval mi2;
   mi2.addInter(i1);
   mi2.addInter(i2);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   LMap lm1;
   lm1.addGO(1, -32);
@@ -2156,15 +1997,11 @@ void TestPWLMapPre2()
   mi3.addInter(zero);
   mi3.addInter(zero);
 
-  MultiInterval as3(mi3);
-
-  Set s2;
-  s2.addAtomSet(as3);
+  Set s2 = createSet(mi3);
 
   Set res1 = pw1.preImage(s2);
 
-  Set res2;
-  res2.addAtomSet(as1);
+  Set res2 = createSet(mi1);
 
   BOOST_REQUIRE_MESSAGE(res1 == res2, 
                         "\npre(" << pw1 << ", " << s2 << ")" << "\n=\n" << res1 << "\nExpected: " << res2);
@@ -2179,19 +2016,15 @@ void TestPWLMapComp1()
   mi1.addInter(i1);
   mi1.addInter(i2);
 
-  MultiInterval as1(mi1);
-
   Interval i3(20, 2, 30);
 
   MultiInterval mi2;
   mi2.addInter(i3);
   mi2.addInter(i3);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   Interval i4(15, 3, 18);
   Interval i5(12, 3, 20);
@@ -2238,8 +2071,6 @@ void TestPWLMapComp1()
   mi5.addInter(i7);
   mi5.addInter(i8);
 
-  MultiInterval as5(mi5);
-
   Interval i9(19, 2, 29);
   Interval i10(18, 2, 28);
 
@@ -2247,11 +2078,9 @@ void TestPWLMapComp1()
   mi6.addInter(i9);
   mi6.addInter(i10);
 
-  MultiInterval as6(mi6);
-
   Set s5;
-  s5.addAtomSet(as5);
-  s5.addAtomSet(as6);
+  s5.addAtomSet(mi5);
+  s5.addAtomSet(mi6);
 
   Interval i11(14, 3, 17);
   Interval i12(10, 3, 16);
@@ -2285,8 +2114,6 @@ void TestPWLMapComp2()
   mi1.addInter(i2);
   mi1.addInter(i3);
 
-  MultiInterval as1(mi1);
-
   Interval i4(35, 7, 99);
 
   MultiInterval mi2;
@@ -2294,11 +2121,9 @@ void TestPWLMapComp2()
   mi2.addInter(i1);
   mi2.addInter(i4);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   Interval i5(200, 20, 400);
   Interval i6(5, 5, 100);
@@ -2309,8 +2134,6 @@ void TestPWLMapComp2()
   mi3.addInter(i6);
   mi3.addInter(i7);
 
-  MultiInterval as3(mi3);
-
   Interval i8(150, 50, 300);
   Interval i9(200, 3, 500);
   Interval i10(4, 4, 80);
@@ -2320,11 +2143,9 @@ void TestPWLMapComp2()
   mi4.addInter(i9);
   mi4.addInter(i10);
 
-  MultiInterval as4(mi4);
-
   Set s2;
-  s2.addAtomSet(as3);
-  s2.addAtomSet(as4);
+  s2.addAtomSet(mi3);
+  s2.addAtomSet(mi4);
 
   LMap lm1;
   lm1.addGO(1, -3);
@@ -2348,6 +2169,66 @@ void TestPWLMapComp2()
                         "\n" << pw1 << "\n°\n" << pw1 << "\n=\n" << res1 << "\nExpected: " << res2);
 }
 
+void TestPWLMapComp3()
+{
+  int N = 100;
+  int repeat = 250;
+
+  PWLMap smap;
+
+  for (int i = 0; i < repeat; i++) {
+    int off = i * 4 * N;
+
+    Interval i1(1 + off, 1, N + off);
+
+    MultiInterval mi1;
+    mi1.addInter(i1);
+
+    Set s1 = createSet(mi1);
+
+    LMap lm1;
+    lm1.addGO(1, N);
+
+    Interval i2(N + 1 + off, 1, 2 * N + off);
+ 
+    MultiInterval mi2;
+    mi2.addInter(i2);
+
+    Set s2 = createSet(mi2);
+
+    LMap lm2;
+    lm2.addGO(1 , N);
+
+    Interval i3(2 * N + 1 + off, 1, 3 * N + off);
+
+    MultiInterval mi3;
+    mi3.addInter(i3);
+
+    Set s3 = createSet(mi3);
+
+    LMap lm3;
+    lm3.addGO(1, N);
+
+    Interval i4(3 * N + 1 + off, 1, 4 * N + off);
+
+    MultiInterval mi4;
+    mi4.addInter(i4);
+
+    Set s4 = createSet(mi4);
+
+    LMap lm4;
+    lm4.addGO(1, 0);
+
+    smap.addSetLM(s1, lm1);
+    smap.addSetLM(s2, lm2);
+    smap.addSetLM(s3, lm3);
+    smap.addSetLM(s4, lm4);
+  }
+
+  smap.mapInf(1);
+
+  BOOST_CHECK(true);
+}
 
 void TestPWLMapCombine1()
 {
@@ -2358,8 +2239,6 @@ void TestPWLMapCombine1()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(20, 3, 30);
 
   MultiInterval mi2;
@@ -2367,11 +2246,9 @@ void TestPWLMapCombine1()
   mi2.addInter(i2);
   mi2.addInter(i2);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   Interval i3(35, 5, 50);
 
@@ -2380,18 +2257,14 @@ void TestPWLMapCombine1()
   mi3.addInter(i2);
   mi3.addInter(i3);
 
-  MultiInterval as3(mi3);
-
   MultiInterval mi4;
   mi4.addInter(i3);
   mi4.addInter(i3);
   mi4.addInter(i2);
 
-  MultiInterval as4(mi4);
-
   Set s2;
-  s2.addAtomSet(as3);
-  s2.addAtomSet(as4);
+  s2.addAtomSet(mi3);
+  s2.addAtomSet(mi4);
 
   LMap lm1;
   lm1.addGO(1, 0);
@@ -2450,8 +2323,6 @@ void TestMinAS1()
   mi1.addInter(i2);
   mi1.addInter(i3);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
   lm1.addGO(1.0, 60.0);
   lm1.addGO(2.0, 2.0);
@@ -2463,7 +2334,7 @@ void TestMinAS1()
   lm2.addGO(1.0, 10.0);
 
   PWLMap res1;
-  res1.minMapAtomSet(as1, lm1, lm2);
+  res1.minMapAtomSet(mi1, lm1, lm2);
 
   Interval i4(3, 3, 24);
 
@@ -2488,7 +2359,7 @@ void TestMinAS1()
   res2.addSetLM(s2, lm1);
 
   BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
-                        "\nmin(" << as1 << ",  " << lm1 << ", " << lm2 << ")\n=\n" << res1 << "\nExpected: " << res2);
+                        "\nmin(" << mi1 << ",  " << lm1 << ", " << lm2 << ")\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestMinAS2()
@@ -2502,8 +2373,6 @@ void TestMinAS2()
   mi1.addInter(i2);
   mi1.addInter(i3);
 
-  MultiInterval as1(mi1);
-
   LMap lm1;
   lm1.addGO(1.0, 60.0);
   lm1.addGO(2.0, 5.0);
@@ -2515,15 +2384,15 @@ void TestMinAS2()
   lm2.addGO(1.0, 10.0);
 
   PWLMap res1;
-  res1.minMapAtomSet(as1, lm1, lm2);
+  res1.minMapAtomSet(mi1, lm1, lm2);
 
-  Set s1 = createSet(as1);
+  Set s1 = createSet(mi1);
 
   PWLMap res2;
   res2.addSetLM(s1, lm2);
 
   BOOST_REQUIRE_MESSAGE(res1.equivalentPW(res2), 
-                        "\nmin(" << as1 << ",  " << lm1 << ", " << lm2 << ")\n=\n" << res1 << "\nExpected: " << res2);
+                        "\nmin(" << mi1 << ",  " << lm1 << ", " << lm2 << ")\n=\n" << res1 << "\nExpected: " << res2);
 }
 
 void TestMinSet1()
@@ -2533,26 +2402,20 @@ void TestMinSet1()
   MultiInterval mi1;
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(10, 1, 15);
 
   MultiInterval mi2;
   mi2.addInter(i2);
-
-  MultiInterval as2(mi2);
 
   Interval i3(20, 2, 30);
 
   MultiInterval mi3;
   mi3.addInter(i3);
 
-  MultiInterval as3(mi3);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
-  s1.addAtomSet(as3);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
+  s1.addAtomSet(mi3);
 
   LMap lm1;
   lm1.addGO(0, 12);
@@ -2568,22 +2431,18 @@ void TestMinSet1()
   MultiInterval mi4;
   mi4.addInter(i4);
 
-  MultiInterval as4(mi4);
-
   Set s2;
-  s2.addAtomSet(as1);
-  s2.addAtomSet(as4);
+  s2.addAtomSet(mi1);
+  s2.addAtomSet(mi4);
 
   Interval i5(13, 1, 15);
 
   MultiInterval mi5;
   mi5.addInter(i5);
 
-  MultiInterval as5(mi5);
-
   Set s3;
-  s3.addAtomSet(as3);
-  s3.addAtomSet(as5);
+  s3.addAtomSet(mi3);
+  s3.addAtomSet(mi5);
 
   PWLMap res2;
   res2.addSetLM(s3, lm1);
@@ -2600,26 +2459,20 @@ void TestMinSet2()
   MultiInterval mi1;
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(10, 1, 15);
 
   MultiInterval mi2;
   mi2.addInter(i2);
-
-  MultiInterval as2(mi2);
 
   Interval i3(20, 2, 30);
 
   MultiInterval mi3;
   mi3.addInter(i3);
 
-  MultiInterval as3(mi3);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
-  s1.addAtomSet(as3);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
+  s1.addAtomSet(mi3);
 
   LMap lm1;
   lm1.addGO(0, 1);
@@ -2644,36 +2497,28 @@ void TestMinMap1()
   MultiInterval mi1;
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(15, 3, 30);
 
   MultiInterval mi2;
   mi2.addInter(i2);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   Interval i3(12, 3, 12);
 
   MultiInterval mi3;
   mi3.addInter(i3);
 
-  MultiInterval as3(mi3);
-
   Interval i4(50, 5, 100);
 
   MultiInterval mi4;
   mi4.addInter(i4);
 
-  MultiInterval as4(mi4);
-
   Set s2;
-  s2.addAtomSet(as3);
-  s2.addAtomSet(as4);
+  s2.addAtomSet(mi3);
+  s2.addAtomSet(mi4);
 
   LMap lm1;
   lm1.addGO(1, 0);
@@ -2690,36 +2535,28 @@ void TestMinMap1()
   MultiInterval mi5;
   mi5.addInter(i5);
 
-  MultiInterval as5(mi5);
-
   Interval i6(30, 5, 60);
 
   MultiInterval mi6;
   mi6.addInter(i6);
 
-  MultiInterval as6(mi6);
-
   Set s3;
-  s3.addAtomSet(as5);
-  s3.addAtomSet(as6);
+  s3.addAtomSet(mi5);
+  s3.addAtomSet(mi6);
 
   Interval i7(75, 5, 90);
 
   MultiInterval mi7;
   mi7.addInter(i7);
 
-  MultiInterval as7(mi7);
-
   Interval i8(95, 1, 100);
 
   MultiInterval mi8;
   mi8.addInter(i8);
 
-  MultiInterval as8(mi8);
-
   Set s4;
-  s4.addAtomSet(as7);
-  s4.addAtomSet(as8);
+  s4.addAtomSet(mi7);
+  s4.addAtomSet(mi8);
 
   LMap lm3;
   lm3.addGO(0, 100);
@@ -2738,44 +2575,34 @@ void TestMinMap1()
   MultiInterval mi9;
   mi9.addInter(i9);
 
-  MultiInterval as9(mi9);
-
   Interval i10(15, 6, 18);
 
   MultiInterval mi10;
   mi10.addInter(i10);
-
-  MultiInterval as10(mi10);
 
   Interval i11(30, 15, 30);
 
   MultiInterval mi11;
   mi11.addInter(i11);
 
-  MultiInterval as11(mi11);
-
   Set s5;
-  s5.addAtomSet(as9);
-  s5.addAtomSet(as10);
-  s5.addAtomSet(as11);
+  s5.addAtomSet(mi9);
+  s5.addAtomSet(mi10);
+  s5.addAtomSet(mi11);
 
   Interval i12(75, 5, 90);
 
   MultiInterval mi12;
   mi12.addInter(i12);
 
-  MultiInterval as12(mi12);
-
   Interval i13(95, 5, 100);
 
   MultiInterval mi13;
   mi13.addInter(i13);
 
-  MultiInterval as13(mi13);
-
   Set s6;
-  s6.addAtomSet(as12);
-  s6.addAtomSet(as13);
+  s6.addAtomSet(mi12);
+  s6.addAtomSet(mi13);
 
   Interval i14(50, 5, 60);
 
@@ -2799,8 +2626,6 @@ void TestReduce1()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(20, 2, 25);
 
   MultiInterval mi2;
@@ -2808,11 +2633,9 @@ void TestReduce1()
   mi2.addInter(i2);
   mi2.addInter(i1);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   Interval i3(15, 5, 50);
 
@@ -2821,8 +2644,6 @@ void TestReduce1()
   mi3.addInter(i3);
   mi3.addInter(i2);
 
-  MultiInterval as3(mi3);
-
   Interval i4(40, 5, 45);
 
   MultiInterval mi4;
@@ -2830,11 +2651,9 @@ void TestReduce1()
   mi4.addInter(i4);
   mi4.addInter(i4);
 
-  MultiInterval as4(mi4);
-
   Set s2;
-  s2.addAtomSet(as3);
-  s2.addAtomSet(as4);
+  s2.addAtomSet(mi3);
+  s2.addAtomSet(mi4);
 
   LMap lm1;
   lm1.addGO(1, 0);
@@ -2894,7 +2713,7 @@ void TestReduce1()
   lm5.addGO(0, 3);
   lm5.addGO(3, 0);
 
-  Set s6 = createSet(as2);
+  Set s6 = createSet(mi2);
 
   PWLMap res2;
   res2.addSetLM(s6, lm1);
@@ -2916,8 +2735,6 @@ void TestMinAdjComp1()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(150, 5, 200);
 
   MultiInterval mi2;
@@ -2925,11 +2742,9 @@ void TestMinAdjComp1()
   mi2.addInter(i2);
   mi2.addInter(i1);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   LMap lm1;
   lm1.addGO(1, 0);
@@ -2990,8 +2805,6 @@ void TestMinAdjComp2()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(150, 5, 200);
 
   MultiInterval mi2;
@@ -2999,11 +2812,9 @@ void TestMinAdjComp2()
   mi2.addInter(i2);
   mi2.addInter(i1);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   LMap lm1;
   lm1.addGO(1, 0);
@@ -3064,8 +2875,6 @@ void TestMinAdjComp3()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(150, 5, 200);
 
   MultiInterval mi2;
@@ -3073,11 +2882,9 @@ void TestMinAdjComp3()
   mi2.addInter(i2);
   mi2.addInter(i1);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   LMap lm1;
   lm1.addGO(1, 0);
@@ -3133,8 +2940,6 @@ void TestMinAdjComp3()
   mi5.addInter(i8);
   mi5.addInter(i7);
 
-  MultiInterval as5(mi5);
-
   Interval i9(150, 5, 150);
 
   MultiInterval mi6;
@@ -3142,11 +2947,9 @@ void TestMinAdjComp3()
   mi6.addInter(i8);
   mi6.addInter(i7);
 
-  MultiInterval as6(mi6);
-
   Set s4;
-  s4.addAtomSet(as5);
-  s4.addAtomSet(as6);
+  s4.addAtomSet(mi5);
+  s4.addAtomSet(mi6);
 
   res2.addSetLM(s4, lm2);
 
@@ -3163,8 +2966,6 @@ void TestMinAdjComp4()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(150, 5, 200);
 
   MultiInterval mi2;
@@ -3172,11 +2973,9 @@ void TestMinAdjComp4()
   mi2.addInter(i2);
   mi2.addInter(i1);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   LMap lm1;
   lm1.addGO(0, 1);
@@ -3252,19 +3051,15 @@ void TestMinAdj1()
   mi1.addInter(i1);
   mi1.addInter(i1);
 
-  MultiInterval as1(mi1);
-
   Interval i2(101, 2, 200);
 
   MultiInterval mi2;
   mi2.addInter(i2);
   mi2.addInter(i2);
 
-  MultiInterval as2(mi2);
-
   Set s1;
-  s1.addAtomSet(as1);
-  s1.addAtomSet(as2);
+  s1.addAtomSet(mi1);
+  s1.addAtomSet(mi2);
 
   MultiInterval mi3;
   mi3.addInter(i1);
@@ -3298,8 +3093,6 @@ void TestMinAdj1()
   mi5.addInter(i4);
   mi5.addInter(i4);
 
-  MultiInterval as5(mi5);
-
   Interval i6(90, 1, 150);
   Interval i7(95, 1, 150);
 
@@ -3307,11 +3100,9 @@ void TestMinAdj1()
   mi6.addInter(i6);
   mi6.addInter(i7);
 
-  MultiInterval as6(mi6);
-
   Set s4;
-  s4.addAtomSet(as5);
-  s4.addAtomSet(as6);
+  s4.addAtomSet(mi5);
+  s4.addAtomSet(mi6);
 
   LMap lm3;
   lm3.addGO(0, 1);
@@ -3350,13 +3141,9 @@ void TestMinAdj1()
   mi9.addInter(i11);
   mi9.addInter(i11);
 
-  MultiInterval as9(mi9);
-
   MultiInterval mi10;
   mi10.addInter(i4);
   mi10.addInter(i4);
-
-  MultiInterval as10(mi10);
 
   Interval i12(90, 1, 100);
   Interval i13(95, 1, 100);
@@ -3365,12 +3152,10 @@ void TestMinAdj1()
   mi11.addInter(i12);
   mi11.addInter(i13);
 
-  MultiInterval as11(mi11);
-
   Set s7;
-  s7.addAtomSet(as9);
-  s7.addAtomSet(as10);
-  s7.addAtomSet(as11);
+  s7.addAtomSet(mi9);
+  s7.addAtomSet(mi10);
+  s7.addAtomSet(mi11);
 
   LMap lm5;
   lm5.addGO(1, 3);
@@ -3929,9 +3714,7 @@ void Test2D()
   MultiInterval mi1;
   mi1.addInter(i1);
   mi1.addInter(i2);
-  MultiInterval as1(mi1);
-  Set sp;
-  sp.addAtomSet(as1);
+  Set sp = createSet(mi1);
   SetVertex V1("V1", 1, sp, 0);
 
   Interval i3(1 + offsn1, 1, 1 + offsn1);
@@ -3939,9 +3722,7 @@ void Test2D()
   MultiInterval mi2;
   mi2.addInter(i3);
   mi2.addInter(i4);
-  MultiInterval as2(mi2);
-  Set sn;
-  sn.addAtomSet(as2);
+  Set sn = createSet(mi2);
   SetVertex V2("V2", 2, sn, 0);
 
   Interval i5(1 + offgp1, 1, 1 + offgp1);
@@ -3949,9 +3730,7 @@ void Test2D()
   MultiInterval mi3;
   mi3.addInter(i5);
   mi3.addInter(i6);
-  MultiInterval as3(mi3);
-  Set gp;
-  gp.addAtomSet(as3);
+  Set gp = createSet(mi3);
   SetVertex V3("V3", 3, gp, 0);
 
   Interval i7(1 + offcl1, 1, offcr1);
@@ -3959,9 +3738,7 @@ void Test2D()
   MultiInterval mi4;
   mi4.addInter(i7);
   mi4.addInter(i8);
-  MultiInterval as4(mi4);
-  Set cl;
-  cl.addAtomSet(as4);
+  Set cl = createSet(mi4);
   SetVertex V4("V4", 4, cl, 0);
 
   Interval i9(1 + offcr1, 1, offcu1);
@@ -3969,9 +3746,7 @@ void Test2D()
   MultiInterval mi5;
   mi5.addInter(i9);
   mi5.addInter(i10);
-  MultiInterval as5(mi5);
-  Set cr;
-  cr.addAtomSet(as5);
+  Set cr = createSet(mi5);
   SetVertex V5("V5", 5, cr, 0);
 
   Interval i11(1 + offcu1, 1, offcd1);
@@ -3979,9 +3754,7 @@ void Test2D()
   MultiInterval mi6;
   mi6.addInter(i11);
   mi6.addInter(i12);
-  MultiInterval as6(mi6);
-  Set cu;
-  cu.addAtomSet(as6);
+  Set cu = createSet(mi6);
   SetVertex V6("V6", 6, cu, 0);
 
   Interval i13(1 + offcd1, 1, offcl1 + offcd1);
@@ -3989,9 +3762,7 @@ void Test2D()
   MultiInterval mi7;
   mi7.addInter(i13);
   mi7.addInter(i14);
-  MultiInterval as7(mi7);
-  Set cd;
-  cd.addAtomSet(as7);
+  Set cd = createSet(mi7);
   SetVertex V7("V7", 7, cd, 0);
 
   float offE11 = 0;
@@ -4014,9 +3785,7 @@ void Test2D()
   MultiInterval mi8;
   mi8.addInter(i15);
   mi8.addInter(i16);
-  MultiInterval as8(mi8);
-  Set domE1;
-  domE1.addAtomSet(as8);
+  Set domE1 = createSet(mi8);
   LMap lm1;
   lm1.addGO(1, offcl1 - offE11);
   lm1.addGO(1, offcl2 - offE12 + 1);
@@ -4034,9 +3803,7 @@ void Test2D()
   MultiInterval mi9;
   mi9.addInter(i17);
   mi9.addInter(i18);
-  MultiInterval as9(mi9);
-  Set domE2;
-  domE2.addAtomSet(as9);
+  Set domE2 = createSet(mi9);
   LMap lm3;
   lm3.addGO(1, offcu1 - offE21 + 1);
   lm3.addGO(1, offcu2 - offE22);
@@ -4054,9 +3821,7 @@ void Test2D()
   MultiInterval mi10;
   mi10.addInter(i19);
   mi10.addInter(i20);
-  MultiInterval as10(mi10);
-  Set domE3;
-  domE3.addAtomSet(as10);
+  Set domE3 = createSet(mi10);
   LMap lm5;
   lm5.addGO(1, offcl1 - offE31);
   lm5.addGO(1, offcl2 - offE32);
@@ -4074,9 +3839,7 @@ void Test2D()
   MultiInterval mi11;
   mi11.addInter(i21);
   mi11.addInter(i22);
-  MultiInterval as11(mi11);
-  Set domE4;
-  domE4.addAtomSet(as11);
+  Set domE4 = createSet(mi11);
   LMap lm7;
   lm7.addGO(1, offcu1 - offE41);
   lm7.addGO(1, offcu2 - offE42);
@@ -4094,9 +3857,7 @@ void Test2D()
   MultiInterval mi12;
   mi12.addInter(i23);
   mi12.addInter(i24);
-  MultiInterval as12(mi12);
-  Set domE5;
-  domE5.addAtomSet(as12);
+  Set domE5 = createSet(mi12);
   LMap lm9;
   lm9.addGO(1, offcd1 - offE51 + offcl1 - 1);
   lm9.addGO(1, offcd2 - offE52);
@@ -4114,9 +3875,7 @@ void Test2D()
   MultiInterval mi13;
   mi13.addInter(i25);
   mi13.addInter(i26);
-  MultiInterval as13(mi13);
-  Set domE6;
-  domE6.addAtomSet(as13);
+  Set domE6 = createSet(mi13);
   LMap lm11;
   lm11.addGO(0, offsn1 + 1);
   lm11.addGO(0, offsn2 + 1);
@@ -4607,40 +4366,32 @@ void TestMatching1()
 // Example with recursive path that starts at the "middle" 
 void TestMatching2()
 {
-  INT N = 1000;
+  INT N = 10;
 
   // Vertices
   Interval i1(1, 1, 1);
   MultiInterval mi1;
   mi1.addInter(i1);
-  MultiInterval as1(mi1);
-  Set s1;
-  s1.addAtomSet(as1);
+  Set s1 = createSet(mi1);
   SetVertex F1("eq1", 1, s1, 0);
 
   Interval i2(2, 1, N);
   MultiInterval mi2;
   mi2.addInter(i2);
-  MultiInterval as2(mi2);
-  Set s2;
-  s2.addAtomSet(as2);
+  Set s2 = createSet(mi2);
   SetVertex F2("eqloop", 2, s2, 0);
 
   Interval i3(N + 1, 1, 2 * N);
   MultiInterval mi3;
   mi3.addInter(i3);
-  MultiInterval as3(mi3);
-  Set s3;
-  s3.addAtomSet(as3);
+  Set s3 = createSet(mi3);
   SetVertex U("u", 3, s3, 0);
 
   // Edges
   Interval i4(1, 1, 1);
   MultiInterval mi4;
   mi4.addInter(i4);
-  MultiInterval as4(mi4);
-  Set domE1;
-  domE1.addAtomSet(as4);
+  Set domE1 = createSet(mi4);
   LMap lm1;
   lm1.addGO(0, 1);
   LMap lm2;
@@ -4654,16 +4405,12 @@ void TestMatching2()
   Interval i5(2, 1, N);
   MultiInterval mi5;
   mi5.addInter(i5);
-  MultiInterval as5(mi5);
-  Set domE2a;
-  domE2a.addAtomSet(as5); 
+  Set domE2a = createSet(mi5);
 
   Interval i6(N + 1, 1, 2 * N - 1);
   MultiInterval mi6;
   mi6.addInter(i6);
-  MultiInterval as6(mi6);
-  Set domE2b;
-  domE2b.addAtomSet(as6);
+  Set domE2b = createSet(mi6);
 
   LMap lm3;
   lm3.addGO(1, 0);
@@ -6513,6 +6260,7 @@ test_suite *init_unit_test_suite(int, char *[])
 {
   framework::master_test_suite().p_name.value = "Set Based Graphs";
 
+  /*
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation3));
@@ -6615,7 +6363,7 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
   //framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
 
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching1));
+  //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching4));
@@ -6627,6 +6375,8 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching10));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching11));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching12));
+  */
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapComp3));
 
   return 0;
 }

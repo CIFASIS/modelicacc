@@ -13,7 +13,7 @@
 
 namespace SBG {
 
-// Piecewise atomic linear maps -----------------------------------------------------------------
+// Atomic piecewise linear maps -----------------------------------------------------------------
 
 #define APW_TEMPLATE                                                               \
   template <template<typename T, typename = std::allocator<T>> class ORD_CT,       \

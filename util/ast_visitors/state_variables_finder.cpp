@@ -51,13 +51,13 @@ void StateVariablesFinder::findStateVariables()
         } else {
           ERROR(
               "StateVariablesFinder::findStateVariablesInEquations:\n"
-              "Equation type not supported.\n");
+              "Equation type not supported 1.\n");
         }
       }
     } else {
       ERROR(
           "StateVariablesFinder::findStateVariablesInEquations:\n"
-          "Equation type not supported.\n");
+          "Equation type not supported 2.\n");
     }
   }
 }

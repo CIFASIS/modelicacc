@@ -82,7 +82,7 @@ typedef SetEdgeImp<SEDesc> SetEdge;
 
 // Set graph ---------------------------------------------------------------------------------------
 
-typedef boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, SetVertex, SetEdge> SBGraph;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, SetVertex, SetEdge> SBGraph;
 typedef SBGraph::vertex_descriptor SetVertexDesc;
 typedef boost::graph_traits<SBGraph>::vertex_iterator VertexIt;
 typedef SBGraph::edge_descriptor SetEdgeDesc;

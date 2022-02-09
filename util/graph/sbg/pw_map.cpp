@@ -205,6 +205,9 @@ PW_TEMP_TYPE PW_TEMP_TYPE::compPW(PW_TEMP_TYPE pw2)
       auxDom = pw2.preImage(auxDom);
       newDom = auxDom.cap(d2);
 
+      std::cout << "newDom: " << newDom << "\n\n";
+      std::cout << "d2: " << d2 << "\n\n";
+
       if (!newDom.empty()) {
         LM_IMP newLM((*itlm1).compose(*itlm2));
 
@@ -445,8 +448,9 @@ PW_TEMP_TYPE PW_TEMP_TYPE::concat(PW_TEMP_TYPE pw2)
   return res;
 }
 
-// Use currents maps for current dom, and use maps of the argument
-// for elements that are exclusive of the doms of the argument
+// Given two maps pw1 (this map) and pw2, return a map pw3
+// such that dom(pw3) = dom(pw1) U dom(pw2), and
+// pw3(x) = pw1(x) if x in dom(pw1); else pw3(x) = pw2(x)
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::combine(PW_TEMP_TYPE pw2)
 {
@@ -504,8 +508,11 @@ PW_TEMP_TYPE PW_TEMP_TYPE::filterMap(bool (*f)(SET_IMP dom, LM_IMP lm))
   return res;
 }
 
-// This operation uses the image of pw2 through dom(pw1) (this map),
-// keeping the linear maps as they are. pw2 should be a bijective map
+// Given a map pw1 (this map) and a bijective map pw2, return a map 
+// pw3 such that dom(pw3) = {pw2(x) : x in dom(pw1)}, and given
+// y = pw2(x) in dom(pw3), pw3(y) = pw1(x) where x in dom(pw1)
+// This operation updates the values of the dom, without changing
+// the mapping of the elements
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::offsetDomMap(PW_TEMP_TYPE pw2)
 {
@@ -521,8 +528,10 @@ PW_TEMP_TYPE PW_TEMP_TYPE::offsetDomMap(PW_TEMP_TYPE pw2)
   return res;
 }
 
-// This operation applies an offset to each linear expression
-// of the map.
+// Given a map pw1 (this map) and a bijective map pw2, return a map 
+// pw3 such that dom(pw3) = dom(pw1), and given
+// y = pw2(x) in dom(pw3), pw3(y) = pw1(x) where x in dom(pw1)
+// This operation updates the linear maps without changing the doms
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::offsetImageMap(ORD_CT<INT_IMP> offElem) 
 {
@@ -550,7 +559,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::offsetImageMap(ORD_CT<INT_IMP> offElem)
 
 // This operation adds two maps. In the
 // intersection of the domains, the linear map will be 
-// the substraction of both linear maps
+// the sum of both linear maps
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::addMap(PW_TEMP_TYPE pw2)
 {
@@ -1422,6 +1431,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf(int n)
       return res;
 
     else {
+      int den = 0;
       for (int j = 1; j <= res.ndim(); ++j) res = res.reduceMapN(j);
       
       do {
@@ -1429,8 +1439,10 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf(int n)
         res = res.compPW(res);
 
         for (int j = 1; j <= res.ndim(); ++j) res = res.reduceMapN(j);
+        den++;
       }
       while (!oldRes.equivalentPW(res));
+      std::cout << "den: " << den << "\n\n";
     }
   }
 
