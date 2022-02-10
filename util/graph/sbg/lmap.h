@@ -37,6 +37,7 @@ struct LMapImp1 {
   void addGO(REAL_IMP g, REAL_IMP o);
 
   bool empty();
+  bool isId();
 
   LMapImp1 replace(REAL_IMP g, REAL_IMP o, int dim);
 

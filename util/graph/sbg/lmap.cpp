@@ -77,6 +77,22 @@ bool LM_TEMP_TYPE::empty()
 }
 
 LM_TEMPLATE
+bool LM_TEMP_TYPE::isId()
+{ 
+  bool res = true;
+
+  BOOST_FOREACH (REAL_IMP gi, gain())
+    if (gi != 1)
+      res = false;
+
+  BOOST_FOREACH (REAL_IMP oi, offset())
+    if (oi != 0)
+      res = false;
+
+  return res;
+}
+
+LM_TEMPLATE
 LM_TEMP_TYPE LM_TEMP_TYPE::replace(REAL_IMP g, REAL_IMP o, int dim)
 {
   OrdNumeric resg;

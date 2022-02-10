@@ -182,8 +182,7 @@ SET_IMP PW_TEMP_TYPE::preImage(SET_IMP s)
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::compPW(PW_TEMP_TYPE pw2)
 {
-  PWLMap aux = (*this).normalize();
-  pw2 = pw2.normalize();
+  PWLMap aux = *this;
 
   LMapsIt itlm1 = aux.lmap_ref().begin();
   LMapsIt itlm2 = pw2.lmap_ref().begin();
@@ -196,34 +195,82 @@ PW_TEMP_TYPE PW_TEMP_TYPE::compPW(PW_TEMP_TYPE pw2)
   SET_IMP auxDom;
   SET_IMP newDom;
 
-  BOOST_FOREACH (SET_IMP d1, aux.dom()) {
-    itlm2 = pw2.lmap_ref().begin();
+  std::cout << aux << "\n\n";
+  std::cout << pw2 << "\n\n";
 
-    BOOST_FOREACH (SET_IMP d2, pw2.dom()) {
-      auxDom = pw2.image(d2);
-      auxDom = auxDom.cap(d1);
-      auxDom = pw2.preImage(auxDom);
-      newDom = auxDom.cap(d2);
+  if (aux.equivalentPW(pw2)) {
+    for (SetsIt itdom1 = aux.dom_ref().begin(); itdom1 != aux.dom_ref().end(); ++itdom1) {
+      itlm2 = std::next(itlm1, 1);
+      Set im1 = image(*itdom1);
 
-      std::cout << "newDom: " << newDom << "\n\n";
-      std::cout << "d2: " << d2 << "\n\n";
-
-      if (!newDom.empty()) {
-        LM_IMP newLM((*itlm1).compose(*itlm2));
-
-        itress = ress.insert(itress, newDom);
+      if ((*itlm1).isId()) {
+        itress = ress.insert(itress, *itdom1);
         ++itress;
-        itreslm = reslm.insert(itreslm, newLM);
+        itreslm = reslm.insert(itreslm, *itlm1);
         ++itreslm;
       }
 
-      ++itlm2;
-    }
+      for (SetsIt itdom2 = std::next(itdom1, 1); itdom2 != aux.dom_ref().end(); ++itdom2) {
+        Set inter = im1.cap(*itdom2);
 
-    ++itlm1;
+        if (!inter.empty() && (*itlm2).isId()) {
+          itress = ress.insert(itress, *itdom1);
+          ++itress;
+          itreslm = reslm.insert(itreslm, *itlm1);
+          ++itreslm;
+        }
+
+        else if (!inter.empty()) {
+          LM_IMP newLM((*itlm1).compose(*itlm2));
+
+          itress = ress.insert(itress, *itdom1);
+          ++itress;
+          itreslm = reslm.insert(itreslm, newLM);
+          ++itreslm;
+        }
+
+        ++itlm2;
+      }
+
+      ++itlm1;
+    }
   }
 
-  return PWLMapImp1(ress, reslm);
+  else {
+    aux = aux.normalize();
+    pw2 = pw2.normalize();
+
+    itlm1 = aux.lmap_ref().begin();
+    itlm2 = pw2.lmap_ref().begin();
+
+    BOOST_FOREACH (SET_IMP d1, aux.dom()) {
+      itlm2 = pw2.lmap_ref().begin();
+
+      BOOST_FOREACH (SET_IMP d2, pw2.dom()) {
+        auxDom = pw2.image(d2);
+        auxDom = auxDom.cap(d1);
+        auxDom = pw2.preImage(auxDom);
+        newDom = auxDom.cap(d2);
+
+        if (!newDom.empty()) {
+          LM_IMP newLM((*itlm1).compose(*itlm2));
+
+          itress = ress.insert(itress, newDom);
+          ++itress;
+          itreslm = reslm.insert(itreslm, newLM);
+          ++itreslm;
+        }
+
+        ++itlm2;
+      }
+
+      ++itlm1;
+    }
+  }
+
+  PWLMapImp1 res(ress, reslm);
+  std::cout << "res: " << res << "\n\n";
+  return res;
 }
 
 PW_TEMPLATE
@@ -1434,6 +1481,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf(int n)
       int den = 0;
       for (int j = 1; j <= res.ndim(); ++j) res = res.reduceMapN(j);
       
+      std::cout << "\n";
       do {
         oldRes = res;
         res = res.compPW(res);

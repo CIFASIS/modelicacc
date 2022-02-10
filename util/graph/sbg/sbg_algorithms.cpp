@@ -240,46 +240,13 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
   // *** Traverse graph
   do {
     oldSmap = newSmap;
-    //auto start = std::chrono::high_resolution_clock::now();
     newSmap = minReach1(V, map_D, map_B, newSmap, newRmap); // Get successor
-    /*
-    auto end = std::chrono::high_resolution_clock::now();
-    double time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-    time_taken *= 1e-9;
-
-    std::cout << std::endl;
-    std::cout << "minReach1 time: " << std::fixed << time_taken << std::setprecision(9);
-    std::cout << " sec" << std::endl << std::endl;
-
-    start = std::chrono::high_resolution_clock::now();
-    */
     newRmap = newSmap.mapInf(1); // Get representative
-    /*
-    std::cout << "newSmap: " << newSmap << "\n\n";
-    end = std::chrono::high_resolution_clock::now();
-    time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-    time_taken *= 1e-9;
 
-    std::cout << std::endl;
-    std::cout << "mapInf time: " << std::fixed << time_taken << std::setprecision(9);
-    std::cout << " sec" << std::endl << std::endl;
-
-    start = std::chrono::high_resolution_clock::now();
-    */
     PWLMap deltaSmap = newSmap.diffMap(oldSmap); 
     Vc = V.diff(deltaSmap.preImage(zero)); // Vertices that changed its successor
-    /*
-    end = std::chrono::high_resolution_clock::now();
-    time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-    time_taken *= 1e-9;
-
-    std::cout << std::endl;
-    std::cout << "Vc time: " << std::fixed << time_taken << std::setprecision(9);
-    std::cout << " sec" << std::endl << std::endl;
-    */
   
     if (!Vc.empty()) {
-      //start = std::chrono::high_resolution_clock::now();
       oldSEmap = newSEmap;
       Set Esucc = newSmap.compPW(map_B).diffMap(map_D).preImage(zero); // Edges that connect vertices with successors
       newSEmap = (map_B.restrictMap(Esucc).minInv(newSmap.image())).compPW(map_D.restrictMap(Esucc));
@@ -292,17 +259,7 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
       Set ER; // Recursive edges that changed its successor
       PWLMap se2map = newSEmap.compPW(newSEmap);
       PWLMap semapNth = se2map;
-      /*
-      end = std::chrono::high_resolution_clock::now();
-      time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-      time_taken *= 1e-9;
 
-      std::cout << std::endl;
-      std::cout << "Ec time: " << std::fixed << time_taken << std::setprecision(9);
-      std::cout << " sec" << std::endl << std::endl;
-
-      start = std::chrono::high_resolution_clock::now();
-      */
       //PWLMap oldSENth;
       //Set visitedEdges = newSEmap.wholeDom().cup(newSEmap.image());
       //Set oldSubsetEdges, visitedSubsetEdges = Emap.image(visitedEdges);
@@ -319,21 +276,11 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
         std::cout << "n: " << n << "\n\n";
       }
       while(ER.empty() && n < 2);
-      /*
-      end = std::chrono::high_resolution_clock::now();
-      time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-      time_taken *= 1e-9;
-
-      std::cout << std::endl;
-      std::cout << "deltaEmap time: " << std::fixed << time_taken << std::setprecision(9);
-      std::cout << " sec" << std::endl << std::endl;
-      */
 
       // *** Handle recursion
-      //start = std::chrono::high_resolution_clock::now();
       ER = ER.cap(Ec);
       if (!ER.empty()) { 
-        //ER = createSet(*(ER.asets().begin()));
+        ER = createSet(*(ER.asets().begin()));
 
         Set oldSubsetEdge = Emap.image(ER);
         Set succSubsetEdge = Emap.image(newSEmap.image(ER));
@@ -343,15 +290,6 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
           newRmap = std::get<1>(p);
         }
       }
-      /*
-      end = std::chrono::high_resolution_clock::now();
-      time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-      time_taken *= 1e-9;
-
-      std::cout << std::endl;
-      std::cout << "recursion time: " << std::fixed << time_taken << std::setprecision(9);
-      std::cout << " sec" << std::endl << std::endl;
-      */
     }
   }
   while (!Vc.empty());

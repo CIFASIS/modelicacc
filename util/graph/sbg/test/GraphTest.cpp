@@ -2172,7 +2172,7 @@ void TestPWLMapComp2()
 void TestPWLMapComp3()
 {
   int N = 100;
-  int repeat = 250;
+  int repeat = 100;
 
   PWLMap smap;
 
@@ -3435,6 +3435,9 @@ void TestRC1()
   res2.addSetLM(s28, lm28);
   res2.addSetLM(s29, lm29);
   res2.addSetLM(s30, lm30);
+
+  std::cout << res1 << "\n\n";
+  std::cout << res2 << "\n\n";
 
   BOOST_CHECK(res1.equivalentPW(res2));
 }
@@ -6344,6 +6347,7 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapPre2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapComp1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapComp2));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapComp3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapCombine1));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAS1));
@@ -6358,8 +6362,10 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp4));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdj1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapInf1));
+  */
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestRC1));
+  /*
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
   //framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
 
@@ -6376,7 +6382,6 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching11));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching12));
   */
-  framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapComp3));
 
   return 0;
 }
