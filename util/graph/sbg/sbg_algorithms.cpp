@@ -280,7 +280,7 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
       // *** Handle recursion
       ER = ER.cap(Ec);
       if (!ER.empty()) { 
-        ER = createSet(*(ER.asets().begin()));
+        //ER = createSet(*(ER.asets().begin()));
 
         Set oldSubsetEdge = Emap.image(ER);
         Set succSubsetEdge = Emap.image(newSEmap.image(ER));

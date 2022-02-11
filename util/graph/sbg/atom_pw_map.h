@@ -33,6 +33,7 @@ struct AtomPWLMapImp1 {
   AtomPWLMapImp1(MI_IMP dom, MI_IMP image);
 
   bool empty();
+  bool isId();
 
   MI_IMP image(MI_IMP as);
   MI_IMP image();

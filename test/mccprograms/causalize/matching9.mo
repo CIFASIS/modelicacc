@@ -11,13 +11,11 @@
     Real x8[N], a8[N], b8[N];
     Real x9[N], a9[N], b9[N];
     Real x10[N], a10[N], b10[N];
-  /*
     Real x11[N], a11[N], b11[N];
     Real x12[N], a12[N], b12[N];
     Real x13[N], a13[N], b13[N];
     Real x14[N], a14[N], b14[N];
     Real x15[N], a15[N], b15[N];
-  */
   equation 
     for i in 2:N-1 loop
       der(x1[i]) = a1[i] - x1[i];
@@ -139,7 +137,6 @@
     a10[1] = 1;
     a10[N] = a10[N - 1] + b10[N - 1];
 
-/*
     for i in 2:N-1 loop
       der(x11[i]) = a11[i] - x11[i];
       a11[i + 1] = a11[i] + b11[i];
@@ -199,5 +196,4 @@
     der(x15[N]) = a15[N] - x15[N];
     a15[1] = 1;
     a15[N] = a15[N - 1] + b15[N - 1];
-  */
   end matching9;

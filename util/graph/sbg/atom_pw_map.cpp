@@ -110,6 +110,14 @@ APW_TEMPLATE
 bool APW_TEMP_TYPE::empty() { return dom_ref().empty() && lmap_ref().empty(); }
 
 APW_TEMPLATE
+bool APW_TEMP_TYPE::isId() 
+{ 
+  if (lmap_ref().isId()) return true;
+
+  return image() == dom();
+}
+
+APW_TEMPLATE
 MI_IMP APW_TEMP_TYPE::image(MI_IMP as)
 {
   ORD_CT<INTER_IMP> inters = (as.cap(dom())).inters();

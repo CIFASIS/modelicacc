@@ -17,6 +17,7 @@
 
 ******************************************************************************/
 
+#include <chrono>
 #include <iostream>
 
 #include <boost/test/unit_test.hpp>
@@ -2172,7 +2173,7 @@ void TestPWLMapComp2()
 void TestPWLMapComp3()
 {
   int N = 100;
-  int repeat = 100;
+  int repeat = 250;
 
   PWLMap smap;
 
@@ -2225,7 +2226,12 @@ void TestPWLMapComp3()
     smap.addSetLM(s4, lm4);
   }
 
+  auto t1 = std::chrono::high_resolution_clock::now();
   smap.mapInf(1);
+  auto t2 = std::chrono::high_resolution_clock::now();
+  auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+  std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+  std::cout << ms_double.count() << "ms\n";
 
   BOOST_CHECK(true);
 }
@@ -6263,7 +6269,7 @@ test_suite *init_unit_test_suite(int, char *[])
 {
   framework::master_test_suite().p_name.value = "Set Based Graphs";
 
-  /*
+/*
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestIntCreation3));
@@ -6347,7 +6353,9 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapPre2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapComp1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapComp2));
+*/
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapComp3));
+/*
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapCombine1));
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAS1));
@@ -6362,14 +6370,12 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdjComp4));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMinAdj1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestPWLMapInf1));
-  */
 
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestRC1));
-  /*
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestGraph3c));
   //framework::master_test_suite().add(BOOST_TEST_CASE(&Test2D));
 
-  //framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching1));
+  framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching1));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching2));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching3));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching4));
@@ -6381,7 +6387,7 @@ test_suite *init_unit_test_suite(int, char *[])
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching10));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching11));
   framework::master_test_suite().add(BOOST_TEST_CASE(&TestMatching12));
-  */
+*/
 
   return 0;
 }
