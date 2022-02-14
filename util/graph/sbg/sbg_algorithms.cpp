@@ -260,22 +260,19 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
       PWLMap se2map = newSEmap.compPW(newSEmap);
       PWLMap semapNth = se2map;
 
-      //PWLMap oldSENth;
-      //Set visitedEdges = newSEmap.wholeDom().cup(newSEmap.image());
-      //Set oldSubsetEdges, visitedSubsetEdges = Emap.image(visitedEdges);
+      Set visitedEdges = newSEmap.wholeDom().cup(newSEmap.image());
+      Set oldSubsetEdges, visitedSubsetEdges = Emap.image(visitedEdges);
       do {
         PWLMap deltaEmap = Emap.compPW(semapNth.filterMap(notEqId)).diffMap(Emap);
         ER = deltaEmap.preImage(zero);
-        //oldSENth = semapNth;
         semapNth = semapNth.compPW(newSEmap);
 
-        //visitedEdges = newSEmap.image(visitedEdges);
-        //oldSubsetEdges = visitedSubsetEdges;
-        //visitedSubsetEdges = Emap.image(visitedEdges);
+        visitedEdges = newSEmap.image(visitedEdges);
+        oldSubsetEdges = visitedSubsetEdges;
+        visitedSubsetEdges = Emap.image(visitedEdges);
         n++;
-        std::cout << "n: " << n << "\n\n";
       }
-      while(ER.empty() && n < 2);
+      while(ER.empty() && oldSubsetEdges.cap(visitedSubsetEdges).empty());
 
       // *** Handle recursion
       ER = ER.cap(Ec);

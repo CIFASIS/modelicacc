@@ -297,7 +297,6 @@ PW_TEMP_TYPE PW_TEMP_TYPE::compPW(PW_TEMP_TYPE pw2)
   }
 
   else {
-
     itlm1 = aux.lmap_ref().begin();
 
     BOOST_FOREACH (SET_IMP d1, aux.dom()) {
@@ -1539,19 +1538,15 @@ PW_TEMP_TYPE PW_TEMP_TYPE::mapInf(int n)
       return res;
 
     else {
-      int den = 0;
       for (int j = 1; j <= res.ndim(); ++j) res = res.reduceMapN(j);
       
-      std::cout << "\n";
       do {
         oldRes = res;
         res = res.compPW(res);
 
         for (int j = 1; j <= res.ndim(); ++j) res = res.reduceMapN(j);
-        den++;
       }
       while (!oldRes.equivalentPW(res));
-      std::cout << "den: " << den << "\n\n";
     }
   }
 

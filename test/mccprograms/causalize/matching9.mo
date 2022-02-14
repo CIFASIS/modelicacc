@@ -1,7 +1,8 @@
   model matching9
     //Model with possibly wrong initial matchingTest
-    constant Integer N=10000;
+    constant Integer N=100000000;
     Real x1[N], a1[N], b1[N];
+/*
     Real x2[N], a2[N], b2[N];
     Real x3[N], a3[N], b3[N];
     Real x4[N], a4[N], b4[N];
@@ -16,6 +17,7 @@
     Real x13[N], a13[N], b13[N];
     Real x14[N], a14[N], b14[N];
     Real x15[N], a15[N], b15[N];
+*/
   equation 
     for i in 2:N-1 loop
       der(x1[i]) = a1[i] - x1[i];
@@ -29,6 +31,7 @@
     a1[1] = 1;
     a1[N] = a1[N - 1] + b1[N - 1];
 
+/*
     for i in 2:N-1 loop
       der(x2[i]) = a2[i] - x2[i];
       a2[i + 1] = a2[i] + b2[i];
@@ -196,4 +199,5 @@
     der(x15[N]) = a15[N] - x15[N];
     a15[1] = 1;
     a15[N] = a15[N - 1] + b15[N - 1];
+*/
   end matching9;
