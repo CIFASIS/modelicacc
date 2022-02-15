@@ -127,9 +127,6 @@ bool MatchingExps::operator()(Reference v) const
 
 set<Expression> MatchingExps::matchedExps() const
 {
-  if (!_state_var && _has_der) {
-    return set<Expression>();
-  } 
   return _matched_exps; 
 }
 
