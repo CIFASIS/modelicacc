@@ -84,7 +84,7 @@ void PWLMapValues::assign(Expression left, Expression right, bool var_left, bool
   } else if (var_right) {
     _constant = sign * Apply(eval_exp, left);
   } else {
-    _constant = sign * (Apply(eval_exp, left) +  Apply(eval_exp, right));
+    _constant = Apply(eval_exp, left) +  sign * Apply(eval_exp, right);
   }
 }
 

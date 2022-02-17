@@ -161,6 +161,7 @@ MatchingGraphBuilder::MatchingMaps MatchingGraphBuilder::generatePWLMaps(Express
 {
   assert(is<Reference>(exp));
   VarSymbolTable symbols = _mmo_class.syms();
+  PWLMapValues pwl_map_values(symbols);
   ORD_REALS constant_pwl_map_u;
   ORD_REALS::iterator constant_pwl_map_u_it = constant_pwl_map_u.begin();
   ORD_REALS slope_pwl_map_u;
@@ -180,17 +181,22 @@ MatchingGraphBuilder::MatchingMaps MatchingGraphBuilder::generatePWLMaps(Express
 
   foreach_(Expression idx, indexes)
   {
-    SBG::INT set_vertex_init = *min_elem -1;
-    PWLMapValues pwl_map_values(symbols);
+    SBG::INT set_vertex_init = *min_elem;
     Apply(pwl_map_values, idx);
     Usage usage = _eq_usage[eq_id];
+    //int set_vertex_offset = pwl_map_values.slope() * offset;
+    //int set_vertex_offset = (offset - set_vertex_init) + map_first_value;
     int range_init_value = usage[pwl_map_values.variable()];
-    int set_vertex_offset = pwl_map_values.slope() * offset;
-    int map_first_value = pwl_map_values.constant() + pwl_map_values.slope() * range_init_value + set_vertex_init;
-    constant_pwl_map_u_it = constant_pwl_map_u.insert(constant_pwl_map_u_it, map_first_value - set_vertex_offset);
+    int map_first_value = pwl_map_values.constant() + pwl_map_values.slope() * range_init_value + set_vertex_init - 1;
+    std::cout << map_first_value << " | " << pwl_map_values.constant() << " | " << pwl_map_values.slope() * range_init_value << " | " << set_vertex_init << "\n";
+    int off = map_first_value - pwl_map_values.slope() * offset;
+    constant_pwl_map_u_it = constant_pwl_map_u.insert(constant_pwl_map_u_it, off);
     slope_pwl_map_u_it = slope_pwl_map_u.insert(slope_pwl_map_u_it, pwl_map_values.slope());
     min_elem++; 
   }
+//  BOOST_FOREACH (REAL c, constant_pwl_map_u)
+//    std::cout << c << " ";
+//  std::cout << "\n"; 
   if (indexes.empty()) { // Scalar variable.
     SBG::INT set_vertex_init = *min_elem -1;
     constant_pwl_map_u_it = constant_pwl_map_u.insert(constant_pwl_map_u_it, - map_offset + set_vertex_init);

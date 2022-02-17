@@ -430,7 +430,7 @@ void MatchingStruct::offsetMaps(PWLMap sideMap)
   mapBSide = mmapSide.compPW(mapB);
 }
 
-void MatchingStruct::shortPaths(Set D, Set E)
+void MatchingStruct::shortPathsLeft(Set D, Set E)
 {
   PWLMap idMap(allVertices);
   PWLMap map_D = mapD.restrictMap(E);
@@ -470,6 +470,39 @@ void MatchingStruct::shortPaths(Set D, Set E)
   //std::cout << "rmapshort: " << rmap << "\n\n";
 }
 
+void MatchingStruct::shortPathsRight(Set D, Set E)
+{
+  PWLMap idMap(allVertices);
+  PWLMap map_D = mapD.restrictMap(E);
+  PWLMap map_B = mapB.restrictMap(E);
+
+  smap = idMap;
+  rmap = idMap;
+
+  Set C = D; // Vertices that reach D
+  int k = 0;
+
+  Set P;
+
+  do {
+    P = map_B.image(map_D.preImage(C)).diff(C);
+    Set EP = map_D.preImage(C).cap(map_B.preImage(P));
+    PWLMap mapBP = map_B.restrictMap(EP);
+    PWLMap Vmin = mapBP.minInv(P);
+    PWLMap smapP = map_D.compPW(Vmin);
+    smap = smapP.combine(smap);
+    PWLMap rmapP = rmap.compPW(smapP);
+    rmap = rmapP.combine(rmap);
+
+    C = C.cup(P);
+    k++;
+  }
+  while (!P.empty()); 
+
+  //std::cout << "smapshort: " << smap << "\n\n";
+  //std::cout << "rmapshort: " << rmap << "\n\n";
+}
+
 void MatchingStruct::directedMinReach(PWLMap sideMap)
 {
   offsetMaps(sideMap);
@@ -497,7 +530,7 @@ void MatchingStruct::SBGMatchingShortStep(Set E)
 
   // *** Forward direction
 
-  shortPaths(unmatchedV.cap(F), Ed);
+  shortPathsLeft(unmatchedV.cap(F), Ed);
 
   // Leave edges in paths that reach unmatched left vertices
   PWLMap auxB = mapB.restrictMap(mapD.preImage(smap.filterMap(notEqId).image()));
@@ -508,7 +541,7 @@ void MatchingStruct::SBGMatchingShortStep(Set E)
   PWLMap auxMapD = mapD;
   mapD = mapB;
   mapB = auxMapD;
-  shortPaths(unmatchedV.cap(U), Ed);
+  shortPathsRight(unmatchedV.cap(U), Ed);
 
   // Leave edges in paths that reach unmatched left and right vertices
   auxB = mapB.restrictMap(mapD.preImage(smap.filterMap(notEqId).image()));
@@ -532,7 +565,7 @@ void MatchingStruct::SBGMatchingShortStep(Set E)
   unmatchedV = allVertices.diff(matchedV);
   PWLMap idUnmatched(unmatchedV);
 
-  //debugStep();
+  debugStep();
 }
 
 void MatchingStruct::SBGMatchingMinStep(Set E)
@@ -599,7 +632,7 @@ void MatchingStruct::SBGMatchingMinStep(Set E)
   PWLMap idUnmatched(unmatchedV);
   mmap = idUnmatched.combine(mmap);
 
-  //debugStep();
+  debugStep();
 }
 
 void MatchingStruct::SBGMatchingShort()
@@ -650,33 +683,10 @@ std::pair<Set, bool> MatchingStruct::SBGMatching()
 {
   debugInit();
 
-  /*
-  std::vector<int> mapcc(num_vertices(g));
-  connected_components(g, &mapcc[0]);
-  
-  std::vector<int> ccs = mapcc;
-  std::sort(ccs.begin(), ccs.end());
-  ccs.erase(unique(ccs.begin(), ccs.end()), ccs.end());
-
-  BOOST_FOREACH (int c, ccs) {
-    SBGraph gc = g.create_subgraph(); 
-
-    // Create vertices of subgraph
-    int i = 0;
-    BOOST_FOREACH (int ci, mapcc) {
-      if (c == ci)
-        add_vertex(g[i], gc);
-
-      i++;
-    }
-
-    BOOST_FOREACH (SetEdgeDesc ei, edges(g)) 
-      add_edge(gc.global_to_local(source(ei, g)), gc.global_to_local(target(ei, g))); 
-  }
-  */
-
   SBGMatchingShort();
 
+  BOOST_FOREACH (MultiInterval as, matchedE.asets())
+    std::cout << as << " | " << mapU.image(as) << "\n"; 
   matchedE = mapD.preImage(U);
   return std::pair<Set, bool>(matchedE, U.diff(matchedV).empty());
 }
