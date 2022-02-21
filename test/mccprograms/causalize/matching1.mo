@@ -1,20 +1,10 @@
-model test1
+model matching1
   //Model without algebraic loops and without connections between different indices
-  constant Integer N=100000;
-  Real x1[N],a1[N], x2[N], a2[N], x3[N], a3[N];
+  constant Integer N=100;
+  Real a[N], x[N];
 equation
   for i in 1:N loop
-    a1[i]=x1[i];
-    der(x1[i])=1-a1[i];
+    a[i] = x[i];
+    der(x[i]) = 1 - a[i];
   end for;  
-
-  for i in 1:N loop
-    a2[i]=x2[i];
-    der(x2[i])=1-a2[i];
-  end for;  
-
-  for i in 1:N loop
-    a3[i]=x3[i];
-    der(x3[i])=1-a3[i];
-  end for;  
-end test1;
+end matching1;

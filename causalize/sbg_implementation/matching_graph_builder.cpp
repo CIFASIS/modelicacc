@@ -188,7 +188,6 @@ MatchingGraphBuilder::MatchingMaps MatchingGraphBuilder::generatePWLMaps(Express
     //int set_vertex_offset = (offset - set_vertex_init) + map_first_value;
     int range_init_value = usage[pwl_map_values.variable()];
     int map_first_value = pwl_map_values.constant() + pwl_map_values.slope() * range_init_value + set_vertex_init - 1;
-    std::cout << map_first_value << " | " << pwl_map_values.constant() << " | " << pwl_map_values.slope() * range_init_value << " | " << set_vertex_init << "\n";
     int off = map_first_value - pwl_map_values.slope() * offset;
     constant_pwl_map_u_it = constant_pwl_map_u.insert(constant_pwl_map_u_it, off);
     slope_pwl_map_u_it = slope_pwl_map_u.insert(slope_pwl_map_u_it, pwl_map_values.slope());

@@ -277,7 +277,7 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
       // *** Handle recursion
       ER = ER.cap(Ec);
       if (!ER.empty()) { 
-        //ER = createSet(*(ER.asets().begin()));
+        ER = createSet(*(ER.asets().begin()));
 
         Set oldSubsetEdge = Emap.image(ER);
         Set succSubsetEdge = Emap.image(newSEmap.image(ER));
@@ -685,8 +685,6 @@ std::pair<Set, bool> MatchingStruct::SBGMatching()
 
   SBGMatchingShort();
 
-  BOOST_FOREACH (MultiInterval as, matchedE.asets())
-    std::cout << as << " | " << mapU.image(as) << "\n"; 
   matchedE = mapD.preImage(U);
   return std::pair<Set, bool>(matchedE, U.diff(matchedV).empty());
 }
