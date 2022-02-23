@@ -25,9 +25,9 @@
 #include <parser/parser.h>
 #include <util/ast_visitors/state_variables_finder.h>
 #include <util/debug.h>
-#include <util/graph/sbg/sbg.h>
-#include <util/graph/sbg/sbg_algorithms.h>
-#include <util/graph/sbg/sbg_printer.h>
+#include <sbg/sbg.hpp>
+#include <sbg/sbg_algorithms.hpp>
+#include <sbg/sbg_printer.hpp>
 
 using namespace std;
 using namespace Modelica;
