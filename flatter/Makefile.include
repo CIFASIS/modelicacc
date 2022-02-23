@@ -27,16 +27,6 @@ FLATTER_SRC := \
 	$(UTIL_DIR)/ast_visitors/mark_connector.cpp \
 	$(UTIL_DIR)/ast_visitors/partial_eval_expression.cpp \
 	$(UTIL_DIR)/ast_visitors/replace_expression.cpp \
-    $(UTIL_DIR)/graph/sbg/sbg.cpp \
-	$(UTIL_DIR)/graph/sbg/sbg_algorithms.cpp \
-	$(UTIL_DIR)/graph/sbg/sbg_printer.cpp \
-	$(UTIL_DIR)/graph/sbg/descs.cpp \
-  $(UTIL_DIR)/graph/sbg/interval.cpp \
-  $(UTIL_DIR)/graph/sbg/multi_interval.cpp \
-  $(UTIL_DIR)/graph/sbg/set.cpp \
-  $(UTIL_DIR)/graph/sbg/lmap.cpp \
-  $(UTIL_DIR)/graph/sbg/atom_pw_map.cpp \
-  $(UTIL_DIR)/graph/sbg/pw_map.cpp \
 	$(MMO_DIR)/mmo_class.cpp \
 	$(MMO_DIR)/mmo_tree.cpp
 

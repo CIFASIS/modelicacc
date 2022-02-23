@@ -10,17 +10,7 @@ CAUSALIZE_SBG_SRC := \
     $(CAUSALIZE_SBG_DIR)/main.cpp\
 	$(CAUSALIZE_SBG_DIR)/matching_graph_builder.cpp\
 	$(UTIL_DIR)/ast_visitors/matching_exps.cpp \
-	$(UTIL_DIR)/ast_visitors/pwl_map_values.cpp \
-	$(UTIL_DIR)/graph/sbg/descs.cpp \
-	$(UTIL_DIR)/graph/sbg/sbg.cpp \
-	$(UTIL_DIR)/graph/sbg/sbg_algorithms.cpp \
-	$(UTIL_DIR)/graph/sbg/sbg_printer.cpp \
-  $(UTIL_DIR)/graph/sbg/interval.cpp \
-  $(UTIL_DIR)/graph/sbg/multi_interval.cpp \
-  $(UTIL_DIR)/graph/sbg/set.cpp \
-  $(UTIL_DIR)/graph/sbg/lmap.cpp \
-  $(UTIL_DIR)/graph/sbg/atom_pw_map.cpp \
-  $(UTIL_DIR)/graph/sbg/pw_map.cpp
+	$(UTIL_DIR)/ast_visitors/pwl_map_values.cpp
 
 # Objects
 CAUSALIZE_SBG_OBJ=$(addprefix $(BUILD_DIR)/, $(CAUSALIZE_SBG_SRC:.cpp=.o))
