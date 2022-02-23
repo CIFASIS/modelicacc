@@ -15,6 +15,7 @@ configure
 
 # 3rd-party files.
 /3rd-party/gtest/usr/*
+/3rd-party/sbg/sb-graph-dev/*
 
 # Test generated files.
 /flatter/test/test_data/*
