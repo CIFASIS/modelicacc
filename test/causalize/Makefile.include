@@ -1,3 +1,5 @@
+include test/causalize/boost/Makefile.include
+
 OBJS_CAUSALIZATION_COMMON := $(OBJS_COMMON) \
                   util/debug.o \
                   util/table.o \

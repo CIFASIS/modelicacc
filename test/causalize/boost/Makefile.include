@@ -1,0 +1,38 @@
+# The Directories, Source, Includes, Objects, Binary 
+CAUSALIZE_TEST_DIR  := ./test/causalize
+BOOST_CMP_DIR  := $(CAUSALIZE_TEST_DIR)/boost
+BOOST_CMP          := bin/boost-cmp
+BOOST_CMP_LIB 	   += -L$(ROOT_DIR)/lib -L$(ROOT_DIR)/3rd-party/sbg/sb-graph-dev/lib -lsbgraph -lginac -lcln -lgmp  
+BOOST_CMP_INCLUDE   = -I$(ROOT_DIR) -I$(ROOT_DIR)/3rd-party/sbg/sb-graph-dev/
+
+all: $(BOOST_CMP)
+
+# Sources
+BOOST_CMP_SRC := \
+	$(UTIL_DIR)/debug.cpp \
+	$(UTIL_DIR)/table.cpp \
+	$(UTIL_DIR)/type.cpp \
+	$(UTIL_DIR)/ast_visitors/all_expressions.cpp \
+	$(UTIL_DIR)/ast_visitors/replace_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/eval_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/partial_eval_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/ginac_interface.cpp \
+	$(UTIL_DIR)/ast_visitors/contains_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/splitfor_visitor.cpp \
+	$(UTIL_DIR)/ast_visitors/state_variables_finder.cpp \
+	$(UTIL_DIR)/ast_visitors/pwl_map_values.cpp \
+	$(UTIL_DIR)/ast_visitors/matching_exps.cpp \
+	$(UTIL_DIR)/logger.cpp \
+	$(MMO_DIR)/mmo_class.cpp \
+	$(BOOST_CMP_DIR)/boost_matching.cpp \
+	$(CAUSALIZE_SBG_DIR)/matching_graph_builder.cpp
+
+# Objects
+BOOST_CMP_OBJ=$(addprefix $(BUILD_DIR)/, $(BOOST_CMP_SRC:.cpp=.o))
+
+create-folders::
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_TEST_DIR)
+	@mkdir -p $(BUILD_DIR)/$(BOOST_CMP_DIR)
+
+$(BOOST_CMP): $(BOOST_CMP_OBJ) $(CAUSALIZE_COMMON_OBJ) $(LIBMODELICA)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(BOOST_CMP) $(BOOST_CMP_OBJ) $(LIBS)
