@@ -22,6 +22,7 @@
 #include <util/ast_visitors/eval_expression.h>
 #include <util/ast_visitors/matching_exps.h>
 #include <util/ast_visitors/pwl_map_values.h>
+#include <util/logger.h>
 
 using namespace Modelica;
 using namespace SBG;
@@ -283,16 +284,16 @@ SBGraph MatchingGraphBuilder::makeGraph()
       Apply(matching_exps, left);
       Apply(matching_exps, right);
       std::set<Expression> matched_exps = matching_exps.matchedExps();
-      std::cout << "Matched exps for: " << unknown_vertex.name() << " in " << eq_desc.second << std::endl;
-      std::cout << "Equation dom: " << dom << std::endl;
+      LOG << "Matched exps for: " << unknown_vertex.name() << " in " << eq_desc.second << std::endl;
+      LOG << "Equation dom: " << dom << std::endl;
       foreach_(Expression exp, matched_exps)
       {
-        std::cout << "Expression: " << exp << std::endl;
+        LOG << "Expression: " << exp << std::endl;
         MatchingMaps maps = generatePWLMaps(exp, dom, unk_dom, set_edge_offset, eq_vertex.name(), max_dim); 
         set_edge_offset += dom.card();
         std::string edge_name = "E_" + std::to_string(edge_id++);
-        std::cout << "MapF: " << maps.first << std::endl;
-        std::cout << "MapU: " << maps.second << std::endl;
+        LOG << "MapF: " << maps.first << std::endl;
+        LOG << "MapU: " << maps.second << std::endl;
         SetEdge edge(edge_name, num_edges(graph) + 1, maps.first, maps.second, 0);
         SetEdgeDesc e;
         bool b;
