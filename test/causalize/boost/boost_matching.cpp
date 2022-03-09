@@ -44,6 +44,26 @@ using namespace Modelica;
 using namespace Modelica::AST;
 using namespace Causalize;
 
+void usage()
+{
+  cout << "Usage: boost-cpm [options] file" << endl;
+  cout << "Computes matching for a given Modelica model file using SBG and boost matching algorithms and shows the execution time of both." << endl;
+  cout << endl;
+  cout << "-d, --debug      Print debug information about graph generation." << endl;
+  cout << "-h, --help       Display this information and exit" << endl;
+  cout << "-o <path>, --output <path> Sets the output path for the generated graph dot file." << endl;
+  cout << endl;
+  cout << "Modelica C Compiler home page: https://github.com/CIFASIS/modelicacc " << endl;
+}
+
+void version()
+{
+  cout << "Modelica C Compiler 2.0" << endl;
+  cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << endl;
+  cout << "This is free software: you are free to change and redistribute it." << endl;
+  cout << "There is NO WARRANTY, to the extent permitted by law." << endl;
+}
+
 //===============================================================================
 // Based on the example code from Aaron Windsor: 
 //
@@ -95,15 +115,23 @@ int main(int argc, char **argv)
   bool debug = false;
 
   while (true) {
-    static struct option long_options[] = {{"debug", no_argument, 0, 'd'},
+    static struct option long_options[] = {{"version", no_argument, 0, 'v'},
+                                           {"help", no_argument, 0, 'h'},
+                                           {"debug", no_argument, 0, 'd'},
                                            {"output", required_argument, 0, 'o'},
                                            {0, 0, 0, 0}};
     int option_index = 0;
-    opt = getopt_long(argc, argv, "do:", long_options, &option_index);
+    opt = getopt_long(argc, argv, "vhdo:", long_options, &option_index);
     if (opt == EOF) {
       break;
     }
     switch (opt) {
+    case 'v':
+      version();
+      exit(0);
+    case 'h':
+      usage();
+      exit(0);
     case 'd':
       debug = true;
       break;
