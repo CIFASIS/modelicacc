@@ -18,8 +18,6 @@
 /*-----------------------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------------------*/
 
-// Connected components ---------------------------------------------------------------------------
-
 PWLMap connectedComponents(SBGraph g)
 {
   PWLMap res;
@@ -297,9 +295,10 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
 // Matching ---------------------------------------------------------------------------------------
 
 // Initialization
-MatchingStruct::MatchingStruct(SBGraph garg)
+MatchingStruct::MatchingStruct(SBGraph garg, bool debugEnabled)
 {
   g = garg; 
+  d = debugEnabled;
 
   BOOST_FOREACH (SetEdgeDesc ei, edges(g)) {
     PWLMap fmap = (g[ei]).map_f();
@@ -465,9 +464,6 @@ void MatchingStruct::shortPathsLeft(Set D, Set E)
     k++;
   }
   while (!P.empty()); 
-
-  //std::cout << "smapshort: " << smap << "\n\n";
-  //std::cout << "rmapshort: " << rmap << "\n\n";
 }
 
 void MatchingStruct::shortPathsRight(Set D, Set E)
@@ -499,8 +495,8 @@ void MatchingStruct::shortPathsRight(Set D, Set E)
   }
   while (!P.empty()); 
 
-  //std::cout << "smapshort: " << smap << "\n\n";
-  //std::cout << "rmapshort: " << rmap << "\n\n";
+  if (d)
+    std::cout << "rmap short: " << rmap << "\n\n";
 }
 
 void MatchingStruct::directedMinReach(PWLMap sideMap)
@@ -513,8 +509,10 @@ void MatchingStruct::directedMinReach(PWLMap sideMap)
   PWLMap directedRmap = std::get<2>(t);
   rmap = mmapSideInv.compPW(directedRmap.compPW(mmapSide));
 
-//  std::cout << "smapmin: " << smap << "\n\n";
-//  std::cout << "rmapmin: " << rmap << "\n\n";
+  if (d) {
+    std::cout << "smap min: " << smap << "\n\n";
+    std::cout << "rmap min: " << rmap << "\n\n";
+  }
 }
 
 void MatchingStruct::SBGMatchingShortStep(Set E)
@@ -565,7 +563,8 @@ void MatchingStruct::SBGMatchingShortStep(Set E)
   unmatchedV = allVertices.diff(matchedV);
   PWLMap idUnmatched(unmatchedV);
 
-  debugStep();
+  if (d)
+    debugStep();
 }
 
 void MatchingStruct::SBGMatchingMinStep(Set E)
@@ -632,7 +631,8 @@ void MatchingStruct::SBGMatchingMinStep(Set E)
   PWLMap idUnmatched(unmatchedV);
   mmap = idUnmatched.combine(mmap);
 
-  debugStep();
+  if (d)
+    debugStep();
 }
 
 void MatchingStruct::SBGMatchingShort()
@@ -645,7 +645,8 @@ void MatchingStruct::SBGMatchingShort()
   }
   while (!diffMatched.empty() && !Ed.empty());
 
-  std::cout << "matchedshort: " << matchedE << "\n\n";
+  if (d)
+    std::cout << "matchedshort: " << matchedE << "\n\n";
 
   if (diffMatched.empty())
     return;
@@ -674,14 +675,16 @@ void MatchingStruct::SBGMatchingMin()
   }
   while (!diffMatched.empty() && !Ed.empty());
 
-  std::cout << "matchedmin: " << matchedE << "\n\n";
+  if (d)
+    std::cout << "matchedmin: " << matchedE << "\n\n";
 
   return;
 }
 
 std::pair<Set, bool> MatchingStruct::SBGMatching()
 {
-  debugInit();
+  if (d)
+    debugInit();
 
   SBGMatchingShort();
 

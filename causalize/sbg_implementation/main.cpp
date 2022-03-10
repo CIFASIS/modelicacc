@@ -43,6 +43,7 @@ void usage()
   cout << endl;
   cout << "-h, --help      Display this information and exit" << endl;
   cout << "-o <path>, --output <path> Sets the output path for the generated graph dot file." << endl;
+  cout << "-d, --debug     Display debug info" << endl;
   cout << "-v, --version   Display version information and exit" << endl;
   cout << endl;
   cout << "Modelica C Compiler home page: https://github.com/CIFASIS/modelicacc " << endl;
@@ -61,14 +62,16 @@ int main(int argc, char **argv)
   int opt;
   extern char* optarg;
   string output_path = "";
+  bool debug_enabled = false;
 
   while (true) {
     static struct option long_options[] = {{"version", no_argument, 0, 'v'},
                                            {"help", no_argument, 0, 'h'},
+                                           {"debug", no_argument, 0, 'd'},
                                            {"output", required_argument, 0, 'o'},
                                            {0, 0, 0, 0}};
     int option_index = 0;
-    opt = getopt_long(argc, argv, "vho:", long_options, &option_index);
+    opt = getopt_long(argc, argv, "vhod:", long_options, &option_index);
     if (opt == EOF) {
       break;
     }
@@ -81,6 +84,9 @@ int main(int argc, char **argv)
       exit(0);
     case 'o':
       output_path = optarg;
+      break;
+    case 'd':
+      debug_enabled = true;
       break;
     case '?':
       usage();
@@ -113,7 +119,7 @@ int main(int argc, char **argv)
 
   printer.printGraph(output_path+mmo_class.name()+".dot");
   
-  MatchingStruct match(matching_graph);
+  MatchingStruct match(matching_graph, debug_enabled);
 
   auto start = chrono::high_resolution_clock::now();
   pair<SBG::Set, bool> res = match.SBGMatching();

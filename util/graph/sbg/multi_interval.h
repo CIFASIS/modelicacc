@@ -35,6 +35,7 @@ struct MultiInterImp1 {
 
   MultiInterImp1();
   MultiInterImp1(Intervals is);
+  MultiInterImp1(ORD_CT<INT> v);
 
   void addInter(INTER_IMP i);
   bool empty();

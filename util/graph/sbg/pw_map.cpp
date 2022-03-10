@@ -325,11 +325,6 @@ PW_TEMP_TYPE PW_TEMP_TYPE::compPW(PW_TEMP_TYPE pw2)
   }
 
   PWLMapImp1 res(ress, reslm);
-  /*
-  std::cout << aux << "\n\n";
-  std::cout << pw2 << "\n\n";
-  std::cout << "res: "<< res << "\n\n";
-  */
   return res;
 }
 
@@ -396,8 +391,7 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minInvCompact(SET_IMP s)
     lmRes.insert(lmRes.begin(), aux);
   }
 
-  PWLMapImp1 res(domRes, lmRes);
-  return res;
+  return PWLMapImp1(domRes, lmRes);
 }
 
 PW_TEMPLATE
@@ -1170,22 +1164,16 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
   return res;
 }
 
-// pw3 (this PWLMap), pw2, pw1 are such that:
-//   pw3 : A -> B, and is a compact map
-//   pw2 : A -> C
-//   pw1 : C -> D
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
 {
   PWLMap res;
 
-  Sets auxd = dom();
-  int auxsize = auxd.size();
-  if (auxsize == 1) {
+  if (dom_ref().size() == 1 && !empty()) {
     SET_IMP dom = *(dom_ref().begin());
     LM_IMP lm = *(lmap_ref().begin());
 
-    SET_IMP dominv = image(dom);
+    SET_IMP dominv = image();
     LM_IMP lminv = lm.invLMap();
     ORD_CT<REAL> lminvo = lminv.offset();
 
@@ -1200,50 +1188,24 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
     }
 
     // Bijective map, therefore, it's invertible
-    if (maxg < Inf) {
-      res = pw2.compPW(invpw);
-    }
+    if (maxg < Inf) res = pw2.compPW(invpw);
 
     // Constant map
     else if (ming == Inf) {
-      if (!empty()) {
-        SET_IMP im2 = pw2.image(dom);
-        SET_IMP compim12 = pw1.image(im2);
+      SET_IMP im2 = pw2.image(dom);
+      SET_IMP compim12 = pw1.image(im2);
 
-        // Get vertices in image of pw2 with minimum image in pw1
-        ORD_CT<INT> mincomp = compim12.minElem();
-        MI_IMP micomp;
-        BOOST_FOREACH (INT mincompi, mincomp) {
-          INTER_IMP i(mincompi, 1, mincompi);
-          micomp.addInter(i);
-        }
-        MI_IMP ascomp(micomp);
-        SET_IMP scomp;
-        scomp.addAtomSet(ascomp);
-        SET_IMP mins2 = pw1.preImage(scomp);
-        mins2 = mins2.cap(im2);
+      if (!compim12.empty()) {
+        // Get vertices in the image of pw2 with minimum image in pw1
+        SET_IMP mincomp(compim12.minElem());
+        SET_IMP mins2 = pw1.preImage(mincomp).cap(im2);
 
         // Choose minimum in mins2, and assign dom(pw1) this element as image
-        ORD_CT<INT> min2 = mins2.minElem();
-        typename ORD_CT<INT>::iterator itmin2 = min2.begin();
-
-        ORD_CT<REAL> reso;
-        typename ORD_CT<REAL>::iterator itreso = reso.begin();
-        ORD_CT<REAL> resg;
-        typename ORD_CT<REAL>::iterator itresg = resg.begin();
-        for (int i = 0; i < dominv.ndim(); ++i) {
-          itresg = resg.insert(itresg, 0);
-          ++itresg;
-          itreso = reso.insert(itreso, (REAL)(*itmin2));
-          ++itreso;
-
-          ++itmin2;
-        }
-
-        res.addSetLM(dominv, LMap(resg, reso));
+        SET_IMP mins(mins2.minElem());
+        res = pw2.compPW(restrictMap(pw2.preImage(mins)).minInv(dominv));
       }
     }
-
+ 
     // Bijective in some dimensions, and constant in others
     else {
       typename ORD_CT<REAL>::iterator itinvo = lminvo.begin();
@@ -1291,16 +1253,8 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
       SET_IMP compim12 = pw1.image(im2);
 
       // Get vertices in image of pw2 with minimum image in pw1
-      ORD_CT<INT> mincomp = compim12.minElem();
-      MI_IMP micomp;
-      BOOST_FOREACH (INT mincompi, mincomp) {
-        INTER_IMP i(mincompi, 1, mincompi);
-        micomp.addInter(i);
-      }
-      MI_IMP ascomp(micomp);
-      SET_IMP scomp;
-      scomp.addAtomSet(ascomp);
-      SET_IMP mins2 = pw1.preImage(scomp);
+      SET_IMP mincomp(compim12.minElem());
+      SET_IMP mins2 = pw1.preImage(mincomp).cap(im2);
 
       // Choose minimum in min2
       // Assign dom(pw3) this element as image
@@ -1353,9 +1307,6 @@ PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw2, PW_TEMP_TYPE pw1)
   return res;
 }
 
-// pw2 (this PWLMap), pw1 are such that:
-//   pw2 : A -> B, and is a compact map
-//   pw1 : A -> C
 PW_TEMPLATE
 PW_TEMP_TYPE PW_TEMP_TYPE::minAdjCompMap(PW_TEMP_TYPE pw1)
 {

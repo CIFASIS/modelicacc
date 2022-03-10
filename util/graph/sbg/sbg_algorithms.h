@@ -28,8 +28,11 @@ std::tuple<PWLMap, PWLMap, PWLMap> minReachable(int nmax, Set V, Set E, PWLMap V
 // Matching of undirected SBGraphs ---------------------------------------------------------------
 
 struct MatchingStruct{
-  MatchingStruct(SBGraph g);
+  public:
+  MatchingStruct(SBGraph g, bool debugEnabled);
+  std::pair<Set, bool> SBGMatching();
 
+  protected:
   Set getManyToOne();
   void offsetMaps(PWLMap sideMap);
   void shortPathsLeft(Set D, Set E);
@@ -39,10 +42,13 @@ struct MatchingStruct{
   void SBGMatchingMinStep(Set E);
   void SBGMatchingShort();
   void SBGMatchingMin();
-  std::pair<Set, bool> SBGMatching();
+
+  void debugInit();
+  void debugStep();
 
   private:
   SBGraph g;
+  bool d;
   Set F;
   Set U;
   PWLMap Vmap; // Map from vertices to set-vertices
@@ -75,7 +81,4 @@ struct MatchingStruct{
   PWLMap VmapSide;
   PWLMap mapDSide;
   PWLMap mapBSide;
-
-  void debugInit();
-  void debugStep();
 };

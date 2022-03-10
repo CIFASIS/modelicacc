@@ -1,17 +1,17 @@
   model matching9
     //Model with possibly wrong initial matchingTest
-    constant Integer N=100000000;
-    Real x1[N], a1[N], b1[N];
+    constant Integer N=1000;
+    Real a1[N], x1[N], b1[N];
 /*
-    Real x2[N], a2[N], b2[N];
-    Real x3[N], a3[N], b3[N];
-    Real x4[N], a4[N], b4[N];
-    Real x5[N], a5[N], b5[N];
-    Real x6[N], a6[N], b6[N];
-    Real x7[N], a7[N], b7[N];
-    Real x8[N], a8[N], b8[N];
-    Real x9[N], a9[N], b9[N];
-    Real x10[N], a10[N], b10[N];
+    Real a2[N], x2[N], b2[N];
+    Real a3[N], x3[N], b3[N];
+    Real a4[N], x4[N], b4[N];
+    Real a5[N], x5[N], b5[N];
+    Real a6[N], x6[N], b6[N];
+    Real a7[N], x7[N], b7[N];
+    Real a8[N], x8[N], b8[N];
+    Real a9[N], x9[N], b9[N];
+    Real a10[N], x10[N], b10[N];
     Real x11[N], a11[N], b11[N];
     Real x12[N], a12[N], b12[N];
     Real x13[N], a13[N], b13[N];

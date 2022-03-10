@@ -51,6 +51,19 @@ SET_TEMP_TYPE::SetImp1(AtomSets asets)
   }
 }
 
+SET_TEMPLATE
+SET_TEMP_TYPE::SetImp1(ORD_CT<INT> v)
+{
+  AtomSets asets;
+  MI_IMP as(v);
+
+  if (!v.empty())
+    asets.insert(asets.begin(), as);
+
+  asets_ = asets;
+  ndim_ = as.ndim();
+}
+
 member_imp_temp(SET_TEMPLATE, SET_TEMP_TYPE, AS_TYPE, asets);
 member_imp_temp(SET_TEMPLATE, SET_TEMP_TYPE, int, ndim);
 

@@ -38,6 +38,28 @@ MI_TEMP_TYPE::MultiInterImp1(INTERS_TYPE inters)
   }
 }
 
+MI_TEMPLATE
+MI_TEMP_TYPE::MultiInterImp1(ORD_CT<INT> v)
+{
+  if (v.size() > 0) {
+    Intervals inters;
+    IntervalsIt itints = inters.begin();
+
+    BOOST_FOREACH (INT i, v) {
+      itints = inters.insert(itints, INTER_IMP(i, 1, i));
+      ++itints;
+    }
+
+    inters_ = inters;
+    ndim_ = inters.size();
+  }
+
+  else {
+    inters_ = Intervals();
+    ndim_ = 0;
+  }
+}
+
 member_imp_temp(MI_TEMPLATE, MI_TEMP_TYPE, INTERS_TYPE, inters);
 member_imp_temp(MI_TEMPLATE, MI_TEMP_TYPE, int, ndim);
 

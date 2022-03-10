@@ -36,6 +36,7 @@ struct SetImp1 {
   SetImp1();
   SetImp1(MI_IMP as);
   SetImp1(AtomSets ss);
+  SetImp1(ORD_CT<INT> v);
 
   void addAtomSet(MI_IMP aset2);
   void addAtomSets(AtomSets sets2);

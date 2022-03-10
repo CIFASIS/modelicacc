@@ -4366,7 +4366,7 @@ void TestMatching1()
   g[e10] = E10;
   g[e11] = E11;
 
-  MatchingStruct match(g);
+  MatchingStruct match(g, false);
   std::pair<Set, bool> res = match.SBGMatching();
 
   BOOST_CHECK(std::get<1>(res));
@@ -4459,7 +4459,7 @@ void TestMatching2()
   g[e1] = E1;
   g[e2] = E2;
 
-  MatchingStruct match(g);
+  MatchingStruct match(g, false);
   std::pair<Set, bool> res = match.SBGMatching();
 
   BOOST_CHECK(std::get<1>(res));
@@ -4684,7 +4684,7 @@ void TestMatching3()
   g[e9] = E9; 
   g[e10] = E10; 
 
-  MatchingStruct match(g);
+  MatchingStruct match(g, false);
   std::pair<Set, bool> res = match.SBGMatching();
 
   BOOST_CHECK(std::get<1>(res));
@@ -4969,7 +4969,7 @@ void TestMatching4()
   g[e3] = E3; 
   g[e4] = E4; 
 
-  MatchingStruct match(g);
+  MatchingStruct match(g, false);
   std::pair<Set, bool> res = match.SBGMatching();
 
   BOOST_CHECK(std::get<1>(res));
@@ -5117,7 +5117,7 @@ void TestMatching5()
   g[e2] = E2; 
   g[e3] = E3; 
 
-  MatchingStruct match(g);
+  MatchingStruct match(g, false);
   std::pair<Set, bool> res = match.SBGMatching();
 
   BOOST_CHECK(std::get<1>(res));
@@ -5300,7 +5300,7 @@ void TestMatching6()
   g[e3] = E3; 
   g[e4] = E4; 
 
-  MatchingStruct match(g);
+  MatchingStruct match(g, false);
   std::pair<Set, bool> res = match.SBGMatching();
 
   BOOST_CHECK(std::get<1>(res));
@@ -5363,7 +5363,7 @@ void TestMatching7()
 
   g[e1] = E1; 
 
-  MatchingStruct match(g);
+  MatchingStruct match(g, false);
   std::pair<Set, bool> res = match.SBGMatching();
 
   BOOST_CHECK(!std::get<1>(res));
@@ -5445,7 +5445,7 @@ void TestMatching8()
 
   g[e1] = E1; 
 
-  MatchingStruct match(g);
+  MatchingStruct match(g, false);
   std::pair<Set, bool> res = match.SBGMatching();
 
   BOOST_CHECK(!std::get<1>(res));
@@ -5658,7 +5658,7 @@ void TestMatching9()
   g[e4] = E4; 
   g[e5] = E5; 
 
-  MatchingStruct match(g);
+  MatchingStruct match(g, false);
   std::pair<Set, bool> res = match.SBGMatching();
 
   BOOST_CHECK(std::get<1>(res));
@@ -5860,7 +5860,7 @@ void TestMatching10()
   g[e4] = E4; 
   g[e5] = E5; 
 
-  MatchingStruct match(g);
+  MatchingStruct match(g, false);
   std::pair<Set, bool> res = match.SBGMatching();
 
   BOOST_CHECK(std::get<1>(res));
@@ -6023,7 +6023,7 @@ void TestMatching11()
   g[e2] = E2; 
   g[e3] = E3; 
 
-  MatchingStruct match(g);
+  MatchingStruct match(g, false);
   std::pair<Set, bool> res = match.SBGMatching();
 
   BOOST_CHECK(std::get<1>(res));
@@ -6256,7 +6256,7 @@ void TestMatching12()
   g[e4] = E4;
   g[e5] = E5;
 
-  MatchingStruct match(g);
+  MatchingStruct match(g, false);
   std::pair<Set, bool> res = match.SBGMatching();
   std::cout << std::get<0>(res) << "\n\n";
 
