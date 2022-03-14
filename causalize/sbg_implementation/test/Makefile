@@ -11,9 +11,8 @@ GOOGLE_TEST_INSTALL = $(ROOT_DIR)/3rd-party/gtest
 GOOGLE_TEST_LIB = gtest
 GOOGLE_MOCK_LIB = gmock
 GOOGLE_TEST_INCLUDE = $(GOOGLE_TEST_INSTALL)/usr/include
-LIB 		+= -lginac -lcln -lgmp  
 G++ = g++
-G++_FLAGS = -c -Wall -I $(GOOGLE_TEST_INCLUDE) -std=c++11
+G++_FLAGS = -c -Wall -I $(GOOGLE_TEST_INCLUDE) -std=c++17
 LD_FLAGS = -L $(GOOGLE_TEST_INSTALL)/usr/lib -l $(GOOGLE_TEST_LIB) -l $(GOOGLE_MOCK_LIB) -l pthread 
 RM = rm -rf
 
@@ -27,15 +26,13 @@ MAIN_SRC = $(SRC_DIR)/main.cpp
 TEST_SRC = $(TEST_DIR)/models_test.cpp
 
 # Objects
-TEST_OBJ=$(addprefix $(BUILD_DIR)/test_, $(notdir $(TEST_SRC:.cpp=.o)))
+TEST_OBJ=$(addprefix $(BUILD_DIR)/, $(TEST_SRC:.cpp=.o))
 
-MAIN_OBJ=$(addprefix $(BUILD_DIR)/, $(notdir $(MAIN_SRC:.cpp=.o)))
+MAIN_OBJ=$(addprefix $(BUILD_DIR)/, $(MAIN_SRC:.cpp=.o))
 
-$(BUILD_DIR)/test_%.o : $(TEST_DIR)/%.cpp
-	$(G++) $(G++_FLAGS) $< -o $@
-
-$(BUILD_DIR)/%.o : $(SRC_DIR)/%.cpp
-	$(G++) $(G++_FLAGS) $< -o $@ 
+$(BUILD_DIR)/%.o : %.cpp
+	$(G++) $(INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(G++) $(G++_FLAGS) $(INCLUDE) $(LIB) $< -o $@
 
 all: $(TARGET) $(RUN_TESTS)
 
