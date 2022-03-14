@@ -36,6 +36,7 @@
 #include <sbg/sbg_algorithms.hpp>
 #include <sbg/sbg_printer.hpp>
 #include <sbg/graph_builders/ordinary_graph_builder.hpp>
+#include <util/logger.h>
 
 using namespace boost;
 using namespace std;
@@ -158,12 +159,13 @@ int main(int argc, char **argv)
   StateVariablesFinder setup_state_var(mmo_class);
   setup_state_var.findStateVariables();
 
+  std::string dot_file = output_path+mmo_class.name();
+  Logger::instance().setFile(dot_file);
+
   MatchingGraphBuilder matching_graph_builder(mmo_class);
 
   SBG::SBGraph matching_graph = matching_graph_builder.makeGraph();
   SBG::GraphPrinter printer(matching_graph, 0);
-
-  std::string dot_file = output_path+mmo_class.name();
 
   printer.printGraph(dot_file+".dot");
 
