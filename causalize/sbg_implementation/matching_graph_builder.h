@@ -18,7 +18,7 @@
 ******************************************************************************/
 
 #include <mmo/mmo_class.h>
-#include <util/graph/sbg/sbg.h>
+#include <sbg/sbg.hpp>
 
 namespace Causalize {
 

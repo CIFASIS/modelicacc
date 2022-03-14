@@ -13,16 +13,17 @@ BUILD_DIR    	:= $(ROOT)/obj/debug
 endif
 AST_DIR         := ast
 PARSER_DIR      := parser
-
+SBG_LIB         := sbg
+SBG_DEV         := sb-graph-dev
 
 # Flags, Libraries and Includes
-INCLUDES := -I.
+INCLUDES := -I. -I$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/include 
 CXXFLAGS := -std=c++14 -Wall -Werror -Wno-reorder -O3 
 ifeq ($(MODE),Debug)
 CXXFLAGS 	+= -ggdb  
 endif
 LIBMODELICA = lib/libmodelica.a
-LIBS     := -L./lib -lginac -lmodelica
+LIBS     := -L./lib -L$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/lib -lsbgraph -lginac -lmodelica
 
 all: $(LIBMODELICA)
 
@@ -31,7 +32,6 @@ include mmo/Makefile.include
 include flatter/Makefile.include
 include causalize/Makefile.include
 include test/causalize/Makefile.include
-include util/graph/sbg/test/Makefile.include
 
 # Sources
 COMMON_SRC := \
@@ -59,7 +59,16 @@ $(BUILD_DIR)/%.o : %.cpp
 
 $(COMMON_OBJ): | create-folders
 
-$(LIBMODELICA): $(COMMON_OBJ) | create-folders
+lib-sbg:  
+ifeq ("$(wildcard $(3RD_PARTY_DIR)/sbg/sb-graph-dev/lib)","")
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB); tar xvzf $(SBG_DEV).tar.gz
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); autoconf 
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); ./configure
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); make
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); make install
+endif
+
+$(LIBMODELICA): $(COMMON_OBJ) lib-sbg | create-folders
 	$(AR) rcs $(LIBMODELICA) $(COMMON_OBJ)
 
 doc: Doxyfile
