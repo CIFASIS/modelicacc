@@ -130,7 +130,7 @@ int main(int argc, char** argv)
     if (className == NULL) className = (char*)::className(sd.classes().back()).c_str();
 
     if (className != NULL) {
-      Logger::instance().setFile(className);
+      Modelica::Logger::instance().setFile(className);
 
       if (debug) LOG << "Searching for class " << (className ? className : "NULL") << std::endl;
 
@@ -142,7 +142,7 @@ int main(int argc, char** argv)
         if (is<Type::Class>(t_final)) mmo = *(boost::get<Type::Class>(t_final).clase());
       }
     } else {
-      Logger::instance().setFile("flatter");
+      Modelica::Logger::instance().setFile("flatter");
     }
 
     if (debug) {

@@ -38,7 +38,7 @@ These are generic installation instructions.
 In order to be able to install and compile ModelicaCC, 
 the following  dependencies must be installed: 
 
-    * autoconf
+    * autoconf 2.69 (avoid 2.71)
     * boost1.71
     * cmake
     * doxygen

@@ -21,11 +21,11 @@
 
 using namespace std;
 
-Logger::Logger() {}
+Modelica::Logger::Logger() {}
 
-Logger::~Logger() { log.close(); }
+Modelica::Logger::~Logger() { log.close(); }
 
-void Logger::setFile(string file_name) 
+void Modelica::Logger::setFile(string file_name) 
 {
     string log_file = file_name + ".log";
     log.open(log_file, std::ofstream::out);

@@ -23,7 +23,9 @@
 #include <fstream>
 #include <string>
 
-#define LOG Logger::instance().log
+namespace Modelica {
+
+#define LOG Modelica::Logger::instance().log
 
 class Logger {
   public:
@@ -40,3 +42,5 @@ class Logger {
   private:
   Logger();
 };
+
+} // namespace Modelica
