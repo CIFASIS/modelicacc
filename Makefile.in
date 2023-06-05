@@ -65,7 +65,7 @@ ifeq ("$(wildcard $(3RD_PARTY_DIR)/sbg/sb-graph-dev/lib)","")
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); autoconf 
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); ./configure
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); make
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); make install
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); sudo make install
 endif
 
 $(LIBMODELICA): $(COMMON_OBJ) lib-sbg | create-folders
@@ -79,7 +79,7 @@ ifeq ("$(wildcard $(3RD_PARTY_DIR)/gtest/usr/lib)","")
 	cd $(3RD_PARTY_DIR)/gtest; tar xvzf $(GTEST_CODE)
 	mkdir -p $(3RD_PARTY_DIR)/gtest/build
 	cd $(3RD_PARTY_DIR)/gtest/build; cmake ../$(GTEST_DIR) -DCMAKE_INSTALL_PREFIX=../usr  
-	cd $(3RD_PARTY_DIR)/gtest/build; make install 
+	cd $(3RD_PARTY_DIR)/gtest/build; sudo make install 
 	rm -rf $(3RD_PARTY_DIR)/gtest/$(GTEST_DIR)
 	rm -rf $(3RD_PARTY_DIR)/gtest/build
 endif
