@@ -34,7 +34,7 @@ class MatchingGraphBuilder {
   SBG::Set buildSet(VarInfo variable, int offset, size_t max_dim);
   SBG::Set buildSet(Equation eq, std::string eq_id, int offset, size_t max_dim);
   SBG::Set buildSet(SBG::MultiInterval variable);
-  SBG::SetVertexDesc addVertex(std::string vertex_name, SBG::Set set, SBG::SBGraph& graph);
+  SBG::SetVertexDesc addVertex(std::string vertex_name, SBG::Set set, std::string desc, SBG::SBGraph& graph);
   void addEquation(Equation eq, std::string id, SBG::Set set, SBG::SBGraph& graph);
   Real getValue(Expression exp);
   SBG::PWLMap buildPWLMap(SBG::ORD_REALS constants, SBG::ORD_REALS slopes, SBG::Set dom);

@@ -129,9 +129,9 @@ SBG::Set MatchingGraphBuilder::generateMapDom(SBG::Set dom, SBG::Set unk_dom, in
   return createSet(edge_set_intervals);
 }
 
-SetVertexDesc MatchingGraphBuilder::addVertex(std::string vertex_name, SBG::Set set, SBGraph& graph)
+SetVertexDesc MatchingGraphBuilder::addVertex(std::string vertex_name, SBG::Set set, std::string desc, SBGraph& graph)
 {
-  SetVertex V(vertex_name, num_vertices(graph) + 1, set, 0);
+  SetVertex V(vertex_name, set, desc);
   SetVertexDesc v = boost::add_vertex(graph); 
   graph[v] = V;
   return v;
@@ -139,10 +139,13 @@ SetVertexDesc MatchingGraphBuilder::addVertex(std::string vertex_name, SBG::Set 
 
 void MatchingGraphBuilder::addEquation(Equation eq, std::string id, SBG::Set set, SBGraph& graph)
 {
+  std::ostringstream desc;
+  desc << eq;
+
   if (!is<Equality>(eq)) {
     ERROR("Only Equality equations supported.");
   }
-  _F.push_back(std::make_pair(addVertex(id, set, graph),get<Equality>(eq)));  
+  _F.push_back(std::make_pair(addVertex(id, set, desc.str(), graph),get<Equality>(eq)));  
 }
 
 PWLMap MatchingGraphBuilder::buildPWLMap(ORD_REALS constants, ORD_REALS slopes, SBG::Set dom)
@@ -235,7 +238,7 @@ SBGraph MatchingGraphBuilder::makeGraph()
     VarInfo variable = symbols[var_name].get();
     if (!isConstant(var_name, symbols) && !isBuiltIn(var_name, symbols) && !isDiscrete(var_name, symbols) && !isParameter(var_name, symbols)) {
       SBG::Set vertex_dom = buildSet(variable, set_vertex_offset, max_dim);
-      _U.push_back(addVertex(var_name, vertex_dom, graph));
+      _U.push_back(addVertex(var_name, vertex_dom, "", graph));
       set_vertex_offset += vertex_dom.card();
     }
   }
@@ -280,21 +283,21 @@ SBGraph MatchingGraphBuilder::makeGraph()
     {
       SetVertex unknown_vertex = graph[unknown_vertex_desc];
       SBG::Set unk_dom = unknown_vertex.range();       
-      MatchingExps matching_exps(unknown_vertex.name(), isState(unknown_vertex.name(), symbols));
+      MatchingExps matching_exps(unknown_vertex.id(), isState(unknown_vertex.id(), symbols));
       Apply(matching_exps, left);
       Apply(matching_exps, right);
       std::set<Expression> matched_exps = matching_exps.matchedExps();
-      LOG << "Matched exps for: " << unknown_vertex.name() << " in " << eq_desc.second << std::endl;
+      LOG << "Matched exps for: " << unknown_vertex.id() << " in " << eq_desc.second << std::endl;
       LOG << "Equation dom: " << dom << std::endl;
       foreach_(Expression exp, matched_exps)
       {
         LOG << "Expression: " << exp << std::endl;
-        MatchingMaps maps = generatePWLMaps(exp, dom, unk_dom, set_edge_offset, eq_vertex.name(), max_dim); 
+        MatchingMaps maps = generatePWLMaps(exp, dom, unk_dom, set_edge_offset, eq_vertex.id(), max_dim); 
         set_edge_offset += dom.card();
         std::string edge_name = "E_" + std::to_string(edge_id++);
         LOG << "MapF: " << maps.first << std::endl;
         LOG << "MapU: " << maps.second << std::endl;
-        SetEdge edge(edge_name, num_edges(graph) + 1, maps.first, maps.second, 0);
+        SetEdge edge(edge_name, maps.first, maps.second);
         SetEdgeDesc e;
         bool b;
         boost::tie(e, b) = boost::add_edge(eq_vertex_desc, unknown_vertex_desc, graph);

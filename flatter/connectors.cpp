@@ -156,14 +156,14 @@ void Connectors::debug(std::string filename)
 
   // Print vertices
   foreach_ (SetVertexDesc vi, vertices(G_)) {
-    Name n = G_[vi].name();
+    Name n = G_[vi].id();
     Set vs = G_[vi].range();
     LOG << n << ": " << vs << endl;
   }
 
   // Print edges
   foreach_ (SetEdgeDesc ei, edges(G_)) {
-    Name n = G_[ei].name();
+    Name n = G_[ei].id();
     PWLMap es1 = G_[ei].map_f();
     PWLMap es2 = G_[ei].map_u();
     AtomPWLMap den;
@@ -358,7 +358,7 @@ Option<SetVertexDesc> Connectors::buildVertex(Name n)
 
   // Vertex already created
   foreach_ (SetVertexDesc Vdesc, vertices(G_)) {
-    if (G_[Vdesc].name() == n)
+    if (G_[Vdesc].id() == n)
       return Option<SetVertexDesc>(Vdesc);
   }
  
@@ -665,7 +665,7 @@ PWLMap Connectors::buildEdgeMap(Set dom, Set im, ExpOptList r)
 bool Connectors::existsEdge(string nm)
 {
   foreach_ (SetEdgeDesc ei, edges(G_)) {
-    string nmi = G_[ei].name();
+    string nmi = G_[ei].id();
 
     if (nmi == nm)
       return true;
@@ -684,17 +684,17 @@ void Connectors::buildEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc Vdesc1, S
 
   string nm = "E_";
 
-  if (V1.name() < V2.name())
-    nm = nm + V1.name() + "_" + V2.name();
+  if (V1.id() < V2.id())
+    nm = nm + V1.id() + "_" + V2.id();
 
   else
-    nm = nm + V2.name() + "_" + V1.name();
+    nm = nm + V2.id() + "_" + V1.id();
 
   // Create new set-edge
   Set dom1 = buildEdgeDom(r1);
   Set dom2 = buildEdgeDom(r2);
   if (dom1.empty() && dom2.empty()) {
-    LOG << "ERROR: Check connects " << V1.name() << ", " << V2.name() << endl;
+    LOG << "ERROR: Check connects " << V1.id() << ", " << V2.id() << endl;
     return;
   }
   Set dom = dom1;
@@ -1097,7 +1097,7 @@ Name Connectors::getName(MultiInterval as)
     Set vs = G_[vi].range();
 
     if (!auxas.cap(vs).empty()) 
-      nm = G_[vi].name();
+      nm = G_[vi].id();
   }
 
   return nm;
@@ -1149,7 +1149,7 @@ vector<Name> Connectors::getEffVars(Set connector)
   // Get connector name
   foreach_ (SetVertexDesc vi, vertices(G_)) {
     Set vs = G_[vi].range();
-    Name vinm = G_[vi].name();
+    Name vinm = G_[vi].id();
 
     if (!connector.cap(vs).empty()) {
       // Search effort vars in the connector
@@ -1183,7 +1183,7 @@ vector<Name> Connectors::getFlowVars(Set connector)
   // Get connector name
   foreach_ (SetVertexDesc vi, vertices(G_)) {
     Set vs = G_[vi].range();
-    Name vinm = G_[vi].name();
+    Name vinm = G_[vi].id();
 
     if (!connector.cap(vs).empty()) {
       // Search flow vars in the connector
