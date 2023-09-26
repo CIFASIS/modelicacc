@@ -1,5 +1,6 @@
 # Target variables
 MODE ?= Debug
+sbg_branch ?= sb-graph-dev
 
 # The Directories, Source, Includes, Objects, Binary 
 ROOT   	        := .
@@ -61,6 +62,7 @@ $(COMMON_OBJ): | create-folders
 
 lib-sbg:  
 ifeq ("$(wildcard $(3RD_PARTY_DIR)/sbg/sb-graph-dev/lib)","")
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB); ./update.py $(sbg_branch)
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB); tar xvzf $(SBG_DEV).tar.gz
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); autoconf 
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); ./configure
@@ -96,7 +98,8 @@ clean:
 	$(RM) -rf $(BUILD_DIR) $(LIBMODELICA) doc
 
 help:
-	@echo "make MODE=<Debug|Release> "
+	@echo "make MODE=<Debug|Release> sbg_branch=<BRANCH_NAME>"
 	@echo "Default values:"
 	@echo ""
 	@echo "MODE=Debug"
+	@echo "sbg_branch=sb-graph-dev"
