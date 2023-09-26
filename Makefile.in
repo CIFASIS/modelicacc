@@ -62,7 +62,7 @@ $(COMMON_OBJ): | create-folders
 
 lib-sbg:  
 ifeq ("$(wildcard $(3RD_PARTY_DIR)/sbg/sb-graph-dev/lib)","")
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB); ./update.py $(sbg_branch)
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB); ./update.py --branch_name $(sbg_branch)
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB); tar xvzf $(SBG_DEV).tar.gz
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); autoconf 
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); ./configure
