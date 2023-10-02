@@ -31,6 +31,10 @@ jobs:
       working-directory: .
       run: ./configure
 
+    - name: SBG
+      working-directory: .
+      run: make update-lib-sbg repo_checkout=https 
+
     - name: Build
       working-directory: .
       run: make
