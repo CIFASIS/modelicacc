@@ -67,6 +67,9 @@ update-lib-sbg:
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB); tar xvzf $(SBG_DEV).tar.gz
 
 lib-sbg:
+ifeq ("$(wildcard $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV))","")
+	make update-lib-sbg
+endif
 ifeq ($(build_sbg), True)
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); autoconf 
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); ./configure
