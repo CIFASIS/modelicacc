@@ -17,6 +17,7 @@ configure
 /3rd-party/gtest/usr/*
 /3rd-party/sbg/sb-graph-dev
 /3rd-party/sbg/*.tar.gz
+/3rd-party/boost/boost-1.81.0/
 
 # Test generated files.
 /flatter/test/test_data/*
