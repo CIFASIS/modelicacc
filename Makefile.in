@@ -18,15 +18,22 @@ AST_DIR         := ast
 PARSER_DIR      := parser
 SBG_LIB         := sbg
 SBG_DEV         := sb-graph-dev
+BOOST_LIB_PATH  := $(3RD_PARTY_DIR)/boost
+BOOST_1_81  := boost-1.81.0
+BOOST_1_81_LIB  := $(BOOST_1_81).tar.xz
+BOOST_1_81_INC  := -I$(BOOST_LIB_PATH)/$(BOOST_1_81)/include
+
 
 # Flags, Libraries and Includes
-INCLUDES := -I. -I$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/usr/include 
-CXXFLAGS := -std=c++17 -Wall -Werror -Wno-reorder -O3 
+SBG_LIB_DEV_INCLUDE := -I$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/usr/include
+INCLUDES := -I.
+CXXFLAGS := -std=c++17 -Wall  -Wno-reorder -O3 
 ifeq ($(MODE),Debug)
 CXXFLAGS 	+= -ggdb  
 endif
 LIBMODELICA = lib/libmodelica.a
-LIBS     := -L./lib -L$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/usr/lib -lsbgraph -lginac -lmodelica
+LIBS     := -L./lib -lginac -lmodelica
+SBG_LIB_DEV_LINK := -L$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/usr/lib -lsbgraph
 
 all: $(LIBMODELICA)
 
@@ -57,23 +64,28 @@ COMMON_SRC := \
 COMMON_OBJ=$(addprefix $(BUILD_DIR)/, $(COMMON_SRC:.cpp=.o))
 
 $(BUILD_DIR)/%.o : %.cpp
-	$(CC) $(INCLUDES) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
-	$(CC) $(INCLUDES) -c $< -o $@ $(CXXFLAGS)
+	$(CC) $(INCLUDES) $(BOOST_1_81_INC) $(SBG_LIB_1_0_0_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES) $(BOOST_1_81_INC) $(SBG_LIB_1_0_0_INCLUDE) -c $< -o $@ $(CXXFLAGS)
 
 $(COMMON_OBJ): | create-folders
 
-update-lib-sbg:
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB); ./update.py --branch_name $(sbg_branch) --repo_checkout $(repo_checkout)
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB); tar xvzf $(SBG_DEV).tar.gz
+lib-boost:
+ifeq ("$(wildcard $(BOOST_LIB_PATH)/$(BOOST_1_81))","")
+	cd $(BOOST_LIB_PATH); tar -xvf $(BOOST_1_81_LIB)
+endif
 
-lib-sbg:
+update-sbg:
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB); ./update.py --branch_name $(sbg_branch) --repo_checkout $(repo_checkout)
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB); tar -zxvf $(SBG_DEV).tar.gz
+
+lib-sbg: lib-boost  
 ifeq ("$(wildcard $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV))","")
-	make update-lib-sbg
+	make update-sbg
 endif
 ifeq ($(build_sbg), True)
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); autoconf 
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); autoconf
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); ./configure
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); make
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); make boost_libdir=../../boost
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); mkdir -p usr
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); make install prefix=./usr
 endif
