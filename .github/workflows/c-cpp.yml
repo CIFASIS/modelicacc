@@ -33,7 +33,7 @@ jobs:
 
     - name: SBG
       working-directory: .
-      run: make update-lib-sbg repo_checkout=https 
+      run: make update-sbg repo_checkout=https 
 
     - name: Build
       working-directory: .
