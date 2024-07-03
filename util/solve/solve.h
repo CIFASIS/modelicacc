@@ -16,14 +16,11 @@
     along with Modelica C Compiler.  If not, see <http://www.gnu.org/licenses/>.
 
 ******************************************************************************/
-
-#ifndef SOLVE_H
-#define SOLVE_H
+#pragma once
 
 #include <ast/equation.h>
 #include <util/table.h>
 #include <mmo/mmo_class.h>
-#include <ginac/ginac.h>
 
 using namespace Modelica::AST;
 class EquationSolver {
@@ -33,4 +30,3 @@ class EquationSolver {
   static Equation Solve(Equation eq, Expression exp, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &cl,
                         const std::string path);
 };
-#endif
