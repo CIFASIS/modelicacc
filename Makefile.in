@@ -20,7 +20,7 @@ SBG_LIB         := sbg
 SBG_DEV         := sb-graph-dev
 SBG_1_0_0       := sb-graph-1.0.0
 BOOST_LIB_PATH  := $(3RD_PARTY_DIR)/boost
-BOOST_1_81  := boost-1.81.0
+BOOST_1_81      := boost-1.81.0
 BOOST_1_81_LIB  := $(BOOST_1_81).tar.xz
 BOOST_1_81_INC  := -I$(BOOST_LIB_PATH)/$(BOOST_1_81)/include
 
@@ -66,8 +66,8 @@ COMMON_SRC := \
 COMMON_OBJ=$(addprefix $(BUILD_DIR)/, $(COMMON_SRC:.cpp=.o))
 
 $(BUILD_DIR)/%.o : %.cpp
-	$(CC) $(INCLUDES) $(BOOST_1_81_INC) $(SBG_LIB_1_0_0_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
-	$(CC) $(INCLUDES) $(BOOST_1_81_INC) $(SBG_LIB_1_0_0_INCLUDE) -c $< -o $@ $(CXXFLAGS)
+	$(CC) $(INCLUDES) $(SBG_LIB_1_0_0_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES) $(SBG_LIB_1_0_0_INCLUDE) -c $< -o $@ $(CXXFLAGS)
 
 $(COMMON_OBJ): | create-folders
 
