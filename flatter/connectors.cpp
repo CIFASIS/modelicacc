@@ -156,14 +156,14 @@ void Connectors::debug(std::string filename)
 
   // Print vertices
   foreach_ (SetVertexDesc vi, vertices(G_)) {
-    Name n = std::to_string(G_[vi].id());
+    Name n = G_[vi].id();
     Set vs = G_[vi].range();
     LOG << n << ": " << vs << endl;
   }
 
   // Print edges
   foreach_ (SetEdgeDesc ei, edges(G_)) {
-    Name n = std::to_string(G_[ei].id());
+    Name n = G_[ei].id();
     PWLMap es1 = G_[ei].map_f();
     PWLMap es2 = G_[ei].map_u();
     AtomPWLMap den;
@@ -358,7 +358,7 @@ Option<SetVertexDesc> Connectors::buildVertex(Name n)
 
   // Vertex already created
   foreach_ (SetVertexDesc Vdesc, vertices(G_)) {
-    if (std::to_string(G_[Vdesc].id()) == n)
+    if (G_[Vdesc].id() == n)
       return Option<SetVertexDesc>(Vdesc);
   }
  
@@ -662,10 +662,10 @@ PWLMap Connectors::buildEdgeMap(Set dom, Set im, ExpOptList r)
 }
 
 // Check if edge is already created
-bool Connectors::existsEdge(Name nm)
+bool Connectors::existsEdge(string nm)
 {
   foreach_ (SetEdgeDesc ei, edges(G_)) {
-    Name nmi = std::to_string(G_[ei].id());
+    string nmi = G_[ei].id();
 
     if (nmi == nm)
       return true;
@@ -685,10 +685,10 @@ void Connectors::buildEdge(ExpOptList r1, ExpOptList r2, SetVertexDesc Vdesc1, S
   string nm = "E_";
 
   if (V1.id() < V2.id())
-    nm = nm + std::to_string(V1.id()) + "_" + std::to_string(V2.id());
+    nm = nm + V1.id() + "_" + V2.id();
 
   else
-    nm = nm + std::to_string(V2.id()) + "_" + std::to_string(V1.id());
+    nm = nm + V2.id() + "_" + V1.id();
 
   // Create new set-edge
   Set dom1 = buildEdgeDom(r1);
@@ -1149,7 +1149,7 @@ vector<Name> Connectors::getEffVars(Set connector)
   // Get connector name
   foreach_ (SetVertexDesc vi, vertices(G_)) {
     Set vs = G_[vi].range();
-    Name vinm = std::to_string(G_[vi].id());
+    Name vinm = G_[vi].id();
 
     if (!connector.cap(vs).empty()) {
       // Search effort vars in the connector
@@ -1183,7 +1183,7 @@ vector<Name> Connectors::getFlowVars(Set connector)
   // Get connector name
   foreach_ (SetVertexDesc vi, vertices(G_)) {
     Set vs = G_[vi].range();
-    Name vinm = std::to_string(G_[vi].id());
+    Name vinm = G_[vi].id();
 
     if (!connector.cap(vs).empty()) {
       // Search flow vars in the connector
