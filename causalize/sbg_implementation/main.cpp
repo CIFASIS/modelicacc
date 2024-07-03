@@ -20,24 +20,17 @@
 #include <boost/variant/get.hpp>
 #include <getopt.h>
 
-#include <causalize/sbg_implementation/matching_graph_builder.h>
 #include <mmo/mmo_class.h>
 #include <parser/parser.h>
 #include <util/ast_visitors/state_variables_finder.h>
 #include <util/debug.h>
 #include <util/logger.h>
-//#include <sbg/graph_builders/matching_graph_builder.hpp>
-#include <sbg/descs.hpp>
-#include <sbg/graph_builders/order_graph_builder.hpp>
-#include <sbg/graph_builders/scc_graph_builder.hpp>
 #include <sbg/sbg.hpp>
 #include <sbg/sbg_algorithms.hpp>
-#include <sbg/sbg_printer.hpp>
 
 using namespace std;
 using namespace Modelica;
 using namespace Modelica::AST;
-using namespace Causalize;
 
 void usage()
 {
@@ -57,22 +50,6 @@ void version()
   cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << endl;
   cout << "This is free software: you are free to change and redistribute it." << endl;
   cout << "There is NO WARRANTY, to the extent permitted by law." << endl;
-}
-
-void print_result(MatchingStruct m, SCCStruct scc, OrderStruct o, VertexOrder vo)
-{
-  SBG::IO::UndirectedConverter uc(m.g());
-  SBG::IO::GraphIO g_io = uc.convert_graph();
-  BOOST_FOREACH (Set s, vo) {
-    BOOST_FOREACH (MultiInterval mi, s.asets()) {
-      SBG::Set represented = scc.rmap().preImage(Set(mi));
-      
-      SBG::IO::MatchingIO s_io = uc.convert_matching(represented);
-      std::cout << s_io << "\n";
-    }
-  }
-
-  return;
 }
 
 int main(int argc, char **argv)
@@ -127,46 +104,5 @@ int main(int argc, char **argv)
   StateVariablesFinder setup_state_var(mmo_class);
   setup_state_var.findStateVariables();
 
-  MatchingGraphBuilder matching_graph_builder(mmo_class);
-
-  SBG::SBGraph matching_graph = matching_graph_builder.makeGraph();
-  SBG::GraphPrinter printer(matching_graph, 0);
-
-  printer.printGraph(output_path+mmo_class.name()+".dot");
-  
-  MatchingStruct match(matching_graph);
-  pair<SBG::Set, bool> res = match.SBGMatching();
-
-  LOG << "\n" << matching_graph << "\n";
-  LOG << res.first << "\n";
-
-  SCCGraphBuilder scc_builder(match);
-  scc_builder.build();
-  DSBGraph scc_graph = scc_builder.result();
-  SCCStruct scc_struct(scc_graph);
-  PWLMap scc = scc_struct.SBGSCC();
-
-  LOG << scc_graph << "\n";
-  LOG << scc << "\n";
-
-  OrderGraphBuilder order_builder(scc_struct);
-  order_builder.build();
-  DSBGraph order_graph = order_builder.result();
-  OrderStruct order_struct(order_graph);
-  VertexOrder order = order_struct.order();
-
-  LOG << order_graph << "\n";
-  LOG << order << "\n";
-
-  SBG::IO::DirectedConverter dc(order_graph);
-  SBG::IO::GraphIO g_io = dc.convert_graph();
-  SBG::IO::VertexOrderIO order_io = dc.convert_vertex_order(order);
-
-  BOOST_FOREACH (SetVertexDesc vd, vertices(matching_graph)) {
-    SBG::SetVertex v = matching_graph[vd];
-    std::cout << v.id() << ": " << v.desc().text() << "\n";
-  }
-  std::cout << "\n";
-  print_result(match, scc_struct, order_struct, order);
   return 0;
 }

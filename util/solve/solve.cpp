@@ -24,6 +24,7 @@
 #include <fstream>
 #include <set>
 #include <algorithm>
+#include <ginac/ginac.h>
 
 #include <ast/queries.h>
 #include <ast/equation.h>
