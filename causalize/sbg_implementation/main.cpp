@@ -34,8 +34,8 @@ using namespace Modelica::AST;
 
 void usage()
 {
-  cout << "Usage causalize [options] file" << endl;
-  cout << "Generates matching graph dot file for a given Modelica model file." << endl;
+  cout << "Usage causalize [options] <FILE>" << endl;
+  cout << "Generates matching graph dot file for a given Modelica model." << endl;
   cout << endl;
   cout << "-h, --help      Display this information and exit" << endl;
   cout << "-o <path>, --output <path> Sets the output path for the generated graph dot file." << endl;
@@ -89,12 +89,19 @@ int main(int argc, char **argv)
 
   StoredDef stored_def;
   bool status = false;
+  std::string model_file; 
   if (argv[optind] != nullptr) {
-    stored_def = Parser::ParseFile(argv[optind], status);
-  } 
+    model_file = argv[optind];
+    stored_def = Parser::ParseFile(model_file, status);
+  } else {
+    std::cout << "No input file provided." << std::endl;
+    usage();
+    exit(-1);
+  }  
 
   if (!status) {
-    return -1;
+    std::cout << "Error parsing file " << model_file << std::endl;
+    exit(-1);
   }
 
   Modelica::Logger::instance().setFile("SBG");
@@ -104,5 +111,14 @@ int main(int argc, char **argv)
   StateVariablesFinder setup_state_var(mmo_class);
   setup_state_var.findStateVariables();
 
-  return 0;
+  /// Temp hack to test the binaries, hardcoded paths should go on config files.
+  const std::string CAUSALIZE = "../3rd-party/sbg/sb-graph-dev/bin/sbg-eval ";
+  const std::string ARGS = "-f " + model_file + " > " + model_file + "_causalized.sbg";
+  const std::string CAUSALIZE_CMD = CAUSALIZE + ARGS;
+
+  int res = std::system(CAUSALIZE_CMD.c_str());
+
+  std::cout << "Result: " << res << std::endl;
+
+  return res;
 }
