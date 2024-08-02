@@ -24,12 +24,12 @@
 
 namespace Modelica {
 
-PWLMapValues::PWLMapValues(VarSymbolTable symbols) : _constant(0), _slope(1), _symbols(symbols), _variable() {};
+PWLMapValues::PWLMapValues(VarSymbolTable symbols) : _constant(0), _slope(1), _symbols(symbols), _variable(){};
 
 bool PWLMapValues::operator()(Integer v) const
-{ 
-  _constant = v;  
-  return false; 
+{
+  _constant = v;
+  return false;
 }
 
 bool PWLMapValues::operator()(Boolean v) const { return false; }
@@ -84,14 +84,15 @@ void PWLMapValues::assign(Expression left, Expression right, bool var_left, bool
   } else if (var_right) {
     _constant = sign * Apply(eval_exp, left);
   } else {
-    _constant = sign * (Apply(eval_exp, left) +  Apply(eval_exp, right));
+    _constant = sign * (Apply(eval_exp, left) + Apply(eval_exp, right));
   }
 }
 
 bool PWLMapValues::operator()(BinOp v) const
 {
   EvalExpression eval_exp(_symbols);
-  Expression l = v.left(), r = v.right();
+  Expression l = v.left();
+  Expression r = v.right();
   bool var_left = ApplyThis(l);
   bool var_right = ApplyThis(r);
   BinOpType type = v.op();
@@ -129,10 +130,10 @@ bool PWLMapValues::operator()(UnaryOp v) const
   return ret;
 }
 
-int PWLMapValues::constant() const  { return _constant; }
+int PWLMapValues::constant() const { return _constant; }
 
-int PWLMapValues::slope() const  { return _slope; }
+int PWLMapValues::slope() const { return _slope; }
 
-std::string PWLMapValues::variable() const  { return _variable; }
+std::string PWLMapValues::variable() const { return _variable; }
 
 }  // namespace Modelica

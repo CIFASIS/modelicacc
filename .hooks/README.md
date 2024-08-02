@@ -1,3 +1,3 @@
 Configure hooks locally by running:
 
-git config core.hooksPath .hooks
+git config --local core.hooksPath .hooks
