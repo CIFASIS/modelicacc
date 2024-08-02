@@ -20,9 +20,9 @@
 #ifndef MMO_CLASS
 #define MMO_CLASS
 
-#include <ast/class.h>
-#include <util/table.h>
-#include <util/type.h>
+#include <ast/class.hpp>
+#include <util/table.hpp>
+#include <util/type.hpp>
 
 namespace Modelica {
 using namespace Modelica::AST;

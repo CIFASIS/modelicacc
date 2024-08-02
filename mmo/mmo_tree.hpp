@@ -20,10 +20,10 @@
 #ifndef CREATEMMOTREE_H
 #define CREATEMMOTREE_H
 
-#include <ast/class.h>
-#include <mmo/mmo_class.h>
-#include <util/type.h>
-#include <ast/ast_types.h>
+#include <ast/class.hpp>
+#include <mmo/mmo_class.hpp>
+#include <util/type.hpp>
+#include <ast/ast_types.hpp>
 
 using namespace Modelica;
 using namespace Modelica::AST;

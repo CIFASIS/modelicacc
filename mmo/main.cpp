@@ -18,12 +18,12 @@
 ******************************************************************************/
 
 #include <iostream>
-#include <parser/parser.h>
+#include <parser/parser.hpp>
 #include <boost/variant/get.hpp>
-#include <mmo/mmo_class.h>
-#include <util/table.h>
-#include <util/debug.h>
-#include <util/ast_visitors/to_micro/convert_to_micro.h>
+#include <mmo/mmo_class.hpp>
+#include <util/table.hpp>
+#include <util/debug.hpp>
+#include <util/ast_visitors/to_micro/convert_to_micro.hpp>
 #include <cstdlib>
 
 int main(int argc, char** argv)
