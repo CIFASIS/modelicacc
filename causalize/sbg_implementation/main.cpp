@@ -20,13 +20,12 @@
 #include <boost/variant/get.hpp>
 #include <getopt.h>
 
+#include <causalize/sbg_implementation/generate_sbg_input.h>
 #include <mmo/mmo_class.h>
 #include <parser/parser.h>
 #include <util/ast_visitors/state_variables_finder.h>
 #include <util/debug.h>
 #include <util/logger.h>
-#include <sbg/sbg.hpp>
-#include <sbg/sbg_algorithms.hpp>
 
 using namespace std;
 using namespace Modelica;
@@ -52,17 +51,15 @@ void version()
   cout << "There is NO WARRANTY, to the extent permitted by law." << endl;
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   int opt;
   extern char* optarg;
   string output_path = "";
 
   while (true) {
-    static struct option long_options[] = {{"version", no_argument, 0, 'v'},
-                                           {"help", no_argument, 0, 'h'},
-                                           {"output", required_argument, 0, 'o'},
-                                           {0, 0, 0, 0}};
+    static struct option long_options[] = {
+        {"version", no_argument, 0, 'v'}, {"help", no_argument, 0, 'h'}, {"output", required_argument, 0, 'o'}, {0, 0, 0, 0}};
     int option_index = 0;
     opt = getopt_long(argc, argv, "vho:", long_options, &option_index);
     if (opt == EOF) {
@@ -89,7 +86,7 @@ int main(int argc, char **argv)
 
   StoredDef stored_def;
   bool status = false;
-  std::string model_file; 
+  std::string model_file = "";
   if (argv[optind] != nullptr) {
     model_file = argv[optind];
     stored_def = Parser::ParseFile(model_file, status);
@@ -97,7 +94,7 @@ int main(int argc, char **argv)
     std::cout << "No input file provided." << std::endl;
     usage();
     exit(-1);
-  }  
+  }
 
   if (!status) {
     std::cout << "Error parsing file " << model_file << std::endl;
@@ -111,9 +108,16 @@ int main(int argc, char **argv)
   StateVariablesFinder setup_state_var(mmo_class);
   setup_state_var.findStateVariables();
 
+  Causalize::GenerateSBGInput gen_sbg_input(mmo_class);
+
+  gen_sbg_input.buildFromModel();
+
   /// Temp hack to test the binaries, hardcoded paths should go on config files.
   const std::string CAUSALIZE = "../3rd-party/sbg/sb-graph-dev/bin/sbg-eval ";
-  const std::string ARGS = "-f " + model_file + " > " + model_file + "_causalized.sbg";
+  const std::string DEFAULT_CAUSALIZED_JSON = "./output.json";
+  const std::string CAUSALIZED_JSON = mmo_class.name() + "_causalized.json";
+  std::string ARGS = "-f " + gen_sbg_input.fileName() + " > " + mmo_class.name() + "_causalized.sbg; mv " + DEFAULT_CAUSALIZED_JSON +
+                     " ./" + CAUSALIZED_JSON;
   const std::string CAUSALIZE_CMD = CAUSALIZE + ARGS;
 
   int res = std::system(CAUSALIZE_CMD.c_str());
