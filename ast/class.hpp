@@ -19,10 +19,10 @@
 
 #ifndef AST_CLASS
 #define AST_CLASS
-#include <ast/equation.h>
-#include <ast/statement.h>
-#include <ast/element.h>
-#include <ast/expression.h>
+#include <ast/equation.hpp>
+#include <ast/statement.hpp>
+#include <ast/element.hpp>
+#include <ast/expression.hpp>
 
 namespace Modelica {
 namespace AST {

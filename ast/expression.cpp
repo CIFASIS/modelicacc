@@ -22,8 +22,8 @@
 #include <iostream>
 #include <sstream>
 
-#include <ast/expression.h>
-#include <util/debug.h>
+#include <ast/expression.hpp>
+#include <util/debug.hpp>
 
 long depth;
 namespace Modelica {
@@ -51,20 +51,20 @@ std::ostream& operator<<(std::ostream& out, const SubAll& s)
 order_by_imp(SubAll);
 
 // AddAll
-AddAll::AddAll(RefTuple a) : arr_(a){}
+AddAll::AddAll(RefTuple a) : arr_(a) {}
 
 member_imp(AddAll, RefTuple, arr);
 
-bool AddAll::operator==(const AddAll &other) const {return (other.arr() == arr());}
-std::ostream& operator<<(std::ostream& out, const AddAll &aa){
+bool AddAll::operator==(const AddAll& other) const { return (other.arr() == arr()); }
+std::ostream& operator<<(std::ostream& out, const AddAll& aa)
+{
   RefTuple rt = aa.arr();
   ExpList inds = get<1>(rt);
 
   out << "sum(" << get<0>(rt) << "[";
 
   ExpList::iterator iti = inds.begin();
-  for(; std::next(iti) != inds.end(); ++iti)
-    out << *iti << ", ";
+  for (; std::next(iti) != inds.end(); ++iti) out << *iti << ", ";
 
   out << *iti << "])";
   return out;
@@ -198,8 +198,7 @@ bool Indexes::operator==(const Indexes& other) const { return other.indexes() ==
 order_by_imp(Indexes);
 
 // ForExp
-ForExp::ForExp(Expression e, Indexes ind)
-    : indices_(ind), exp_(e){};
+ForExp::ForExp(Expression e, Indexes ind) : indices_(ind), exp_(e){};
 std::ostream& operator<<(std::ostream& out, const ForExp& n)  // output
 {
   out << n.exp() << " for " << n.indices();
@@ -223,8 +222,7 @@ member_imp(Named, Name, name);
 order_by_imp(Named);
 
 // UnaryOp
-UnaryOp::UnaryOp(Expression e, UnaryOpType op)
-    : exp_(e), op_(op){};
+UnaryOp::UnaryOp(Expression e, UnaryOpType op) : exp_(e), op_(op){};
 std::ostream& operator<<(std::ostream& out, const UnaryOp& n)  // output
 {
   if (n.op() == Minus)
@@ -236,7 +234,7 @@ std::ostream& operator<<(std::ostream& out, const UnaryOp& n)  // output
   return out;
 }
 bool UnaryOp::operator==(const UnaryOp& other) const { return other.exp() == exp() && other.op() == op(); }
-member_imp(UnaryOp, Expression, exp); 
+member_imp(UnaryOp, Expression, exp);
 member_imp(UnaryOp, UnaryOpType, op);
 order_by_imp(UnaryOp);
 
@@ -375,12 +373,10 @@ std::ostream& operator<<(std::ostream& out, const Brace& c)  // output
   return out;
 }
 bool Brace::operator==(const Brace& other) const { return other.args() == args(); }
-member_imp(Brace, ExpList, args)
-order_by_imp(Brace);
+member_imp(Brace, ExpList, args) order_by_imp(Brace);
 
 // Bracket
-Bracket::Bracket(ExpListList args)
-    : args_(args){};
+Bracket::Bracket(ExpListList args) : args_(args){};
 std::ostream& operator<<(std::ostream& out, const Bracket& c)  // output
 {
   out << "[";
@@ -399,8 +395,7 @@ std::ostream& operator<<(std::ostream& out, const Bracket& c)  // output
   return out;
 }
 bool Bracket::operator==(const Bracket& other) const { return other.args() == args(); }
-member_imp(Bracket, ExpListList, args)
-order_by_imp(Bracket);
+member_imp(Bracket, ExpListList, args) order_by_imp(Bracket);
 
 Boolean True(TRUE);
 Boolean False(FALSE);

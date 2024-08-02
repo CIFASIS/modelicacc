@@ -19,7 +19,7 @@
 
 #ifndef AST_MODIFICATION
 #define AST_MODIFICATION
-#include <ast/expression.h>
+#include <ast/expression.hpp>
 
 namespace Modelica {
 namespace AST {

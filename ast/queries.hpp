@@ -20,9 +20,9 @@
 #ifndef QUERIES_H
 #define QUERIES_H
 
-#include <ast/expression.h>
-#include <util/table.h>
-#include <util/debug.h>
+#include <ast/expression.hpp>
+#include <util/table.hpp>
+#include <util/debug.hpp>
 #include <boost/variant/get.hpp>
 
 namespace Modelica {

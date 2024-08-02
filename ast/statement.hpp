@@ -19,7 +19,7 @@
 
 #ifndef AST_STATEMENT
 #define AST_STATEMENT
-#include <ast/equation.h>
+#include <ast/equation.hpp>
 
 namespace Modelica {
 namespace AST {

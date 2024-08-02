@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <ast/element.h>
-#include <ast/class.h>
+#include <ast/element.hpp>
+#include <ast/class.hpp>
 #include <boost/foreach.hpp>
 #include <boost/variant/get.hpp>
 

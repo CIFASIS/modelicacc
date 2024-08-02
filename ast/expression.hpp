@@ -19,7 +19,7 @@
 
 #ifndef AST_EXPRESSION
 #define AST_EXPRESSION
-#include <ast/ast_types.h>
+#include <ast/ast_types.hpp>
 #include <string>
 #include <iostream>
 #include <vector>

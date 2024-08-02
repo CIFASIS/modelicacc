@@ -19,7 +19,7 @@
 
 #ifndef AST_ELEMENT
 #define AST_ELEMENT
-#include <ast/modification.h>
+#include <ast/modification.hpp>
 
 namespace Modelica {
 namespace AST {
