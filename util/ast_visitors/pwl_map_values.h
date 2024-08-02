@@ -25,10 +25,9 @@
 
 namespace Modelica {
 
-using namespace Modelica::AST;
 class PWLMapValues : public boost::static_visitor<bool> {
   public:
-  PWLMapValues(VarSymbolTable symbols);
+  explicit PWLMapValues(VarSymbolTable symbols);
   bool operator()(Integer v) const;
   bool operator()(Boolean v) const;
   bool operator()(AddAll v) const;

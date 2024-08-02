@@ -19,16 +19,16 @@
 
 #ifndef AST_VISITOR_EVALEXP
 #define AST_VISITOR_EVALEXP
+
 #include <boost/variant/static_visitor.hpp>
 #include <ast/expression.h>
 #include <util/table.h>
 
 namespace Modelica {
 
-using namespace Modelica::AST;
-class EvalExpression : public boost::static_visitor<Real>{
+class EvalExpression : public boost::static_visitor<Real> {
   public:
-  EvalExpression(const VarSymbolTable &);
+  explicit EvalExpression(const VarSymbolTable &);
   EvalExpression(const VarSymbolTable &, Name, Real);
   Real operator()(Integer v) const;
   Real operator()(Boolean v) const;
