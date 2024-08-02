@@ -20,7 +20,7 @@
 #ifndef IDENT_PARSER
 #define IDENT_PARSER
 #include <boost/spirit/include/qi.hpp>
-#include <ast/expression.h>
+#include <ast/expression.hpp>
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;
 namespace Modelica {

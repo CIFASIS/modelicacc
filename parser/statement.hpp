@@ -21,9 +21,9 @@
 #define STATEMENT_PARSER
 #include <boost/spirit/include/qi.hpp>
 
-#include <ast/statement.h>
-#include <parser/skipper.h>
-#include <parser/modification.h>
+#include <ast/statement.hpp>
+#include <parser/skipper.hpp>
+#include <parser/modification.hpp>
 
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;

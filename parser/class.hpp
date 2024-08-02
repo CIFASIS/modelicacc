@@ -21,10 +21,10 @@
 #define CLASS_PARSER
 #include <boost/spirit/include/qi.hpp>
 
-#include <ast/class.h>
-#include <parser/skipper.h>
-#include <parser/equation.h>
-#include <parser/statement.h>
+#include <ast/class.hpp>
+#include <parser/skipper.hpp>
+#include <parser/equation.hpp>
+#include <parser/statement.hpp>
 
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;

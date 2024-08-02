@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <parser/statement.h>
-#include <parser/statement_def.h>
+#include <parser/statement.hpp>
+#include <parser/statement_def.hpp>
 
 namespace Modelica {
 namespace Parser {

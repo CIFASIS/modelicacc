@@ -26,7 +26,7 @@
 #include <boost/fusion/include/std_pair.hpp>
 #include <boost/fusion/include/boost_tuple.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
-#include <ast/element.h>
+#include <ast/element.hpp>
 
 BOOST_FUSION_ADAPT_STRUCT(Modelica::AST::Class,
                           (Modelica::AST::Name, name_)(Modelica::AST::StringComment, st_comment_)(Modelica::AST::Composition, composition_))

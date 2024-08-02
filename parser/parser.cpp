@@ -23,10 +23,10 @@
 #include <boost/fusion/include/boost_tuple.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
 
-#include <util/debug.h>
-#include <parser/parser.h>
-#include <parser/class.h>
-#include <parser/skipper.h>
+#include <util/debug.hpp>
+#include <parser/parser.hpp>
+#include <parser/class.hpp>
+#include <parser/skipper.hpp>
 
 using namespace std;
 namespace Modelica {

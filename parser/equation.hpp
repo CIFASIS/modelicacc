@@ -21,9 +21,9 @@
 #define EQUATION_PARSER
 #include <boost/spirit/include/qi.hpp>
 
-#include <ast/equation.h>
-#include <parser/skipper.h>
-#include <parser/modification.h>
+#include <ast/equation.hpp>
+#include <parser/skipper.hpp>
+#include <parser/modification.hpp>
 
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;

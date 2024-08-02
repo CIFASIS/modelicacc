@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <parser/class.h>
-#include <parser/class_def.h>
+#include <parser/class.hpp>
+#include <parser/class_def.hpp>
 
 namespace Modelica {
 namespace Parser {

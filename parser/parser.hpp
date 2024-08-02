@@ -18,7 +18,7 @@
 ******************************************************************************/
 
 #include <string>
-#include <ast/class.h>
+#include <ast/class.hpp>
 
 namespace Modelica {
 namespace Parser {

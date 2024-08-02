@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <parser/expression.h>
-#include <parser/expression_def.h>
+#include <parser/expression.hpp>
+#include <parser/expression_def.hpp>
 
 namespace Modelica {
 namespace Parser {

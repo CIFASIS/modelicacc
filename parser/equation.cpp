@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <parser/equation.h>
-#include <parser/equation_def.h>
+#include <parser/equation.hpp>
+#include <parser/equation_def.hpp>
 
 namespace Modelica {
 namespace Parser {

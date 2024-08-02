@@ -21,9 +21,9 @@
 #define EXPRESSION_PARSER
 #include <boost/spirit/include/qi.hpp>
 
-#include <ast/expression.h>
-#include <parser/skipper.h>
-#include <parser/ident.h>
+#include <ast/expression.hpp>
+#include <parser/skipper.hpp>
+#include <parser/ident.hpp>
 
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;

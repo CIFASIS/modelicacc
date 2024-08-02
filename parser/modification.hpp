@@ -21,10 +21,10 @@
 #define MODIFICATION_PARSER
 #include <boost/spirit/include/qi.hpp>
 
-#include <ast/expression.h>
-#include <ast/modification.h>
-#include <parser/skipper.h>
-#include <parser/expression.h>
+#include <ast/expression.hpp>
+#include <ast/modification.hpp>
+#include <parser/skipper.hpp>
+#include <parser/expression.hpp>
 
 namespace qi = boost::spirit::qi;
 using namespace Modelica::AST;
