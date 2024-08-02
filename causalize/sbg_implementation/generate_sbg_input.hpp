@@ -20,7 +20,7 @@
 #include <fstream>
 #include <iostream>
 
-#include <mmo/mmo_class.h>
+#include <mmo/mmo_class.hpp>
 
 namespace Causalize {
 

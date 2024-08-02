@@ -17,9 +17,9 @@
 
 ******************************************************************************/
 
-#include <ast/ast_types.h>
-#include <ast/expression.h>
-#include <util/table.h>
+#include <ast/ast_types.hpp>
+#include <ast/expression.hpp>
+#include <util/table.hpp>
 
 namespace Causalize {
 class ForIndexIterator {

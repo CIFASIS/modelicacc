@@ -21,12 +21,12 @@
 #include <boost/variant/variant.hpp>
 #include <boost/variant/get.hpp>
 
-#include <util/debug.h>
-#include <util/table.h>
-#include <util/ast_visitors/partial_eval_expression.h>
+#include <util/debug.hpp>
+#include <util/table.hpp>
+#include <util/ast_visitors/partial_eval_expression.hpp>
 
-#include "process_for_equations.h"
-#include "for_index_iterator.h"
+#include "process_for_equations.hpp"
+#include "for_index_iterator.hpp"
 
 namespace Causalize {
 

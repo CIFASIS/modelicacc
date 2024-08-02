@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include <mmo/mmo_class.h>
+#include <mmo/mmo_class.hpp>
 
 /**
  * Performs a loop unrolling over the for-equations

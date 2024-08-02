@@ -20,12 +20,12 @@
 #include <boost/variant/get.hpp>
 #include <getopt.h>
 
-#include <causalize/sbg_implementation/generate_sbg_input.h>
-#include <mmo/mmo_class.h>
-#include <parser/parser.h>
-#include <util/ast_visitors/state_variables_finder.h>
-#include <util/debug.h>
-#include <util/logger.h>
+#include <causalize/sbg_implementation/generate_sbg_input.hpp>
+#include <mmo/mmo_class.hpp>
+#include <parser/parser.hpp>
+#include <util/ast_visitors/state_variables_finder.hpp>
+#include <util/debug.hpp>
+#include <util/logger.hpp>
 
 using namespace std;
 using namespace Modelica;
@@ -46,7 +46,7 @@ void usage()
 void version()
 {
   cout << "Modelica C Compiler 2.0" << endl;
-  cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << endl;
+  cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.hpptml>" << endl;
   cout << "This is free software: you are free to change and redistribute it." << endl;
   cout << "There is NO WARRANTY, to the extent permitted by law." << endl;
 }
