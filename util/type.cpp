@@ -20,8 +20,8 @@
 
 #include <boost/foreach.hpp>
 #include <boost/variant/get.hpp>
-#include <mmo/mmo_class.h>
-#include <util/type.h>
+#include <mmo/mmo_class.hpp>
+#include <util/type.hpp>
 
 namespace Type {
 using namespace Modelica;

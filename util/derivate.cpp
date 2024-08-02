@@ -18,8 +18,8 @@
 
 ******************************************************************************/
 
-#include <util/derivate.h>
-#include <util/ast_visitors/ginac_interface.h>
+#include <util/derivate.hpp>
+#include <util/ast_visitors/ginac_interface.hpp>
 
 namespace Modelica {
 

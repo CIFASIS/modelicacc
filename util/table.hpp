@@ -22,9 +22,9 @@
 
 #include <map>
 #include <string>
-#include <ast/ast_types.h>
-#include <ast/class.h>
-#include <util/type.h>
+#include <ast/ast_types.hpp>
+#include <ast/class.hpp>
+#include <util/type.hpp>
 
 template <typename Key, typename Value>
 struct SymbolTable : public std::map<Key, Value> {

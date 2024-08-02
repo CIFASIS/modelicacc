@@ -21,7 +21,8 @@
 #define AST_VISITOR_SPLITFOR
 
 #include <boost/variant/static_visitor.hpp>
-#include <ast/equation.h>
+
+#include <ast/equation.hpp>
 
 namespace Modelica {
 

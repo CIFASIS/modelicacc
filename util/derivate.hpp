@@ -21,8 +21,8 @@
 #ifndef DERIVATE_H
 #define DERIVATE_H
 
-#include <ast/expression.h>
-#include <util/table.h>
+#include <ast/expression.hpp>
+#include <util/table.hpp>
 
 namespace Modelica {
 using namespace Modelica::AST;

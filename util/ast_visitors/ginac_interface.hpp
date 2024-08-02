@@ -20,14 +20,17 @@
 
 #ifndef GINAC_INTERFACE
 #define GINAC_INTERFACE
-#include <map>
-#include <vector>
-#include <string>
+
+#include <boost/variant/static_visitor.hpp>
 #include <ginac/ginac.h>
 #include <ginac/flags.h>
-#include <boost/variant/static_visitor.hpp>
-#include <ast/expression.h>
-#include <util/table.h>
+#include <map>
+#include <string>
+#include <vector>
+
+
+#include <ast/expression.hpp>
+#include <util/table.hpp>
 
 DECLARE_FUNCTION_2P(var)
 DECLARE_FUNCTION_1P(der)

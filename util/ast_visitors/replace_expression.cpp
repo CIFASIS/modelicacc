@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <ast/queries.h>
-#include <util/ast_visitors/replace_expression.h>
+#include <ast/queries.hpp>
+#include <util/ast_visitors/replace_expression.hpp>
 
 namespace Modelica {
 

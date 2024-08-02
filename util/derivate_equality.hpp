@@ -21,9 +21,9 @@
 #ifndef DERIVATE_EQ_H
 #define DERIVATE_EQ_H
 
-#include <ast/expression.h>
-#include <util/table.h>
-#include <util/derivate.h>
+#include <ast/expression.hpp>
+#include <util/table.hpp>
+#include <util/derivate.hpp>
 
 namespace Modelica {
 using namespace Modelica::AST;

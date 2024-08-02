@@ -19,9 +19,11 @@
 
 #ifndef AST_VISITOR_TO_MICRO_EXP
 #define AST_VISITOR_TO_MICRO_EXP
+
 #include <boost/variant/static_visitor.hpp>
-#include <ast/expression.h>
-#include <mmo/mmo_class.h>
+
+#include <ast/expression.hpp>
+#include <mmo/mmo_class.hpp>
 
 namespace Modelica {
 

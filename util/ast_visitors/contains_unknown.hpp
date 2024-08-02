@@ -21,9 +21,9 @@
 #define AST_VISITOR_CONTAINS_UNKNOWN
 
 #include <boost/variant/static_visitor.hpp>
-#include <flatter/mmo_graph.h>
-#include <ast/expression.h>
-#include <util/table.h>
+#include <flatter/mmo_graph.hpp>
+#include <ast/expression.hpp>
+#include <util/table.hpp>
 #include <set>
 
 using namespace Modelica;

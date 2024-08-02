@@ -23,8 +23,8 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include <ast/expression.h>
-//#include <mmo/mmo_class.h>
+#include <ast/expression.hpp>
+//#include <mmo/mmo_class.hpp>
 
 namespace Modelica {
 struct MMO_Class;

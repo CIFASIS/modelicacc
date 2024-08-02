@@ -17,10 +17,10 @@
 
 ******************************************************************************/
 
-#include <ast/queries.h>
-#include <util/ast_visitors/eval_expression.h>
-#include <util/ast_visitors/pwl_map_values.h>
-#include <util/debug.h>
+#include <ast/queries.hpp>
+#include <util/ast_visitors/eval_expression.hpp>
+#include <util/ast_visitors/pwl_map_values.hpp>
+#include <util/debug.hpp>
 
 namespace Modelica {
 

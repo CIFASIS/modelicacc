@@ -19,9 +19,11 @@
 
 #ifndef AST_VISITOR_REPLACE_ST
 #define AST_VISITOR_REPLACE_ST
+
 #include <boost/variant/static_visitor.hpp>
-#include <ast/statement.h>
-#include <util/ast_visitors/replace_expression.h>
+
+#include <ast/statement.hpp>
+#include <util/ast_visitors/replace_expression.hpp>
 
 namespace Modelica {
 

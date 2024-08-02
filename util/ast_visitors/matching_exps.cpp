@@ -17,15 +17,16 @@
 
 ******************************************************************************/
 
-#include <util/debug.h>
 #include <boost/variant/get.hpp>
 
-#include <util/ast_visitors/matching_exps.h>
+#include <util/ast_visitors/matching_exps.hpp>
+#include <util/debug.hpp>
 
 using namespace std;
 
 namespace Modelica {
-MatchingExps::MatchingExps(string variable_name, bool state_var) : _matched_exps(), _variable_name(variable_name), _state_var(state_var), _der_call(false), _has_der(false) {};
+MatchingExps::MatchingExps(string variable_name, bool state_var)
+    : _matched_exps(), _variable_name(variable_name), _state_var(state_var), _der_call(false), _has_der(false){};
 
 bool MatchingExps::operator()(Integer v) const { return false; }
 
@@ -75,7 +76,7 @@ bool MatchingExps::operator()(Range v) const
 }
 
 bool MatchingExps::operator()(Brace v) const
-{ 
+{
   bool matched = false;
   foreach_(Expression e, v.args()) { matched = matched || ApplyThis(e); }
   return matched;
@@ -106,12 +107,13 @@ bool MatchingExps::operator()(Named v) const { return false; }
 bool MatchingExps::operator()(Output v) const
 {
   bool matched = false;
-  foreach_(OptExp out_exp, v.args()) {
+  foreach_(OptExp out_exp, v.args())
+  {
     if (out_exp) {
       matched = matched || ApplyThis(out_exp.get());
     }
   }
-  return matched; 
+  return matched;
 }
 
 bool MatchingExps::operator()(Reference v) const
@@ -119,15 +121,12 @@ bool MatchingExps::operator()(Reference v) const
   if (get<0>(v.ref().front()) == _variable_name) {
     if ((_state_var && _der_call) || !_state_var) {
       _matched_exps.insert(v);
-      return true;      
+      return true;
     }
-  } 
+  }
   return false;
 }
 
-set<Expression> MatchingExps::matchedExps() const
-{
-  return _matched_exps; 
-}
+set<Expression> MatchingExps::matchedExps() const { return _matched_exps; }
 
 }  // namespace Modelica

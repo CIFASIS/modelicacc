@@ -19,12 +19,14 @@
 
 #ifndef AST_VISITOR_REPLACEINDEX
 #define AST_VISITOR_REPLACEINDEX
-#include <boost/variant/static_visitor.hpp>
-#include <ast/expression.h>
-#include <util/table.h>
-#include <unordered_map>
+
 #include <boost/functional/hash.hpp>
 #include <boost/variant.hpp>
+#include <boost/variant/static_visitor.hpp>
+#include <unordered_map>
+
+#include <ast/expression.hpp>
+#include <util/table.hpp>
 
 namespace Modelica {
 

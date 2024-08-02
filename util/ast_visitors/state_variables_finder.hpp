@@ -17,10 +17,11 @@
 
 ******************************************************************************/
 
-#include <ast/expression.h>
-#include <mmo/mmo_class.h>
-#include <util/table.h>
 #include <boost/variant/static_visitor.hpp>
+
+#include <ast/expression.hpp>
+#include <mmo/mmo_class.hpp>
+#include <util/table.hpp>
 
 using namespace std;
 using namespace Modelica;

@@ -22,8 +22,8 @@
 
 #include <boost/variant/static_visitor.hpp>
 
-#include <ast/expression.h>
-#include <util/table.h>
+#include <ast/expression.hpp>
+#include <util/table.hpp>
 
 namespace Modelica {
 

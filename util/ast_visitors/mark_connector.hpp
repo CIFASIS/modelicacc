@@ -19,9 +19,11 @@
 
 #ifndef AST_VISITOR_MARKC
 #define AST_VISITOR_MARKC
+
 #include <boost/variant/static_visitor.hpp>
-#include <ast/equation.h>
-#include <ast/expression.h>
+
+#include <ast/equation.hpp>
+#include <ast/expression.hpp>
 
 namespace Modelica {
 using namespace Modelica::AST;

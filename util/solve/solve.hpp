@@ -18,9 +18,9 @@
 ******************************************************************************/
 #pragma once
 
-#include <ast/equation.h>
-#include <util/table.h>
-#include <mmo/mmo_class.h>
+#include <ast/equation.hpp>
+#include <mmo/mmo_class.hpp>
+#include <util/table.hpp>
 
 using namespace Modelica::AST;
 class EquationSolver {

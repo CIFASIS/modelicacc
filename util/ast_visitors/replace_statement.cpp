@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <util/debug.h>
-#include <util/ast_visitors/replace_statement.h>
+#include <util/ast_visitors/replace_statement.hpp>
+#include <util/debug.hpp>
 
 namespace Modelica {
 

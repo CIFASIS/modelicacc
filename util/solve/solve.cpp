@@ -26,17 +26,17 @@
 #include <algorithm>
 #include <ginac/ginac.h>
 
-#include <ast/queries.h>
-#include <ast/equation.h>
-#include <util/ast_visitors/ginac_interface.h>
-#include <util/ast_visitors/contains_expression.h>
-#include <util/ast_visitors/partial_eval_expression.h>
-#include <util/ast_visitors/all_expressions.h>
-#include <util/ast_visitors/eval_expression.h>
-#include <util/ast_visitors/replace_expression.h>
-#include <util/solve/solve.h>
-#include <util/debug.h>
-#include <parser/parser.h>
+#include <ast/queries.hpp>
+#include <ast/equation.hpp>
+#include <util/ast_visitors/ginac_interface.hpp>
+#include <util/ast_visitors/contains_expression.hpp>
+#include <util/ast_visitors/partial_eval_expression.hpp>
+#include <util/ast_visitors/all_expressions.hpp>
+#include <util/ast_visitors/eval_expression.hpp>
+#include <util/ast_visitors/replace_expression.hpp>
+#include <util/solve/solve.hpp>
+#include <util/debug.hpp>
+#include <parser/parser.hpp>
 #include <boost/variant/get.hpp>
 
 using namespace GiNaC;

@@ -19,8 +19,10 @@
 
 #ifndef AST_VISITOR_ST
 #define AST_VISITOR_ST
+
 #include <boost/variant/static_visitor.hpp>
-#include <ast/statement.h>
+
+#include <ast/statement.hpp>
 
 namespace Modelica {
 using namespace Modelica::AST;

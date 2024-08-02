@@ -17,10 +17,10 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/to_micro/convert_to_micro.h>
-#include <util/ast_visitors/to_micro/convert_to_micro_statement.h>
-#include <ast/queries.h>
-#include <util/ast_visitors/partial_eval_expression.h>
+#include <util/ast_visitors/to_micro/convert_to_micro.hpp>
+#include <util/ast_visitors/to_micro/convert_to_micro_statement.hpp>
+#include <ast/queries.hpp>
+#include <util/ast_visitors/partial_eval_expression.hpp>
 
 namespace Modelica {
 ConvertToMicro::ConvertToMicro(MMO_Class &cl) : mmo_class(cl), tomicro_exp(cl, disc_count) { disc_count = 0; }

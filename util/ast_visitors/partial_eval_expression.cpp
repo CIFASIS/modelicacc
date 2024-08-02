@@ -18,10 +18,11 @@
 ******************************************************************************/
 
 #include <math.h>
-#include <util/debug.h>
-#include <util/ast_visitors/partial_eval_expression.h>
-#include <util/ast_visitors/eval_expression.h>
-#include <ast/queries.h>
+
+#include <ast/queries.hpp>
+#include <util/ast_visitors/eval_expression.hpp>
+#include <util/ast_visitors/partial_eval_expression.hpp>
+#include <util/debug.hpp>
 
 namespace Modelica {
 
@@ -37,7 +38,8 @@ Expression PartialEvalExpression::operator()(Real v) const
   return v;
 }
 Expression PartialEvalExpression::operator()(Boolean v) const { return v; }
-Expression PartialEvalExpression::operator()(AddAll v) const {
+Expression PartialEvalExpression::operator()(AddAll v) const
+{
   WARNING("Not evaluating AddAll exp");
   return v;
 }

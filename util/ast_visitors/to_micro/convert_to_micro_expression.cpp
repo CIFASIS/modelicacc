@@ -17,11 +17,12 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/to_micro/convert_to_micro_expression.h>
-#include <ast/queries.h>
-#include <stdio.h>
 #include <map>
+#include <stdio.h>
 #include <sstream>
+
+#include <ast/queries.hpp>
+#include <util/ast_visitors/to_micro/convert_to_micro_expression.hpp>
 
 namespace Modelica {
 
@@ -33,9 +34,7 @@ Expression ConvertToMicroExpression::operator()(Boolean v) const
   if (v == TRUE) return 1.0;
   return 0.0;
 }
-Expression ConvertToMicroExpression::operator()(AddAll v) const{
-  return v;
-}
+Expression ConvertToMicroExpression::operator()(AddAll v) const { return v; }
 Expression ConvertToMicroExpression::operator()(String v) const
 {
   WARNING("uModelica does not supports strings\n");
@@ -59,8 +58,8 @@ Expression ConvertToMicroExpression::operator()(BinOp v) const
       IfSt::ElseList el;
       IfSt ifst(Expression(v), StatementList(1, Assign(d, Expression(1.0))), el, StatementList(1, Assign(d, Expression(0.0))));
       mmo_class.addInitStatement(ifst);
-      mmo_class.statements_ref().statements_ref().push_back(st);
-      rels.push_back(Expression(v));
+      mmo_class.statements_ref().statements_ref().emplace_back(st);
+      rels.emplace_back(v);
       disc.push_back(d);
       return Call("pre", d);
     } else {

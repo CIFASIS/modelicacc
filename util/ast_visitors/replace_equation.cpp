@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <util/debug.h>
-#include <util/ast_visitors/replace_equation.h>
+#include <util/debug.hpp>
+#include <util/ast_visitors/replace_equation.hpp>
 
 namespace Modelica {
 

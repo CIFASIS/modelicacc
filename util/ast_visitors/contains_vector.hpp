@@ -19,10 +19,12 @@
 
 #ifndef AST_VISITOR_CONTAINS_VECTOR
 #define AST_VISITOR_CONTAINS_VECTOR
+
 #include <boost/variant/static_visitor.hpp>
-#include <causalize/vg_implementation/vector/vector_graph_definition.h>
-#include <ast/expression.h>
-#include <util/ast_visitors/contains_expression.h>
+
+#include <causalize/vg_implementation/vector/vector_graph_definition.hpp>
+#include <ast/expression.hpp>
+#include <util/ast_visitors/contains_expression.hpp>
 #include <boost/icl/discrete_interval.hpp>
 #include <set>
 

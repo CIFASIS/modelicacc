@@ -23,7 +23,7 @@
 #include <boost/variant/static_visitor.hpp>
 #include <set>
 
-#include <ast/expression.h>
+#include <ast/expression.hpp>
 
 namespace Modelica {
 

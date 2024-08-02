@@ -20,7 +20,7 @@
 #pragma once
 
 #include <boost/variant/static_visitor.hpp>
-#include <ast/expression.h>
+#include <ast/expression.hpp>
 
 namespace Modelica {
 

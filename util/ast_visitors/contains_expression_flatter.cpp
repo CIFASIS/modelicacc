@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <util/debug.h>
-#include <util/ast_visitors/contains_expression_flatter.h>
+#include <util/debug.hpp>
+#include <util/ast_visitors/contains_expression_flatter.hpp>
 #include <boost/variant/get.hpp>
 
 namespace Modelica {
@@ -132,8 +132,10 @@ bool ContainsExpressionFlatter::operator()(Reference v) const
     if (get<0>(v.ref().front()) == get<0>(ref.ref().front()) && get<1>(v.ref().front()).size() == 0) return true;
 
     // Check variable subscripts
-    foreach_ (RefTuple r, v.ref()) {
-      foreach_ (Expression e, get<1>(r)) {
+    foreach_(RefTuple r, v.ref())
+    {
+      foreach_(Expression e, get<1>(r))
+      {
         if (ApplyThis(e)) {
           return true;
         }

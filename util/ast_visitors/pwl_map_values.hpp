@@ -18,7 +18,7 @@
 ******************************************************************************/
 
 #include <boost/variant/static_visitor.hpp>
-#include <ast/expression.h>
+#include <ast/expression.hpp>
 
 #ifndef AST_VISITOR_PWL_MAP_VALUES
 #define AST_VISITOR_PWL_MAP_VALUES

@@ -18,10 +18,11 @@
 ******************************************************************************/
 
 #include <boost/variant/static_visitor.hpp>
-#include <ast/expression.h>
-#include <util/table.h>
-#include <mmo/mmo_class.h>
-#include <flatter/class_finder.h>
+
+#include <ast/expression.hpp>
+#include <util/table.hpp>
+#include <mmo/mmo_class.hpp>
+#include <flatter/class_finder.hpp>
 
 #ifndef AST_VISITOR_DOTEXPRESSION
 #define AST_VISITOR_DOTEXPRESSION

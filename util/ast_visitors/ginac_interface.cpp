@@ -24,16 +24,16 @@
 #include <stdio.h>
 #include <sstream>
 #include <ginac/ginac.h>
-#include <util/ast_visitors/ginac_interface.h>
-#include <util/ast_visitors/eval_expression.h>
+#include <util/ast_visitors/ginac_interface.hpp>
+#include <util/ast_visitors/eval_expression.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/lexical_cast.hpp>
-#include <util/debug.h>
-#include <ast/queries.h>
-#include <parser/parser.h>
+#include <util/debug.hpp>
+#include <ast/queries.hpp>
+#include <parser/parser.hpp>
 
 using namespace GiNaC;
 using namespace std;

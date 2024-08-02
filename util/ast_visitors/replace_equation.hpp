@@ -20,8 +20,8 @@
 #ifndef AST_VISITOR_REPLACE_EQ
 #define AST_VISITOR_REPLACE_EQ
 #include <boost/variant/static_visitor.hpp>
-#include <ast/equation.h>
-#include <util/ast_visitors/replace_expression.h>
+#include <ast/equation.hpp>
+#include <util/ast_visitors/replace_expression.hpp>
 
 namespace Modelica {
 

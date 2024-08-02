@@ -16,9 +16,9 @@
     along with Modelica C Compiler.  If not, see <http://www.gnu.org/licenses/>.
 
 ******************************************************************************/
-
-#include <util/ast_visitors/mark_connector.h>
 #include <boost/variant/get.hpp>
+
+#include <util/ast_visitors/mark_connector.hpp>
 
 using namespace Modelica;
 using namespace Modelica::AST;

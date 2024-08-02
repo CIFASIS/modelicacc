@@ -19,8 +19,10 @@
 
 #ifndef AST_VISITOR_EQ
 #define AST_VISITOR_EQ
+
 #include <boost/variant/static_visitor.hpp>
-#include <ast/equation.h>
+
+#include <ast/equation.hpp>
 
 #define applyExp(X) boost::apply_visitor(v, X)
 namespace Modelica {
