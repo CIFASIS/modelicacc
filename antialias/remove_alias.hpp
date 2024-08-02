@@ -19,7 +19,7 @@
 
 #ifndef REMOVE_ALIAS_H
 #define REMOVE_ALIAS_H
-#include <mmo/mmo_class.h>
+#include <mmo/mmo_class.hpp>
 
 namespace Modelica {
 class RemoveAlias {
