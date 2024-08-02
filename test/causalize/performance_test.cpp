@@ -1,18 +1,18 @@
-#include <causalize/graph_implementation/unknowns_collector.h>
-#include <causalize/graph_implementation/causalization_strategy.h>
+#include <causalize/graph_implementation/unknowns_collector.hpp>
+#include <causalize/graph_implementation/causalization_strategy.hpp>
 
-#include <parser/parser.h>
-#include <ast/ast_types.h>
-#include <ast/equation.h>
-#include <mmo/mmo_class.h>
-#include <util/table.h>
-#include <util/debug.h>
-#include <util/ast_visitors/contains.h>
+#include <parser/parser.hpp>
+#include <ast/ast_types.hpp>
+#include <ast/equation.hpp>
+#include <mmo/mmo_class.hpp>
+#include <util/table.hpp>
+#include <util/debug.hpp>
+#include <util/ast_visitors/contains.hpp>
 
 #include <boost/variant/get.hpp>
 
-#include <sys/time.h>
-#include <stdio.h>
+#include <sys/time.hpp>
+#include <stdio.hpp>
 
 using namespace Modelica::AST;
 

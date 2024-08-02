@@ -13,22 +13,23 @@
 ******************************************************************************/
 
 /*! \file test_parse.cpp
-*   Current support is for Linux filesystem.
-*/
+ *   Current support is for Linux filesystem.
+ */
 
 #include <ostream>
 
 #include <boost/filesystem.hpp>
 
-#include <parser/parser.h>
+#include <parser/parser.hpp>
 
 using namespace boost::filesystem;
 using namespace std;
 
-int main(){
-  path test_path("../mccprograms"); 
+int main()
+{
+  path test_path("../mccprograms");
 
-  for(directory_entry &x : directory_iterator(test_path)){
+  for (directory_entry &x : directory_iterator(test_path)) {
     bool ret = false;
     bool &ref = ret;
 
