@@ -35,13 +35,13 @@ TEST_P(ITests, GenerateCode)
 {
   const std::string NAME = GetParam();
   std::cout << "Testing model: " << NAME << std::endl;
-  const std::string FLATTER = "../../../bin/causalize ";
+  const std::string CAUSALIZE = "../../../bin/causalize ";
   const std::string ARGS = "-o ./test_data/ ../../../test/mccprograms/" + NAME + ".mo";
   const std::string RESULT_FILE = "./test_data/" + NAME + ".passed";
   const std::string TEST_CMD = "./test_results.sh " + NAME;
-  const std::string FLATTER_CMD = FLATTER + ARGS;
+  const std::string CAUSALIZE_CMD = CAUSALIZE + ARGS;
 
-  std::system(FLATTER_CMD.c_str());
+  std::system(CAUSALIZE_CMD.c_str());
   std::system(TEST_CMD.c_str());
 
   std::ifstream result(RESULT_FILE.c_str());
