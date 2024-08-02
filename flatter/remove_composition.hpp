@@ -18,14 +18,14 @@
 
 ******************************************************************************/
 
-//#include <flatten/change_compref.h>
-#include <mmo/mmo_class.h>
-#include <ast/equation.h>
-#include <ast/statement.h>
-#include <util/type.h>
-#include <util/ast_visitors/equation_visitor.h>
-#include <util/ast_visitors/statement_visitor.h>
-#include <util/ast_visitors/dot_expression.h>
+//#include <flatten/change_compref.hpp>
+#include <mmo/mmo_class.hpp>
+#include <ast/equation.hpp>
+#include <ast/statement.hpp>
+#include <util/type.hpp>
+#include <util/ast_visitors/equation_visitor.hpp>
+#include <util/ast_visitors/statement_visitor.hpp>
+#include <util/ast_visitors/dot_expression.hpp>
 
 #include <iostream>
 #include <sstream>

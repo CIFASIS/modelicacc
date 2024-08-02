@@ -18,7 +18,7 @@
 
 ******************************************************************************/
 
-#include <flatter/remove_composition.h>
+#include <flatter/remove_composition.hpp>
 #include <boost/variant/get.hpp>
 
 static int label;

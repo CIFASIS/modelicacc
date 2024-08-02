@@ -19,7 +19,6 @@
 
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/variant/get.hpp>
-
 #include <fstream>
 #include <getopt.h>
 #include <iostream>
@@ -27,14 +26,14 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <flatter/class_finder.h>
-#include <flatter/connectors.h>
-#include <flatter/flatter.h>
-#include <mmo/mmo_class.h>
-#include <mmo/mmo_tree.h>
-#include <parser/parser.h>
-#include <util/logger.h>
-#include <util/table.h>
+#include <flatter/class_finder.hpp>
+#include <flatter/connectors.hpp>
+#include <flatter/flatter.hpp>
+#include <mmo/mmo_class.hpp>
+#include <mmo/mmo_tree.hpp>
+#include <parser/parser.hpp>
+#include <util/logger.hpp>
+#include <util/table.hpp>
 
 void usage()
 {
@@ -43,12 +42,12 @@ void usage()
   cout << endl;
   cout << "-c <class_name>, --class <class_name> Flatter class <class_name> defined in a Modelica model." << endl;
   cout << "-d, --debug     Generate a detailed log file with debug information about the " << endl;
-  cout << "                the generated graph, including a dot file for it and the" << endl; 
+  cout << "                the generated graph, including a dot file for it and the" << endl;
   cout << "                differents stages of the flatter algorithm." << endl;
   cout << "-g <path>, --graph <path> Sets the output path for the generated graph dot file," << endl;
   cout << "                this flag only has effect if the debug flag is enabled." << endl;
   cout << "-h, --help      Display this information and exit" << endl;
-  
+
   cout << "-v, --version   Display version information and exit" << endl;
   cout << endl;
   cout << "Modelica C Compiler home page: https://github.com/CIFASIS/modelicacc " << endl;
@@ -57,11 +56,10 @@ void usage()
 void version()
 {
   cout << "Modelica C Compiler 2.0" << endl;
-  cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << endl;
+  cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.hpptml>" << endl;
   cout << "This is free software: you are free to change and redistribute it." << endl;
   cout << "There is NO WARRANTY, to the extent permitted by law." << endl;
 }
-
 
 int main(int argc, char** argv)
 {
@@ -80,12 +78,9 @@ int main(int argc, char** argv)
   string output_path = "";
 
   while (true) {
-    static struct option long_options[] = {{"version", no_argument, 0, 'v'},
-                                           {"help", no_argument, 0, 'h'},
-                                           {"class", required_argument, 0, 'c'},
-                                           {"graph", required_argument, 0, 'g'},
-                                           {"debug", no_argument, 0, 'd'},
-                                           {0, 0, 0, 0}};
+    static struct option long_options[] = {{"version", no_argument, 0, 'v'},     {"help", no_argument, 0, 'h'},
+                                           {"class", required_argument, 0, 'c'}, {"graph", required_argument, 0, 'g'},
+                                           {"debug", no_argument, 0, 'd'},       {0, 0, 0, 0}};
     int option_index = 0;
     opt = getopt_long(argc, argv, "vhdc:g:", long_options, &option_index);
     if (opt == EOF) {
@@ -173,11 +168,11 @@ int main(int argc, char** argv)
       LOG << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
       if (filename.empty()) {
         if (className != NULL) {
-          std::string str_class_name = className; 
-          co.debug(str_class_name+".dot");
+          std::string str_class_name = className;
+          co.debug(str_class_name + ".dot");
         } else {
           co.debug("flatter.dot");
-        }      
+        }
       } else {
         co.debug(filename);
       }

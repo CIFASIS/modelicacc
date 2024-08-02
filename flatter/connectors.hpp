@@ -20,21 +20,21 @@
 #include <boost/variant/static_visitor.hpp>
 #include <set>
 
-#include <ast/ast_types.h>
-#include <ast/element.h>
-#include <ast/equation.h>
-#include <ast/expression.h>
-#include <ast/statement.h>
-#include <flatter/class_finder.h>
-#include <mmo/mmo_class.h>
+#include <ast/ast_types.hpp>
+#include <ast/element.hpp>
+#include <ast/equation.hpp>
+#include <ast/expression.hpp>
+#include <ast/statement.hpp>
+#include <flatter/class_finder.hpp>
+#include <mmo/mmo_class.hpp>
 
-#include <util/ast_visitors/replace_expression.h>
-#include <util/ast_visitors/constant_expression.h>
+#include <util/ast_visitors/replace_expression.hpp>
+#include <util/ast_visitors/constant_expression.hpp>
 #include <sbg/sbg.hpp>
 #include <sbg/sbg_algorithms.hpp>
 #include <sbg/sbg_printer.hpp>
-#include <util/table.h>
-#include <util/type.h>
+#include <util/table.hpp>
+#include <util/type.hpp>
 
 using namespace Modelica;
 using namespace Modelica::AST;

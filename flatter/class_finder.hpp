@@ -22,13 +22,13 @@
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
-#include <ast/class.h>
-#include <mmo/mmo_class.h>
-#include <ast/equation.h>
-#include <ast/statement.h>
-#include <ast/modification.h>
-#include <util/type.h>
-#include <ast/ast_types.h>
+#include <ast/class.hpp>
+#include <mmo/mmo_class.hpp>
+#include <ast/equation.hpp>
+#include <ast/statement.hpp>
+#include <ast/modification.hpp>
+#include <util/type.hpp>
+#include <ast/ast_types.hpp>
 
 using namespace Modelica;
 using namespace Modelica::AST;

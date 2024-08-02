@@ -21,8 +21,8 @@
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graphviz.hpp>
-#include <ast/expression.h>
-#include <util/table.h>
+#include <ast/expression.hpp>
+#include <util/table.hpp>
 
 #ifndef MMOGRAPH_DEFINITION_
 #define MMOGRAPH_DEFINITION_

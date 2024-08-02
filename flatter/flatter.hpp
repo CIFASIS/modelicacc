@@ -20,17 +20,17 @@
 #ifndef FLATTER_H
 #define FLATTER_H
 
-#include <flatter/remove_composition.h>
-#include <flatter/class_finder.h>
-#include <mmo/mmo_class.h>
-#include <ast/equation.h>
-#include <ast/statement.h>
-#include <ast/element.h>
-#include <util/type.h>
-#include <util/ast_visitors/equation_visitor.h>
-#include <util/ast_visitors/statement_visitor.h>
-#include <util/ast_visitors/dot_expression.h>
-#include <util/ast_visitors/mark_connector.h>
+#include <flatter/remove_composition.hpp>
+#include <flatter/class_finder.hpp>
+#include <mmo/mmo_class.hpp>
+#include <ast/equation.hpp>
+#include <ast/statement.hpp>
+#include <ast/element.hpp>
+#include <util/type.hpp>
+#include <util/ast_visitors/equation_visitor.hpp>
+#include <util/ast_visitors/statement_visitor.hpp>
+#include <util/ast_visitors/dot_expression.hpp>
+#include <util/ast_visitors/mark_connector.hpp>
 #include <boost/variant/get.hpp>
 
 class Flatter {

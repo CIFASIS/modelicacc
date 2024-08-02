@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
+#include <gtest/gtest.hpp>
+#include <gmock/gmock.hpp>
 
 int main(int argc, char **argv)
 {
