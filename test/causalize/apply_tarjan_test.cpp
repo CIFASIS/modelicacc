@@ -1,9 +1,9 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/included/unit_test.hpp>
 
-#include <causalize/graph_implementation/apply_tarjan.h>
+#include <causalize/graph_implementation/apply_tarjan.hpp>
 
-#include <util/debug.h>
+#include <util/debug.hpp>
 
 using namespace boost::unit_test;
 

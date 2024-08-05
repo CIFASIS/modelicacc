@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <parser/ident.h>
-#include <parser/ident_def.h>
+#include <parser/ident.hpp>
+#include <parser/ident_def.hpp>
 
 namespace Modelica {
 namespace Parser {

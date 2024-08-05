@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include <ast/statement.h>
+#include <ast/statement.hpp>
 
 namespace Modelica {
 namespace AST {

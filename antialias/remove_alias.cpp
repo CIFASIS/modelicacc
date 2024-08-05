@@ -17,14 +17,14 @@
 
 ******************************************************************************/
 
-#include <antialias/remove_alias.h>
-#include <ast/equation.h>
-#include <ast/queries.h>
+#include <antialias/remove_alias.hpp>
+#include <ast/equation.hpp>
+#include <ast/queries.hpp>
 #include <boost/variant/get.hpp>
-#include <util/ast_visitors/partial_eval_expression.h>
-#include <util/ast_visitors/replace_equation.h>
-#include <util/ast_visitors/replace_statement.h>
-#include <util/ast_visitors/state_variables_finder.h>
+#include <util/ast_visitors/partial_eval_expression.hpp>
+#include <util/ast_visitors/replace_equation.hpp>
+#include <util/ast_visitors/replace_statement.hpp>
+#include <util/ast_visitors/state_variables_finder.hpp>
 #include <algorithm>
 #include <vector>
 

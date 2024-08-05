@@ -17,11 +17,12 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/to_micro/convert_to_micro_statement.h>
-#include <util/ast_visitors/to_micro/convert_to_micro_expression.h>
-#include <ast/queries.h>
 #include <stdio.h>
 #include <sstream>
+
+#include <ast/queries.hpp>
+#include <util/ast_visitors/to_micro/convert_to_micro_expression.hpp>
+#include <util/ast_visitors/to_micro/convert_to_micro_statement.hpp>
 
 namespace Modelica {
 

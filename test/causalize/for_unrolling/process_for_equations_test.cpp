@@ -3,12 +3,12 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/included/unit_test.hpp>
 
-#include <parser/parser.h>
-#include <ast/expression.h>
-#include <ast/class.h>
-#include <mmo/mmo_class.h>
-#include <util/table.h>
-#include <causalize/graph_implementation/for_unrolling/process_for_equations.h>
+#include <parser/parser.hpp>
+#include <ast/expression.hpp>
+#include <ast/class.hpp>
+#include <mmo/mmo_class.hpp>
+#include <util/table.hpp>
+#include <causalize/graph_implementation/for_unrolling/process_for_equations.hpp>
 #include <boost/variant/variant.hpp>
 #include <boost/variant/get.hpp>
 

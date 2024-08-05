@@ -17,9 +17,9 @@
 
 ******************************************************************************/
 
-#include <util/debug.h>
-#include <util/ast_visitors/all_expressions.h>
-#include <util/ast_visitors/eval_expression.h>
+#include <util/debug.hpp>
+#include <util/ast_visitors/all_expressions.hpp>
+#include <util/ast_visitors/eval_expression.hpp>
 #include <boost/variant/get.hpp>
 
 namespace Modelica {

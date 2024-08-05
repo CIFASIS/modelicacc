@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <util/debug.h>
-#include <util/ast_visitors/contains_expression.h>
+#include <util/debug.hpp>
+#include <util/ast_visitors/contains_expression.hpp>
 #include <boost/variant/get.hpp>
 
 namespace Modelica {

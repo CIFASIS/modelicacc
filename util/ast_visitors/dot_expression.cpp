@@ -17,9 +17,9 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/dot_expression.h>
-#include <ast/queries.h>
-#include <util/type.h>
+#include <util/ast_visitors/dot_expression.hpp>
+#include <ast/queries.hpp>
+#include <util/type.hpp>
 
 namespace Modelica {
 
@@ -29,14 +29,14 @@ DotExpression::DotExpression(Option<MMO_Class &> m, Name n, ExpList xs) : _class
 };
 Expression DotExpression::operator()(Integer v) const { return v; }
 Expression DotExpression::operator()(Boolean v) const { return v; }
-Expression DotExpression::operator()(AddAll v) const{
-  RefTuple rt = v.arr(); 
+Expression DotExpression::operator()(AddAll v) const
+{
+  RefTuple rt = v.arr();
   Name name;
   ExpList indices;
 
-  if(syms) 
-    if(syms.get()[get<0>(rt)]) 
-      name = prefix + "_";
+  if (syms)
+    if (syms.get()[get<0>(rt)]) name = prefix + "_";
 
   name += get<0>(rt);
   indices += get<1>(rt);

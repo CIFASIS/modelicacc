@@ -17,11 +17,11 @@
 
 ******************************************************************************/
 
-#include <causalize/common/for_unrolling/for_index_iterator.h>
-#include <ast/expression.h>
-#include <util/ast_visitors/eval_expression.h>
-#include <ast/modification.h>
-#include <util/debug.h>
+#include <causalize/common/for_unrolling/for_index_iterator.hpp>
+#include <ast/expression.hpp>
+#include <util/ast_visitors/eval_expression.hpp>
+#include <ast/modification.hpp>
+#include <util/debug.hpp>
 
 namespace Causalize {
 

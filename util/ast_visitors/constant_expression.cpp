@@ -17,19 +17,19 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/constant_expression.h>
+#include <util/ast_visitors/constant_expression.hpp>
 
-#include <ast/queries.h>
+#include <ast/queries.hpp>
 
 namespace Modelica {
 
-ConstantExpression::ConstantExpression(VarSymbolTable& symbols) : _symbols(symbols) {};
+ConstantExpression::ConstantExpression(VarSymbolTable& symbols) : _symbols(symbols){};
 
 bool ConstantExpression::operator()(Integer v) const { return true; }
 
 bool ConstantExpression::operator()(Boolean v) const { return true; }
 
-bool ConstantExpression::operator()(AddAll v) const {return false;}
+bool ConstantExpression::operator()(AddAll v) const { return false; }
 
 bool ConstantExpression::operator()(String v) const { return true; }
 
@@ -126,7 +126,7 @@ bool ConstantExpression::operator()(Output v) const
 }
 
 bool ConstantExpression::operator()(Reference v) const
-{ 
+{
   std::string var_name = get<0>(v.ref().front());
   return isConstantNoCheck(var_name, _symbols);
 }

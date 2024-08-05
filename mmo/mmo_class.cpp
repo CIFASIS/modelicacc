@@ -17,10 +17,10 @@
 
 ******************************************************************************/
 
-#include <mmo/mmo_class.h>
+#include <mmo/mmo_class.hpp>
 #include <boost/variant/get.hpp>
-#include <util/debug.h>
-#include <util/ast_visitors/eval_expression.h>
+#include <util/debug.hpp>
+#include <util/ast_visitors/eval_expression.hpp>
 
 #include <iostream>
 
@@ -230,23 +230,24 @@ void MMO_Class::insertElement(Element e)
   }
 }
 
-void MMO_Class::addVar(Name n, VarInfo var){ 
-  syms_.insert(n, var); 
-  //cout << n << ": " << var << "\n";
+void MMO_Class::addVar(Name n, VarInfo var)
+{
+  syms_.insert(n, var);
+  // cout << n << ": " << var << "\n";
 }
 
-void MMO_Class::rmVar(Name n){
+void MMO_Class::rmVar(Name n)
+{
   syms_.remove(n);
 
   std::vector<Name>::iterator itvars = variables_.begin();
   std::vector<Name> newvars;
   std::vector<Name>::iterator itnew = newvars.begin();
-  for(; itvars != variables_.end(); ++itvars){
-    if(*itvars != n){
+  for (; itvars != variables_.end(); ++itvars) {
+    if (*itvars != n) {
       itnew = newvars.insert(itnew, *itvars);
       ++itnew;
     }
-
   }
   set_variables(newvars);
 }

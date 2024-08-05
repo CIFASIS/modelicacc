@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/splitfor_visitor.h>
-#include <util/debug.h>
+#include <util/ast_visitors/splitfor_visitor.hpp>
+#include <util/debug.hpp>
 
 namespace Modelica {
 

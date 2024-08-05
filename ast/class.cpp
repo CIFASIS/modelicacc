@@ -17,15 +17,15 @@
 
 ******************************************************************************/
 
-#include <ast/class.h>
-#include <ast/element.h>
+#include <ast/class.hpp>
+#include <ast/element.hpp>
 #include <boost/fusion/include/boost_tuple.hpp>
 #include <boost/version.hpp>
 #if defined BOOST_VERSION && BOOST_VERSION > 105600
 #include <boost/optional/optional_io.hpp>
 #endif
 #include <boost/variant/get.hpp>
-#include <util/debug.h>
+#include <util/debug.hpp>
 
 namespace Modelica {
 namespace AST {
@@ -161,7 +161,7 @@ std::ostream& operator<<(std::ostream& out, const EnumClass& c)
   out << c.name() << " =  enumeration (";
   out << c.enum_spec();
   out << ")";
-  
+
   return out;
 }
 member_imp(DerClass, bool, final);

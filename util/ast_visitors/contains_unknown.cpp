@@ -17,29 +17,27 @@
 
 ******************************************************************************/
 
-#include <util/ast_visitors/contains_unknown.h>
-#include <util/debug.h>
+#include <util/ast_visitors/contains_unknown.hpp>
+#include <util/debug.hpp>
 #include <boost/variant/get.hpp>
-#include <util/ast_visitors/eval_expression.h>
-#include <util/ast_visitors/partial_eval_expression.h>
-#include <ast/queries.h>
+#include <util/ast_visitors/eval_expression.hpp>
+#include <util/ast_visitors/partial_eval_expression.hpp>
+#include <ast/queries.hpp>
 
 using namespace boost;
 using namespace Modelica;
-using namespace Modelica::AST ;
+using namespace Modelica::AST;
 
-ContainsUnknown::ContainsUnknown(std::vector<Expression> unks, const VarSymbolTable &s): syms(s){ 
-  int i=0;
-  for (Expression e: unks) {
+ContainsUnknown::ContainsUnknown(std::vector<Expression> unks, const VarSymbolTable &s) : syms(s)
+{
+  int i = 0;
+  for (Expression e : unks) {
     std::stringstream ss;
     ss << e;
-    definedUnks.insert(make_pair(ss.str(),i++));
+    definedUnks.insert(make_pair(ss.str(), i++));
   }
-  
 }
-void ContainsUnknown::clear() {
-  usedUnks.clear(); 
-}
+void ContainsUnknown::clear() { usedUnks.clear(); }
 
 bool ContainsUnknown::operator()(Modelica::AST::Integer v) const { return false; }
 
@@ -57,58 +55,64 @@ bool ContainsUnknown::operator()(SubEnd v) const { return false; }
 
 bool ContainsUnknown::operator()(SubAll v) const { return false; }
 
-bool ContainsUnknown::operator()(BinOp v) const {
-  Expression l=v.left(), r=v.right();
+bool ContainsUnknown::operator()(BinOp v) const
+{
+  Expression l = v.left(), r = v.right();
   bool rl = ApplyThis(l);
   bool rr = ApplyThis(r);
   return rr || rl;
 }
 
-bool ContainsUnknown::operator()(UnaryOp v) const {
-  Expression e=v.exp();
+bool ContainsUnknown::operator()(UnaryOp v) const
+{
+  Expression e = v.exp();
   return ApplyThis(e);
 }
 
-bool ContainsUnknown::operator()(IfExp v) const {
-  Expression cond=v.cond(), then=v.then(), elseexp=v.elseexp();
+bool ContainsUnknown::operator()(IfExp v) const
+{
+  Expression cond = v.cond(), then = v.then(), elseexp = v.elseexp();
   const bool rc = ApplyThis(cond);
   const bool rt = ApplyThis(then);
   const bool re = ApplyThis(elseexp);
   return rc || rt || re;
 }
 
-bool ContainsUnknown::operator()(Range v) const {
-  Expression start=v.start(), end=v.end();
+bool ContainsUnknown::operator()(Range v) const
+{
+  Expression start = v.start(), end = v.end();
   bool rs = ApplyThis(start);
   bool re = ApplyThis(end);
   return rs || re;
 }
 
-bool ContainsUnknown::operator()(Brace v) const {
+bool ContainsUnknown::operator()(Brace v) const
+{
   bool ret = false;
-  for (Expression exp: v.args()) {
+  for (Expression exp : v.args()) {
     bool b = ApplyThis(exp);
     ret |= b;
   }
   return ret;
 }
 
-bool ContainsUnknown::operator()(Bracket v) const {
+bool ContainsUnknown::operator()(Bracket v) const
+{
   bool ret = false;
-  for (auto &list: v.args()) {
-    for (Expression exp: list) {
-    bool b = ApplyThis(exp);
-    ret |= b;
-  }
+  for (auto &list : v.args()) {
+    for (Expression exp : list) {
+      bool b = ApplyThis(exp);
+      ret |= b;
+    }
   }
   return ret;
-} // TODO: Warning! Modificado para que compile.
+}  // TODO: Warning! Modificado para que compile.
 
-bool ContainsUnknown::operator()(Call call) const {
-  if ("der"!=call.name())
-    return false;
+bool ContainsUnknown::operator()(Call call) const
+{
+  if ("der" != call.name()) return false;
   int usage = IsUsed(call);
-  if (usage!=-1) {
+  if (usage != -1) {
     usedUnks.insert(usage);
     return true;
   } else {
@@ -116,30 +120,34 @@ bool ContainsUnknown::operator()(Call call) const {
   }
 }
 
-bool ContainsUnknown::operator()(FunctionExp v) const {
+bool ContainsUnknown::operator()(FunctionExp v) const
+{
   bool ret = false;
-  for (Expression exp: v.args()) {
+  for (Expression exp : v.args()) {
     bool b = ApplyThis(exp);
     ret |= b;
   }
   return ret;
 }
 
-bool ContainsUnknown::operator()(ForExp v) const {
+bool ContainsUnknown::operator()(ForExp v) const
+{
   Expression exp = v.exp();
   bool ret = ApplyThis(exp);
   return ret;
 }
 
-bool ContainsUnknown::operator()(Named v) const {
+bool ContainsUnknown::operator()(Named v) const
+{
   Expression exp = v.exp();
   bool ret = ApplyThis(exp);
   return ret;
 }
 
-bool ContainsUnknown::operator()(Output v) const {
+bool ContainsUnknown::operator()(Output v) const
+{
   bool ret = false;
-  for (Option<Expression> exp: v.args()) {
+  for (Option<Expression> exp : v.args()) {
     if (exp) {
       bool b = ApplyThis(exp.get());
       ret |= b;
@@ -148,10 +156,10 @@ bool ContainsUnknown::operator()(Output v) const {
   return ret;
 }
 
-
-bool ContainsUnknown::operator()(Reference ref) const {
+bool ContainsUnknown::operator()(Reference ref) const
+{
   int usage = IsUsed(ref);
-  if (usage!=-1) {
+  if (usage != -1) {
     usedUnks.insert(usage);
     return true;
   } else {
@@ -159,21 +167,15 @@ bool ContainsUnknown::operator()(Reference ref) const {
   }
 }
 
-std::set<int> ContainsUnknown::getUsages() const {
-  return usedUnks;
-}
+std::set<int> ContainsUnknown::getUsages() const { return usedUnks; }
 
-int ContainsUnknown::IsUsed(Expression e) const {
+int ContainsUnknown::IsUsed(Expression e) const
+{
   std::stringstream ss;
   ss << e;
   try {
     return definedUnks.at(ss.str());
-  } catch (const std::out_of_range& oor) {
+  } catch (const std::out_of_range &oor) {
     return -1;
   }
 }
-
-
-
-
-

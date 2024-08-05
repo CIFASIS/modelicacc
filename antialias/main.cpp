@@ -17,13 +17,14 @@
 
 ******************************************************************************/
 
-#include <iostream>
-#include <ast/class.h>
-#include <cstdlib>
-#include <parser/parser.h>
-#include <util/debug.h>
 #include <boost/variant/get.hpp>
-#include <antialias/remove_alias.h>
+#include <cstdlib>
+#include <iostream>
+
+#include <antialias/remove_alias.hpp>
+#include <ast/class.hpp>
+#include <parser/parser.hpp>
+#include <util/debug.hpp>
 
 int main(int argc, char** argv)
 {

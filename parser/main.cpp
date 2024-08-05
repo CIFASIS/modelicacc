@@ -19,28 +19,29 @@
 
 #include <iostream>
 #include <fstream>
-#include <stdio.h>
+#include <stdio.hpp>
 
-#include <mmo/mmo_class.h>
-#include <mmo/mmo_tree.h>
-#include <parser/parser.h>
+#include <mmo/mmo_class.hpp>
+#include <mmo/mmo_tree.hpp>
+#include <parser/parser.hpp>
 
-int main(int argc, char** argv){
+int main(int argc, char** argv)
+{
   using namespace std;
   using namespace Modelica::AST;
   using namespace Modelica;
   using namespace boost;
 
   bool ret;
-  char *out = NULL;
+  char* out = NULL;
   char opt;
   std::ofstream outputFile;
 
-  while ((opt = getopt(argc, argv, "o:")) != -1){
-    switch (opt){
-      case 'o':
-        out = optarg;
-        break;
+  while ((opt = getopt(argc, argv, "o:")) != -1) {
+    switch (opt) {
+    case 'o':
+      out = optarg;
+      break;
     }
   }
 
@@ -50,15 +51,18 @@ int main(int argc, char** argv){
   else
     sd = Parser::ParseFile("", ret);
 
-  if(ret){
-    if(out) std::cout << sd << std::endl;
+  if (ret) {
+    if (out)
+      std::cout << sd << std::endl;
 
-    else std::cout << sd << std::endl;
+    else
+      std::cout << sd << std::endl;
   }
 
-  else std::cout << "Error parser" << std::endl;
- 
-  if(out) return 0;
+  else
+    std::cout << "Error parser" << std::endl;
+
+  if (out) return 0;
 
   return 0;
 }

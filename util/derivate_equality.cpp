@@ -22,12 +22,12 @@
  *
  */
 
-#include <util/derivate_equality.h>
-#include <ast/equation.h>
-#include <ast/queries.h>
-#include <util/derivate.h>
+#include <util/derivate_equality.hpp>
+#include <ast/equation.hpp>
+#include <ast/queries.hpp>
+#include <util/derivate.hpp>
 #include <boost/variant/get.hpp>
-#include <util/ast_visitors/part_evalexp.h>
+#include <util/ast_visitors/part_evalexp.hpp>
 
 namespace Modelica {
 Equality derivate_equality(Equality eq, VarSymbolTable syms)

@@ -17,9 +17,9 @@
 
 ******************************************************************************/
 
-#include <util/table.h>
-// Si se usa type.h si o si tiene que estar mmo_class.h. No se puede ṕoner dentro de type.h
-#include <mmo/mmo_class.h>
+#include <util/table.hpp>
+// Si se usa type.hpp si o si tiene que estar mmo_class.hpp. No se puede ṕoner dentro de type.hpp
+#include <mmo/mmo_class.hpp>
 
 using namespace Modelica::AST;
 
@@ -41,11 +41,11 @@ bool VarInfo::isPrefix(TypePrefix p)
 void VarInfo::removePrefix(TypePrefix p)
 {
   TypePrefixes::iterator it = std::find(prefixes_ref().begin(), prefixes_ref().end(), Option<TypePrefix>(p));
-  if (it != prefixes_ref().end()){ 
-    //Option<TypePrefix> otp = *it;
-    //if(otp){
-     // TypePrefix tp = *otp;
-      //std::cout << tp << "\n";
+  if (it != prefixes_ref().end()) {
+    // Option<TypePrefix> otp = *it;
+    // if(otp){
+    // TypePrefix tp = *otp;
+    // std::cout << tp << "\n";
     //}
     prefixes_ref().erase(it);
   }
@@ -56,9 +56,9 @@ std::ostream& operator<<(std::ostream& out, const VarInfo& v)  // output
   out << "type: " << v.type() << " state: " << v.state() << " builtin: " << v.builtin() << "\n";
   VarInfo auxv = v;
   TypePrefixes::iterator itpre = auxv.prefixes_ref().begin();
-  for(; itpre != auxv.prefixes_ref().end(); ++itpre){
+  for (; itpre != auxv.prefixes_ref().end(); ++itpre) {
     Option<TypePrefix> otp = *itpre;
-    if(otp){
+    if (otp) {
       TypePrefix tp = *otp;
       out << tp << "\n";
     }
@@ -66,10 +66,11 @@ std::ostream& operator<<(std::ostream& out, const VarInfo& v)  // output
   return out;
 }
 
-std::ostream &operator<<(std::ostream &out, const VarSymbolTable &vst){
+std::ostream& operator<<(std::ostream& out, const VarSymbolTable& vst)
+{
   typename std::map<Name, VarInfo>::const_iterator it;
 
-  for(it = vst.begin(); it != vst.end(); ++it){
+  for (it = vst.begin(); it != vst.end(); ++it) {
     out << it->first << ": " << it->second << "\n";
   }
 

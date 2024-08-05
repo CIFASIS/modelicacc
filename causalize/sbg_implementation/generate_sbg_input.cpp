@@ -20,13 +20,13 @@
 #include <cmath>
 #include <sstream>
 
-#include <ast/queries.h>
-#include <causalize/sbg_implementation/generate_sbg_input.h>
-#include <util/ast_visitors/constant_expression.h>
-#include <util/ast_visitors/eval_expression.h>
-#include <util/ast_visitors/matching_exps.h>
-#include <util/ast_visitors/pwl_map_values.h>
-#include <util/logger.h>
+#include <ast/queries.hpp>
+#include <causalize/sbg_implementation/generate_sbg_input.hpp>
+#include <util/ast_visitors/constant_expression.hpp>
+#include <util/ast_visitors/eval_expression.hpp>
+#include <util/ast_visitors/matching_exps.hpp>
+#include <util/ast_visitors/pwl_map_values.hpp>
+#include <util/logger.hpp>
 
 using namespace Modelica;
 

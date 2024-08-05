@@ -17,7 +17,7 @@
 
  ******************************************************************************/
 
-#include "logger.h"
+#include "logger.hpp"
 
 using namespace std;
 
@@ -25,8 +25,8 @@ Modelica::Logger::Logger() {}
 
 Modelica::Logger::~Logger() { log.close(); }
 
-void Modelica::Logger::setFile(string file_name) 
+void Modelica::Logger::setFile(string file_name)
 {
-    string log_file = file_name + ".log";
-    log.open(log_file, std::ofstream::out);
+  string log_file = file_name + ".log";
+  log.open(log_file, std::ofstream::out);
 }

@@ -18,11 +18,11 @@
 
 ******************************************************************************/
 
-#include <flatter/flatter.h>
-#include <util/ast_visitors/partial_eval_expression.h>
+#include <flatter/flatter.hpp>
+#include <util/ast_visitors/partial_eval_expression.hpp>
 #include <boost/algorithm/string.hpp>
-#include <util/debug.h>
-#include <util/logger.h>
+#include <util/debug.hpp>
+#include <util/logger.hpp>
 
 #include <iostream>
 using namespace std;

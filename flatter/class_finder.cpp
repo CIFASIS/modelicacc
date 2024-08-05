@@ -18,11 +18,11 @@
 
 ******************************************************************************/
 
-#include <flatter/class_finder.h>
+#include <flatter/class_finder.hpp>
 #include <boost/variant/get.hpp>
 #include <iostream>
-#include <util/debug.h>
-#include <util/logger.h>
+#include <util/debug.hpp>
+#include <util/logger.hpp>
 
 using namespace std;
 using namespace Modelica;
@@ -64,7 +64,7 @@ void ClassFinder::expand(MMO_Class &up, MMO_Class &down)
         if (v.indices()) indexes += v.indices().get();
         if (indexes.size() > 0) v.set_indices(indexes);
         v.set_prefixes(v.prefixes() + get<0>(td));
-        //LOG << "v2: " << v << "\n";
+        // LOG << "v2: " << v << "\n";
 
         if (is<Type::String>(t_final)) v.set_type("String");
         if (is<Type::Integer>(t_final)) v.set_type("Integer");
@@ -110,7 +110,7 @@ void ClassFinder::ExpandAll(MMO_Class &up)
   }
 }
 
-#define newMMO(NEW, OLD)              \
+#define newMMO(NEW, OLD)            \
   MMO_Class *NEW = new MMO_Class(); \
   *(NEW) = (OLD);
 
@@ -366,7 +366,7 @@ void ClassFinder::applyArgument(MMO_Class &contex, MMO_Class &target, Argument m
       v.set_indices(OptIndices);
       v.set_prefixes(preType);
       v.set_type(comp.type());
-      //LOG << "v1: " << v << "\n";
+      // LOG << "v1: " << v << "\n";
       target.syms_ref().insert(comp.declaration().name(), v);
 
     } else

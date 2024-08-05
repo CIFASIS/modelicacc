@@ -22,11 +22,11 @@
 #include <boost/variant/variant.hpp>
 #include <boost/variant/get.hpp>
 
-#include <util/ast_visitors/state_variables_finder.h>
+#include <util/ast_visitors/state_variables_finder.hpp>
 
-#include <ast/expression.h>
-#include <util/debug.h>
-#include <util/table.h>
+#include <ast/expression.hpp>
+#include <util/debug.hpp>
+#include <util/table.hpp>
 
 StateVariablesFinder::StateVariablesFinder(MMO_Class &c) : _c(c) {}
 
