@@ -103,7 +103,7 @@ void GenerateSBGInput::addIndexRange(IndexList range, const std::string& eq_id, 
     if (idx_range.step()) {
       step = getValue(idx_range.step().get());
     }
-    addDef(node_id, upper, -1, step);
+    addDef(node_id, upper - lower + 1, -1, step);
     usage[idx.name()] = lower;
   }
   _eq_usage[eq_id] = usage;
@@ -246,7 +246,7 @@ void GenerateSBGInput::addVariableNodes()
   foreach_(Name var_name, variables)
   {
     VarInfo variable = symbols[var_name].get();
-    if (!isVariable(var_name, symbols)) {
+    if (isVariable(var_name, symbols)) {
       buildSet(variable, _node_id);
       _var_nodes.insert(std::make_pair(var_name, _node_id));
       _node_id++;
