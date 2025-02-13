@@ -1,10 +1,14 @@
 # Changelog
 
-## [Unreleased]
-
+## [4.0] - 2022-05-04
 ### Added
-- Implemented SBGraphs data structures and helper clases, for details see [**graph definition**](https://github.com/CIFASIS/modelicacc/tree/SBGraphs/util/graph)
-- Implemented **new flatter** algorithm based on **SBGraphs**
+- Implemented SBGraphs as an independent library.
+- Implemented **new matching** algorithm based on **SBGraphs**.
+
+## [3.0] - 2021-08-20
+### Added
+- Implemented SBGraphs data structures and helper classes.
+- Implemented **new flatter** algorithm based on **SBGraphs**.
 
 ## [2.0] - 2020-11-17
 ### Added

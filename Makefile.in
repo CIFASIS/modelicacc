@@ -77,7 +77,7 @@ ifeq ("$(wildcard $(BOOST_LIB_PATH)/$(BOOST_1_81))","")
 endif
 
 update-sbg:
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB); ./update.py --branch_name $(sbg_branch) --repo_checkout $(repo_checkout)
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB); python3 ./update.py --branch_name $(sbg_branch) --repo_checkout $(repo_checkout)
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB); tar -zxvf $(SBG_DEV).tar.gz
 
 lib-sbg: lib-boost  

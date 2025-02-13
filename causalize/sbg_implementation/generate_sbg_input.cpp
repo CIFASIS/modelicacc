@@ -152,7 +152,7 @@ void GenerateSBGInput::addOffset(int edge_id, const std::string& map, int offset
     off_def << " - " << offset;
   }
   def << "off" << map << edge_id << dim_name.str() << " = "
-      << "r(V" << v_id - 1 << ",1) - r(E" << edge_id - 1 << ",1)" << off_def.str();
+      << "V" << v_id - 1 << " - E" << edge_id - 1 << off_def.str();
   _offsets.push_back(def.str());
 }
 
@@ -328,49 +328,49 @@ void GenerateSBGInput::buildFromModel()
 
 void GenerateSBGInput::generateEdgeMap(const std::string& map_name, const std::string& map_idx, bool fixed_slopes)
 {
-  _sbg_input << map_name << " %= <<";
+  _sbg_input << map_name << ": <<";
   unsigned long size = 1;
   for (std::string def : _E) {
     int slope = fixed_slopes ? 1 : _m1_slopes[size - 1];
     _sbg_input << "{" << def << "} -> " << slope << "*x+off" << map_idx << size << ((size < _E.size()) ? " , " : "");
     size++;
   }
-  _sbg_input << ">>;" << std::endl;
+  _sbg_input << ">>" << std::endl;
 }
 
 void GenerateSBGInput::generateSBGInput()
 {
   for (std::string def : _offsets) {
-    _sbg_input << def << std::endl;
+    _sbg_input << def << ";" << std::endl;
   }
   _sbg_input << std::endl;
   _sbg_input << "matchSCCTS(" << std::endl;
-  _sbg_input << "V %= {";
+  _sbg_input << "V: {";
   unsigned long size = 1;
   for (std::string def : _V) {
-    _sbg_input << def << ((size < _V.size()) ? " , " : "");
+    _sbg_input << def << ((size < _V.size()) ? ", " : "");
     size++;
   }
-  _sbg_input << "};" << std::endl;
+  _sbg_input << "}" << std::endl;
 
-  _sbg_input << "Vmap %= <<";
+  _sbg_input << "Vmap: <<";
   size = 1;
   for (std::string def : _V) {
-    _sbg_input << "{" << def << "} -> 0*x+" << size << ((size < _V.size()) ? " , " : "");
+    _sbg_input << "{" << def << "} -> 0*x+" << size << ((size < _V.size()) ? ", " : "");
     size++;
   }
-  _sbg_input << ">>;" << std::endl;
+  _sbg_input << ">>" << std::endl;
   generateEdgeMap("map1", "M1");
   const bool FIXED_SLOPES = true;
   generateEdgeMap("map2", "M2", FIXED_SLOPES);
-  _sbg_input << "Emap %= <<";
+  _sbg_input << "Emap: <<";
   size = 1;
   for (std::string def : _E) {
     _sbg_input << "{" << def << "} -> 0*x+" << size << ((size < _E.size()) ? " , " : "");
     size++;
   }
-  _sbg_input << ">>;" << std::endl;
-  _sbg_input << ", 1)" << std::endl;
+  _sbg_input << ">>" << std::endl;
+  _sbg_input << ", 1);" << std::endl;
   _sbg_input.close();
 }
 
