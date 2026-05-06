@@ -17,6 +17,7 @@
 
 ******************************************************************************/
 
+#include <algorithm>
 #include <cmath>
 #include <sstream>
 
@@ -28,34 +29,142 @@
 #include <util/ast_visitors/pwl_map_values.hpp>
 #include <util/logger.hpp>
 
-using namespace Modelica;
+namespace Modelica {
 
 namespace Causalize {
-GenerateSBGInput::GenerateSBGInput(MMO_Class& mmo_class) : _mmo_class(mmo_class) {}
+
+// Constructors/Destructors ----------------------------------------------------
+
+GenerateSBGInput::GenerateSBGInput(MMO_Class& mmo_class)
+  : _mmo_class(mmo_class), _vertex_offset(1) {}
+
+// Getters ---------------------------------------------------------------------
 
 std::string GenerateSBGInput::fileName() { return _mmo_class.name() + "_sbg_input.sbg"; }
 
-Integer GenerateSBGInput::getValue(Expression exp) const
+// Add variable vertices -------------------------------------------------------
+
+Integer GenerateSBGInput::getValue(Expression expr) const
 {
   VarSymbolTable symbols = _mmo_class.syms();
-  EvalExpression eval_exp(symbols);
-  return Integer(Apply(eval_exp, exp));
+  EvalExpression eval_expr(symbols);
+  return Integer(Apply(eval_expr, expr));
 }
 
-void GenerateSBGInput::addDef(int node_id, int end, int dim, int step)
+void GenerateSBGInput::buildSet(const VarInfo& variable)
 {
-  std::ostringstream def;
-  std::ostringstream dim_name;
-  if (dim >= 0) {
-    dim_name << "D" << dim;
+  Option<ExpList> dims = variable.indices();
+  VertexDefinition vertex_def(_node_id);
+  if (dims) {
+    for (const Expression& d : dims.get()) {
+      Integer d_val = getValue(d);
+      vertex_def.addDimension(_vertex_offset, 1, _vertex_offset + d_val - 1);
+    }
+    _vertex_offset += vertex_def.maxDimSize() + 1;
+  } else {
+    vertex_def.addDimension(_vertex_offset, 1, _vertex_offset);
+    ++_vertex_offset;
   }
-  def << "V" << node_id << dim_name.str() << " = "
-      << "V" << node_id - 1 << dim_name.str() << "+" << end;
-  _offsets.push_back(def.str());
-  def.str("");
-  def << "[V" << node_id - 1 << dim_name.str() << "+1:" << step << ":V" << node_id << dim_name.str() << "]";
-  _V.push_back(def.str());
+
+  _V.push_back(vertex_def.printSet().str()); 
 }
+
+void GenerateSBGInput::addVariableNodes()
+{
+  IdentList variables = _mmo_class.variables();
+  VarSymbolTable symbols = _mmo_class.syms();
+
+  // Build unknown nodes.
+  foreach_(Name var_name, variables)
+  {
+    VarInfo variable = symbols[var_name].get();
+    if (isVariable(var_name, symbols)) {
+      buildSet(variable);
+      _var_nodes.insert(std::make_pair(var_name, _node_id));
+      ++_node_id;
+    }
+  }
+}
+
+// Add equations vertices ------------------------------------------------------
+
+void GenerateSBGInput::buildEqualitySet(Equality eq)
+{
+  VertexDefinition vertex_def(_node_id);
+
+  vertex_def.addDimension(_vertex_offset, 1, _vertex_offset);
+  ++_vertex_offset;
+
+  _V.push_back(vertex_def.printSet().str()); 
+}
+
+VertexDefinition GenerateSBGInput::indicesDefinition(const IndexList& indices)
+{
+  VertexDefinition vertex_def(_node_id);
+
+  for (const Index& index : indices) {
+    OptExp expr = index.exp();
+    if (!expr || !is<Range>(expr.get())) {
+      ERROR(": only Range expressions supported\n");
+    }
+    Range expr_range = get<Range>(expr.get());
+    Integer start = getValue(expr_range.start());
+    Integer step = 1;
+    Integer end = getValue(expr_range.end());
+    if (expr_range.step()) {
+      step = getValue(expr_range.step().get());
+    }
+    vertex_def.addDimension(start, step, end);
+  }
+
+  return vertex_def;
+}
+
+void GenerateSBGInput::buildForEqSet(ForEq eq, VertexDefinition vertex_def)
+{
+  ForEq for_eq = get<ForEq>(eq);
+  VertexDefinition this_vertex_def = indicesDefinition(
+    for_eq.range().indexes());
+  for (const Equation& jth_eq : for_eq.elements()) {
+    if (is<Equality>(jth_eq)) {
+      VertexDefinition this_copy = this_vertex_def;
+      this_copy.offset(_vertex_offset);
+      _V.push_back(this_copy.printSet().str()); 
+      _vertex_offset += this_copy.maxDimSize() + 1;
+    } else if (is<ForEq>(jth_eq)) {
+      VertexDefinition vertex_def_copy = vertex_def;
+      vertex_def_copy.concat(this_vertex_def);
+      buildForEqSet(get<ForEq>(eq), vertex_def_copy);
+    } else {
+      ERROR("GenerateSBGInput::buildForEqSet: only equalities and for loops supported\n");
+    }
+  }
+}
+
+void GenerateSBGInput::addEquationNodes()
+{
+  // Build equation nodes.
+  EquationList eqs = _mmo_class.equations().equations();
+  foreach_(Equation eq, eqs)
+  {
+    if (is<ForEq>(eq)) {
+      ForEq for_eq = get<ForEq>(eq);
+      VertexDefinition vertex_def(_node_id);
+      buildForEqSet(for_eq, vertex_def);
+      std::string eq_name = "eq_" + std::to_string(_node_id);
+    } else if (is<Equality>(eq)) {
+      Equality equality = get<Equality>(eq);
+      buildEqualitySet(equality);
+      std::string eq_name = "eq_" + std::to_string(_node_id);
+    } else {
+      ERROR("GenerateSBGInput::addEquationNodes: only equalities and for loops supported\n");
+    }
+    //addEquationInfo(eq_name, equality, IndexList(), _node_id);
+    ++_node_id;
+  }
+}
+
+// Add edges -------------------------------------------------------------------
 
 Integer GenerateSBGInput::getSize(const Index& idx) const
 {
@@ -85,57 +194,6 @@ Integer GenerateSBGInput::getMin(const Index& idx) const
   }
   Range range = get<Range>(exp.get());
   return getValue(range.start());
-}
-
-void GenerateSBGInput::addIndexRange(IndexList range, const std::string& eq_id, int node_id)
-{
-  Usage usage;
-  foreach_(Index idx, range)
-  {
-    OptExp exp = idx.exp();
-    if (!exp || !is<Range>(exp.get())) {
-      ERROR("Only Range expressions supported");
-    }
-    Range idx_range = get<Range>(exp.get());
-    Integer lower = getValue(idx_range.start());
-    Integer step = 1;
-    Integer upper = getValue(idx_range.end());
-    if (idx_range.step()) {
-      step = getValue(idx_range.step().get());
-    }
-    addDef(node_id, upper - lower + 1, -1, step);
-    usage[idx.name()] = lower;
-  }
-  _eq_usage[eq_id] = usage;
-}
-
-/// @todo Handle for-for equations in the same way we do in QSS Solver.
-void GenerateSBGInput::buildSet(Equation eq, const std::string& eq_id, int node_id, Indexes range)
-{
-  Usage usage;
-  if (!range.indexes().empty()) {
-    if (is<ForEq>(eq)) {
-      ERROR("Nested for equations not implemented.");
-      return;
-    }
-    addIndexRange(range.indexes(), eq_id, node_id);
-  } else if (is<ForEq>(eq)) {
-    ForEq for_eq = get<ForEq>(eq);
-    addIndexRange(for_eq.range().indexes(), eq_id, node_id);
-  } else {
-    addDef(node_id, 1);
-  }
-}
-
-/// @todo Add dimension padding and multiple dim support.
-void GenerateSBGInput::buildSet(const VarInfo& variable, int node_id)
-{
-  Option<ExpList> dims = variable.indices();
-  if (dims) {
-    foreach_(Expression d, dims.get()) { addDef(node_id, getValue(d)); }
-  } else {
-    addDef(node_id, 1);
-  }
 }
 
 void GenerateSBGInput::addOffset(int edge_id, const std::string& map, int offset, int v_id, int dim)
@@ -235,61 +293,6 @@ void GenerateSBGInput::setup()
   }
 }
 
-void GenerateSBGInput::addVariableNodes()
-{
-  IdentList variables = _mmo_class.variables();
-  VarSymbolTable symbols = _mmo_class.syms();
-
-  _offsets.emplace_back("V0 = 0");
-  _offsets.emplace_back("E0 = 0");
-  // Build unknown nodes.
-  foreach_(Name var_name, variables)
-  {
-    VarInfo variable = symbols[var_name].get();
-    if (isVariable(var_name, symbols)) {
-      buildSet(variable, _node_id);
-      _var_nodes.insert(std::make_pair(var_name, _node_id));
-      _node_id++;
-    }
-  }
-}
-
-void GenerateSBGInput::addEquationInfo(const std::string& eq_name, Equality eq, IndexList indexes, int node_id)
-{
-  _eqs.insert(std::make_pair(eq_name, eq));
-  _eq_range.insert(std::make_pair(eq_name, indexes));
-  _eq_nodes.insert(std::make_pair(eq_name, node_id));
-}
-
-void GenerateSBGInput::addEquationNodes()
-{
-  // Build equation nodes.
-  EquationList eqs = _mmo_class.equations().equations();
-  foreach_(Equation eq, eqs)
-  {
-    if (is<ForEq>(eq)) {
-      ForEq for_eq = get<ForEq>(eq);
-      std::vector<Equation> for_eqs = for_eq.elements();
-      Indexes range = for_eq.range();
-      foreach_(Equation for_el, for_eqs)
-      {
-        ERROR_UNLESS(is<Equality>(for_el), "Only causalization of for and equality equations");
-        std::string eq_name = "eq_" + std::to_string(_node_id);
-        buildSet(for_el, eq_name, _node_id, range);
-        addEquationInfo(eq_name, get<Equality>(for_el), range.indexes(), _node_id);
-        _node_id++;
-      }
-    } else if (is<Equality>(eq)) {
-      std::string eq_name = "eq_" + std::to_string(_node_id);
-      buildSet(eq, eq_name, _node_id);
-      addEquationInfo(eq_name, get<Equality>(eq), IndexList(), _node_id);
-      _node_id++;
-    } else {
-      ERROR("Only causalization of for and equality equations");
-    }
-  }
-}
-
 void GenerateSBGInput::addEdges()
 {
   VarSymbolTable symbols = _mmo_class.syms();
@@ -317,6 +320,8 @@ void GenerateSBGInput::addEdges()
   }
 }
 
+// Build SBG -------------------------------------------------------------------
+
 void GenerateSBGInput::buildFromModel()
 {
   setup();
@@ -332,7 +337,7 @@ void GenerateSBGInput::generateEdgeMap(const std::string& map_name, const std::s
   unsigned long size = 1;
   for (std::string def : _E) {
     int slope = fixed_slopes ? 1 : _m1_slopes[size - 1];
-    _sbg_input << "{" << def << "} -> " << slope << "*x+off" << map_idx << size << ((size < _E.size()) ? " , " : "");
+    _sbg_input << "{" << def << "} -> |" << slope << "*x+off" << map_idx << size << ((size < _E.size()) ? "|, " : "|");
     size++;
   }
   _sbg_input << ">>" << std::endl;
@@ -340,11 +345,12 @@ void GenerateSBGInput::generateEdgeMap(const std::string& map_name, const std::s
 
 void GenerateSBGInput::generateSBGInput()
 {
+  _sbg_input << "dims = " << _max_dim << ";\n";
   for (std::string def : _offsets) {
     _sbg_input << def << ";" << std::endl;
   }
   _sbg_input << std::endl;
-  _sbg_input << "matchSCCTS(" << std::endl;
+  _sbg_input << "causalize(" << std::endl;
   _sbg_input << "V: {";
   unsigned long size = 1;
   for (std::string def : _V) {
@@ -356,7 +362,7 @@ void GenerateSBGInput::generateSBGInput()
   _sbg_input << "Vmap: <<";
   size = 1;
   for (std::string def : _V) {
-    _sbg_input << "{" << def << "} -> 0*x+" << size << ((size < _V.size()) ? ", " : "");
+    _sbg_input << "{" << def << "} -> |0*x+" << size << ((size < _V.size()) ? "|, " : "|");
     size++;
   }
   _sbg_input << ">>" << std::endl;
@@ -366,7 +372,7 @@ void GenerateSBGInput::generateSBGInput()
   _sbg_input << "Emap: <<";
   size = 1;
   for (std::string def : _E) {
-    _sbg_input << "{" << def << "} -> 0*x+" << size << ((size < _E.size()) ? " , " : "");
+    _sbg_input << "{" << def << "} -> |0*x+" << size << ((size < _E.size()) ? "|, " : "|");
     size++;
   }
   _sbg_input << ">>" << std::endl;
@@ -374,4 +380,6 @@ void GenerateSBGInput::generateSBGInput()
   _sbg_input.close();
 }
 
-}  // namespace Causalize
+} // namespace Causalize
+
+} // namespace Modelica

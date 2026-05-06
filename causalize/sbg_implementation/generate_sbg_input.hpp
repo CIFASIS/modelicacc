@@ -17,10 +17,14 @@
 
 ******************************************************************************/
 
+#include "causalize/sbg_implementation/vertex_definition.hpp"
+
 #include <fstream>
 #include <iostream>
 
 #include <mmo/mmo_class.hpp>
+
+namespace Modelica {
 
 namespace Causalize {
 
@@ -32,24 +36,25 @@ class GenerateSBGInput {
   virtual std::string fileName();
 
   protected:
-  void setup();
+  Integer getValue(Expression exp) const;
+  void buildSet(const VarInfo& variable);
   void addVariableNodes();
-  void addEquationInfo(const std::string& eq_name, Equality eq, IndexList indexes, int node_id);
+  void addIndexRange(IndexList range, const std::string& eq_id, int node_id);
+  VertexDefinition indicesDefinition(const IndexList& indices);
+  void buildEqualitySet(Equality eq);
+  void buildForEqSet(ForEq eq, VertexDefinition vertex_def);
+  //void addEquationInfo(const std::string& eq_name, Equality eq, IndexList indexes, int node_id);
   void addEquationNodes();
   void addEdges();
-  void generateSBGInput();
-  void buildSet(const VarInfo& variable, int node_id);
-  void buildSet(Equation eq, const std::string& eq_id, int offset, Indexes range = IndexList());
-  Integer getValue(Expression exp) const;
-  void addDef(int node_id, int end, int dim = -1, int step = 1);
   void addOffset(int edge_id, const std::string& map, int constant, int slope, int dim = -1);
   void generatePWLMaps(Expression exp, const std::string& eq_id, int edge_id);
-  void addIndexRange(IndexList range, const std::string& eq_id, int node_id);
   Integer getMin(const Index& idx) const;
   Integer getSize(const Index& idx) const;
   Integer getSize(const IndexList& dom) const;
   void addEdgeDef(int edge_id, int end, int dim = -1);
   void generateEdgeMap(const std::string& map_name, const std::string& map_idx, bool fixed_slopes = false);
+  void setup();
+  void generateSBGInput();
 
   private:
   using Usage = std::map<std::string, int, std::less<>>;
@@ -70,6 +75,9 @@ class GenerateSBGInput {
   unsigned long _max_dim;
   int _node_id;
   int _edge_id;
+  Integer _vertex_offset;
 };
 
-}  // namespace Causalize
+} // namespace Causalize
+
+} // namespace Modelica

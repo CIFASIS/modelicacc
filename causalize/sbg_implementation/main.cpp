@@ -108,7 +108,7 @@ int main(int argc, char** argv)
   StateVariablesFinder setup_state_var(mmo_class);
   setup_state_var.findStateVariables();
 
-  Causalize::GenerateSBGInput gen_sbg_input(mmo_class);
+  Modelica::Causalize::GenerateSBGInput gen_sbg_input(mmo_class);
 
   gen_sbg_input.buildFromModel();
 
