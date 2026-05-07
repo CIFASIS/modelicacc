@@ -8,8 +8,9 @@ all: $(CAUSALIZE_SBG)
 # Sources
 CAUSALIZE_SBG_SRC := \
     $(CAUSALIZE_SBG_DIR)/main.cpp\
-    $(CAUSALIZE_SBG_DIR)/vertex_definition.cpp\
+    $(CAUSALIZE_SBG_DIR)/equation_info.cpp\
     $(CAUSALIZE_SBG_DIR)/generate_sbg_input.cpp\
+    $(CAUSALIZE_SBG_DIR)/set_vertex.cpp\
 	$(UTIL_DIR)/ast_visitors/constant_expression.cpp \
 	$(UTIL_DIR)/ast_visitors/matching_exps.cpp \
 	$(UTIL_DIR)/ast_visitors/pwl_map_values.cpp \

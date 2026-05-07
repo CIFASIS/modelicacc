@@ -17,43 +17,15 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_VERTEX_DEFINITION_HPP_
-#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_VERTEX_DEFINITION_HPP_
-
-#include "ast/expression.hpp"
-
-#include <sstream>
-#include <vector>
+#include "causalize/sbg_implementation/equation_info.hpp"
 
 namespace Modelica {
 
 namespace Causalize {
 
-/**
- * @brief Helper class to save all the information related to an array of
- * variables. 
- */
-class VertexDefinition {
-public:
-  VertexDefinition(int node_id);
-
-  void addDimension(AST::Integer start, AST::Integer step, AST::Integer end);
-  void offset(AST::Integer offset);
-  void concat(VertexDefinition other);
-
-  std::ostringstream printSet();
-
-  AST::Integer maxDimSize();
-
-private:
-  int _node_id;
-  std::vector<AST::Integer> _starts;
-  std::vector<AST::Integer> _steps;
-  std::vector<AST::Integer> _ends;
-};
+EquationInfo::EquationInfo(AST::IndexList indices, AST::Equality equality)
+  : _indices(indices), _equality(equality) {}
 
 } // namespace Causalize
 
 } // namespace Modelica
-
-#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_VERTEX_DEFINITION_HPP_

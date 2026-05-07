@@ -17,16 +17,33 @@
 
 ******************************************************************************/
 
-#include "causalize/sbg_implementation/vertex_definition.hpp"
+#include "causalize/sbg_implementation/set_vertex.hpp"
+
+#include <iostream>
 
 namespace Modelica {
 
 namespace Causalize {
 
-VertexDefinition::VertexDefinition(int node_id)
-  : _node_id(node_id), _starts(), _steps(), _ends() {}
+// Constructors/Destructors ----------------------------------------------------
 
-void VertexDefinition::addDimension(AST::Integer start, AST::Integer step
+SetVertex::SetVertex(int node_id) : _node_id(node_id) {}
+
+// Getters ---------------------------------------------------------------------
+
+int SetVertex::node_id() const { return _node_id; }
+
+std::size_t SetVertex::arity() const { return _starts.size(); }
+
+std::string SetVertex::name() const { return _name; }
+
+// Setters ---------------------------------------------------------------------
+
+void SetVertex::set_node_id(int node_id) { _node_id = node_id; }
+
+void SetVertex::set_name(std::string name) { _name = name; }
+
+void SetVertex::addDimension(AST::Integer start, AST::Integer step
   , AST::Integer end)
 {
   _starts.push_back(start);
@@ -34,20 +51,34 @@ void VertexDefinition::addDimension(AST::Integer start, AST::Integer step
   _ends.push_back(end);
 }
 
-std::ostringstream VertexDefinition::printSet()
+// Operators -------------------------------------------------------------------
+
+std::ostream& operator<<(std::ostream& out, const SetVertex& sv)
 {
-  std::ostringstream vertex_set;
+  out << sv.name() << ": " << sv.printSet().str();
+
+  return out;
+}
+
+// Methods ---------------------------------------------------------------------
+
+std::ostringstream SetVertex::printSet() const
+{
+  std::ostringstream out;
 
   unsigned int arity = _starts.size();
   for (unsigned int k = 0; k < arity; ++k) {
-    vertex_set << "[" << _starts[k] << ":" << _steps[k] << ":"
+    out << "[" << _starts[k] << ":" << _steps[k] << ":"
       << _ends[k] << "]";
+    if (k < arity - 1) {
+      out << "x";
+    }
   }
 
-  return vertex_set;
+  return out;
 }
 
-void VertexDefinition::offset(AST::Integer offset)
+void SetVertex::offset(AST::Integer offset)
 {
   unsigned int arity = _starts.size();
   for (unsigned int k = 0; k < arity; ++k) {
@@ -56,14 +87,14 @@ void VertexDefinition::offset(AST::Integer offset)
   }
 }
 
-void VertexDefinition::concat(VertexDefinition other)
+void SetVertex::concat(SetVertex other)
 {
   _starts.insert(_starts.end(), other._starts.begin(), other._starts.end());
   _steps.insert(_steps.end(), other._steps.begin(), other._steps.end());
   _ends.insert(_ends.end(), other._ends.begin(), other._ends.end());
 }
 
-AST::Integer VertexDefinition::maxDimSize()
+AST::Integer SetVertex::maxDimSize()
 {
   AST::Integer maximum = 0;
 

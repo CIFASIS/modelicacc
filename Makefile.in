@@ -29,7 +29,7 @@ BOOST_1_81_INC  := -I$(BOOST_LIB_PATH)/$(BOOST_1_81)/include
 SBG_LIB_DEV_INCLUDE := -I$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/usr/include
 SBG_LIB_1_0_0_INCLUDE := -I$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0)/usr/include
 INCLUDES := -I.
-CXXFLAGS := -std=c++17 -Wall  -Wno-reorder -O3 
+CXXFLAGS := -std=c++17 -Wall  -Wno-reorder -O3
 ifeq ($(MODE),Debug)
 CXXFLAGS 	+= -ggdb  
 endif
