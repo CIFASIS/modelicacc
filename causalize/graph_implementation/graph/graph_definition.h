@@ -25,8 +25,8 @@
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 
-#include <util/table.h>
-#include <ast/equation.h>
+#include <util/table.hpp>
+#include <ast/equation.hpp>
 
 namespace Causalize {
 /// @brief Vertex in the incidence graph can be either Equations or Unknowns. This type is used for distinguish between them

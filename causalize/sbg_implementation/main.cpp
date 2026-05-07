@@ -26,10 +26,48 @@
 #include <util/ast_visitors/state_variables_finder.hpp>
 #include <util/debug.hpp>
 #include <util/logger.hpp>
+#include <util/solve/solve.hpp>
+#include <ast/equation.hpp>
+#include <util/table.hpp>
+#include <causalize/graph_implementation/apply_tarjan.h>
+#include <causalize/graph_implementation/graph/graph_definition.h>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 using namespace Modelica;
 using namespace Modelica::AST;
+
+// Data structures for EquationSolver integration
+std::list<std::string> c_code;
+Modelica::AST::ClassList _cl;
+
+// JSON parsing functions
+std::string read_json_file(const std::string& filename) {
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+    throw std::runtime_error("Cannot open JSON file: " + filename);
+  }
+  std::stringstream buffer;
+  buffer << file.rdbuf();
+  return buffer.str();
+}
+
+Modelica::AST::EquationList parse_json_to_equations(const std::string& json_content) {
+  // TODO: Implement JSON to EquationList conversion
+  // This is a placeholder - you need to implement the actual parsing
+  Modelica::AST::EquationList eqs;
+  // Parse JSON and convert to Modelica equations
+  return eqs;
+}
+
+Modelica::AST::ExpList parse_json_to_unknowns(const std::string& json_content) {
+  // TODO: Implement JSON to ExpList conversion  
+  // This is a placeholder - you need to implement the actual parsing
+  Modelica::AST::ExpList unknowns;
+  // Parse JSON and convert to variable expressions
+  return unknowns;
+}
 
 void usage()
 {
@@ -123,6 +161,47 @@ int main(int argc, char** argv)
   int res = std::system(CAUSALIZE_CMD.c_str());
 
   std::cout << "Result: " << res << std::endl;
+
+  // Check if SBG processing succeeded
+  if (res != 0) {
+    std::cerr << "SBG processing failed with code: " << res << std::endl;
+    return res;
+  }
+
+  // Validate JSON file exists
+  std::ifstream json_file(CAUSALIZED_JSON);
+  if (!json_file.good()) {
+    std::cerr << "Failed to open SBG output file: " << CAUSALIZED_JSON << std::endl;
+    return -1;
+  }
+
+  try {
+    // Read and parse JSON output from SBG
+    std::string json_content = read_json_file(CAUSALIZED_JSON);
+    
+    // Convert JSON results to EquationList and ExpList
+    Modelica::AST::EquationList causalized_eqs = parse_json_to_equations(json_content);
+    Modelica::AST::ExpList unknowns = parse_json_to_unknowns(json_content);
+
+    // Apply EquationSolver to generate C code
+    std::stringstream output_path;
+    output_path << mmo_class.name() << ".c";
+    Modelica::AST::EquationList final_eqs = EquationSolver::Solve(
+        causalized_eqs, 
+        unknowns, 
+        mmo_class.syms_ref(), 
+        c_code, 
+        _cl, 
+        output_path.str()
+    );
+
+    std::cout << "EquationSolver processing completed successfully." << std::endl;
+    std::cout << "Generated C code in: " << output_path.str() << std::endl;
+
+  } catch (const std::exception& e) {
+    std::cerr << "Error during EquationSolver integration: " << e.what() << std::endl;
+    return -1;
+  }
 
   return res;
 }

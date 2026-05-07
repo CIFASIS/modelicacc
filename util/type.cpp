@@ -151,7 +151,15 @@ Tuple::Tuple(TypeList ts) : types_(ts) {}
 bool Tuple::operator==(const Tuple& other) const { return (other.types() == types()); }
 std::ostream& operator<<(std::ostream& out, const Tuple& c)  // output
 {
-  out << "(" << c.types() << ")";
+  out << "(";
+  TypeList types = c.types();
+  for (auto it = types.begin(); it != types.end(); ++it) {
+    if (it != types.begin()) {
+      out << ", ";
+    }
+    out << *it;
+  }
+  out << ")";
   return out;
 }
 member_imp(Tuple, TypeList, types);

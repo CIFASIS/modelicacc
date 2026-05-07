@@ -43,10 +43,30 @@ bool ContainsExpression::operator()(AddAll v) const
 
   return false;
 }
-bool ContainsExpression::operator()(Name v) const { return exp == Expression(v); }
-bool ContainsExpression::operator()(Real v) const { return exp == Expression(v); }
-bool ContainsExpression::operator()(SubEnd v) const { return exp == Expression(v); }
-bool ContainsExpression::operator()(SubAll v) const { return exp == Expression(v); }
+bool ContainsExpression::operator()(Name v) const { 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  return exp == Expression(v); 
+#pragma GCC diagnostic pop
+}
+bool ContainsExpression::operator()(Real v) const { 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  return exp == Expression(v); 
+#pragma GCC diagnostic pop
+}
+bool ContainsExpression::operator()(SubEnd v) const { 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  return exp == Expression(v); 
+#pragma GCC diagnostic pop
+}
+bool ContainsExpression::operator()(SubAll v) const { 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  return exp == Expression(v); 
+#pragma GCC diagnostic pop
+}
 bool ContainsExpression::operator()(BinOp v) const
 {
   if (exp == Expression(v)) return true;

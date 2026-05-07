@@ -56,12 +56,18 @@ Expression ReplaceExpression::operator()(Real v) const
 }
 Expression ReplaceExpression::operator()(SubEnd v) const
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
   if (look == Expression(v)) return rep;
+#pragma GCC diagnostic pop
   return v;
 }
 Expression ReplaceExpression::operator()(SubAll v) const
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
   if (look == Expression(v)) return rep;
+#pragma GCC diagnostic pop
   return v;
 }
 Expression ReplaceExpression::operator()(BinOp v) const
