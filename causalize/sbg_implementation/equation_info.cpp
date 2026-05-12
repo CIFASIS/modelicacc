@@ -26,6 +26,10 @@ namespace Causalize {
 EquationInfo::EquationInfo(AST::IndexList indices, AST::Equality equality)
   : _indices(indices), _equality(equality) {}
 
+const AST::IndexList& EquationInfo::indices() const { return _indices; }
+
+const AST::Equality& EquationInfo::equality() const { return _equality; }
+
 } // namespace Causalize
 
 } // namespace Modelica

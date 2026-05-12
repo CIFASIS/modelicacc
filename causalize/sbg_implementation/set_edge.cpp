@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include "causalize/sbg_implementation/set_vertex.hpp"
+#include "causalize/sbg_implementation/set_edge.hpp"
 
 #include <iostream>
 
@@ -27,68 +27,44 @@ namespace Causalize {
 
 // Constructors/Destructors ----------------------------------------------------
 
-SetVertex::SetVertex(int node_id) : _node_id(node_id) {}
+SetEdge::SetEdge(int edge_id) : _edge_id(edge_id) {}
 
-SetVertex::SetVertex(int node_id, detail::HyperRectangle rect)
-  : _node_id(node_id), _set(rect) {}
+SetEdge::SetEdge(int edge_id, detail::HyperRectangle domain)
+  : _edge_id(edge_id), _domain(domain) {}
 
 // Getters ---------------------------------------------------------------------
 
-int SetVertex::node_id() const { return _node_id; }
+int SetEdge::edge_id() const { return _edge_id; }
 
-std::size_t SetVertex::arity() const { return _set.arity(); }
+std::size_t SetEdge::arity() const { return _domain.arity(); }
 
-std::string SetVertex::name() const { return _name; }
+std::string SetEdge::name() const { return _name; }
 
 // Setters ---------------------------------------------------------------------
 
-void SetVertex::set_node_id(int node_id) { _node_id = node_id; }
+void SetEdge::set_edge_id(int edge_id) { _edge_id = edge_id; }
 
-void SetVertex::set_name(std::string name) { _name = name; }
-
-void SetVertex::addDimension(AST::Integer start, AST::Integer step
-  , AST::Integer end)
-{
-  _set.addDimension(start, step, end);
-}
+void SetEdge::set_name(std::string name) { _name = name; }
 
 // Operators -------------------------------------------------------------------
 
-std::ostream& operator<<(std::ostream& out, const SetVertex& sv)
+std::ostream& operator<<(std::ostream& out, const SetEdge& se)
 {
-  sv.print(out);
+  out << se.name() << ": " << se.domainToSBGFormat().str();
 
   return out;
 }
 
 // Methods ---------------------------------------------------------------------
 
-std::ostream& SetVertex::print(std::ostream& out) const
+std::ostringstream SetEdge::domainToSBGFormat() const
 {
-  out << _name << ": " << _set.toSBGFormat().str(); 
-  return out;
+  return _domain.toSBGFormat();
 }
 
-std::ostringstream SetVertex::toSBGFormat() const
+AST::Integer SetEdge::maxDimSize()
 {
-  std::ostringstream out;
-  out << _set.toSBGFormat().str();
-  return out;
-}
-
-void SetVertex::offset(AST::Integer offset)
-{
-  _set.offset(offset);
-}
-
-void SetVertex::cartesianProduct(const SetVertex& other)
-{
-  _set.cartesianProduct(other._set);
-}
-
-AST::Integer SetVertex::maxDimSize() const
-{
-  return _set.maxDimSize();
+  return _domain.maxDimSize();
 }
 
 } // namespace Causalize

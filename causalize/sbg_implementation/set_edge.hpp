@@ -17,62 +17,60 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_VERTEX_HPP_
-#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_VERTEX_HPP_
+#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_EDGE_HPP_
+#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_EDGE_HPP_
 
 #include "ast/expression.hpp"
+#include "causalize/sbg_implementation/affine_transformation.hpp"
 #include "causalize/sbg_implementation/hyper_rectangle.hpp"
 
 #include <iosfwd>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace Modelica {
 
 namespace Causalize {
 
 /**
- * @brief Interface class between arrays of variables and equations of a model,
- * and set-vertices of the corresponding causalization SBG.
+ * @brief Interface class between usages of variables in equations of a model,
+ * and set-edges of the corresponding causalization SBG. 
  */
-class SetVertex {
+class SetEdge {
 public:
-  SetVertex(int node_id);
-  SetVertex(int node_id, detail::HyperRectangle rect);
+  SetEdge(int edge_id);
+  SetEdge(int edge_id, detail::HyperRectangle domain);
 
-  int node_id() const;
+  int edge_id() const;
   std::size_t arity() const;
   std::string name() const;
 
-  void set_node_id(int node_id);
+  void set_edge_id(int edge_id);
   void set_name(std::string name);
-  void addDimension(AST::Integer start, AST::Integer step, AST::Integer end);
+
+  std::ostringstream domainToSBGFormat() const;
 
   /**
-   * @brief Prints the corresponding array in SBG program format.
+   * @brief Returns the maximum size between dimensions of the domain. That is,
+   * if the array of equations was declared:
+   * for i1 in range1, ..., ik in rangek loop it returns
+   * max{rangei : 0 < i < k+1}.
    */
-  std::ostream& print(std::ostream& out) const;
-  std::ostringstream toSBGFormat() const;
-
-  void offset(AST::Integer offset);
-  void cartesianProduct(const SetVertex& other);
-
-  /**
-   * @brief Returns the maximum size between dimensions. That is, if the array
-   * was declared: Type x[n1, ..., nk]; it returns max{ni : 0 < i < k+1}.
-   */
-  AST::Integer maxDimSize() const;
+  AST::Integer maxDimSize();
 
 private:
-  int _node_id;
+  int _edge_id;
   std::string _name;
-  detail::HyperRectangle _set;
+  detail::HyperRectangle _domain;
+  detail::AffineTransformation _map1;
+  detail::AffineTransformation _map2;
 };
 
-std::ostream& operator<<(std::ostream& out, const SetVertex& sv);
+std::ostream& operator<<(std::ostream& out, const SetEdge& sv);
 
 } // namespace Causalize
 
 } // namespace Modelica
 
-#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_VERTEX_HPP_
+#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_EDGE_HPP_

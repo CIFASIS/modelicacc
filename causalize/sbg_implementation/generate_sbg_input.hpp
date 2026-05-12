@@ -17,8 +17,10 @@
 
 ******************************************************************************/
 
-#include "causalize/sbg_implementation/set_vertex.hpp"
 #include "causalize/sbg_implementation/equation_info.hpp"
+#include "causalize/sbg_implementation/hyper_rectangle.hpp"
+#include "causalize/sbg_implementation/set_edge.hpp"
+#include "causalize/sbg_implementation/set_vertex.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -30,40 +32,37 @@ namespace Modelica {
 namespace Causalize {
 
 class GenerateSBGInput {
-  public:
+public:
   explicit GenerateSBGInput(Modelica::MMO_Class& mmo_class);
   virtual ~GenerateSBGInput() = default;
   virtual void buildFromModel();
   virtual std::string fileName();
 
-  protected:
-  Integer getValue(Expression exp) const;
+protected:
+  Integer getValue(Expression expr) const;
   void buildSet(const VarInfo& variable, const Name& name);
-  void addVariableNodes();
-  void addIndexRange(IndexList range, const std::string& eq_id, int node_id);
-  SetVertex indicesDefinition(const IndexList& indices);
+  detail::HyperRectangle indicesToHyperRect(const IndexList& indices) const;
   void buildEqualitySet(Equality eq, SetVertex vertex_def);
   void buildForEqSet(ForEq eq, SetVertex vertex_def);
-  void addEquationNodes();
-  //void addEdges();
-  //void addOffset(int edge_id, const std::string& map, int constant, int slope, int dim = -1);
-  //void generatePWLMaps(Expression exp, const std::string& eq_id, int edge_id);
-  //Integer getMin(const Index& idx) const;
-  //Integer getSize(const Index& idx) const;
-  //Integer getSize(const IndexList& dom) const;
-  //void addEdgeDef(int edge_id, int end, int dim = -1);
-  //void generateEdgeMap(const std::string& map_name, const std::string& map_idx, bool fixed_slopes = false);
+
+  void generateExpression(const SetVertex& sv, const Expression& expr
+    , EquationInfo& eq_info, detail::HyperRectangle domain);
+
   void setup();
+  void addVariableNodes();
+  void addEquationNodes();
+  void addEdges();
   void generateSBGInput();
 
-  private:
+private:
   Modelica::MMO_Class& _mmo_class;
+  unsigned int _max_dim;
   std::vector<SetVertex> _set_vertices;
   std::map<int, EquationInfo> _equations_info;
-  unsigned int _max_dim;
   int _node_id; ///< Counter for set-vertices
   int _edge_id; ///< Counter for set-edges
-  Integer _vertex_offset; ///< Current set-vertex offset
+  Integer _vertex_offset; ///< Current vertex offset
+  Integer _edge_offset; ///< Current edge offset
   std::ofstream _sbg_input;
 };
 

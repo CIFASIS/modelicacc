@@ -36,6 +36,9 @@ public:
   EquationInfo() = default;
   EquationInfo(AST::IndexList indices, AST::Equality equality);
 
+  const AST::IndexList& indices() const;
+  const AST::Equality& equality() const;
+
 private:
   AST::IndexList _indices;
   AST::Equality _equality;

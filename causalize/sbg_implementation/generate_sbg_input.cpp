@@ -17,21 +17,26 @@
 
 ******************************************************************************/
 
-#include <algorithm>
-#include <cmath>
-#include <sstream>
-
 #include <ast/queries.hpp>
 #include <causalize/sbg_implementation/generate_sbg_input.hpp>
 #include <util/ast_visitors/constant_expression.hpp>
 #include <util/ast_visitors/eval_expression.hpp>
 #include <util/ast_visitors/matching_exps.hpp>
-#include <util/ast_visitors/pwl_map_values.hpp>
+#include <util/ast_visitors/affine_transform.hpp>
 #include <util/logger.hpp>
+
+#include <algorithm>
+#include <cmath>
+#include <sstream>
+#include <tuple>
 
 namespace Modelica {
 
 namespace Causalize {
+
+////////////////////////////////////////////////////////////////////////////////
+// Generate SBG Input ----------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 
 // Constructors/Destructors ----------------------------------------------------
 
@@ -40,7 +45,8 @@ GenerateSBGInput::GenerateSBGInput(MMO_Class& mmo_class)
 
 // Getters ---------------------------------------------------------------------
 
-std::string GenerateSBGInput::fileName() { return _mmo_class.name() + "_sbg_input.sbg"; }
+std::string GenerateSBGInput::fileName() { return _mmo_class.name()
+  + "_sbg_input.sbg"; }
 
 // Add variable vertices -------------------------------------------------------
 
@@ -77,8 +83,7 @@ void GenerateSBGInput::addVariableNodes()
   VarSymbolTable symbols = _mmo_class.syms();
 
   // Build unknown nodes.
-  foreach_(Name var_name, variables)
-  {
+  for (const Name& var_name : variables) {
     VarInfo variable = symbols[var_name].get();
     if (isVariable(var_name, symbols)) {
       buildSet(variable, var_name);
@@ -106,16 +111,21 @@ void GenerateSBGInput::buildEqualitySet(Equality eq
   ++_node_id;
 }
 
-SetVertex GenerateSBGInput::indicesDefinition(const IndexList& indices)
+detail::HyperRectangle GenerateSBGInput::indicesToHyperRect(
+  const IndexList& indices) const
 {
-  SetVertex set_vertex{_node_id};
+  detail::HyperRectangle result;
 
   for (const Index& index : indices) {
     OptExp expr = index.exp();
-    if (!expr || !is<Range>(expr.get())) {
-      ERROR("GenerateSBGInput::indicesDefinition: only Range expressions "
+    if (!expr) {
+      ERROR("GenerateSBGInput::indicesToHyperRect: empty index\n");
+    } 
+    else if (!is<Range>(expr.get())) {
+      ERROR("GenerateSBGInput::indicesToHyperRect: only Range expressions "
         , "supported\n");
     }
+
     Range expr_range = get<Range>(expr.get());
     Integer start = getValue(expr_range.start());
     Integer step = 1;
@@ -123,10 +133,15 @@ SetVertex GenerateSBGInput::indicesDefinition(const IndexList& indices)
     if (expr_range.step()) {
       step = getValue(expr_range.step().get());
     }
-    set_vertex.addDimension(start, step, end);
+
+    result.addDimension(start, step, end);
   }
 
-  return set_vertex;
+  if (result.arity() < _max_dim) {
+    // TODO: fill remaining dimensions
+  }
+
+  return result;
 }
 
 void GenerateSBGInput::buildForEqSet(ForEq eq, SetVertex set_vertex)
@@ -134,7 +149,8 @@ void GenerateSBGInput::buildForEqSet(ForEq eq, SetVertex set_vertex)
   ForEq for_eq = get<ForEq>(eq);
   SetVertex set_vertex_copy = set_vertex;
   IndexList indices = for_eq.range().indexes();
-  set_vertex_copy.concat(indicesDefinition(indices));
+  set_vertex_copy.cartesianProduct(SetVertex{_node_id
+    , indicesToHyperRect(indices)});
   for (const Equation& jth_eq : for_eq.elements()) {
     if (is<Equality>(jth_eq)) {
       Equality equality = get<Equality>(jth_eq);
@@ -155,7 +171,7 @@ void GenerateSBGInput::addEquationNodes()
 {
   // Build equation nodes.
   EquationList eqs = _mmo_class.equations().equations();
-  foreach_(Equation eq, eqs)
+  for (const Equation& eq : eqs)
   {
     SetVertex set_vertex{_node_id};
     if (is<ForEq>(eq)) {
@@ -173,149 +189,54 @@ void GenerateSBGInput::addEquationNodes()
 
 // Add edges -------------------------------------------------------------------
 
-//Integer GenerateSBGInput::getSize(const Index& idx) const
-//{
-//  OptExp exp = idx.exp();
-//  if (!exp || !is<Range>(exp.get())) {
-//    ERROR("Only Range expressions supported");
-//  }
-//  Range range = get<Range>(exp.get());
-//  /// @todo Handle step size.
-//  return getValue(range.end()) - getValue(range.start()) + 1;
-//}
-//
-//Integer GenerateSBGInput::getSize(const IndexList& dom) const
-//{
-//  Integer ret = 1;
-//  for (const auto& idx : dom) {
-//    ret *= getSize(idx);
-//  }
-//  return ret;
-//}
-//
-//Integer GenerateSBGInput::getMin(const Index& idx) const
-//{
-//  OptExp exp = idx.exp();
-//  if (!exp || !is<Range>(exp.get())) {
-//    ERROR("Only Range expressions supported");
-//  }
-//  Range range = get<Range>(exp.get());
-//  return getValue(range.start());
-//}
-//
-//void GenerateSBGInput::addOffset(int edge_id, const std::string& map, int offset, int v_id, int dim)
-//{
-//  std::ostringstream def;
-//  std::ostringstream dim_name;
-//  if (dim >= 0) {
-//    dim_name << "D" << dim;
-//  }
-//  std::ostringstream off_def;
-//  if (offset > 0) {
-//    off_def << " + " << offset;
-//  } else if (offset < 0) {
-//    off_def << " - " << offset;
-//  }
-//  def << "off" << map << edge_id << dim_name.str() << " = "
-//      << "V" << v_id - 1 << " - E" << edge_id - 1 << off_def.str();
-//  _offsets.push_back(def.str());
-//}
-//
-//void GenerateSBGInput::addEdgeDef(int edge_id, int end, int dim)
-//{
-//  std::ostringstream def;
-//  std::ostringstream dim_name;
-//  if (dim >= 0) {
-//    dim_name << "D" << dim;
-//  }
-//  def << "E" << edge_id << dim_name.str() << " = "
-//      << "E" << edge_id - 1 << dim_name.str() << "+" << end;
-//  _offsets.push_back(def.str());
-//  def.str("");
-//  def << "[E" << edge_id - 1 << dim_name.str() << "+1:1:E" << edge_id << dim_name.str() << "]";
-//  _E.push_back(def.str());
-//}
-//
-//void GenerateSBGInput::generatePWLMaps(Expression exp, const std::string& eq_id, int edge_id)
-//{
-//  assert(is<Reference>(exp));
-//  const IndexList& dom = _eq_range[eq_id];
-//  Integer dom_size = getSize(dom);
-//  VarSymbolTable symbols = _mmo_class.syms();
-//
-//  Reference occur = get<Reference>(exp);
-//  Ref names = occur.ref();
-//  assert(names.size() > 0);
-//  std::string node_name = get<0>(names[0]);
-//  int node_id = _var_nodes[node_name];
-//  int eq_node_id = _eq_nodes[eq_id];
-//  ExpList indexes = get<1>(occur.ref().front());
-//  addEdgeDef(edge_id, dom_size);
-//  for (Expression idx : indexes) {
-//    ConstantExpression constant_index(symbols);
-//    if (Apply(constant_index, idx)) {
-//      addOffset(edge_id, "M1", 0, node_id);
-//      _m1_slopes.push_back(1);
-//    } else {
-//      PWLMapValues pwl_map_values(symbols);
-//      Apply(pwl_map_values, idx);
-//      assert(pwl_map_values.slope() != 0);
-//      Usage usage = _eq_usage[eq_id];
-//      int range_init_value = usage[pwl_map_values.variable()];
-//      int map_first_value = 0;
-//      map_first_value = pwl_map_values.constant() + pwl_map_values.slope() * range_init_value;
-//      addOffset(edge_id, "M1", map_first_value, node_id);
-//      _m1_slopes.push_back(pwl_map_values.slope());
-//    }
-//  }
-//  if (indexes.empty()) {  // Scalar variable.
-//    addOffset(edge_id, "M1", 0, node_id);
-//    _m1_slopes.push_back(1);
-//  }
-//  std::for_each(dom.begin(), dom.end(), [this, edge_id, eq_node_id](auto) { addOffset(edge_id, "M2", 0, eq_node_id); });
-//  if (dom.empty()) {  // Scalar variable.
-//    addOffset(edge_id, "M2", 0, eq_node_id);
-//  }
-//}
-//
-//void GenerateSBGInput::generateEdgeMap(const std::string& map_name, const std::string& map_idx, bool fixed_slopes)
-//{
-//  _sbg_input << map_name << ": <<";
-//  unsigned long size = 1;
-//  for (std::string def : _E) {
-//    int slope = fixed_slopes ? 1 : _m1_slopes[size - 1];
-//    _sbg_input << "{" << def << "} -> |" << slope << "*x+off" << map_idx << size << ((size < _E.size()) ? "|, " : "|");
-//    size++;
-//  }
-//  _sbg_input << ">>" << std::endl;
-//}
-//
-//void GenerateSBGInput::addEdges()
-//{
-//  VarSymbolTable symbols = _mmo_class.syms();
-//
-//  foreach_(auto eq_desc, _eqs)
-//  {
-//    Equality eq = eq_desc.second;
-//    Expression left = eq.left();
-//    Expression right = eq.right();
-//    foreach_(const auto& node, _var_nodes)
-//    {
-//      Name var_name = node.first;
-//      MatchingExps matching_exps(var_name, isState(var_name, symbols));
-//      Apply(matching_exps, left);
-//      Apply(matching_exps, right);
-//      std::set<Expression> matched_exps = matching_exps.matchedExps();
-//      LOG << "Matched exps for: " << var_name << " in " << eq << std::endl;
-//      foreach_(Expression exp, matched_exps)
-//      {
-//        LOG << "Expression: " << exp << std::endl;
-//        generatePWLMaps(exp, eq_desc.first, _edge_id);
-//        _edge_id++;
-//      }
-//    }
-//  }
-//}
+void GenerateSBGInput::generateExpression(const SetVertex& sv
+  , const Expression& expr, EquationInfo& eq_info
+  , detail::HyperRectangle domain)
+{
+  assert(is<Reference>(expr));
+
+  Reference occur = get<Reference>(expr);
+  Ref names = occur.ref();
+  assert(names.size() > 0);
+  ExpList indexes = get<1>(names.front());
+
+  SetEdge se{_edge_id, domain};
+  for (Expression index : indexes) {
+    //AffineTransformVisitor affine_visitor(symbols);
+    //AffineTransformation A = Apply(affine_visitor, indexes);
+  }
+  // add to map1 or map2 if it is a state variable or not 
+
+  // update _edge_offset;
+
+  ++_edge_id;
+}
+
+void GenerateSBGInput::addEdges()
+{
+  VarSymbolTable symbols = _mmo_class.syms();
+
+  for (auto& eq_info_pair : _equations_info) {
+    const EquationInfo& eq_info = eq_info_pair.second;
+    const Equality eq = eq_info.equality();
+    Expression left = eq.left();
+    Expression right = eq.right();
+    detail::HyperRectangle domain = indicesToHyperRect(eq_info.indices());
+
+    for (const SetVertex& sv : _set_vertices) {
+      Name var_name = sv.name();
+      MatchingExps matching_exprs(var_name, isState(var_name, symbols));
+      Apply(matching_exprs, left);
+      Apply(matching_exprs, right);
+      std::set<Expression> matched_exprs = matching_exprs.matchedExps();
+      LOG << "Matched exprs for: " << var_name << " in " << eq << std::endl;
+      for (const Expression& expr : matched_exprs) {
+        LOG << "Expression: " << expr << std::endl;
+        //generatePWLMaps(sv, expr, eq_info, domain);
+      }
+    }
+  }
+}
 
 // Build SBG -------------------------------------------------------------------
 
@@ -361,7 +282,7 @@ void GenerateSBGInput::generateSBGInput()
   _sbg_input << "V: {";
   unsigned long size = 1;
   for (const SetVertex& sv : _set_vertices) {
-    _sbg_input << sv.printSet().str()
+    _sbg_input << sv.toSBGFormat().str()
       << ((size < _set_vertices.size()) ? ", " : "");
     ++size;
   }
@@ -370,7 +291,7 @@ void GenerateSBGInput::generateSBGInput()
   _sbg_input << "Vmap: <<";
   size = 1;
   for (const SetVertex& sv : _set_vertices) {
-    _sbg_input << "{" << sv.printSet().str() << "} -> ";
+    _sbg_input << "{" << sv.toSBGFormat().str() << "} -> ";
     for (std::size_t k = 0; k + 1 < _max_dim; ++k) {
       _sbg_input << "|0*x+" << size;
     }
@@ -390,6 +311,8 @@ void GenerateSBGInput::generateSBGInput()
   //  size++;
   //}
   //_sbg_input << ">>" << std::endl;
+
+  // TODO: X and Y sets of bipartite SBG
 
   _sbg_input << ", 1);" << std::endl;
 
