@@ -21,8 +21,9 @@
 #define MODELICACC_UTIL_HYPER_RECTANGLE_HPP_
 
 #include "ast/expression.hpp"
-#include "util/table.hpp"
 #include "util/affine_transformation.hpp"
+#include "util/table.hpp"
+#include "util/translation.hpp"
 
 #include <sstream>
 #include <vector>
@@ -46,8 +47,7 @@ public:
    */
   std::ostringstream toSBGFormat() const;
 
-  void offset(AST::Integer offset);
-
+  HyperRectangle translate(const Translation& t) const;
   void cartesianProduct(const HyperRectangle& other);
 
   AST::Integer maxDimSize() const;

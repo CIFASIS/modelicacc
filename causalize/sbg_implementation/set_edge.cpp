@@ -48,18 +48,22 @@ void SetEdge::set_edge_id(int edge_id) { _edge_id = edge_id; }
 
 void SetEdge::set_name(std::string name) { _name = name; }
 
+void SetEdge::set_map1(CompactTransformation map1) { _map1 = map1; }
+
+void SetEdge::set_map2(CompactTransformation map2) { _map2 = map2; }
+
 // Operators -------------------------------------------------------------------
 
 std::ostream& operator<<(std::ostream& out, const SetEdge& se)
 {
-  out << se.name() << ": " << se.domainToSBGFormat().str();
+  out << se.name() << ": " << se.toSBGFormat().str();
 
   return out;
 }
 
 // Methods ---------------------------------------------------------------------
 
-std::ostringstream SetEdge::domainToSBGFormat() const
+std::ostringstream SetEdge::toSBGFormat() const
 {
   return _domain.toSBGFormat();
 }

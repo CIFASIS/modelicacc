@@ -44,9 +44,11 @@ public:
   std::size_t arity() const;
   std::string name() const;
   const CompactSet& set() const;
+  const Translation& translation() const;
 
   void set_node_id(int node_id);
   void set_name(std::string name);
+  void set_translation(Translation t);
   void addDimension(AST::Integer start, AST::Integer step, AST::Integer end);
 
   /**
@@ -55,7 +57,6 @@ public:
   std::ostream& print(std::ostream& out) const;
   std::ostringstream toSBGFormat() const;
 
-  void offset(AST::Integer offset);
   void cartesianProduct(const SetVertex& other);
 
   /**
@@ -68,6 +69,7 @@ private:
   int _node_id;
   std::string _name;
   CompactSet _set;
+  Translation _translation;
 };
 
 std::ostream& operator<<(std::ostream& out, const SetVertex& sv);

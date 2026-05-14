@@ -17,43 +17,43 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_UTIL_AFFINE_DIAG_TRANSFORMATION_HPP_
-#define MODELICACC_UTIL_AFFINE_DIAG_TRANSFORMATION_HPP_ 
+#ifndef MODELICACC_UTIL_TRANSLATION_HPP_
+#define MODELICACC_UTIL_TRANSLATION_HPP_ 
 
 #include "ast/expression.hpp"
-#include "util/translation.hpp"
 
 #include <sstream>
 #include <vector>
 
 namespace Modelica {
 
-namespace Util {
-
-namespace detail {
-
-class AffineDiagTransformation {
+/**
+ * @brief Encodes geometric translation, i.e. the vector of an affine
+ * transformation.
+ */
+class Translation {
 public:
-  AffineDiagTransformation(std::size_t n);
+  Translation() = default;
+  /**
+   * @brief Returns the identity translation of dimension n.
+   */
+  Translation(std::size_t n);
 
-  AST::Integer& matrix(std::size_t i, std::size_t j);
-  const AST::Integer& matrix(std::size_t i, std::size_t j) const;
+  /**
+   * @brief Returns the identity translation of dimension n.
+   */
+  Translation(std::size_t n, AST::Integer value);
 
-  AST::Integer& translation(std::size_t i);
-  const AST::Integer& translation(std::size_t i) const;
+  std::size_t arity() const;
 
-  std::ostringstream toSBGFormat() const;
+  AST::Integer& operator[](std::size_t i);
+  const AST::Integer& operator[](std::size_t i) const;
 
 private:
   std::size_t _dimension;
-  std::vector<AST::Integer> _diag;
-  Translation _translation;
+  std::vector<AST::Integer> _translation;
 };
-
-} // namespace detail
-
-} // namespace Util
 
 } // namespace Modelica
 
-#endif // MODELICACC_UTIL_AFFINE_DIAG_TRANSFORMATION_HPP_ 
+#endif // MODELICACC_UTIL_TRANSLATION_HPP_ 

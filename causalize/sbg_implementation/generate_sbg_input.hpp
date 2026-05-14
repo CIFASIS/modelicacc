@@ -24,6 +24,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <string>
 
 #include <mmo/mmo_class.hpp>
 
@@ -58,6 +59,7 @@ private:
   unsigned int _max_dim;
   std::vector<SetVertex> _set_vertices;
   std::map<int, EquationInfo> _equations_info;
+  std::vector<SetEdge> _set_edges;
   int _node_id; ///< Counter for set-vertices
   int _edge_id; ///< Counter for set-edges
   Integer _vertex_offset; ///< Current vertex offset

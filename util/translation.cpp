@@ -24,60 +24,36 @@
 
 namespace Modelica {
 
-namespace Util {
+Translation::Translation(std::size_t n) : _dimension(n), _translation(n, 0) {}
 
-namespace detail {
+Translation::Translation(std::size_t n, AST::Integer value)
+  : _dimension(n), _translation(n, value) {}
 
-AffineDiagTransformation::AffineDiagTransformation(std::size_t n)
-  : _dimension(n), _diag(n, 0), _translation(n) {}
+std::size_t Translation::arity() const { return _dimension; }
 
-AST::Integer& AffineDiagTransformation::matrix(std::size_t i, std::size_t j)
+AST::Integer& Translation::operator[](std::size_t i)
 {
-  if (i == j) {
-    return _diag[i];
-  }
-
-  ERROR("AffineDiagTransformation::matrix: only diagonal access\n");
-}
-
-const AST::Integer& AffineDiagTransformation::matrix(std::size_t i
-  , std::size_t j) const
-{
-  if (i == j) {
-    return _diag[i];
-  }
-
-  ERROR("AffineDiagTransformation::matrix: only diagonal access\n");
-}
-
-AST::Integer& AffineDiagTransformation::translation(std::size_t i)
-{
+  ERROR_UNLESS(i < _dimension, "Translation::operator[]: index ", i
+    , "out of dimension ", _dimension);
   return _translation[i];
 }
 
-const AST::Integer& AffineDiagTransformation::translation(std::size_t i) const
+const AST::Integer& Translation::operator[](std::size_t i) const
 {
+  ERROR_UNLESS(i < _dimension, "Translation::operator[]: index ", i
+    , "out of dimension ", _dimension);
   return _translation[i];
 }
 
-std::ostringstream AffineDiagTransformation::toSBGFormat() const
+Translation Translation::operator-() const
 {
-  std::ostringstream out;
+  Translation result;
 
-  out << "|";
   for (std::size_t k = 0; k < _dimension; ++k) {
-    out << _diag[k] << "*x+" << _translation[k];
-    if (k < _dimension - 1) {
-      out << "|";
-    }
+    result._translation[k] = -((*this)[k]);
   }
-  out << "|";
 
-  return out;
+  return result;
 }
-
-} // namespace detail
-
-} // namespace Util
 
 } // namespace Modelica

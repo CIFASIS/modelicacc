@@ -43,7 +43,7 @@ namespace Causalize {
 // Constructors/Destructors ----------------------------------------------------
 
 GenerateSBGInput::GenerateSBGInput(MMO_Class& mmo_class)
-  : _mmo_class(mmo_class), _vertex_offset(1) {}
+  : _mmo_class(mmo_class), _vertex_offset(0) {}
 
 // Getters ---------------------------------------------------------------------
 
@@ -66,11 +66,13 @@ void GenerateSBGInput::buildSet(const VarInfo& variable, const Name& name)
   if (dims) {
     for (const Expression& d : dims.get()) {
       Integer d_val = getValue(d);
-      set_vertex.addDimension(_vertex_offset, 1, _vertex_offset + d_val - 1);
+      set_vertex.addDimension(1, 1, d_val);
     }
+    set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
     _vertex_offset += set_vertex.maxDimSize() + 1;
   } else {
-    set_vertex.addDimension(_vertex_offset, 1, _vertex_offset);
+    set_vertex.addDimension(1, 1, 1);
+    set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
     ++_vertex_offset;
   }
 
@@ -95,10 +97,9 @@ void GenerateSBGInput::addVariableNodes()
 
 // Add equations vertices ------------------------------------------------------
 
-void GenerateSBGInput::buildEqualitySet(Equality eq
-  , SetVertex set_vertex)
+void GenerateSBGInput::buildEqualitySet(Equality eq, SetVertex set_vertex)
 {
-  set_vertex.offset(_vertex_offset);
+  set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
   _vertex_offset += set_vertex.maxDimSize() + 1;
 
   // Fill remaining dimensions
@@ -194,16 +195,21 @@ void GenerateSBGInput::addEdges()
     Expression right = eq.right();
 
     // Get vertices that represent this array of equations
-    CompactSet domain;
+    CompactSet eq_nodes;
+    Translation eq_nodes_trans;
     for (const SetVertex& sv : _set_vertices) {
       if (sv.node_id() == eq_id) {
-        domain = sv.set();
+        eq_nodes = sv.set();
+        eq_nodes_trans = sv.translation();
       } 
     }
 
     // Get vertices of variables that appear in this array of equations
     for (const SetVertex& sv : _set_vertices) {
       Name var_name = sv.name();
+      if (var_name.substr(0, 3) == "eq_") {
+        continue;
+      }
       MatchingExps matching_exprs(var_name, isState(var_name, symbols));
       Apply(matching_exprs, left);
       Apply(matching_exprs, right);
@@ -211,12 +217,19 @@ void GenerateSBGInput::addEdges()
       LOG << "Matched exprs for: " << var_name << " in " << eq << std::endl;
       for (const Expression& expr : matched_exprs) {
         LOG << "Expression: " << expr << std::endl;
-        // TODO: offset domain
-        // translation = ???;
-        CompactSet translated_domain; //= domain + translation;
-        SetEdge se{_edge_id, translated_domain};
-        // se.addMap1(-translation);
-        // se.addMap2(generatePWLMaps(sv, expr, eq_info, domain));
+        Translation domain_trans{_max_dim, _edge_offset};
+        CompactSet domain = eq_nodes.translate(domain_trans);
+        SetEdge se{_edge_id, domain};
+
+        CompactTransformation map1(_max_dim);
+        for (std::size_t k = 0; k < _max_dim; ++k) {
+          map1.translation(k) = eq_nodes_trans[k] - domain_trans[k];
+        }
+        se.set_map1(map1);
+
+        // se.set_map2(???);
+        // ++_edge_offset;
+        _set_edges.push_back(se);
       }
     }
   }
@@ -251,9 +264,9 @@ void GenerateSBGInput::buildFromModel()
   setup();
   addVariableNodes();
   addEquationNodes();
-  for (auto sv : _set_vertices)
-    std::cout << sv << "\n";
-  //addEdges();
+  addEdges();
+  //for (auto se : _set_edges)
+  //  std::cout << se << "\n";
   generateSBGInput();
 }
 

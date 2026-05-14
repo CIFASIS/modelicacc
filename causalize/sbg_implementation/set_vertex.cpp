@@ -42,11 +42,15 @@ std::string SetVertex::name() const { return _name; }
 
 const CompactSet& SetVertex::set() const { return _set; }
 
+const Translation& SetVertex::translation() const { return _translation; }
+
 // Setters ---------------------------------------------------------------------
 
 void SetVertex::set_node_id(int node_id) { _node_id = node_id; }
 
 void SetVertex::set_name(std::string name) { _name = name; }
+
+void SetVertex::set_translation(Translation t) { _translation = t; }
 
 void SetVertex::addDimension(AST::Integer start, AST::Integer step
   , AST::Integer end)
@@ -67,20 +71,15 @@ std::ostream& operator<<(std::ostream& out, const SetVertex& sv)
 
 std::ostream& SetVertex::print(std::ostream& out) const
 {
-  out << _name << ": " << _set.toSBGFormat().str(); 
+  out << _name << ": " << _set.translate(_translation).toSBGFormat().str(); 
   return out;
 }
 
 std::ostringstream SetVertex::toSBGFormat() const
 {
   std::ostringstream out;
-  out << _set.toSBGFormat().str();
+  out << _set.translate(_translation).toSBGFormat().str();
   return out;
-}
-
-void SetVertex::offset(AST::Integer offset)
-{
-  _set.offset(offset);
 }
 
 void SetVertex::cartesianProduct(const SetVertex& other)

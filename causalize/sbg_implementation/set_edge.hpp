@@ -48,8 +48,10 @@ public:
 
   void set_edge_id(int edge_id);
   void set_name(std::string name);
+  void set_map1(CompactTransformation map1);
+  void set_map2(CompactTransformation map2);
 
-  std::ostringstream domainToSBGFormat() const;
+  std::ostringstream toSBGFormat() const;
 
   /**
    * @brief Returns the maximum size between dimensions of the domain. That is,

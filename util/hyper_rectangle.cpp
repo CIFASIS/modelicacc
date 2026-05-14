@@ -51,6 +51,22 @@ void HyperRectangle::addDimension(AST::Integer start, AST::Integer step
 
 // Operators -------------------------------------------------------------------
 
+HyperRectangle HyperRectangle::translate(const Translation& t) const
+{
+  std::size_t arity = _starts.size();
+  ERROR_UNLESS(t.arity() == arity, "HyperRectangle::translate: dimensions of "
+    , "hyper-rectangle and translation are different");
+
+  HyperRectangle result = *this;
+
+  for (std::size_t k = 0; k < arity; ++k) {
+    result._starts[k] += t[k];
+    result._ends[k] += t[k];
+  }
+
+  return result;
+}
+
 std::ostringstream HyperRectangle::toSBGFormat() const
 {
   std::ostringstream out;
@@ -67,15 +83,6 @@ std::ostringstream HyperRectangle::toSBGFormat() const
 }
 
 // Methods ---------------------------------------------------------------------
-
-void HyperRectangle::offset(AST::Integer offset)
-{
-  unsigned int arity = _starts.size();
-  for (unsigned int k = 0; k < arity; ++k) {
-    _starts[k] += offset;
-    _ends[k] += offset;
-  }
-}
 
 void HyperRectangle::cartesianProduct(const HyperRectangle& other)
 {
@@ -108,13 +115,13 @@ CompactSet indicesToCompactSet(const IndexList& indices
   for (const Index& index : indices) {
     OptExp expr = index.exp();
     if (!expr) {
-      ERROR("GenerateSBGInput::indicesToHyperRect: empty index");
+      ERROR("indicesToCompactSet: empty index");
     } 
     else if (!is<Range>(expr.get())) {
-      ERROR("GenerateSBGInput::indicesToHyperRect: only Range expressions "
-        , "supported");
+      ERROR("indicesToCompactSet: only Range expressions supported");
     }
 
+    // TODO: consider decreasing Interval
     EvalExpression eval_expr(symbols);
     Range expr_range = get<Range>(expr.get());
     Integer start = Integer(Apply(eval_expr, expr_range.start()));
