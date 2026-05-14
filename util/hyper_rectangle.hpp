@@ -17,53 +17,59 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AFFINE_TRANSFORMATION_HPP_
-#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AFFINE_TRANSFORMATION_HPP_ 
+#ifndef MODELICACC_UTIL_HYPER_RECTANGLE_HPP_
+#define MODELICACC_UTIL_HYPER_RECTANGLE_HPP_
 
 #include "ast/expression.hpp"
-#include "causalize/sbg_implementation/affine_diag_transformation.hpp"
+#include "util/table.hpp"
+#include "util/affine_transformation.hpp"
 
-#include <variant>
 #include <sstream>
+#include <vector>
 
 namespace Modelica {
 
-namespace Causalize {
+namespace Util {
 
 namespace detail {
 
-class AffineTransformation {
+class HyperRectangle {
 public:
-  /**
-   * @brief Builds a zero filled matrix of dimension nxn, with a zero-filled
-   * vector of dimension n. 
-   */
-  AffineTransformation(std::size_t n);
+  HyperRectangle();
+
+  std::size_t arity() const;
+
+  void addDimension(AST::Integer start, AST::Integer step, AST::Integer end);
 
   /**
-   * @brief Works as operator[] for the matrix of the transformation.
+   * @brief Returns a string-like result that is parsable by the SBG parser.
    */
-  AST::Integer& matrix(std::size_t i, std::size_t j);
-  const AST::Integer& matrix(std::size_t i, std::size_t j) const;
-
-  /**
-   * @brief Works as operator[] for the vector of the transformation.
-   */
-  AST::Integer& translation(std::size_t i);
-  const AST::Integer& translation(std::size_t i) const;
-
   std::ostringstream toSBGFormat() const;
 
-private:
-  using AffTransfImpl = std::variant<AffineDiagTransformation>;
+  void offset(AST::Integer offset);
 
-  AffTransfImpl _impl;
-}; 
+  void cartesianProduct(const HyperRectangle& other);
+
+  AST::Integer maxDimSize() const;
+
+private:
+  std::vector<AST::Integer> _starts;
+  std::vector<AST::Integer> _steps;
+  std::vector<AST::Integer> _ends;
+};
+
+std::ostringstream& operator<<(std::ostringstream& out
+  , const HyperRectangle& rect);
 
 } // namespace detail
 
-} // namespace Causalize
+} // namespace Util
+
+using CompactSet = Util::detail::HyperRectangle;
+
+CompactSet indicesToCompactSet(const IndexList&indices
+  , const VarSymbolTable& symbols);
 
 } // namespace Modelica
 
-#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AFFINE_TRANSFORMATION_HPP_ 
+#endif // MODELICACC_UTIL_HYPER_RECTANGLE_HPP_

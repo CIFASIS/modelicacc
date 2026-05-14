@@ -17,13 +17,17 @@
 
 ******************************************************************************/
 
-#include "causalize/sbg_implementation/hyper_rectangle.hpp"
+#include "util/hyper_rectangle.hpp"
+#include "util/ast_visitors/eval_expression.hpp"
+#include "util/debug.hpp"
+
+#include <boost/variant/get.hpp>
 
 #include <iostream>
 
 namespace Modelica {
 
-namespace Causalize {
+namespace Util {
 
 namespace detail {
 
@@ -94,6 +98,40 @@ AST::Integer HyperRectangle::maxDimSize() const
 
 } // namespace detail
 
-} // namespace Causalize
+} // namespace Util
+
+CompactSet indicesToCompactSet(const IndexList& indices
+  , const VarSymbolTable& symbols)
+{
+  CompactSet result;
+
+  for (const Index& index : indices) {
+    OptExp expr = index.exp();
+    if (!expr) {
+      ERROR("GenerateSBGInput::indicesToHyperRect: empty index");
+    } 
+    else if (!is<Range>(expr.get())) {
+      ERROR("GenerateSBGInput::indicesToHyperRect: only Range expressions "
+        , "supported");
+    }
+
+    EvalExpression eval_expr(symbols);
+    Range expr_range = get<Range>(expr.get());
+    Integer start = Integer(Apply(eval_expr, expr_range.start()));
+    Integer step = 1;
+    Integer end = Integer(Apply(eval_expr, expr_range.end()));
+    if (expr_range.step()) {
+      step = Integer(Apply(eval_expr, expr_range.step().get()));
+    }
+
+    result.addDimension(start, step, end);
+  }
+
+  //if (result.arity() < _max_dim) {
+  //  // TODO: fill remaining dimensions
+  //}
+
+  return result;
+}
 
 } // namespace Modelica

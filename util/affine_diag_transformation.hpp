@@ -17,19 +17,42 @@
 
 ******************************************************************************/
 
-#include "causalize/sbg_implementation/hyper_rectangle.hpp"
+#ifndef MODELICACC_UTIL_AFFINE_DIAG_TRANSFORMATION_HPP_
+#define MODELICACC_UTIL_AFFINE_DIAG_TRANSFORMATION_HPP_ 
 
-#include <iostream>
+#include "ast/expression.hpp"
+
+#include <sstream>
+#include <vector>
 
 namespace Modelica {
 
-namespace Causalize {
+namespace Util {
 
 namespace detail {
 
+class AffineDiagTransformation {
+public:
+  AffineDiagTransformation(std::size_t n);
+
+  AST::Integer& matrix(std::size_t i, std::size_t j);
+  const AST::Integer& matrix(std::size_t i, std::size_t j) const;
+
+  AST::Integer& translation(std::size_t i);
+  const AST::Integer& translation(std::size_t i) const;
+
+  std::ostringstream toSBGFormat() const;
+
+private:
+  std::size_t _dimension;
+  std::vector<AST::Integer> _diag;
+  std::vector<AST::Integer> _translation;
+};
 
 } // namespace detail
 
-} // namespace Causalize
+} // namespace Util
 
 } // namespace Modelica
+
+#endif // MODELICACC_UTIL_AFFINE_DIAG_TRANSFORMATION_HPP_ 

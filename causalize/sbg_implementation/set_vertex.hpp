@@ -21,7 +21,7 @@
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_VERTEX_HPP_
 
 #include "ast/expression.hpp"
-#include "causalize/sbg_implementation/hyper_rectangle.hpp"
+#include "util/hyper_rectangle.hpp"
 
 #include <iosfwd>
 #include <sstream>
@@ -38,11 +38,12 @@ namespace Causalize {
 class SetVertex {
 public:
   SetVertex(int node_id);
-  SetVertex(int node_id, detail::HyperRectangle rect);
+  SetVertex(int node_id, CompactSet rect);
 
   int node_id() const;
   std::size_t arity() const;
   std::string name() const;
+  const CompactSet& set() const;
 
   void set_node_id(int node_id);
   void set_name(std::string name);
@@ -66,7 +67,7 @@ public:
 private:
   int _node_id;
   std::string _name;
-  detail::HyperRectangle _set;
+  CompactSet _set;
 };
 
 std::ostream& operator<<(std::ostream& out, const SetVertex& sv);

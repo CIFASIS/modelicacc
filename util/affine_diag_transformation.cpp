@@ -17,14 +17,14 @@
 
 ******************************************************************************/
 
-#include "causalize/sbg_implementation/affine_diag_transformation.hpp"
+#include "util/affine_diag_transformation.hpp"
 #include "util/debug.hpp"
 
 #include <iostream>
 
 namespace Modelica {
 
-namespace Causalize {
+namespace Util {
 
 namespace detail {
 
@@ -78,6 +78,6 @@ std::ostringstream AffineDiagTransformation::toSBGFormat() const
 
 } // namespace detail
 
-} // namespace Causalize
+} // namespace Util
 
 } // namespace Modelica

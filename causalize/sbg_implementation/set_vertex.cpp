@@ -29,7 +29,7 @@ namespace Causalize {
 
 SetVertex::SetVertex(int node_id) : _node_id(node_id) {}
 
-SetVertex::SetVertex(int node_id, detail::HyperRectangle rect)
+SetVertex::SetVertex(int node_id, CompactSet rect)
   : _node_id(node_id), _set(rect) {}
 
 // Getters ---------------------------------------------------------------------
@@ -39,6 +39,8 @@ int SetVertex::node_id() const { return _node_id; }
 std::size_t SetVertex::arity() const { return _set.arity(); }
 
 std::string SetVertex::name() const { return _name; }
+
+const CompactSet& SetVertex::set() const { return _set; }
 
 // Setters ---------------------------------------------------------------------
 

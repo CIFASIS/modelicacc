@@ -18,7 +18,7 @@
 ******************************************************************************/
 
 #include "causalize/sbg_implementation/equation_info.hpp"
-#include "causalize/sbg_implementation/hyper_rectangle.hpp"
+#include "util/hyper_rectangle.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
 
@@ -41,12 +41,11 @@ public:
 protected:
   Integer getValue(Expression expr) const;
   void buildSet(const VarInfo& variable, const Name& name);
-  detail::HyperRectangle indicesToHyperRect(const IndexList& indices) const;
   void buildEqualitySet(Equality eq, SetVertex vertex_def);
   void buildForEqSet(ForEq eq, SetVertex vertex_def);
 
   void generateExpression(const SetVertex& sv, const Expression& expr
-    , EquationInfo& eq_info, detail::HyperRectangle domain);
+    , EquationInfo& eq_info, CompactSet domain);
 
   void setup();
   void addVariableNodes();

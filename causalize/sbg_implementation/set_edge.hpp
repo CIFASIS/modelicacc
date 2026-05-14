@@ -21,8 +21,8 @@
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_EDGE_HPP_
 
 #include "ast/expression.hpp"
-#include "causalize/sbg_implementation/affine_transformation.hpp"
-#include "causalize/sbg_implementation/hyper_rectangle.hpp"
+#include "util/affine_transformation.hpp"
+#include "util/hyper_rectangle.hpp"
 
 #include <iosfwd>
 #include <sstream>
@@ -39,8 +39,8 @@ namespace Causalize {
  */
 class SetEdge {
 public:
-  SetEdge(int edge_id);
-  SetEdge(int edge_id, detail::HyperRectangle domain);
+  SetEdge(int edge_id, std::size_t arity);
+  SetEdge(int edge_id, CompactSet domain);
 
   int edge_id() const;
   std::size_t arity() const;
@@ -62,9 +62,10 @@ public:
 private:
   int _edge_id;
   std::string _name;
-  detail::HyperRectangle _domain;
-  detail::AffineTransformation _map1;
-  detail::AffineTransformation _map2;
+  std::size_t _arity;
+  CompactSet _domain;
+  CompactTransformation _map1;
+  CompactTransformation _map2;
 };
 
 std::ostream& operator<<(std::ostream& out, const SetEdge& sv);

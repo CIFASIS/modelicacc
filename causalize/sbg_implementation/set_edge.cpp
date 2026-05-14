@@ -27,10 +27,12 @@ namespace Causalize {
 
 // Constructors/Destructors ----------------------------------------------------
 
-SetEdge::SetEdge(int edge_id) : _edge_id(edge_id) {}
+SetEdge::SetEdge(int edge_id, std::size_t arity)
+  : _edge_id(edge_id), _arity(arity), _map1(arity), _map2(arity) {}
 
-SetEdge::SetEdge(int edge_id, detail::HyperRectangle domain)
-  : _edge_id(edge_id), _domain(domain) {}
+SetEdge::SetEdge(int edge_id, Util::detail::HyperRectangle domain)
+  : _edge_id(edge_id), _domain(domain), _arity(domain.arity())
+    , _map1(domain.arity()), _map2(domain.arity()) {}
 
 // Getters ---------------------------------------------------------------------
 

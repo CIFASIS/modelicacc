@@ -17,13 +17,15 @@
 
 ******************************************************************************/
 
-#include <ast/queries.hpp>
-#include <causalize/sbg_implementation/generate_sbg_input.hpp>
-#include <util/ast_visitors/constant_expression.hpp>
-#include <util/ast_visitors/eval_expression.hpp>
-#include <util/ast_visitors/matching_exps.hpp>
-#include <util/ast_visitors/affine_transform.hpp>
-#include <util/logger.hpp>
+#include "causalize/sbg_implementation/generate_sbg_input.hpp"
+#include "ast/queries.hpp"
+#include "util/affine_transformation.hpp"
+#include "util/affine_expr.hpp"
+#include "util/ast_visitors/affine_expr_visitor.hpp"
+#include "util/ast_visitors/constant_expression.hpp"
+#include "util/ast_visitors/eval_expression.hpp"
+#include "util/ast_visitors/matching_exps.hpp"
+#include "util/logger.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -82,7 +84,7 @@ void GenerateSBGInput::addVariableNodes()
   IdentList variables = _mmo_class.variables();
   VarSymbolTable symbols = _mmo_class.syms();
 
-  // Build unknown nodes.
+  // Build unknown nodes
   for (const Name& var_name : variables) {
     VarInfo variable = symbols[var_name].get();
     if (isVariable(var_name, symbols)) {
@@ -99,6 +101,7 @@ void GenerateSBGInput::buildEqualitySet(Equality eq
   set_vertex.offset(_vertex_offset);
   _vertex_offset += set_vertex.maxDimSize() + 1;
 
+  // Fill remaining dimensions
   for (auto k = set_vertex.arity(); k < _max_dim; ++k) {
     set_vertex.addDimension(_vertex_offset, 1, _vertex_offset);
   }
@@ -111,46 +114,13 @@ void GenerateSBGInput::buildEqualitySet(Equality eq
   ++_node_id;
 }
 
-detail::HyperRectangle GenerateSBGInput::indicesToHyperRect(
-  const IndexList& indices) const
-{
-  detail::HyperRectangle result;
-
-  for (const Index& index : indices) {
-    OptExp expr = index.exp();
-    if (!expr) {
-      ERROR("GenerateSBGInput::indicesToHyperRect: empty index\n");
-    } 
-    else if (!is<Range>(expr.get())) {
-      ERROR("GenerateSBGInput::indicesToHyperRect: only Range expressions "
-        , "supported\n");
-    }
-
-    Range expr_range = get<Range>(expr.get());
-    Integer start = getValue(expr_range.start());
-    Integer step = 1;
-    Integer end = getValue(expr_range.end());
-    if (expr_range.step()) {
-      step = getValue(expr_range.step().get());
-    }
-
-    result.addDimension(start, step, end);
-  }
-
-  if (result.arity() < _max_dim) {
-    // TODO: fill remaining dimensions
-  }
-
-  return result;
-}
-
 void GenerateSBGInput::buildForEqSet(ForEq eq, SetVertex set_vertex)
 {
   ForEq for_eq = get<ForEq>(eq);
   SetVertex set_vertex_copy = set_vertex;
   IndexList indices = for_eq.range().indexes();
   set_vertex_copy.cartesianProduct(SetVertex{_node_id
-    , indicesToHyperRect(indices)});
+    , indicesToCompactSet(indices,  _mmo_class.syms())});
   for (const Equation& jth_eq : for_eq.elements()) {
     if (is<Equality>(jth_eq)) {
       Equality equality = get<Equality>(jth_eq);
@@ -169,7 +139,7 @@ void GenerateSBGInput::buildForEqSet(ForEq eq, SetVertex set_vertex)
 
 void GenerateSBGInput::addEquationNodes()
 {
-  // Build equation nodes.
+  // Build equation nodes
   EquationList eqs = _mmo_class.equations().equations();
   for (const Equation& eq : eqs)
   {
@@ -191,24 +161,26 @@ void GenerateSBGInput::addEquationNodes()
 
 void GenerateSBGInput::generateExpression(const SetVertex& sv
   , const Expression& expr, EquationInfo& eq_info
-  , detail::HyperRectangle domain)
+  , CompactSet domain)
 {
   assert(is<Reference>(expr));
-
-  Reference occur = get<Reference>(expr);
-  Ref names = occur.ref();
+  Reference occurrence = get<Reference>(expr);
+  Ref names = occurrence.ref();
   assert(names.size() > 0);
   ExpList indexes = get<1>(names.front());
 
-  SetEdge se{_edge_id, domain};
+  CompactTransformation t{_max_dim};
+  std::size_t i = 0;
   for (Expression index : indexes) {
-    //AffineTransformVisitor affine_visitor(symbols);
-    //AffineTransformation A = Apply(affine_visitor, indexes);
+    AffineExprVisitor affine_expr_visitor(_mmo_class.syms());
+    Util::AffineExpr ith_expr = Apply(affine_expr_visitor, index);
+    //t.translation(i) = ith_expr.offset()[i];
+    ++i;
   }
-  // add to map1 or map2 if it is a state variable or not 
 
   // update _edge_offset;
 
+  //se.set_edge_id(_edge_id);
   ++_edge_id;
 }
 
@@ -216,13 +188,20 @@ void GenerateSBGInput::addEdges()
 {
   VarSymbolTable symbols = _mmo_class.syms();
 
-  for (auto& eq_info_pair : _equations_info) {
-    const EquationInfo& eq_info = eq_info_pair.second;
+  for (auto& [eq_id, eq_info] : _equations_info) {
     const Equality eq = eq_info.equality();
     Expression left = eq.left();
     Expression right = eq.right();
-    detail::HyperRectangle domain = indicesToHyperRect(eq_info.indices());
 
+    // Get vertices that represent this array of equations
+    CompactSet domain;
+    for (const SetVertex& sv : _set_vertices) {
+      if (sv.node_id() == eq_id) {
+        domain = sv.set();
+      } 
+    }
+
+    // Get vertices of variables that appear in this array of equations
     for (const SetVertex& sv : _set_vertices) {
       Name var_name = sv.name();
       MatchingExps matching_exprs(var_name, isState(var_name, symbols));
@@ -232,7 +211,12 @@ void GenerateSBGInput::addEdges()
       LOG << "Matched exprs for: " << var_name << " in " << eq << std::endl;
       for (const Expression& expr : matched_exprs) {
         LOG << "Expression: " << expr << std::endl;
-        //generatePWLMaps(sv, expr, eq_info, domain);
+        // TODO: offset domain
+        // translation = ???;
+        CompactSet translated_domain; //= domain + translation;
+        SetEdge se{_edge_id, translated_domain};
+        // se.addMap1(-translation);
+        // se.addMap2(generatePWLMaps(sv, expr, eq_info, domain));
       }
     }
   }

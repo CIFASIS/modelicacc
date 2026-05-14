@@ -17,42 +17,39 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AFFINE_DIAG_TRANSFORMATION_HPP_
-#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AFFINE_DIAG_TRANSFORMATION_HPP_ 
+#ifndef MODELICACC_UTIL_AFFINE_EXPR_HPP_
+#define MODELICACC_UTIL_AFFINE_EXPR_HPP_ 
 
 #include "ast/expression.hpp"
 
-#include <sstream>
-#include <vector>
+#include <string>
+#include <unordered_map>
 
 namespace Modelica {
 
-namespace Causalize {
+namespace Util {
 
-namespace detail {
-
-class AffineDiagTransformation {
+class AffineExpr {
 public:
-  AffineDiagTransformation(std::size_t n);
+  AffineExpr() = default;
+  AffineExpr(AST::Integer v);
+  AffineExpr(std::string var_name);
 
-  AST::Integer& matrix(std::size_t i, std::size_t j);
-  const AST::Integer& matrix(std::size_t i, std::size_t j) const;
+  AffineExpr operator-() const;
+  AffineExpr operator+(const AffineExpr& other) const;
+  AffineExpr operator-(const AffineExpr& other) const;
+  AffineExpr operator*(AST::Integer scalar) const;
+  AffineExpr operator*(const AffineExpr& other) const;
 
-  AST::Integer& translation(std::size_t i);
-  const AST::Integer& translation(std::size_t i) const;
-
-  std::ostringstream toSBGFormat() const;
+  bool isConstant() const;
 
 private:
-  std::size_t _dimension;
-  std::vector<AST::Integer> _diag;
-  std::vector<AST::Integer> _translation;
+  std::unordered_map<std::string, AST::Integer> _slopes;
+  AST::Integer _offset;
 };
 
-} // namespace detail
-
-} // namespace Causalize
+} // namespace Util
 
 } // namespace Modelica
 
-#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AFFINE_DIAG_TRANSFORMATION_HPP_ 
+#endif // MODELICACC_UTIL_AFFINE_EXPR_HPP_ 
