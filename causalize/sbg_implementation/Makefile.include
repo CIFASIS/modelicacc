@@ -12,23 +12,20 @@ CAUSALIZE_SBG_SRC := \
 	$(UTIL_DIR)/ast_visitors/constant_expression.cpp \
 	$(UTIL_DIR)/ast_visitors/matching_exps.cpp \
 	$(UTIL_DIR)/ast_visitors/pwl_map_values.cpp \
-	$(UTIL_DIR)/logger.cpp \
-	$(UTIL_DIR)/solve/solve.cpp \
-	$(UTIL_DIR)/ast_visitors/contains_expression.cpp \
-	$(UTIL_DIR)/ast_visitors/partial_eval_expression.cpp	
+	$(UTIL_DIR)/logger.cpp
 
 # Objects
 CAUSALIZE_SBG_OBJ=$(addprefix $(BUILD_DIR)/, $(CAUSALIZE_SBG_SRC:.cpp=.o))
 
 $(BUILD_DIR)/$(CAUSALIZE_DIR)/sbg_implementation/%.o : $(CAUSALIZE_SBG_DIR)/%.cpp
-	$(CC) $(INCLUDES) $(BOOST_1_81_INC) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
-	$(CC) $(INCLUDES) $(BOOST_1_81_INC) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
+	$(CC) $(INCLUDES)  $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES)  $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
 
 create-folders::
 	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/sbg_implementation
 
 $(CAUSALIZE_SBG): $(CAUSALIZE_SBG_OBJ) $(CAUSALIZE_COMMON_OBJ) $(LIBMODELICA)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(BOOST_1_81_INC) $(SBG_LIB_DEV_INCLUDE) -o $(CAUSALIZE_SBG) $(CAUSALIZE_COMMON_OBJ) $(CAUSALIZE_SBG_OBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -o $(CAUSALIZE_SBG) $(CAUSALIZE_COMMON_OBJ) $(CAUSALIZE_SBG_OBJ) $(LIBS)
 
 # Disable the tests until we have the binary/API interface working.
 $(CAUSALIZE_SBG_TEST):
