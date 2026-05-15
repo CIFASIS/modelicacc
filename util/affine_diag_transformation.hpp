@@ -21,6 +21,7 @@
 #define MODELICACC_UTIL_AFFINE_DIAG_TRANSFORMATION_HPP_ 
 
 #include "ast/expression.hpp"
+#include "util/affine_expr.hpp"
 #include "util/translation.hpp"
 
 #include <sstream>
@@ -41,6 +42,8 @@ public:
 
   AST::Integer& translation(std::size_t i);
   const AST::Integer& translation(std::size_t i) const;
+
+  void setRow(std::size_t i, const AffineExpr& expr);
 
   std::ostringstream toSBGFormat() const;
 

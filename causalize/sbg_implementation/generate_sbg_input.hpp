@@ -42,11 +42,13 @@ public:
 protected:
   Integer getValue(Expression expr) const;
   void buildSet(const VarInfo& variable, const Name& name);
-  void buildEqualitySet(Equality eq, SetVertex vertex_def);
-  void buildForEqSet(ForEq eq, SetVertex vertex_def);
+  void buildEqualitySet(Equality eq, SetVertex& vertex_def);
+  void buildForEqSet(ForEq eq, SetVertex vertex_def, IndexList indices);
 
-  void generateExpression(const SetVertex& sv, const Expression& expr
-    , EquationInfo& eq_info, CompactSet domain);
+  CompactTransformation toTransformation(const Expression& expr
+    , const IndexList& order);
+  void addMaps(Expression expr, CompactSet eq_nodes, Translation eq_nodes_trans
+    , const IndexList& order);
 
   void setup();
   void addVariableNodes();

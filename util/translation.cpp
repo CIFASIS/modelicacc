@@ -45,15 +45,4 @@ const AST::Integer& Translation::operator[](std::size_t i) const
   return _translation[i];
 }
 
-Translation Translation::operator-() const
-{
-  Translation result;
-
-  for (std::size_t k = 0; k < _dimension; ++k) {
-    result._translation[k] = -((*this)[k]);
-  }
-
-  return result;
-}
-
 } // namespace Modelica

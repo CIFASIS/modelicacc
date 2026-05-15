@@ -35,7 +35,13 @@ namespace Modelica {
 class AffineExprVisitor
   : public boost::static_visitor<Util::AffineExpr> {
 public:
-  explicit AffineExprVisitor(VarSymbolTable symbols);
+  /**
+   * @brief The second argument is present to keep track of the order of
+   * counters. For example, "i" is the counter for the first dimensions,
+   * "j" for the second one and so on.
+   */
+  explicit AffineExprVisitor(VarSymbolTable symbols
+    , std::vector<std::string> order);
   Util::AffineExpr operator()(Integer v) const;
   Util::AffineExpr operator()(Boolean v) const;
   Util::AffineExpr operator()(AddAll v) const;
@@ -59,6 +65,7 @@ public:
 
 protected:
   VarSymbolTable _symbols;
+  std::vector<std::string> _order;
 };
 
 }  // namespace Modelica

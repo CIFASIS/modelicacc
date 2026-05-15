@@ -29,10 +29,13 @@ namespace Util {
 namespace detail {
 
 AffineDiagTransformation::AffineDiagTransformation(std::size_t n)
-  : _dimension(n), _diag(n, 0), _translation(n) {}
+  : _dimension(n), _diag(n, 0), _translation(n, 0) {}
 
 AST::Integer& AffineDiagTransformation::matrix(std::size_t i, std::size_t j)
 {
+  ERROR_UNLESS(i < _dimension && j < _dimension,
+    "AffineDiagTransformation::matrix: ranges out of bounds");
+
   if (i == j) {
     return _diag[i];
   }
@@ -43,6 +46,9 @@ AST::Integer& AffineDiagTransformation::matrix(std::size_t i, std::size_t j)
 const AST::Integer& AffineDiagTransformation::matrix(std::size_t i
   , std::size_t j) const
 {
+  ERROR_UNLESS(i < _dimension && j < _dimension,
+    "AffineDiagTransformation::matrix: ranges out of bounds");
+
   if (i == j) {
     return _diag[i];
   }
@@ -52,12 +58,27 @@ const AST::Integer& AffineDiagTransformation::matrix(std::size_t i
 
 AST::Integer& AffineDiagTransformation::translation(std::size_t i)
 {
+  ERROR_UNLESS(i < _dimension,
+    "AffineDiagTransformation::translation: range out of bounds");
+
   return _translation[i];
 }
 
 const AST::Integer& AffineDiagTransformation::translation(std::size_t i) const
 {
+  ERROR_UNLESS(i < _dimension,
+    "AffineDiagTransformation::translation: range out of bounds");
+
   return _translation[i];
+}
+
+void AffineDiagTransformation::setRow(std::size_t i, const AffineExpr& expr)
+{
+  ERROR_UNLESS(_dimension == expr.arity() && i < _dimension
+    , "AffineDiagTransformation::setRow: dimensions don't match");
+
+  _diag[i] = expr.slopes()[i];
+  _translation[i] = expr.offset();
 }
 
 std::ostringstream AffineDiagTransformation::toSBGFormat() const

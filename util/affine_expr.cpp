@@ -24,31 +24,61 @@ namespace Modelica {
 
 namespace Util {
 
-AffineExpr::AffineExpr(AST::Integer v) : _offset(v) {}
-
-AffineExpr::AffineExpr(std::string var_name)
+AffineExpr::AffineExpr(const std::vector<std::string>& order)
+  : _order(order)
 {
-  _slopes[var_name] = 1;
+  for (const std::string& var_name : order) {
+    _slopes[var_name] = 0;
+  }
 }
+
+std::vector<AST::Integer> AffineExpr::slopes() const
+{
+  std::vector<AST::Integer> result; 
+
+  for (const std::string& var_name : _order) {
+    result.push_back(_slopes.at(var_name));
+  }
+
+  return result;
+}
+
+const AST::Integer& AffineExpr::offset() const { return _offset; }
+
+std::size_t AffineExpr::arity() const { return _slopes.size(); }
 
 AffineExpr AffineExpr::operator-() const
 {
   AffineExpr result;
 
-  for (const auto& [var_name, slope] : _slopes) {
-    result._slopes[var_name] = -slope;
+  for (const std::string& var_name : _order) {
+    result._slopes[var_name] = -_slopes.at(var_name);
   }
   result._offset = -_offset;
 
   return result;
 }
 
+void AffineExpr::set_slope(std::string var_name, AST::Integer slope)
+{
+  _slopes[var_name] = slope;
+}
+
+void AffineExpr::set_offset(AST::Integer offset)
+{
+  _offset = offset;
+}
+
 AffineExpr AffineExpr::operator+(const AffineExpr& other) const
 {
+  ERROR_UNLESS(arity() == other.arity(), "AffineExpr::operator+: dimensions "
+    , "don't match");
+
   AffineExpr result;
 
-  for (const auto& [var_name, slope] : _slopes) {
-    result._slopes[var_name] =  slope + other._slopes.at(var_name);
+  for (const std::string& var_name : _order) {
+    result._slopes[var_name] = _slopes.at(var_name)
+      + other._slopes.at(var_name);
   }
   result._offset = _offset + other._offset;
 
@@ -57,10 +87,14 @@ AffineExpr AffineExpr::operator+(const AffineExpr& other) const
 
 AffineExpr AffineExpr::operator-(const AffineExpr& other) const
 {
+  ERROR_UNLESS(arity() == other.arity(), "AffineExpr::operator-: dimensions "
+    , "don't match");
+
   AffineExpr result;
 
-  for (const auto& [var_name, slope] : _slopes) {
-    result._slopes[var_name] =  slope - other._slopes.at(var_name);
+  for (const std::string& var_name : _order) {
+    result._slopes[var_name] = _slopes.at(var_name)
+      - other._slopes.at(var_name);
   }
   result._offset = _offset - other._offset;
 
@@ -71,8 +105,8 @@ AffineExpr AffineExpr::operator*(AST::Integer scalar) const
 {
   AffineExpr result;
 
-  for (const auto& [var_name, slope] : _slopes) {
-    result._slopes[var_name] =  scalar*slope;
+  for (const std::string& var_name : _order) {
+    result._slopes[var_name] =  scalar*_slopes.at(var_name);
   }
   result._offset = scalar*_offset;
 
@@ -81,6 +115,9 @@ AffineExpr AffineExpr::operator*(AST::Integer scalar) const
 
 AffineExpr AffineExpr::operator*(const AffineExpr& other) const
 {
+  ERROR_UNLESS(arity() == other.arity(), "AffineExpr::operator*: dimensions "
+    , "don't match");
+
   if (isConstant()) {
     return other * this->_offset;
   } else if (other.isConstant()) {
@@ -94,8 +131,8 @@ AffineExpr AffineExpr::operator*(const AffineExpr& other) const
 
 bool AffineExpr::isConstant() const
 {
-  for (const auto& [var_name, slope] :  _slopes) {
-    if (slope != 0) {
+  for (const std::string& var_name :  _order) {
+    if (_slopes.at(var_name) != 0) {
       return false;
     }
   }

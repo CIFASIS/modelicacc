@@ -29,11 +29,22 @@ namespace Modelica {
 
 namespace Util {
 
+/**
+ * @brief Represents and affine expression involving an ordered collection of
+ * of variables.
+ */
 class AffineExpr {
 public:
   AffineExpr() = default;
-  AffineExpr(AST::Integer v);
-  AffineExpr(std::string var_name);
+  AffineExpr(const std::vector<std::string>& variables);
+
+  std::vector<AST::Integer> slopes() const;
+  const AST::Integer& offset() const;
+
+  std::size_t arity() const;
+
+  void set_slope(std::string var_name, AST::Integer slope);
+  void set_offset(AST::Integer offset);
 
   AffineExpr operator-() const;
   AffineExpr operator+(const AffineExpr& other) const;
@@ -44,6 +55,7 @@ public:
   bool isConstant() const;
 
 private:
+  std::vector<std::string> _order;
   std::unordered_map<std::string, AST::Integer> _slopes;
   AST::Integer _offset;
 };

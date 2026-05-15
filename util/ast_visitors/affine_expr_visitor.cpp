@@ -18,16 +18,19 @@
 ******************************************************************************/
 
 #include "util/ast_visitors/affine_expr_visitor.hpp"
+#include "util/ast_visitors/eval_expression.hpp"
 #include "util/debug.hpp"
 
 namespace Modelica {
 
-AffineExprVisitor::AffineExprVisitor(VarSymbolTable symbols)
-  : _symbols(symbols) {}
+AffineExprVisitor::AffineExprVisitor(VarSymbolTable symbols
+  , std::vector<std::string> order) : _symbols(symbols), _order(order) {}
 
 Util::AffineExpr AffineExprVisitor::operator()(Integer v) const
 {
-  return Util::AffineExpr{v};
+  Util::AffineExpr result{_order};
+  result.set_offset(v);
+  return result;
 }
 
 Util::AffineExpr AffineExprVisitor::operator()(Boolean v) const
@@ -128,7 +131,24 @@ Util::AffineExpr AffineExprVisitor::operator()(Output v) const
 
 Util::AffineExpr AffineExprVisitor::operator()(Reference v) const
 {
-  return Util::AffineExpr{get<0>(v.ref().front())};
+  Util::AffineExpr result{_order};
+  Name v_name = get<0>(v.ref().front());
+
+  bool in_order = false; // Is counter of a loop?
+  for (const std::string& index_name : _order) {
+    if (v_name == index_name) {
+      in_order = true;
+    }
+  }
+
+  if (in_order) {
+    result.set_slope(v_name, 1);
+  } else {
+    EvalExpression eval_expr{_symbols};
+    result.set_offset(static_cast<AST::Integer>(Apply(eval_expr, Expression{v})));
+  }
+
+  return result;
 }
 
 Util::AffineExpr AffineExprVisitor::operator()(BinOp v) const
@@ -169,6 +189,7 @@ Util::AffineExpr AffineExprVisitor::operator()(UnaryOp v) const
     }
 
     default: {
+      ERROR("AffineExprVisitor: operation ", v.op(), " not supported");
       break;
     }
   }

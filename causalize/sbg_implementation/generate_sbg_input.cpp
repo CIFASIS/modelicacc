@@ -86,7 +86,6 @@ void GenerateSBGInput::addVariableNodes()
   IdentList variables = _mmo_class.variables();
   VarSymbolTable symbols = _mmo_class.syms();
 
-  // Build unknown nodes
   for (const Name& var_name : variables) {
     VarInfo variable = symbols[var_name].get();
     if (isVariable(var_name, symbols)) {
@@ -97,7 +96,7 @@ void GenerateSBGInput::addVariableNodes()
 
 // Add equations vertices ------------------------------------------------------
 
-void GenerateSBGInput::buildEqualitySet(Equality eq, SetVertex set_vertex)
+void GenerateSBGInput::buildEqualitySet(Equality eq, SetVertex& set_vertex)
 {
   set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
   _vertex_offset += set_vertex.maxDimSize() + 1;
@@ -115,22 +114,26 @@ void GenerateSBGInput::buildEqualitySet(Equality eq, SetVertex set_vertex)
   ++_node_id;
 }
 
-void GenerateSBGInput::buildForEqSet(ForEq eq, SetVertex set_vertex)
+void GenerateSBGInput::buildForEqSet(ForEq eq, SetVertex set_vertex
+  , IndexList indices)
 {
   ForEq for_eq = get<ForEq>(eq);
-  SetVertex set_vertex_copy = set_vertex;
-  IndexList indices = for_eq.range().indexes();
-  set_vertex_copy.cartesianProduct(SetVertex{_node_id
+  IndexList nested_indices = for_eq.range().indexes();
+  indices.insert(indices.end(), nested_indices.begin(), nested_indices.end()); 
+  set_vertex.cartesianProduct(SetVertex{_node_id
     , indicesToCompactSet(indices,  _mmo_class.syms())});
   for (const Equation& jth_eq : for_eq.elements()) {
     if (is<Equality>(jth_eq)) {
       Equality equality = get<Equality>(jth_eq);
-      buildEqualitySet(equality, set_vertex_copy);
+      buildEqualitySet(equality, set_vertex);
 
-      _equations_info[set_vertex_copy.node_id()]
+      for (std::size_t k = indices.size(); k < _max_dim; ++k) {
+        indices.emplace_back("dummy", Expression{0});
+      }
+      _equations_info[set_vertex.node_id()]
         = EquationInfo{indices, equality};
     } else if (is<ForEq>(jth_eq)) {
-      buildForEqSet(get<ForEq>(jth_eq), set_vertex_copy);
+      buildForEqSet(get<ForEq>(jth_eq), set_vertex, indices);
     } else {
       ERROR("GenerateSBGInput::buildForEqSet: only equalities and for loops "
         , "supported\n");
@@ -140,17 +143,24 @@ void GenerateSBGInput::buildForEqSet(ForEq eq, SetVertex set_vertex)
 
 void GenerateSBGInput::addEquationNodes()
 {
-  // Build equation nodes
+  IndexList scalar_indices;
+  for (std::size_t k = 0; k < _max_dim; ++k) {
+    scalar_indices.emplace_back("dummy", Expression{0});
+  }
+
   EquationList eqs = _mmo_class.equations().equations();
-  for (const Equation& eq : eqs)
-  {
+  for (const Equation& eq : eqs) {
     SetVertex set_vertex{_node_id};
+    IndexList indices;
     if (is<ForEq>(eq)) {
       ForEq for_eq = get<ForEq>(eq);
-      buildForEqSet(for_eq, set_vertex);
+      buildForEqSet(for_eq, set_vertex, indices);
     } else if (is<Equality>(eq)) {
       Equality equality = get<Equality>(eq);
+      set_vertex.addDimension(1, 1, 1);
       buildEqualitySet(equality, set_vertex);
+      _equations_info[set_vertex.node_id()]
+        = EquationInfo{scalar_indices, equality};
     } else {
       ERROR("GenerateSBGInput::addEquationNodes: only equalities and for loops "
         , "supported\n");
@@ -160,9 +170,8 @@ void GenerateSBGInput::addEquationNodes()
 
 // Add edges -------------------------------------------------------------------
 
-void GenerateSBGInput::generateExpression(const SetVertex& sv
-  , const Expression& expr, EquationInfo& eq_info
-  , CompactSet domain)
+CompactTransformation GenerateSBGInput::toTransformation(const Expression& expr
+  , const IndexList& indices)
 {
   assert(is<Reference>(expr));
   Reference occurrence = get<Reference>(expr);
@@ -170,18 +179,39 @@ void GenerateSBGInput::generateExpression(const SetVertex& sv
   assert(names.size() > 0);
   ExpList indexes = get<1>(names.front());
 
+  std::vector<std::string> order;
+  for (const Index& index : indices) {
+    order.push_back(index.name());
+  }
+
   CompactTransformation t{_max_dim};
   std::size_t i = 0;
   for (Expression index : indexes) {
-    AffineExprVisitor affine_expr_visitor(_mmo_class.syms());
+    AffineExprVisitor affine_expr_visitor(_mmo_class.syms(), order);
     Util::AffineExpr ith_expr = Apply(affine_expr_visitor, index);
-    //t.translation(i) = ith_expr.offset()[i];
+    t.setRow(i, ith_expr);
     ++i;
   }
 
-  // update _edge_offset;
+  return t;
+}
 
-  //se.set_edge_id(_edge_id);
+void GenerateSBGInput::addMaps(Expression expr, CompactSet eq_nodes
+  , Translation eq_nodes_trans, const IndexList& indices)
+{
+  Translation domain_trans{_max_dim, _edge_offset};
+  CompactSet domain = eq_nodes.translate(domain_trans);
+  SetEdge se{_edge_id, domain};
+
+  CompactTransformation map1(_max_dim);
+  for (std::size_t k = 0; k < _max_dim; ++k) {
+    map1.translation(k) = eq_nodes_trans[k] - domain_trans[k];
+  }
+  se.set_map1(map1);
+  se.set_map2(toTransformation(expr, indices));
+  _set_edges.push_back(se);
+
+  _edge_offset += domain.maxDimSize() + 1;
   ++_edge_id;
 }
 
@@ -217,19 +247,7 @@ void GenerateSBGInput::addEdges()
       LOG << "Matched exprs for: " << var_name << " in " << eq << std::endl;
       for (const Expression& expr : matched_exprs) {
         LOG << "Expression: " << expr << std::endl;
-        Translation domain_trans{_max_dim, _edge_offset};
-        CompactSet domain = eq_nodes.translate(domain_trans);
-        SetEdge se{_edge_id, domain};
-
-        CompactTransformation map1(_max_dim);
-        for (std::size_t k = 0; k < _max_dim; ++k) {
-          map1.translation(k) = eq_nodes_trans[k] - domain_trans[k];
-        }
-        se.set_map1(map1);
-
-        // se.set_map2(???);
-        // ++_edge_offset;
-        _set_edges.push_back(se);
+        addMaps(expr, eq_nodes, eq_nodes_trans, eq_info.indices());
       }
     }
   }
@@ -265,8 +283,8 @@ void GenerateSBGInput::buildFromModel()
   addVariableNodes();
   addEquationNodes();
   addEdges();
-  //for (auto se : _set_edges)
-  //  std::cout << se << "\n";
+  for (auto s : _set_edges)
+    std::cout << s << "\n";
   generateSBGInput();
 }
 
