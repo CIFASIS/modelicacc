@@ -74,7 +74,7 @@ void AffineTransformation::setRow(std::size_t i, const AffineExpr& expr)
   return std::visit([&](auto& a) { return a.setRow(i, expr); }, _impl);
 }
 
-std::ostringstream AffineTransformation::toSBGFormat() const
+std::string AffineTransformation::toSBGFormat() const
 {
   return std::visit([](const auto& a) { return a.toSBGFormat(); }, _impl);
 }

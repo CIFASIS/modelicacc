@@ -81,7 +81,7 @@ void AffineDiagTransformation::setRow(std::size_t i, const AffineExpr& expr)
   _translation[i] = expr.offset();
 }
 
-std::ostringstream AffineDiagTransformation::toSBGFormat() const
+std::string AffineDiagTransformation::toSBGFormat() const
 {
   std::ostringstream out;
 
@@ -94,7 +94,7 @@ std::ostringstream AffineDiagTransformation::toSBGFormat() const
   }
   out << "|";
 
-  return out;
+  return out.str();
 }
 
 } // namespace detail

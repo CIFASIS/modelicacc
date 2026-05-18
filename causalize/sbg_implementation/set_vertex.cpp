@@ -71,15 +71,15 @@ std::ostream& operator<<(std::ostream& out, const SetVertex& sv)
 
 std::ostream& SetVertex::print(std::ostream& out) const
 {
-  out << _name << ": " << _set.translate(_translation).toSBGFormat().str(); 
+  out << _name << ": " << _set.translate(_translation).toSBGFormat(); 
   return out;
 }
 
-std::ostringstream SetVertex::toSBGFormat() const
+std::string SetVertex::toSBGFormat() const
 {
   std::ostringstream out;
-  out << _set.translate(_translation).toSBGFormat().str();
-  return out;
+  out << _set.translate(_translation).toSBGFormat();
+  return out.str();
 }
 
 void SetVertex::cartesianProduct(const SetVertex& other)

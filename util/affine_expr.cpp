@@ -30,6 +30,7 @@ AffineExpr::AffineExpr(const std::vector<std::string>& order)
   for (const std::string& var_name : order) {
     _slopes[var_name] = 0;
   }
+  _offset = 0;
 }
 
 std::vector<AST::Integer> AffineExpr::slopes() const
@@ -69,12 +70,22 @@ void AffineExpr::set_offset(AST::Integer offset)
   _offset = offset;
 }
 
+AffineExpr AffineExpr::operator+(AST::Integer value) const
+{
+  AffineExpr result{_order};
+
+  result._slopes = _slopes;
+  result._offset = _offset + value;
+
+  return result;
+}
+
 AffineExpr AffineExpr::operator+(const AffineExpr& other) const
 {
   ERROR_UNLESS(arity() == other.arity(), "AffineExpr::operator+: dimensions "
     , "don't match");
 
-  AffineExpr result;
+  AffineExpr result{_order};
 
   for (const std::string& var_name : _order) {
     result._slopes[var_name] = _slopes.at(var_name)
@@ -90,7 +101,7 @@ AffineExpr AffineExpr::operator-(const AffineExpr& other) const
   ERROR_UNLESS(arity() == other.arity(), "AffineExpr::operator-: dimensions "
     , "don't match");
 
-  AffineExpr result;
+  AffineExpr result{_order};
 
   for (const std::string& var_name : _order) {
     result._slopes[var_name] = _slopes.at(var_name)
@@ -103,7 +114,7 @@ AffineExpr AffineExpr::operator-(const AffineExpr& other) const
 
 AffineExpr AffineExpr::operator*(AST::Integer scalar) const
 {
-  AffineExpr result;
+  AffineExpr result{_order};
 
   for (const std::string& var_name : _order) {
     result._slopes[var_name] =  scalar*_slopes.at(var_name);

@@ -67,19 +67,19 @@ HyperRectangle HyperRectangle::translate(const Translation& t) const
   return result;
 }
 
-std::ostringstream HyperRectangle::toSBGFormat() const
+std::string HyperRectangle::toSBGFormat() const
 {
   std::ostringstream out;
 
   unsigned int arity = _starts.size();
   for (unsigned int k = 0; k < arity; ++k) {
     out << "[" << _starts[k] << ":" << _steps[k] << ":" << _ends[k] << "]";
-    if (k < arity - 1) {
+    if (k + 1 < arity) {
       out << "x";
     }
   }
 
-  return out;
+  return out.str();
 }
 
 // Methods ---------------------------------------------------------------------

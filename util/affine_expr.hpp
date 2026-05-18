@@ -47,6 +47,7 @@ public:
   void set_offset(AST::Integer offset);
 
   AffineExpr operator-() const;
+  AffineExpr operator+(AST::Integer value) const;
   AffineExpr operator+(const AffineExpr& other) const;
   AffineExpr operator-(const AffineExpr& other) const;
   AffineExpr operator*(AST::Integer scalar) const;

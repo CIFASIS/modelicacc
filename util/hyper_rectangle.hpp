@@ -45,7 +45,7 @@ public:
   /**
    * @brief Returns a string-like result that is parsable by the SBG parser.
    */
-  std::ostringstream toSBGFormat() const;
+  std::string toSBGFormat() const;
 
   HyperRectangle translate(const Translation& t) const;
   void cartesianProduct(const HyperRectangle& other);
@@ -57,9 +57,6 @@ private:
   std::vector<AST::Integer> _steps;
   std::vector<AST::Integer> _ends;
 };
-
-std::ostringstream& operator<<(std::ostringstream& out
-  , const HyperRectangle& rect);
 
 } // namespace detail
 

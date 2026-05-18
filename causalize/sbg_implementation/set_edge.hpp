@@ -51,7 +51,10 @@ public:
   void set_map1(CompactTransformation map1);
   void set_map2(CompactTransformation map2);
 
-  std::ostringstream toSBGFormat() const;
+  std::string domainToSBGFormat() const;
+  std::string map1ToSBGFormat() const;
+  std::string map2ToSBGFormat() const;
+  std::string toSBGFormat() const;
 
   /**
    * @brief Returns the maximum size between dimensions of the domain. That is,

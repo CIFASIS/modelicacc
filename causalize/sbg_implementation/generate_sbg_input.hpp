@@ -45,10 +45,19 @@ protected:
   void buildEqualitySet(Equality eq, SetVertex& vertex_def);
   void buildForEqSet(ForEq eq, SetVertex vertex_def, IndexList indices);
 
-  CompactTransformation toTransformation(const Expression& expr
-    , const IndexList& order);
-  void addMaps(Expression expr, CompactSet eq_nodes, Translation eq_nodes_trans
-    , const IndexList& order);
+  /**
+   * @brief Creates maps from edgesto equations nodes.
+   */
+  CompactTransformation createMap1(const CompactSet& eq_nodes
+    , const Translation& eq_nodes_trans) const;
+
+  /**
+   * @brief Creates maps from edges to variables nodes.
+   */
+  CompactTransformation createMap2(const Expression& expr
+    , const IndexList& counters, const Translation& var_trans) const;
+  void addMaps(std::string name, CompactSet domain, CompactTransformation map1
+    , CompactTransformation map2);
 
   void setup();
   void addVariableNodes();

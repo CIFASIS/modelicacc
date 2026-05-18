@@ -56,16 +56,32 @@ void SetEdge::set_map2(CompactTransformation map2) { _map2 = map2; }
 
 std::ostream& operator<<(std::ostream& out, const SetEdge& se)
 {
-  out << se.name() << ": " << se.toSBGFormat().str();
+  out << se.name() << ": " << se.toSBGFormat();
 
   return out;
 }
 
 // Methods ---------------------------------------------------------------------
 
-std::ostringstream SetEdge::toSBGFormat() const
+std::string SetEdge::domainToSBGFormat() const
 {
-  return _domain.toSBGFormat();
+  return "{" + _domain.toSBGFormat() + "}";
+}
+
+std::string SetEdge::map1ToSBGFormat() const
+{
+  return _map1.toSBGFormat();
+}
+
+std::string SetEdge::map2ToSBGFormat() const
+{
+  return _map2.toSBGFormat();
+}
+
+std::string SetEdge::toSBGFormat() const
+{
+  return map1ToSBGFormat() + "<-" + _domain.toSBGFormat() + "->"
+    + map2ToSBGFormat();
 }
 
 AST::Integer SetEdge::maxDimSize()

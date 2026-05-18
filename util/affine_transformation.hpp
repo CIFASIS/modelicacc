@@ -57,7 +57,7 @@ public:
 
   void setRow(std::size_t i, const AffineExpr& expr);
 
-  std::ostringstream toSBGFormat() const;
+  std::string toSBGFormat() const;
 
 private:
   using AffTransfImpl = std::variant<AffineDiagTransformation>;

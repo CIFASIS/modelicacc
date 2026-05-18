@@ -55,7 +55,7 @@ public:
    * @brief Prints the corresponding array in SBG program format.
    */
   std::ostream& print(std::ostream& out) const;
-  std::ostringstream toSBGFormat() const;
+  std::string toSBGFormat() const;
 
   void cartesianProduct(const SetVertex& other);
 
