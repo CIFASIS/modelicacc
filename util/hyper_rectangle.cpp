@@ -24,6 +24,7 @@
 #include <boost/variant/get.hpp>
 
 #include <iostream>
+#include <utility>
 
 namespace Modelica {
 
@@ -35,19 +36,17 @@ namespace detail {
 
 HyperRectangle::HyperRectangle() {}
 
-// Getters ---------------------------------------------------------------------
-
-std::size_t HyperRectangle::arity() const { return _starts.size(); }
-
-// Setters ---------------------------------------------------------------------
-
-void HyperRectangle::addDimension(AST::Integer start, AST::Integer step
+HyperRectangle::HyperRectangle(AST::Integer start, AST::Integer step
   , AST::Integer end)
 {
   _starts.push_back(start);
   _steps.push_back(step);
   _ends.push_back(end);
 }
+
+// Getters ---------------------------------------------------------------------
+
+std::size_t HyperRectangle::arity() const { return _starts.size(); }
 
 // Operators -------------------------------------------------------------------
 
@@ -107,36 +106,39 @@ AST::Integer HyperRectangle::maxDimSize() const
 
 } // namespace Util
 
+CompactSet indexToCompactSet(const Index& index, const VarSymbolTable& symbols)
+{
+  OptExp expr = index.exp();
+  if (!expr) {
+    ERROR("indexToCompactSet: empty index");
+  } else if (!is<Range>(expr.get())) {
+    ERROR("indexToCompactSet: only Range expressions supported");
+  }
+
+  EvalExpression eval_expr(symbols);
+  Range expr_range = get<Range>(expr.get());
+  Integer start = Integer(Apply(eval_expr, expr_range.start()));
+  Integer step = 1;
+  Integer end = Integer(Apply(eval_expr, expr_range.end()));
+  if (expr_range.step()) {
+    step = Integer(Apply(eval_expr, expr_range.step().get()));
+  }
+
+  if (start > end) { // Decreasing range
+    ERROR("indexToCompactSet: only increasing Range expressions supported");
+  }
+
+  return CompactSet{start, step, end};
+}
+
 CompactSet indicesToCompactSet(const IndexList& indices
   , const VarSymbolTable& symbols)
 {
   CompactSet result;
 
   for (const Index& index : indices) {
-    OptExp expr = index.exp();
-    if (!expr) {
-      ERROR("indicesToCompactSet: empty index");
-    } 
-    else if (!is<Range>(expr.get())) {
-      ERROR("indicesToCompactSet: only Range expressions supported");
-    }
-
-    // TODO: consider decreasing Interval
-    EvalExpression eval_expr(symbols);
-    Range expr_range = get<Range>(expr.get());
-    Integer start = Integer(Apply(eval_expr, expr_range.start()));
-    Integer step = 1;
-    Integer end = Integer(Apply(eval_expr, expr_range.end()));
-    if (expr_range.step()) {
-      step = Integer(Apply(eval_expr, expr_range.step().get()));
-    }
-
-    result.addDimension(start, step, end);
+    result.cartesianProduct(indexToCompactSet(index, symbols));
   }
-
-  //if (result.arity() < _max_dim) {
-  //  // TODO: fill remaining dimensions
-  //}
 
   return result;
 }

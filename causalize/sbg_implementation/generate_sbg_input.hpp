@@ -40,13 +40,12 @@ public:
   virtual std::string fileName();
 
 protected:
-  Integer getValue(Expression expr) const;
-  void buildSet(const VarInfo& variable, const Name& name);
-  void buildEqualitySet(Equality eq, SetVertex& vertex_def);
-  void buildForEqSet(ForEq eq, SetVertex vertex_def, IndexList indices);
+  void addVariableSet(const VarInfo& variable, const Name& name);
+  void addEqualitySet(SetVertex& vertex_def);
+  void addForEqSet(const ForEq& eq, SetVertex vertex_def, IndexList indices);
 
   /**
-   * @brief Creates maps from edgesto equations nodes.
+   * @brief Creates maps from edges to equations nodes.
    */
   CompactTransformation createMap1(const CompactSet& eq_nodes
     , const Translation& eq_nodes_trans) const;
@@ -56,13 +55,19 @@ protected:
    */
   CompactTransformation createMap2(const Expression& expr
     , const IndexList& counters, const Translation& var_trans) const;
-  void addMaps(std::string name, CompactSet domain, CompactTransformation map1
+  void addMaps(std::string name, CompactSet eq_nodes, CompactTransformation map1
     , CompactTransformation map2);
 
   void setup();
   void addVariableNodes();
   void addEquationNodes();
   void addEdges();
+
+  void generateVSet();
+  void generateVMap();
+  void generateMap1();
+  void generateMap2();
+  void generateEMap();
   void generateSBGInput();
 
 private:

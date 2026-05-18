@@ -49,7 +49,6 @@ public:
   void set_node_id(int node_id);
   void set_name(std::string name);
   void set_translation(Translation t);
-  void addDimension(AST::Integer start, AST::Integer step, AST::Integer end);
 
   /**
    * @brief Prints the corresponding array in SBG program format.
@@ -57,6 +56,7 @@ public:
   std::ostream& print(std::ostream& out) const;
   std::string toSBGFormat() const;
 
+  void cartesianProduct(const CompactSet& s);
   void cartesianProduct(const SetVertex& other);
 
   /**

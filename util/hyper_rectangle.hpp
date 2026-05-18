@@ -37,10 +37,9 @@ namespace detail {
 class HyperRectangle {
 public:
   HyperRectangle();
+  HyperRectangle(AST::Integer start, AST::Integer step, AST::Integer end);
 
   std::size_t arity() const;
-
-  void addDimension(AST::Integer start, AST::Integer step, AST::Integer end);
 
   /**
    * @brief Returns a string-like result that is parsable by the SBG parser.

@@ -52,12 +52,6 @@ void SetVertex::set_name(std::string name) { _name = name; }
 
 void SetVertex::set_translation(Translation t) { _translation = t; }
 
-void SetVertex::addDimension(AST::Integer start, AST::Integer step
-  , AST::Integer end)
-{
-  _set.addDimension(start, step, end);
-}
-
 // Operators -------------------------------------------------------------------
 
 std::ostream& operator<<(std::ostream& out, const SetVertex& sv)
@@ -80,6 +74,11 @@ std::string SetVertex::toSBGFormat() const
   std::ostringstream out;
   out << _set.translate(_translation).toSBGFormat();
   return out.str();
+}
+
+void SetVertex::cartesianProduct(const CompactSet& s)
+{
+  _set.cartesianProduct(s);
 }
 
 void SetVertex::cartesianProduct(const SetVertex& other)

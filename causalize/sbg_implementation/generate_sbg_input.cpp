@@ -52,38 +52,32 @@ std::string GenerateSBGInput::fileName() { return _mmo_class.name()
 
 // Add variable vertices -------------------------------------------------------
 
-Integer GenerateSBGInput::getValue(Expression expr) const
+void GenerateSBGInput::addVariableSet(const VarInfo& variable
+  , const Name& name)
 {
-  VarSymbolTable symbols = _mmo_class.syms();
-  EvalExpression eval_expr(symbols);
-  return Integer(Apply(eval_expr, expr));
-}
-
-void GenerateSBGInput::buildSet(const VarInfo& variable, const Name& name)
-{
-  Option<ExpList> dims = variable.indices();
+  Option<ExpList> dimensions = variable.indices();
   SetVertex set_vertex{_node_id};
   std::size_t k = 0;
-  if (dims) {
-    for (const Expression& d : dims.get()) {
-      Integer d_val = getValue(d);
-      set_vertex.addDimension(1, 1, d_val);
+  if (dimensions) { // Array variable
+    for (const Expression& dim : dimensions.get()) {
+      Integer dim_size = static_cast<Integer>(
+        Apply(EvalExpression{_mmo_class.syms()}, dim));
+      set_vertex.cartesianProduct(CompactSet{1, 1, dim_size});
       ++k;
     }
-    set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
-    _vertex_offset += set_vertex.maxDimSize() + 1;
-  } else {
-    set_vertex.addDimension(1, 1, 1);
-    set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
+  } else { // Scalar variable
+    set_vertex.cartesianProduct(CompactSet{1, 1, 1});
     ++k;
-    ++_vertex_offset;
   }
+  set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
+  _vertex_offset += set_vertex.maxDimSize() + 1;
 
   // Fill remaining dimensions
   for (; k < _max_dim; ++k) {
-    set_vertex.addDimension(1, 1, 1);
+    set_vertex.cartesianProduct(CompactSet{1, 1, 1});
   }
 
+  // Save variable set-vertex
   set_vertex.set_name(name);
   _set_vertices.push_back(set_vertex);
   ++_node_id;
@@ -97,32 +91,30 @@ void GenerateSBGInput::addVariableNodes()
   for (const Name& var_name : variables) {
     VarInfo variable = symbols[var_name].get();
     if (isVariable(var_name, symbols)) {
-      buildSet(variable, var_name);
+      addVariableSet(variable, var_name);
     }
   }
 }
 
 // Add equations vertices ------------------------------------------------------
 
-void GenerateSBGInput::buildEqualitySet(Equality eq, SetVertex& set_vertex)
+void GenerateSBGInput::addEqualitySet(SetVertex& set_vertex)
 {
+  // Fill remaining dimensions
+  for (auto k = set_vertex.arity(); k < _max_dim; ++k) {
+    set_vertex.cartesianProduct(CompactSet{1, 1, 1});
+  }
   set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
   _vertex_offset += set_vertex.maxDimSize() + 1;
 
-  // Fill remaining dimensions
-  for (auto k = set_vertex.arity(); k < _max_dim; ++k) {
-    set_vertex.addDimension(_vertex_offset, 1, _vertex_offset);
-  }
-  ++_vertex_offset;
-
+  // Save equation set-vertex
   set_vertex.set_node_id(_node_id);
-  std::string name = "eq_" + std::to_string(_node_id);
-  set_vertex.set_name(name);
+  set_vertex.set_name("eq_" + std::to_string(_node_id));
   _set_vertices.push_back(set_vertex);
   ++_node_id;
 }
 
-void GenerateSBGInput::buildForEqSet(ForEq eq, SetVertex set_vertex
+void GenerateSBGInput::addForEqSet(const ForEq& eq, SetVertex set_vertex
   , IndexList indices)
 {
   ForEq for_eq = get<ForEq>(eq);
@@ -133,17 +125,17 @@ void GenerateSBGInput::buildForEqSet(ForEq eq, SetVertex set_vertex
   for (const Equation& jth_eq : for_eq.elements()) {
     if (is<Equality>(jth_eq)) {
       Equality equality = get<Equality>(jth_eq);
-      buildEqualitySet(equality, set_vertex);
-
+      addEqualitySet(set_vertex);
+      // Fill remaining dimensions in the indices for affine transformation
       for (std::size_t k = indices.size(); k < _max_dim; ++k) {
         indices.emplace_back("dummy_" + k, Expression{0});
       }
       _equations_info[set_vertex.node_id()]
         = EquationInfo{indices, equality};
     } else if (is<ForEq>(jth_eq)) {
-      buildForEqSet(get<ForEq>(jth_eq), set_vertex, indices);
+      addForEqSet(get<ForEq>(jth_eq), set_vertex, indices);
     } else {
-      ERROR("GenerateSBGInput::buildForEqSet: only equalities and for loops "
+      ERROR("GenerateSBGInput::addForEqSet: only equalities and for loops "
         , "supported\n");
     }
   }
@@ -157,12 +149,12 @@ void GenerateSBGInput::addEquationNodes()
     IndexList indices;
     if (is<ForEq>(eq)) {
       ForEq for_eq = get<ForEq>(eq);
-      buildForEqSet(for_eq, set_vertex, indices);
+      addForEqSet(for_eq, set_vertex, indices);
     } else if (is<Equality>(eq)) {
       Equality equality = get<Equality>(eq);
-      set_vertex.addDimension(1, 1, 1);
-      buildEqualitySet(equality, set_vertex);
-
+      set_vertex.cartesianProduct(CompactSet{1, 1, 1});
+      addEqualitySet(set_vertex);
+      // Fill remaining dimensions in the indices for affine transformation
       IndexList scalar_indices;
       for (std::size_t k = 0; k < _max_dim; ++k) {
         scalar_indices.emplace_back("dummy_" + k, Expression{0});
@@ -193,6 +185,7 @@ CompactTransformation GenerateSBGInput::createMap1(const CompactSet& eq_nodes
 CompactTransformation GenerateSBGInput::createMap2(const Expression& expr
   , const IndexList& counters, const Translation& var_trans) const
 {
+  // Get expression of subscripts 
   assert(is<Reference>(expr));
   Reference occurrence = get<Reference>(expr);
   Ref names = occurrence.ref();
@@ -200,18 +193,19 @@ CompactTransformation GenerateSBGInput::createMap2(const Expression& expr
   ExpList indexes = get<1>(names.front());
   Translation domain_trans{_max_dim, _edge_offset};
 
+  // Get order of counters
   std::vector<std::string> order;
   for (const Index& counter : counters) {
     order.push_back(counter.name());
   }
 
   CompactTransformation t{_max_dim};
-  if (indexes.empty()) {
+  if (indexes.empty()) { // Access to scalar variable
     for (std::size_t k = 0; k < _max_dim; ++k) {
       Util::AffineExpr kth_expr{order};
       t.setRow(k, kth_expr + (var_trans[k] + 1));
     }
-  } else {
+  } else { // Access to array variable
     std::size_t k = 0;
     AffineExprVisitor affine_expr_visitor(_mmo_class.syms(), order);
     for (Expression index : indexes) {
@@ -228,9 +222,11 @@ CompactTransformation GenerateSBGInput::createMap2(const Expression& expr
   return t;
 }
 
-void GenerateSBGInput::addMaps(std::string name, CompactSet domain
+void GenerateSBGInput::addMaps(std::string name, CompactSet eq_nodes 
   , CompactTransformation map1, CompactTransformation map2)
 {
+  Translation domain_trans{_max_dim, _edge_offset};
+  CompactSet domain = eq_nodes.translate(domain_trans);
   SetEdge se{_edge_id, domain};
 
   se.set_name(name);
@@ -277,16 +273,14 @@ void GenerateSBGInput::addEdges()
       for (const Expression& expr : matched_exprs) {
         LOG << "Expression: " << expr << std::endl;
         std::string name = eq_name + "-" + var_name;
-        Translation domain_trans{_max_dim, _edge_offset};
-        CompactSet domain = eq_nodes.translate(domain_trans);
-        addMaps(name, domain, createMap1(eq_nodes, eq_nodes_trans)
+        addMaps(name, eq_nodes, createMap1(eq_nodes, eq_nodes_trans)
           , createMap2(expr, eq_info.indices(), sv.translation()));
       }
     }
   }
 }
 
-// Build SBG -------------------------------------------------------------------
+// Generate SBG program --------------------------------------------------------
 
 void GenerateSBGInput::setup()
 {
@@ -298,7 +292,7 @@ void GenerateSBGInput::setup()
   _node_id = 1;
   _edge_id = 1;
 
-  // Get max dim defined in the model.
+  // Get maximum dimension  between the arrays of variables defined in the model
   for (Name var_name : variables) {
     VarInfo variable = symbols[var_name].get();
     if (isVariable(var_name, symbols)) {
@@ -319,67 +313,90 @@ void GenerateSBGInput::buildFromModel()
   generateSBGInput();
 }
 
+void GenerateSBGInput::generateVSet()
+{
+  _sbg_input << "V: {";
+  std::size_t size = _set_vertices.size();
+  std::size_t j = 1;
+  for (const SetVertex& sv : _set_vertices) {
+    _sbg_input << sv.toSBGFormat() << ((j < size) ? ", " : "");
+    ++j;
+  }
+  _sbg_input << "}" << std::endl;
+}
+
+void GenerateSBGInput::generateVMap()
+{
+  _sbg_input << "Vmap: <<";
+  std::size_t size = _set_vertices.size();
+  std::size_t j = 1;
+  for (const SetVertex& sv : _set_vertices) {
+    _sbg_input << "{" << sv.toSBGFormat() << "} -> ";
+    for (std::size_t k = 0; k + 1 < _max_dim; ++k) {
+      _sbg_input << "|0*x+" << j;
+    }
+    _sbg_input << "|0*x+" << j;
+    _sbg_input << ((j < size) ? "|, " : "|");
+    ++j;
+  }
+  _sbg_input << ">>" << std::endl;
+}
+
+void GenerateSBGInput::generateMap1()
+{
+  _sbg_input << "map1: <<";
+  std::size_t size = _set_edges.size();
+  std::size_t j = 1;
+  for (const SetEdge& se : _set_edges) {
+    _sbg_input << se.domainToSBGFormat() << " -> ";
+    _sbg_input << se.map1ToSBGFormat();
+    _sbg_input << ((j < size) ? ", " : "");
+    ++j;
+  }
+  _sbg_input << ">>" << std::endl;
+}
+
+void GenerateSBGInput::generateMap2()
+{
+  _sbg_input << "map2: <<";
+  std::size_t size = _set_edges.size();
+  std::size_t j = 1;
+  for (const SetEdge& se : _set_edges) {
+    _sbg_input << se.domainToSBGFormat() << " -> ";
+    _sbg_input << se.map2ToSBGFormat();
+    _sbg_input << ((j < size) ? ", " : "");
+    ++j;
+  }
+  _sbg_input << ">>" << std::endl;
+}
+
+void GenerateSBGInput::generateEMap()
+{
+  _sbg_input << "Emap: <<";
+  std::size_t size = _set_edges.size();
+  std::size_t j = 1;
+  for (const SetEdge& se : _set_edges) {
+    _sbg_input << se.domainToSBGFormat() << " -> ";
+    for (std::size_t k = 0; k + 1 < _max_dim; ++k) {
+      _sbg_input << "|0*x+" << j;
+    }
+    _sbg_input << "|0*x+" << j;
+    _sbg_input << ((j < size) ? "|, " : "|");
+    ++j;
+  }
+  _sbg_input << ">>" << std::endl;
+}
+
 void GenerateSBGInput::generateSBGInput()
 {
   _sbg_input << "dims = " << _max_dim << ";\n";
 
   _sbg_input << "causalize(" << std::endl;
-
-  _sbg_input << "V: {";
-  unsigned long size = 1;
-  for (const SetVertex& sv : _set_vertices) {
-    _sbg_input << sv.toSBGFormat()
-      << ((size < _set_vertices.size()) ? ", " : "");
-    ++size;
-  }
-  _sbg_input << "}" << std::endl;
-
-  _sbg_input << "Vmap: <<";
-  size = 1;
-  for (const SetVertex& sv : _set_vertices) {
-    _sbg_input << "{" << sv.toSBGFormat() << "} -> ";
-    for (std::size_t k = 0; k + 1 < _max_dim; ++k) {
-      _sbg_input << "|0*x+" << size;
-    }
-    _sbg_input << "|0*x+" << size;
-    _sbg_input << ((size < _set_vertices.size()) ? "|, " : "|");
-    ++size;
-  }
-  _sbg_input << ">>" << std::endl;
-
-  _sbg_input << "map1: <<";
-  size = 1;
-  for (const SetEdge& se : _set_edges) {
-    _sbg_input << se.domainToSBGFormat() << " -> ";
-    _sbg_input << se.map1ToSBGFormat();
-    _sbg_input << ((size < _set_edges.size()) ? ", " : "");
-    ++size;
-  }
-  _sbg_input << ">>" << std::endl;
-
-  _sbg_input << "map2: <<";
-  size = 1;
-  for (const SetEdge& se : _set_edges) {
-    _sbg_input << se.domainToSBGFormat() << " -> ";
-    _sbg_input << se.map2ToSBGFormat();
-    _sbg_input << ((size < _set_edges.size()) ? ", " : "");
-    ++size;
-  }
-  _sbg_input << ">>" << std::endl;
-
-  _sbg_input << "Emap: <<";
-  size = 1;
-  for (const SetEdge& se : _set_edges) {
-    _sbg_input << se.domainToSBGFormat() << " -> ";
-    for (std::size_t k = 0; k + 1 < _max_dim; ++k) {
-      _sbg_input << "|0*x+" << size;
-    }
-    _sbg_input << "|0*x+" << size;
-    _sbg_input << ((size < _set_vertices.size()) ? "|, " : "|");
-    ++size;
-  }
-  _sbg_input << ">>" << std::endl;
-
+  generateVSet();
+  generateVMap();
+  generateMap1();
+  generateMap2();
+  generateEMap();
 
   // TODO: X and Y sets of bipartite SBG
 
