@@ -64,32 +64,6 @@ bool isDebugParam(char *param)
   return false;
 }
 
-void ERROR(const char *format, ...)
-{
-  va_list ap;
-  va_start(ap, format);
-  const char *error_string = "Error: ";
-  char *new_format = new char[sizeof(char) * strlen(error_string) + strlen(format) + 1];
-  strcpy(new_format, error_string);
-  strcat(new_format, format);
-  vfprintf(stderr, new_format, ap);
-  fprintf(stderr, "\n");
-  fflush(stderr);
-  va_end(ap);
-  delete[] new_format;
-  exit(EXIT_FAILURE);
-}
-
-void ERROR_UNLESS(bool condition, const char *format, ...)
-{
-  if (!condition) {
-    va_list ap;
-    va_start(ap, format);
-    ERROR(format, ap);
-    va_end(ap);
-  }
-}
-
 void WARNING(const char *format, ...)
 {
   va_list ap;
