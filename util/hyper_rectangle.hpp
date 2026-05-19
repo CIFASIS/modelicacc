@@ -63,9 +63,6 @@ private:
 
 using CompactSet = Util::detail::HyperRectangle;
 
-CompactSet indicesToCompactSet(const IndexList&indices
-  , const VarSymbolTable& symbols);
-
 } // namespace Modelica
 
 #endif // MODELICACC_UTIL_HYPER_RECTANGLE_HPP_

@@ -23,6 +23,7 @@
 #include "util/affine_expr.hpp"
 #include "util/ast_visitors/affine_expr_visitor.hpp"
 #include "util/ast_visitors/constant_expression.hpp"
+#include "util/ast_visitors/compact_set_visitor.hpp"
 #include "util/ast_visitors/eval_expression.hpp"
 #include "util/ast_visitors/matching_exps.hpp"
 #include "util/logger.hpp"
@@ -98,42 +99,40 @@ void GenerateSBGInput::addVariableNodes()
 
 // Add equations vertices ------------------------------------------------------
 
-void GenerateSBGInput::addEqualitySet(SetVertex& set_vertex)
+void GenerateSBGInput::addEqualitySet(const IndexList& indices
+  , const Equality& equality)
 {
-  // Fill remaining dimensions
-  for (auto k = set_vertex.arity(); k < _max_dim; ++k) {
-    set_vertex.cartesianProduct(CompactSet{1, 1, 1});
+  // Create set for array of equations
+  CompactSetVisitor set_visitor{_mmo_class.syms(), indices};
+  CompactSet set_left = Apply(set_visitor, equality.left());
+  CompactSet set_right = Apply(set_visitor, equality.right());
+  if (false /*set_left != set_right*/) {
+    ERROR("GenerateSBGInput::addEqualitySet: variable access in equation "
+      , equality, " not supported");
   }
+  SetVertex set_vertex{_node_id, set_left};
   set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
   _vertex_offset += set_vertex.maxDimSize() + 1;
 
   // Save equation set-vertex
-  set_vertex.set_node_id(_node_id);
   set_vertex.set_name("eq_" + std::to_string(_node_id));
   _set_vertices.push_back(set_vertex);
   ++_node_id;
 }
 
-void GenerateSBGInput::addForEqSet(const ForEq& eq, SetVertex set_vertex
-  , IndexList indices)
+void GenerateSBGInput::addForEqSet(const ForEq& eq, IndexList indices)
 {
   ForEq for_eq = get<ForEq>(eq);
   IndexList nested_indices = for_eq.range().indexes();
   indices.insert(indices.end(), nested_indices.begin(), nested_indices.end()); 
-  set_vertex.cartesianProduct(SetVertex{_node_id
-    , indicesToCompactSet(indices,  _mmo_class.syms())});
   for (const Equation& jth_eq : for_eq.elements()) {
     if (is<Equality>(jth_eq)) {
       Equality equality = get<Equality>(jth_eq);
-      addEqualitySet(set_vertex);
-      // Fill remaining dimensions in the indices for affine transformation
-      for (std::size_t k = indices.size(); k < _max_dim; ++k) {
-        indices.emplace_back("dummy_" + k, Expression{0});
-      }
-      _equations_info[set_vertex.node_id()]
+      addEqualitySet(indices, equality);
+      _equations_info[_set_vertices.back().node_id()]
         = EquationInfo{indices, equality};
     } else if (is<ForEq>(jth_eq)) {
-      addForEqSet(get<ForEq>(jth_eq), set_vertex, indices);
+      addForEqSet(get<ForEq>(jth_eq), indices);
     } else {
       ERROR("GenerateSBGInput::addForEqSet: only equalities and for loops "
         , "supported\n");
@@ -145,21 +144,19 @@ void GenerateSBGInput::addEquationNodes()
 {
   EquationList eqs = _mmo_class.equations().equations();
   for (const Equation& eq : eqs) {
-    SetVertex set_vertex{_node_id};
     IndexList indices;
     if (is<ForEq>(eq)) {
       ForEq for_eq = get<ForEq>(eq);
-      addForEqSet(for_eq, set_vertex, indices);
+      addForEqSet(for_eq, indices);
     } else if (is<Equality>(eq)) {
-      Equality equality = get<Equality>(eq);
-      set_vertex.cartesianProduct(CompactSet{1, 1, 1});
-      addEqualitySet(set_vertex);
       // Fill remaining dimensions in the indices for affine transformation
       IndexList scalar_indices;
       for (std::size_t k = 0; k < _max_dim; ++k) {
         scalar_indices.emplace_back("dummy_" + k, Expression{0});
       }
-      _equations_info[set_vertex.node_id()]
+      Equality equality = get<Equality>(eq);
+      addEqualitySet(scalar_indices, equality);
+      _equations_info[_set_vertices.back().node_id()]
         = EquationInfo{scalar_indices, equality};
     } else {
       ERROR("GenerateSBGInput::addEquationNodes: only equalities and for loops "

@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_UTIL_AST_VISITORS_AFFINE_EXPR_HPP_
-#define MODELICACC_UTIL_AST_VISITORS_AFFINE_EXPR_HPP_
+#ifndef MODELICACC_UTIL_AST_VISITORS_AFFINE_EXPR_VISITOR_HPP_
+#define MODELICACC_UTIL_AST_VISITORS_AFFINE_EXPR_VISITOR_HPP_
 
 #include "ast/expression.hpp"
 #include "util/affine_expr.hpp"
@@ -70,4 +70,4 @@ protected:
 
 }  // namespace Modelica
 
-#endif // MODELICACC_UTIL_AST_VISITORS_AFFINE_EXPR_HPP_
+#endif // MODELICACC_UTIL_AST_VISITORS_AFFINE_EXPR_VISITOR_HPP_

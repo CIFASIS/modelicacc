@@ -17,6 +17,7 @@ CAUSALIZE_SBG_SRC := \
 	$(UTIL_DIR)/hyper_rectangle.cpp \
 	$(UTIL_DIR)/translation.cpp \
 	$(UTIL_DIR)/ast_visitors/affine_expr_visitor.cpp \
+	$(UTIL_DIR)/ast_visitors/compact_set_visitor.cpp \
 	$(UTIL_DIR)/ast_visitors/constant_expression.cpp \
 	$(UTIL_DIR)/ast_visitors/matching_exps.cpp \
 	$(UTIL_DIR)/affine_expr.cpp \

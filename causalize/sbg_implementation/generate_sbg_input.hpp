@@ -41,8 +41,8 @@ public:
 
 protected:
   void addVariableSet(const VarInfo& variable, const Name& name);
-  void addEqualitySet(SetVertex& vertex_def);
-  void addForEqSet(const ForEq& eq, SetVertex vertex_def, IndexList indices);
+  void addEqualitySet(const IndexList& indices, const Equality& equality);
+  void addForEqSet(const ForEq& eq, IndexList indices);
 
   /**
    * @brief Creates maps from edges to equations nodes.
