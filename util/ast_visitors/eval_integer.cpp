@@ -95,7 +95,8 @@ Integer EvalInteger::operator()(SubEnd v) const
 
 Integer EvalInteger::operator()(BinOp v) const
 {
-  Expression l = v.left(), r = v.right();
+  Expression l = v.left();
+  Expression r = v.right();
   switch (v.op()) {
     case Add: {
       return ApplyThis(l) + ApplyThis(r);
@@ -127,11 +128,12 @@ Integer EvalInteger::operator()(BinOp v) const
     }
 
     default: {
-      ERROR("EvalInteger: BinOp %s not supported.", BinOpTypeName[v.op()]);
-      return 0;
+      ERROR("EvalInteger: BinOp ", v.op(), " not supported");
       break;
     }
   }
+
+  return 0;
 }
 
 Integer EvalInteger::operator()(UnaryOp v) const
@@ -239,7 +241,7 @@ Integer EvalInteger::operator()(Reference v) const
 {
   Ref ref = v.ref();
   ERROR_UNLESS(ref.size() == 1, "EvalInteger: conversion of dotted references "
-    ,"not implemented");
+    , "not implemented");
   Option<ExpList> opt_subs = get<1>(ref[0]);
   ERROR_UNLESS(opt_subs.has_value(), "EvalInteger: conversion of subscripted "
     , "references not implemented");

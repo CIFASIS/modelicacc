@@ -31,18 +31,11 @@
 namespace Modelica {
 
 /**
- * @brief Returns (if possible) an associated compact set in which each element
- * of the arrays accessed by the input AST::Expression is uniquely identified
- * by an element of the compact set. 
+ * @brief Returns (if possible) an associated compact set of an index.
  */
 class CompactSetVisitor : public boost::static_visitor<CompactSet> {
 public:
-  /**
-   * @brief The second argument is an enviroment of declared counters that
-   * are available to use in the expression.
-   */
-  explicit CompactSetVisitor(const VarSymbolTable& symbols
-    , const IndexList& indices);
+  explicit CompactSetVisitor(const VarSymbolTable& symbols);
   CompactSet operator()(Integer v);
   CompactSet operator()(Boolean v);
   CompactSet operator()(AddAll v);
@@ -64,23 +57,12 @@ public:
   CompactSet operator()(Reference);
   CompactSet operator()(Range);
 
-  const std::vector<Name>& order();
-
 protected:
-  /**
-   * @brief Checks if an access can be represented as a compact set.
-   */
-  void checkSupport(std::size_t k, const Expression& expr);
-
   VarSymbolTable _symbols;
   IndexList _env;
 
   Integer _dimension_size; ///< Used in the presence of SubAll
-  std::vector<Name> _order;
 };
-
-CompactSet indicesToCompactSet(const IndexList&indices
-  , const VarSymbolTable& symbols);
 
 }  // namespace Modelica
 

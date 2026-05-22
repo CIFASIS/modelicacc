@@ -41,8 +41,13 @@ public:
 
 protected:
   void addVariableSet(const VarInfo& variable, const Name& name);
-  void addEqualitySet(const IndexList& indices, const Equality& equality);
-  void addForEqSet(const ForEq& eq, IndexList indices);
+
+  /**
+   * @brief Generates an equivalent list of equations to that of
+   * _mmo_class.equations().equations() where each loop has an unique
+   * inner-most equation.
+   */
+  EquationList flatterForEqs() const;
 
   /**
    * @brief Creates maps from edges to equations nodes.
@@ -69,6 +74,7 @@ protected:
   void generateMap2();
   void generateEMap();
   void generateSBGInput();
+  void generatePartition();
 
 private:
   Modelica::MMO_Class& _mmo_class;

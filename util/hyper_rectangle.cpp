@@ -50,20 +50,33 @@ std::size_t HyperRectangle::arity() const { return _starts.size(); }
 
 // Operators -------------------------------------------------------------------
 
-HyperRectangle HyperRectangle::translate(const Translation& t) const
+void HyperRectangle::setUnion(const HyperRectangle& other)
 {
-  std::size_t arity = _starts.size();
-  ERROR_UNLESS(t.arity() == arity, "HyperRectangle::translate: dimensions of "
-    , "hyper-rectangle and translation are different");
-
-  HyperRectangle result = *this;
-
-  for (std::size_t k = 0; k < arity; ++k) {
-    result._starts[k] += t[k];
-    result._ends[k] += t[k];
+  if (_starts.empty()) {
+    _starts = other._starts;
+    _steps = other._steps;
+    _ends = other._ends;
+    return;
   }
 
-  return result;
+  if (other._starts.empty()) {
+    return;
+  }
+
+  if (_starts == other._starts && _steps == other._steps
+    && _ends == other._ends) {
+    return;
+  }
+
+  ERROR("HyperRectangle::union: union of ", toSBGFormat(), " and "
+    , other.toSBGFormat(), " not supported");
+}
+
+void HyperRectangle::cartesianProduct(const HyperRectangle& other)
+{
+  _starts.insert(_starts.end(), other._starts.begin(), other._starts.end());
+  _steps.insert(_steps.end(), other._steps.begin(), other._steps.end());
+  _ends.insert(_ends.end(), other._ends.begin(), other._ends.end());
 }
 
 std::string HyperRectangle::toSBGFormat() const
@@ -83,11 +96,30 @@ std::string HyperRectangle::toSBGFormat() const
 
 // Methods ---------------------------------------------------------------------
 
-void HyperRectangle::cartesianProduct(const HyperRectangle& other)
+void HyperRectangle::reflection()
 {
-  _starts.insert(_starts.end(), other._starts.begin(), other._starts.end());
-  _steps.insert(_steps.end(), other._steps.begin(), other._steps.end());
-  _ends.insert(_ends.end(), other._ends.begin(), other._ends.end());
+  ERROR("HyperRectangle::reflection: not supported yet");
+}
+
+void HyperRectangle::translate(const Translation& t)
+{
+  std::size_t arity = _starts.size();
+  ERROR_UNLESS(t.arity() == arity, "HyperRectangle::translate: dimensions of "
+    , "hyper-rectangle and translation are different");
+
+  for (std::size_t k = 0; k < arity; ++k) {
+    _starts[k] += t[k];
+    _ends[k] += t[k];
+  }
+}
+
+void HyperRectangle::scale(AST::Integer factor)
+{
+  for (std::size_t k = 0; k < arity(); ++k) {
+    _starts[k] *= factor;
+    _steps[k] *= factor;
+    _ends[k] *= factor;
+  }
 }
 
 AST::Integer HyperRectangle::maxDimSize() const

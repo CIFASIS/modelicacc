@@ -46,8 +46,11 @@ public:
    */
   std::string toSBGFormat() const;
 
-  HyperRectangle translate(const Translation& t) const;
+  void setUnion(const HyperRectangle& other);
   void cartesianProduct(const HyperRectangle& other);
+  void reflection();
+  void translate(const Translation& t);
+  void scale(Integer factor);
 
   AST::Integer maxDimSize() const;
 

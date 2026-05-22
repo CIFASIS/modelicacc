@@ -34,14 +34,14 @@ namespace Causalize {
 class EquationInfo {
 public:
   EquationInfo() = default;
-  EquationInfo(AST::IndexList indices, AST::Equality equality);
+  EquationInfo(AST::IndexList indices, AST::Equation equation);
 
   const AST::IndexList& indices() const;
-  const AST::Equality& equality() const;
+  const AST::Equation& equation() const;
 
 private:
   AST::IndexList _indices;
-  AST::Equality _equality;
+  AST::Equation _equation;
 };
 
 } // namespace Causalize

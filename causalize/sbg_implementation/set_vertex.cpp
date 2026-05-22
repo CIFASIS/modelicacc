@@ -63,17 +63,23 @@ std::ostream& operator<<(std::ostream& out, const SetVertex& sv)
 
 // Methods ---------------------------------------------------------------------
 
+bool SetVertex::isVariable() const { return _name.substr(0, 3) != "eq_"; }
+
+bool SetVertex::isEquation() const { return _name.substr(0, 3) == "eq_"; }
+
 std::ostream& SetVertex::print(std::ostream& out) const
 {
-  out << _name << ": " << _set.translate(_translation).toSBGFormat(); 
+  CompactSet copy = _set;
+  copy.translate(_translation);
+  out << _name << ": " << copy.toSBGFormat(); 
   return out;
 }
 
 std::string SetVertex::toSBGFormat() const
 {
-  std::ostringstream out;
-  out << _set.translate(_translation).toSBGFormat();
-  return out.str();
+  CompactSet copy = _set;
+  copy.translate(_translation);
+  return copy.toSBGFormat();
 }
 
 void SetVertex::cartesianProduct(const CompactSet& s)

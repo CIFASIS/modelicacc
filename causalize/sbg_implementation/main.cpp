@@ -113,11 +113,10 @@ int main(int argc, char** argv)
   gen_sbg_input.buildFromModel();
 
   /// Temp hack to test the binaries, hardcoded paths should go on config files.
-  const std::string CAUSALIZE = "./3rd-party/sbg/sb-graph-dev/bin/sbg-eval ";
+  const std::string CAUSALIZE = "./3rd-party/sbg/sb-graph-dev/build/eval/sbg-eval ";
   const std::string DEFAULT_CAUSALIZED_JSON = "./output.json";
   const std::string CAUSALIZED_JSON = mmo_class.name() + "_causalized.json";
-  std::string ARGS = "-f " + gen_sbg_input.fileName() + " > " + mmo_class.name() + "_causalized.sbg; mv " + DEFAULT_CAUSALIZED_JSON +
-                     " ./" + CAUSALIZED_JSON;
+  std::string ARGS = gen_sbg_input.fileName() + " > " + mmo_class.name() + "_causalized.sbg; mv " + DEFAULT_CAUSALIZED_JSON + " ./" + CAUSALIZED_JSON;
   const std::string CAUSALIZE_CMD = CAUSALIZE + ARGS;
 
   int res = std::system(CAUSALIZE_CMD.c_str());

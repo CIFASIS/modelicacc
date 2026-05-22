@@ -50,6 +50,9 @@ public:
   void set_name(std::string name);
   void set_translation(Translation t);
 
+  bool isVariable() const;
+  bool isEquation() const;
+
   /**
    * @brief Prints the corresponding array in SBG program format.
    */
