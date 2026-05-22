@@ -1,0 +1,106 @@
+/*****************************************************************************
+
+    This file is part of Modelica C Compiler.
+
+    Modelica C Compiler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Modelica C Compiler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Modelica C Compiler.  If not, see <http://www.gnu.org/licenses/>.
+
+******************************************************************************/
+
+#include "util/ast_visitors/equation_compact_set.hpp"
+#include "util/debug.hpp"
+#include "util/ast_visitors/compact_set_visitor.hpp"
+
+namespace Modelica {
+
+EquationCompactSet::EquationCompactSet(VarSymbolTable vtable
+  , unsigned int max_dim) : _vtable(vtable), _max_dim(max_dim), _counters() {}
+
+CompactSet EquationCompactSet::operator()(Connect eq)
+{
+  ERROR("EquationCompactSet: Connect not yet supported");
+  return CompactSet{};
+}
+
+CompactSet EquationCompactSet::operator()(Equality eq)
+{
+  CompactSet result;
+
+  // Scalar equations
+  if (_counters.empty()) {
+    for (std::size_t k = 0; k < _max_dim; ++k) {
+      result.cartesianProduct(CompactSet{1, 1, 1});
+    }
+    return result;
+  }
+
+  // Equation arrays; start inserting counters to environment
+  for (const Index& counter : _counters) {
+    OptExp counter_exp = counter.exp();
+    ERROR_UNLESS(counter_exp.has_value(), "EquationCompactSet: for index "
+      , "without definition in ", eq);
+
+    ExpList counter_indices{1, counter.exp().value()};
+    VarInfo counter_info{TypePrefixes{}, counter.name(), Option<Comment>{}
+      , Option<Modification>{}, Option<ExpList>{counter_indices}
+      , false};
+    _vtable[counter.name()] = counter_info;
+  }
+
+  // Calculate set for counters
+  CompactSetVisitor set_visitor{_vtable};
+  for (const Index& counter : _counters) {
+    result.cartesianProduct(Apply(set_visitor, counter.exp().value()));
+  }
+
+  // Fill remaining dimensions
+  for (std::size_t k = _counters.size(); k < _max_dim; ++k) {
+    result.cartesianProduct(CompactSet{1, 1, 1});
+  }
+
+  // TODO: check that expressions in equations are compatible with the result
+  // and rotate if necessary
+
+  return result;
+}
+
+CompactSet EquationCompactSet::operator()(CallEq eq)
+{
+  ERROR("EquationCompactSet: trying to convert a CallEq");
+  return CompactSet{};
+}
+
+CompactSet EquationCompactSet::operator()(ForEq eq)
+{
+  IndexList for_indices = eq.range().indexes();
+  _counters.insert(_counters.end(), for_indices.begin(), for_indices.end());
+  EquationList eq_elems = eq.elements();
+  ERROR_UNLESS(eq_elems.size() == 1, "EquationCompactSet: ForEq should be "
+    , "composed by a singleton list");
+
+  return ApplyThis(eq_elems.front());
+}
+
+CompactSet EquationCompactSet::operator()(IfEq eq)
+{
+  ERROR("EquationCompactSet: trying to convert an IfEq");
+  return CompactSet{};
+}
+
+CompactSet EquationCompactSet::operator()(WhenEq eq)
+{
+  ERROR("EquationCompactSet: trying to convert a WhenEq");
+  return CompactSet{};
+}
+
+} // namespace Modelica
