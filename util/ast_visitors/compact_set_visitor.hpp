@@ -21,7 +21,7 @@
 #define MODELICACC_UTIL_AST_VISITORS_COMPACT_SET_VISITOR_HPP_
 
 #include "ast/expression.hpp"
-#include "util/hyper_rectangle.hpp"
+#include "util/compact_set.hpp"
 #include "util/table.hpp"
 
 #include <boost/variant/static_visitor.hpp>

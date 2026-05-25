@@ -21,7 +21,7 @@
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_VERTEX_HPP_
 
 #include "ast/expression.hpp"
-#include "util/hyper_rectangle.hpp"
+#include "util/compact_set.hpp"
 
 #include <iosfwd>
 #include <sstream>
@@ -38,7 +38,7 @@ namespace Causalize {
 class SetVertex {
 public:
   SetVertex(int node_id);
-  SetVertex(int node_id, CompactSet rect);
+  SetVertex(int node_id, CompactSet s);
 
   int node_id() const;
   std::size_t arity() const;
@@ -62,11 +62,7 @@ public:
   void cartesianProduct(const CompactSet& s);
   void cartesianProduct(const SetVertex& other);
 
-  /**
-   * @brief Returns the maximum size between dimensions. That is, if the array
-   * was declared: Type x[n1, ..., nk]; it returns max{ni : 0 < i < k+1}.
-   */
-  AST::Integer maxDimSize() const;
+  AST::Integer maxDimPerimetral() const;
 
 private:
   int _node_id;

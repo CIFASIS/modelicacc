@@ -17,27 +17,24 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_UTIL_HYPER_RECTANGLE_HPP_
-#define MODELICACC_UTIL_HYPER_RECTANGLE_HPP_
+#ifndef MODELICACC_UTIL_COMPACT_SET_HPP_
+#define MODELICACC_UTIL_COMPACT_SET_HPP_
 
 #include "ast/expression.hpp"
 #include "util/affine_transformation.hpp"
 #include "util/table.hpp"
 #include "util/translation.hpp"
+#include "sbg/set.hpp"
 
 #include <sstream>
 #include <vector>
 
 namespace Modelica {
 
-namespace Util {
-
-namespace detail {
-
-class HyperRectangle {
+class CompactSet {
 public:
-  HyperRectangle();
-  HyperRectangle(AST::Integer start, AST::Integer step, AST::Integer end);
+  CompactSet();
+  CompactSet(AST::Integer start, AST::Integer step, AST::Integer end);
 
   std::size_t arity() const;
 
@@ -46,26 +43,21 @@ public:
    */
   std::string toSBGFormat() const;
 
-  void setUnion(const HyperRectangle& other);
-  void cartesianProduct(const HyperRectangle& other);
+  void setUnion(const CompactSet& other);
+  void cartesianProduct(const CompactSet& other);
   void reflection();
   void translate(const Translation& t);
   void scale(Integer factor);
 
-  AST::Integer maxDimSize() const;
+  /**
+   * @brief 
+   */
+  AST::Integer maxDimPerimetral() const;
 
 private:
-  std::vector<AST::Integer> _starts;
-  std::vector<AST::Integer> _steps;
-  std::vector<AST::Integer> _ends;
+  SBG::LIB::Set _set;
 };
-
-} // namespace detail
-
-} // namespace Util
-
-using CompactSet = Util::detail::HyperRectangle;
 
 } // namespace Modelica
 
-#endif // MODELICACC_UTIL_HYPER_RECTANGLE_HPP_
+#endif // MODELICACC_UTIL_COMPACT_SET_HPP_

@@ -14,7 +14,7 @@ CAUSALIZE_SBG_SRC := \
     $(CAUSALIZE_SBG_DIR)/set_edge.cpp\
 	$(UTIL_DIR)/affine_transformation.cpp \
 	$(UTIL_DIR)/affine_diag_transformation.cpp \
-	$(UTIL_DIR)/hyper_rectangle.cpp \
+	$(UTIL_DIR)/compact_set.cpp \
 	$(UTIL_DIR)/translation.cpp \
 	$(UTIL_DIR)/ast_visitors/affine_expr_visitor.cpp \
 	$(UTIL_DIR)/ast_visitors/compact_set_visitor.cpp \
@@ -26,7 +26,7 @@ CAUSALIZE_SBG_SRC := \
 # Objects
 CAUSALIZE_SBG_OBJ=$(addprefix $(BUILD_DIR)/, $(CAUSALIZE_SBG_SRC:.cpp=.o))
 
-$(BUILD_DIR)/$(CAUSALIZE_DIR)/sbg_implementation/%.o : $(CAUSALIZE_SBG_DIR)/%.cpp
+$(BUILD_DIR)/$(CAUSALIZE_SBG_DIR)/%.o : $(CAUSALIZE_SBG_DIR)/%.cpp
 	$(CC) $(INCLUDES) $(BOOST_1_81_INC) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
 	$(CC) $(INCLUDES) $(BOOST_1_81_INC) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
 

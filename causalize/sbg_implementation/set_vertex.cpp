@@ -29,8 +29,8 @@ namespace Causalize {
 
 SetVertex::SetVertex(int node_id) : _node_id(node_id) {}
 
-SetVertex::SetVertex(int node_id, CompactSet rect)
-  : _node_id(node_id), _set(rect) {}
+SetVertex::SetVertex(int node_id, CompactSet s)
+  : _node_id(node_id), _set(s), _translation(s.arity()) {}
 
 // Getters ---------------------------------------------------------------------
 
@@ -85,6 +85,7 @@ std::string SetVertex::toSBGFormat() const
 void SetVertex::cartesianProduct(const CompactSet& s)
 {
   _set.cartesianProduct(s);
+  std::cout << _set.toSBGFormat() << "\n";
 }
 
 void SetVertex::cartesianProduct(const SetVertex& other)
@@ -92,9 +93,9 @@ void SetVertex::cartesianProduct(const SetVertex& other)
   _set.cartesianProduct(other._set);
 }
 
-AST::Integer SetVertex::maxDimSize() const
+AST::Integer SetVertex::maxDimPerimetral() const
 {
-  return _set.maxDimSize();
+  return _set.maxDimPerimetral();
 }
 
 } // namespace Causalize

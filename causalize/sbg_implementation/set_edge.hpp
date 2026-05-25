@@ -22,7 +22,7 @@
 
 #include "ast/expression.hpp"
 #include "util/affine_transformation.hpp"
-#include "util/hyper_rectangle.hpp"
+#include "util/compact_set.hpp"
 
 #include <iosfwd>
 #include <sstream>
@@ -56,13 +56,7 @@ public:
   std::string map2ToSBGFormat() const;
   std::string toSBGFormat() const;
 
-  /**
-   * @brief Returns the maximum size between dimensions of the domain. That is,
-   * if the array of equations was declared:
-   * for i1 in range1, ..., ik in rangek loop it returns
-   * max{rangei : 0 < i < k+1}.
-   */
-  AST::Integer maxDimSize();
+  AST::Integer maxDimPerimetral();
 
 private:
   int _edge_id;

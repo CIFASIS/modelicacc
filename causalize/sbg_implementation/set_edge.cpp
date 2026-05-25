@@ -30,7 +30,7 @@ namespace Causalize {
 SetEdge::SetEdge(int edge_id, std::size_t arity)
   : _edge_id(edge_id), _arity(arity), _map1(arity), _map2(arity) {}
 
-SetEdge::SetEdge(int edge_id, Util::detail::HyperRectangle domain)
+SetEdge::SetEdge(int edge_id, CompactSet domain)
   : _edge_id(edge_id), _domain(domain), _arity(domain.arity())
     , _map1(domain.arity()), _map2(domain.arity()) {}
 
@@ -65,7 +65,7 @@ std::ostream& operator<<(std::ostream& out, const SetEdge& se)
 
 std::string SetEdge::domainToSBGFormat() const
 {
-  return "{" + _domain.toSBGFormat() + "}";
+  return _domain.toSBGFormat();
 }
 
 std::string SetEdge::map1ToSBGFormat() const
@@ -84,9 +84,9 @@ std::string SetEdge::toSBGFormat() const
     + map2ToSBGFormat();
 }
 
-AST::Integer SetEdge::maxDimSize()
+AST::Integer SetEdge::maxDimPerimetral()
 {
-  return _domain.maxDimSize();
+  return _domain.maxDimPerimetral();
 }
 
 } // namespace Causalize
