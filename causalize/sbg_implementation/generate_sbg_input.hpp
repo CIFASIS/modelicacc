@@ -18,7 +18,7 @@
 ******************************************************************************/
 
 #include "causalize/sbg_implementation/equation_info.hpp"
-#include "util/hyper_rectangle.hpp"
+#include "util/compact_set.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
 

@@ -39,7 +39,11 @@ CompactSet EquationCompactSet::operator()(Equality eq)
   // Scalar equations
   if (_counters.empty()) {
     for (std::size_t k = 0; k < _max_dim; ++k) {
-      result.cartesianProduct(CompactSet{1, 1, 1});
+      if (k == 0) {
+        result = CompactSet{1, 1, 1};
+      } else {
+        result.cartesianProduct(CompactSet{1, 1, 1});
+      }
     }
     return result;
   }
@@ -57,10 +61,16 @@ CompactSet EquationCompactSet::operator()(Equality eq)
     _vtable[counter.name()] = counter_info;
   }
 
-  // Calculate set for counters
+  // Calculate set for counters with new environment
   CompactSetVisitor set_visitor{_vtable};
+  std::size_t k = 0;
   for (const Index& counter : _counters) {
-    result.cartesianProduct(Apply(set_visitor, counter.exp().value()));
+    if (k == 0) {
+      result = Apply(set_visitor, counter.exp().value());
+    } else {
+      result.cartesianProduct(Apply(set_visitor, counter.exp().value()));
+    }
+    ++k;
   }
 
   // Fill remaining dimensions
@@ -69,7 +79,15 @@ CompactSet EquationCompactSet::operator()(Equality eq)
   }
 
   // TODO: check that expressions in equations are compatible with the result
-  // and rotate if necessary
+  // and rotate if necessary. Only 1D supported.
+  //for (/*each state variable*/) {
+  //  MatchingExps matching_exprs(var_name, isState(var_name, _vtable));
+  //  Apply(matching_exprs, eq.left());
+  //  Apply(matching_exprs, eq.right());
+  //  std::set<Expression> matched_exprs = matching_exprs.matchedExps();
+  //  for (const Expression& expr : matched_exprs) {
+  //  }
+  //}
 
   return result;
 }

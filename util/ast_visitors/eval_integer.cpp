@@ -243,8 +243,8 @@ Integer EvalInteger::operator()(Reference v) const
   ERROR_UNLESS(ref.size() == 1, "EvalInteger: conversion of dotted references "
     , "not implemented");
   Option<ExpList> opt_subs = get<1>(ref[0]);
-  ERROR_UNLESS(opt_subs.has_value(), "EvalInteger: conversion of subscripted "
-    , "references not implemented");
+  ERROR_UNLESS(opt_subs.has_value() ? opt_subs.value().empty() : true
+    , "EvalInteger: conversion of subscripted references not implemented ", v);
   Name v_name = get<0>(ref[0]);
 
   if (_name && _name.value() == v_name) {

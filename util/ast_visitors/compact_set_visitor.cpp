@@ -181,10 +181,38 @@ CompactSet CompactSetVisitor::operator()(Output v)
 
 CompactSet CompactSetVisitor::operator()(Reference v)
 {
-  WARNING("CompactSet: Reference not fully supported yet");
-  EvalInteger eval_int{_symbols};
-  Integer value = Apply(eval_int, Expression{v});
-  return CompactSet{value, 1, value};
+  CompactSet result;
+
+  Ref ref = v.ref();
+  ERROR_UNLESS(ref.size() == 1, "CompactSetVisitor: conversion of dotted "
+    , "references not implemented");
+  Option<ExpList> opt_subs = get<1>(ref[0]);
+  ERROR_UNLESS(opt_subs.has_value() ? opt_subs.value().empty() : true
+    , "CompactSetVisitor: conversion of subscripted references not implemented");
+
+  if (!opt_subs) { // Non-subscripted access
+    Name v_name = get<0>(ref[0]);
+    ERROR_UNLESS(_symbols[v_name].has_value(), "CompactSetVisitor: variable "
+      , v, " not found");
+    Option<ExpList> v_indices = _symbols[v_name].value().indices();
+    if (v_indices) { // Access to array variable
+      std::size_t k = 0;
+      for (const Expression& index : v_indices.value()) {
+        if (k == 0) {
+          result = ApplyThis(index);
+        } else {
+          result.cartesianProduct(ApplyThis(index));
+        }
+        ++k;
+      }
+    } else { // Access to scalar variable
+      EvalInteger eval_int{_symbols};
+      Integer value = Apply(eval_int, Expression{v});
+      result = CompactSet{value, 1, value};
+    }
+  }
+
+  return result;
 }
 
 CompactSet CompactSetVisitor::operator()(BinOp v)

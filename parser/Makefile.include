@@ -25,7 +25,3 @@ OBJS_PARSER= $(SRC_PARSER:.cpp=.o)
 
 bin/parser: $(OBJS_PARSER) $(LIBMODELICA)
 	$(CXX) $(CXXFLAGS) -o bin/parser $(OBJS_PARSER) -L./lib -lmodelica
-
-
-
-	

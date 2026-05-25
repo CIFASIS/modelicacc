@@ -57,26 +57,35 @@ std::string GenerateSBGInput::fileName() { return _mmo_class.name()
 void GenerateSBGInput::addVariableSet(const VarInfo& variable
   , const Name& name)
 {
-  SetVertex set_vertex{_node_id};
+  CompactSet var_set;
   std::size_t var_dimensions = 0;
   Option<ExpList> dimensions = variable.indices();
   EvalInteger eval_int{_mmo_class.syms()};
   if (dimensions) {
+    std::size_t k = 0;
     for (const Expression& dimension : dimensions.value()) {
       Integer value = Apply(eval_int, dimension);
-      set_vertex.cartesianProduct(CompactSet{1, 1, value});
+      if (k == 0) {
+        var_set = CompactSet{1, 1, value};
+      } else {
+        var_set.cartesianProduct(CompactSet{1, 1, value});
+      }
+      ++k;
     }
     var_dimensions = dimensions.value().size();
+  } else {
+    var_set = CompactSet{1, 1, 1};
   }
 
   // Fill remaining dimensions
+  SetVertex set_vertex{_node_id, var_set};
   for (std::size_t k = var_dimensions; k < _max_dim; ++k) {
     set_vertex.cartesianProduct(CompactSet{1, 1, 1});
   }
 
   // Translate to avoid repeating nodes values
   set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
-  _vertex_offset += set_vertex.maxDimSize() + 1;
+  _vertex_offset += set_vertex.maxDimPerimetral();
 
   // Save variable set-vertex
   set_vertex.set_name(name);
@@ -184,7 +193,7 @@ void GenerateSBGInput::addEquationNodes()
 
     // Translate to avoid repeating nodes values
     set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
-    _vertex_offset += set_vertex.maxDimSize() + 1;
+    _vertex_offset += set_vertex.maxDimPerimetral();
 
     // Save equation set-vertex
     set_vertex.set_name("eq_" + std::to_string(_node_id));
@@ -262,7 +271,7 @@ void GenerateSBGInput::addMaps(std::string name, CompactSet eq_nodes
   se.set_map2(map2);
   _set_edges.push_back(se);
 
-  _edge_offset += domain.maxDimSize() + 1;
+  _edge_offset += eq_nodes.maxDimPerimetral();
   ++_edge_id;
 }
 
@@ -344,14 +353,14 @@ void GenerateSBGInput::buildFromModel()
 
 void GenerateSBGInput::generateVSet()
 {
-  _sbg_input << "V: {";
-  std::size_t size = _set_vertices.size();
-  std::size_t j = 1;
+  _sbg_input << "V: ";
+  CompactSet V;
   for (const SetVertex& sv : _set_vertices) {
-    _sbg_input << sv.toSBGFormat() << ((j < size) ? ", " : "");
-    ++j;
+    CompactSet jth_set = sv.set();
+    jth_set.translate(sv.translation());
+    V.setUnion(jth_set);
   }
-  _sbg_input << "}" << std::endl;
+  _sbg_input << V.toSBGFormat() << std::endl;
 }
 
 void GenerateSBGInput::generateVMap()
@@ -360,7 +369,7 @@ void GenerateSBGInput::generateVMap()
   std::size_t size = _set_vertices.size();
   std::size_t j = 1;
   for (const SetVertex& sv : _set_vertices) {
-    _sbg_input << "{" << sv.toSBGFormat() << "} -> ";
+    _sbg_input << sv.toSBGFormat() << " -> ";
     for (std::size_t k = 0; k + 1 < _max_dim; ++k) {
       _sbg_input << "|0*x+" << j;
     }
@@ -418,41 +427,41 @@ void GenerateSBGInput::generateEMap()
 
 void GenerateSBGInput::generatePartition()
 {
-  std::string X = "X: {";
+  _sbg_input << "X: ";
+  CompactSet X;
   for (const SetVertex& sv : _set_vertices) {
     if (sv.isEquation()) {
-      X.append(sv.toSBGFormat() + ", ");
+      CompactSet jth_set = sv.set();
+      jth_set.translate(sv.translation());
+      X.setUnion(jth_set);
     }
   }
-  X = X.substr(0, X.size() - 2);
-  X.append("}");
-  _sbg_input << X << std::endl;
+  _sbg_input << X.toSBGFormat() << std::endl;
 
-  std::string Y = "Y: {";
+  _sbg_input << "Y: ";
+  CompactSet Y;
   for (const SetVertex& sv : _set_vertices) {
     if (sv.isVariable()) {
-      Y.append(sv.toSBGFormat() + ", ");
+      CompactSet jth_set = sv.set();
+      jth_set.translate(sv.translation());
+      Y.setUnion(jth_set);
     }
   }
-  Y = Y.substr(0, Y.size() - 2);
-  Y.append("}");
-  _sbg_input << Y;
+  _sbg_input << Y.toSBGFormat();
 }
 
 void GenerateSBGInput::generateSBGInput()
 {
   _sbg_input << "dims = " << _max_dim << ";\n";
 
-  //_sbg_input << "causalize(" << std::endl;
+  _sbg_input << "causalize(" << std::endl;
   generateVSet();
   generateVMap();
   generateMap1();
   generateMap2();
   generateEMap();
   generatePartition();
-  _sbg_input << ";\n";
-
-  //_sbg_input << ", 1);" << std::endl;
+  _sbg_input << ", 1);" << std::endl;
 
   _sbg_input.close();
 }
