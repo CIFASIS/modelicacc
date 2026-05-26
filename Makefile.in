@@ -1,5 +1,5 @@
 # Target variables
-MODE ?= Debug
+MODE ?= Release
 sbg_branch ?= sb-graph-dev
 build_sbg ?= True
 repo_checkout=ssh
@@ -9,7 +9,6 @@ ROOT   	        := .
 3RD_PARTY_DIR   := $(ROOT)/3rd-party
 GTEST_DIR       := googletest-release-1.12.1
 GTEST_CODE      := $(GTEST_DIR).tar.gz
-BUILD_DIR       := 
 BUILD_DIR    	:= $(ROOT)/obj/release
 ifeq ($(MODE),Debug)
 BUILD_DIR    	:= $(ROOT)/obj/debug
@@ -18,6 +17,7 @@ AST_DIR         := ast
 PARSER_DIR      := parser
 SBG_LIB         := sbg
 SBG_DEV         := sb-graph-dev
+SBG_DEV_DIR     := $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)
 SBG_1_0_0       := sb-graph-1.0.0
 BOOST_LIB_PATH  := $(3RD_PARTY_DIR)/boost
 BOOST_1_81      := boost-1.81.0
@@ -26,19 +26,20 @@ BOOST_1_81_INC  := -I$(BOOST_LIB_PATH)/$(BOOST_1_81)/include
 
 
 # Flags, Libraries and Includes
-SBG_LIB_DEV_INCLUDE := -I$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/usr/include
+SBG_LIB_DEV_INCLUDE := -I$(SBG_DEV_DIR)
 SBG_LIB_1_0_0_INCLUDE := -I$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0)/usr/include
 INCLUDES := -I.
-CXXFLAGS := -std=c++17 -Wall  -Wno-reorder -O3 
+CXXFLAGS := -std=c++17 -Wall  -Wno-reorder -O3
 ifeq ($(MODE),Debug)
 CXXFLAGS 	+= -ggdb  
 endif
 LIBMODELICA = lib/libmodelica.a
 LIBS     := -L./lib -lginac -lmodelica
-SBG_LIB_DEV_LINK := -L$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/usr/lib -lsbgraph
+SBG_LIB_DEV_LINK := -L$(SBG_DEV_DIR)/build -lsbgraph -L$(SBG_DEV_DIR)/build/sbg -lsbg-dev
 SBG_LIB_1_0_0_LINK := -L$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0)/usr/lib -lsbgraph
 
-all: $(LIBMODELICA)
+all: update-sbg $(LIBMODELICA)
+update-sbg: sbg_branch = iss-87-refine-interfaces
 
 include antialias/Makefile.include
 include mmo/Makefile.include
@@ -65,9 +66,21 @@ COMMON_SRC := \
 # Objects
 COMMON_OBJ=$(addprefix $(BUILD_DIR)/, $(COMMON_SRC:.cpp=.o))
 
+$(BUILD_DIR)/util/compact_set.o : util/compact_set.cpp
+	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
+
+$(BUILD_DIR)/util/ast_visitors/compact_set_visitor.o : util/ast_visitors/compact_set_visitor.cpp
+	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
+
+$(BUILD_DIR)/util/ast_visitors/equation_compact_set.o : util/ast_visitors/equation_compact_set.cpp
+	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
+
 $(BUILD_DIR)/%.o : %.cpp
-	$(CC) $(INCLUDES) $(SBG_LIB_1_0_0_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
-	$(CC) $(INCLUDES) $(SBG_LIB_1_0_0_INCLUDE) -c $< -o $@ $(CXXFLAGS)
+	$(CC) $(INCLUDES) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES) -c $< -o $@ $(CXXFLAGS)
 
 $(COMMON_OBJ): | create-folders
 
@@ -93,11 +106,9 @@ ifeq ("$(wildcard $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV))","")
 	make update-sbg
 endif
 ifeq ($(build_sbg), True)
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); autoconf
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); ./configure
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); make boost_libdir=../../boost/$(BOOST_1_81)
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); mkdir -p usr
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); make install prefix=./usr
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); mkdir -p build
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/build; cmake ..
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/build; make
 endif
 
 $(LIBMODELICA): $(COMMON_OBJ) lib-sbg | create-folders

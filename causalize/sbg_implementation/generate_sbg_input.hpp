@@ -17,59 +17,78 @@
 
 ******************************************************************************/
 
+#include "causalize/sbg_implementation/equation_info.hpp"
+#include "util/compact_set.hpp"
+#include "causalize/sbg_implementation/set_edge.hpp"
+#include "causalize/sbg_implementation/set_vertex.hpp"
+
 #include <fstream>
 #include <iostream>
+#include <string>
 
 #include <mmo/mmo_class.hpp>
+
+namespace Modelica {
 
 namespace Causalize {
 
 class GenerateSBGInput {
-  public:
+public:
   explicit GenerateSBGInput(Modelica::MMO_Class& mmo_class);
   virtual ~GenerateSBGInput() = default;
   virtual void buildFromModel();
   virtual std::string fileName();
 
-  protected:
+protected:
+  void addVariableSet(const VarInfo& variable, const Name& name);
+
+  /**
+   * @brief Generates an equivalent list of equations to that of
+   * _mmo_class.equations().equations() where each loop has an unique
+   * inner-most equation.
+   */
+  EquationList flatterForEqs() const;
+
+  /**
+   * @brief Creates maps from edges to equations nodes.
+   */
+  CompactTransformation createMap1(const CompactSet& eq_nodes
+    , const Translation& eq_nodes_trans) const;
+
+  /**
+   * @brief Creates maps from edges to variables nodes.
+   */
+  CompactTransformation createMap2(const Expression& expr
+    , const IndexList& counters, const Translation& var_trans) const;
+  void addMaps(std::string name, CompactSet eq_nodes, CompactTransformation map1
+    , CompactTransformation map2);
+
   void setup();
   void addVariableNodes();
-  void addEquationInfo(const std::string& eq_name, Equality eq, IndexList indexes, int node_id);
   void addEquationNodes();
   void addEdges();
+
+  void generateVSet();
+  void generateVMap();
+  void generateMap1();
+  void generateMap2();
+  void generateEMap();
   void generateSBGInput();
-  void buildSet(const VarInfo& variable, int node_id);
-  void buildSet(Equation eq, const std::string& eq_id, int offset, Indexes range = IndexList());
-  Integer getValue(Expression exp) const;
-  void addDef(int node_id, int end, int dim = -1, int step = 1);
-  void addOffset(int edge_id, const std::string& map, int constant, int slope, int dim = -1);
-  void generatePWLMaps(Expression exp, const std::string& eq_id, int edge_id);
-  void addIndexRange(IndexList range, const std::string& eq_id, int node_id);
-  Integer getMin(const Index& idx) const;
-  Integer getSize(const Index& idx) const;
-  Integer getSize(const IndexList& dom) const;
-  void addEdgeDef(int edge_id, int end, int dim = -1);
-  void generateEdgeMap(const std::string& map_name, const std::string& map_idx, bool fixed_slopes = false);
+  void generatePartition();
 
-  private:
-  using Usage = std::map<std::string, int, std::less<>>;
-  using EqUsage = std::map<std::string, Usage, std::less<>>;
-
+private:
   Modelica::MMO_Class& _mmo_class;
-  std::list<std::string> _V;
-  std::list<std::string> _E;
-  std::map<std::string, Equality, std::less<>> _eqs;
-  std::map<std::string, IndexList, std::less<>> _eq_range;
-  std::map<std::string, int, std::less<>> _var_nodes;
-  std::map<std::string, int, std::less<>> _eq_nodes;
-  EqUsage _eq_usage;
-  std::list<std::string> _V_map;
-  std::list<std::string> _offsets;
+  unsigned int _max_dim;
+  std::vector<SetVertex> _set_vertices;
+  std::map<int, EquationInfo> _equations_info;
+  std::vector<SetEdge> _set_edges;
+  int _node_id; ///< Counter for set-vertices
+  int _edge_id; ///< Counter for set-edges
+  Integer _vertex_offset; ///< Current vertex offset
+  Integer _edge_offset; ///< Current edge offset
   std::ofstream _sbg_input;
-  std::vector<int> _m1_slopes;
-  unsigned long _max_dim;
-  int _node_id;
-  int _edge_id;
 };
 
-}  // namespace Causalize
+} // namespace Causalize
+
+} // namespace Modelica

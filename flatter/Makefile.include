@@ -33,6 +33,10 @@ FLATTER_SRC := \
 # Objects
 FLATTER_OBJ=$(addprefix $(BUILD_DIR)/, $(FLATTER_SRC:.cpp=.o))
 
+$(BUILD_DIR)/flatter/%.o : flatter/%.cpp
+	$(CC) $(INCLUDES) $(SBG_LIB_1_0_0_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES) $(SBG_LIB_1_0_0_INCLUDE) -c $< -o $@ $(CXXFLAGS)
+
 create-folders::
 	@mkdir -p $(BUILD_DIR)/$(FLATTER_DIR)
 	@mkdir -p $(BUILD_DIR)/$(UTIL_DIR)

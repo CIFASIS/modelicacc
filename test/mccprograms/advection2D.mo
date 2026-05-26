@@ -35,7 +35,7 @@ model advection2D
     // Rest of the grid.
     for i in 2:N, j in 2:N loop
       der(u[i, j])=-ax*(u[i,j] - u[i,j-1])/dx - ay*(u[i,j] - u[i-1,j])/dy + r*(u[i,j]^2-u[i,j]^3);
-	    end for;
+	  end for;
 	annotation(
 
 	experiment(
