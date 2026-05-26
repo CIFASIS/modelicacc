@@ -17,6 +17,11 @@
 
 ******************************************************************************/
 
+#ifndef MODELICACC_UTIL_DEBUG_HPP_
+#define MODELICACC_UTIL_DEBUG_HPP_
+
+#include <iostream>
+
 // This debugging routines allow the user to turn on selected
 // debugging messages, controllable from the command line arguments
 // passed to modelicacc after de -d option.
@@ -40,15 +45,30 @@ bool isDebugParam(char *param);
 bool debugIsEnabled(char);
 
 /*
- * Print an ERROR message. Then exits with EXIT_FAILURE status.
+ * @brief Print an ERROR message. Then exits with EXIT_FAILURE status.
  */
-void ERROR(const char *format, ...);
+template<class... Args>
+void ERROR(Args... args)
+{
+  (std::cerr << "ERROR>> " << ... << args);
+  std::cerr << "\n";
+  exit(EXIT_FAILURE);
+}
 
 /**
- * Print an ERROR message if condition is false.
+ * @brief Print an ERROR message if condition is false.
  * Then exits with EXIT_FAILURE status.
  */
-void ERROR_UNLESS(bool condition, const char *format, ...);
+template<class... Args>
+void ERROR_UNLESS(bool cond, Args... args)
+{
+  if (!cond) {
+    (std::cerr << "ERROR>> " << ... << args);
+    std::cerr << "\n";
+    exit(EXIT_FAILURE);
+  }
+}
+
 
 /*
  * Print an Warning message.
@@ -60,3 +80,5 @@ void WARNING(const char *format, ...);
  * Then continues with the execution.
  */
 void WARNING_UNLESS(bool condition, const char *format, ...);
+
+#endif // MODELICACC_UTIL_DEBUG_HPP_

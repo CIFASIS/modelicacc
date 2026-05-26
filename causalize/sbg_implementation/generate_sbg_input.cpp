@@ -17,201 +17,308 @@
 
 ******************************************************************************/
 
+#include "causalize/sbg_implementation/generate_sbg_input.hpp"
+#include "ast/queries.hpp"
+#include "util/affine_transformation.hpp"
+#include "util/affine_expr.hpp"
+#include "util/logger.hpp"
+#include "util/ast_visitors/affine_expr_visitor.hpp"
+#include "util/ast_visitors/compact_set_visitor.hpp"
+#include "util/ast_visitors/equation_compact_set.hpp"
+#include "util/ast_visitors/eval_expression.hpp"
+#include "util/ast_visitors/eval_integer.hpp"
+#include "util/ast_visitors/matching_exps.hpp"
+
+#include <algorithm>
 #include <cmath>
 #include <sstream>
+#include <tuple>
 
-#include <ast/queries.hpp>
-#include <causalize/sbg_implementation/generate_sbg_input.hpp>
-#include <util/ast_visitors/constant_expression.hpp>
-#include <util/ast_visitors/eval_expression.hpp>
-#include <util/ast_visitors/matching_exps.hpp>
-#include <util/ast_visitors/pwl_map_values.hpp>
-#include <util/logger.hpp>
-
-using namespace Modelica;
+namespace Modelica {
 
 namespace Causalize {
-GenerateSBGInput::GenerateSBGInput(MMO_Class& mmo_class) : _mmo_class(mmo_class) {}
 
-std::string GenerateSBGInput::fileName() { return _mmo_class.name() + "_sbg_input.sbg"; }
+////////////////////////////////////////////////////////////////////////////////
+// Generate SBG Input ----------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 
-Integer GenerateSBGInput::getValue(Expression exp) const
+// Constructors/Destructors ----------------------------------------------------
+
+GenerateSBGInput::GenerateSBGInput(MMO_Class& mmo_class)
+  : _mmo_class(mmo_class), _vertex_offset(0), _edge_offset(0) {}
+
+// Getters ---------------------------------------------------------------------
+
+std::string GenerateSBGInput::fileName() { return _mmo_class.name()
+  + "_sbg_input.sbg"; }
+
+// Add variable vertices -------------------------------------------------------
+
+void GenerateSBGInput::addVariableSet(const VarInfo& variable
+  , const Name& name)
 {
+  CompactSet var_set;
+  std::size_t var_dimensions = 0;
+  Option<ExpList> dimensions = variable.indices();
+  EvalInteger eval_int{_mmo_class.syms()};
+  if (dimensions) {
+    std::size_t k = 0;
+    for (const Expression& dimension : dimensions.value()) {
+      Integer value = Apply(eval_int, dimension);
+      if (k == 0) {
+        var_set = CompactSet{1, 1, value};
+      } else {
+        var_set.cartesianProduct(CompactSet{1, 1, value});
+      }
+      ++k;
+    }
+    var_dimensions = dimensions.value().size();
+  } else {
+    var_set = CompactSet{1, 1, 1};
+  }
+
+  // Fill remaining dimensions
+  SetVertex set_vertex{_node_id, var_set};
+  for (std::size_t k = var_dimensions; k < _max_dim; ++k) {
+    set_vertex.cartesianProduct(CompactSet{1, 1, 1});
+  }
+
+  // Translate to avoid repeating nodes values
+  set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
+  _vertex_offset += set_vertex.maxDimPerimetral();
+
+  // Save variable set-vertex
+  set_vertex.set_name(name);
+  _set_vertices.push_back(set_vertex);
+  ++_node_id;
+}
+
+void GenerateSBGInput::addVariableNodes()
+{
+  IdentList variables = _mmo_class.variables();
   VarSymbolTable symbols = _mmo_class.syms();
-  EvalExpression eval_exp(symbols);
-  return Integer(Apply(eval_exp, exp));
-}
 
-void GenerateSBGInput::addDef(int node_id, int end, int dim, int step)
-{
-  std::ostringstream def;
-  std::ostringstream dim_name;
-  if (dim >= 0) {
-    dim_name << "D" << dim;
-  }
-  def << "V" << node_id << dim_name.str() << " = "
-      << "V" << node_id - 1 << dim_name.str() << "+" << end;
-  _offsets.push_back(def.str());
-  def.str("");
-  def << "[V" << node_id - 1 << dim_name.str() << "+1:" << step << ":V" << node_id << dim_name.str() << "]";
-  _V.push_back(def.str());
-}
-
-Integer GenerateSBGInput::getSize(const Index& idx) const
-{
-  OptExp exp = idx.exp();
-  if (!exp || !is<Range>(exp.get())) {
-    ERROR("Only Range expressions supported");
-  }
-  Range range = get<Range>(exp.get());
-  /// @todo Handle step size.
-  return getValue(range.end()) - getValue(range.start()) + 1;
-}
-
-Integer GenerateSBGInput::getSize(const IndexList& dom) const
-{
-  Integer ret = 1;
-  for (const auto& idx : dom) {
-    ret *= getSize(idx);
-  }
-  return ret;
-}
-
-Integer GenerateSBGInput::getMin(const Index& idx) const
-{
-  OptExp exp = idx.exp();
-  if (!exp || !is<Range>(exp.get())) {
-    ERROR("Only Range expressions supported");
-  }
-  Range range = get<Range>(exp.get());
-  return getValue(range.start());
-}
-
-void GenerateSBGInput::addIndexRange(IndexList range, const std::string& eq_id, int node_id)
-{
-  Usage usage;
-  foreach_(Index idx, range)
-  {
-    OptExp exp = idx.exp();
-    if (!exp || !is<Range>(exp.get())) {
-      ERROR("Only Range expressions supported");
+  for (const Name& var_name : variables) {
+    VarInfo variable = symbols[var_name].get();
+    if (isVariable(var_name, symbols)) {
+      addVariableSet(variable, var_name);
     }
-    Range idx_range = get<Range>(exp.get());
-    Integer lower = getValue(idx_range.start());
-    Integer step = 1;
-    Integer upper = getValue(idx_range.end());
-    if (idx_range.step()) {
-      step = getValue(idx_range.step().get());
-    }
-    addDef(node_id, upper - lower + 1, -1, step);
-    usage[idx.name()] = lower;
   }
-  _eq_usage[eq_id] = usage;
 }
 
-/// @todo Handle for-for equations in the same way we do in QSS Solver.
-void GenerateSBGInput::buildSet(Equation eq, const std::string& eq_id, int node_id, Indexes range)
+// Add equations vertices ------------------------------------------------------
+
+namespace detail {
+
+EquationList flatterEq(Equation eq);
+
+EquationList flatterForEq(ForEq for_eq)
 {
-  Usage usage;
-  if (!range.indexes().empty()) {
-    if (is<ForEq>(eq)) {
-      ERROR("Nested for equations not implemented.");
-      return;
+  EquationList result;
+
+  for (const Equation& eq : for_eq.elements()) {
+    EquationList flattened_eq = flatterEq(eq);
+    for (const Equation& nested_eq : flattened_eq) {
+      result.push_back(ForEq{for_eq.range(), EquationList{1, nested_eq}});
     }
-    addIndexRange(range.indexes(), eq_id, node_id);
+  }
+
+  return result;
+}
+
+EquationList flatterEq(Equation eq)
+{
+  EquationList result;
+
+  if (is<ForEq>(eq)) {
+    EquationList flattened_for_eq = flatterForEq(get<ForEq>(eq));
+    result.insert(result.end(), flattened_for_eq.begin()
+      , flattened_for_eq.end());
+  } else {
+    result.push_back(eq);
+  }
+
+  return result;
+}
+
+} // namespace detail
+
+EquationList GenerateSBGInput::flatterForEqs() const
+{
+  EquationList result;
+
+  EquationList eqs = _mmo_class.equations().equations();
+  for (const Equation& eq : eqs) {
+    EquationList flattened_eq = detail::flatterEq(eq);
+    result.insert(result.end(), flattened_eq.begin(), flattened_eq.end());
+  }
+
+  return result;
+}
+
+IndexList getIndices(Equation eq, unsigned int max_dim)
+{
+  if (is<ForEq>(eq)) {
+    return get<ForEq>(eq).range().indexes();
+  } else {
+    IndexList scalar_indices;
+    for (std::size_t k = 0; k < max_dim; ++k) {
+      scalar_indices.emplace_back("dummy_" + k, Expression{0});
+    }
+    return scalar_indices;
+  }
+}
+
+/**
+ * @brief Currently we only handle equalities.
+ */
+Equality getEquality(Equation eq)
+{
+  if (is<Equality>(eq)) {
+    return get<Equality>(eq);
   } else if (is<ForEq>(eq)) {
-    ForEq for_eq = get<ForEq>(eq);
-    addIndexRange(for_eq.range().indexes(), eq_id, node_id);
-  } else {
-    addDef(node_id, 1);
+    return getEquality(get<ForEq>(eq).elements().front());
+  }
+
+  ERROR("GenerateSBGInput::getEquality: only for eqs and equalities supported");
+  return Equality{};
+}
+
+void GenerateSBGInput::addEquationNodes()
+{
+  EquationList eqs = flatterForEqs();
+  for (const Equation& eq : eqs) {
+    EquationCompactSet eq_to_compact_set{_mmo_class.syms(), _max_dim};
+    SetVertex set_vertex{_node_id, Apply(eq_to_compact_set, eq)};
+
+    // Translate to avoid repeating nodes values
+    set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
+    _vertex_offset += set_vertex.maxDimPerimetral();
+
+    // Save equation set-vertex
+    set_vertex.set_name("eq_" + std::to_string(_node_id));
+    _equations_info[_node_id]
+      = EquationInfo{getIndices(eq, _max_dim), getEquality(eq)};
+    _set_vertices.push_back(set_vertex);
+    ++_node_id;
   }
 }
 
-/// @todo Add dimension padding and multiple dim support.
-void GenerateSBGInput::buildSet(const VarInfo& variable, int node_id)
+// Add edges -------------------------------------------------------------------
+
+CompactTransformation GenerateSBGInput::createMap1(const CompactSet& eq_nodes
+  , const Translation& eq_nodes_trans) const
 {
-  Option<ExpList> dims = variable.indices();
-  if (dims) {
-    foreach_(Expression d, dims.get()) { addDef(node_id, getValue(d)); }
-  } else {
-    addDef(node_id, 1);
+  Translation domain_trans{_max_dim, _edge_offset};
+  CompactTransformation map1{_max_dim};
+  for (std::size_t k = 0; k < _max_dim; ++k) {
+    map1.matrix(k, k) = 1;
+    map1.translation(k) = eq_nodes_trans[k] - domain_trans[k];
   }
+  return map1;
 }
 
-void GenerateSBGInput::addOffset(int edge_id, const std::string& map, int offset, int v_id, int dim)
+CompactTransformation GenerateSBGInput::createMap2(const Expression& expr
+  , const IndexList& counters, const Translation& var_trans) const
 {
-  std::ostringstream def;
-  std::ostringstream dim_name;
-  if (dim >= 0) {
-    dim_name << "D" << dim;
-  }
-  std::ostringstream off_def;
-  if (offset > 0) {
-    off_def << " + " << offset;
-  } else if (offset < 0) {
-    off_def << " - " << offset;
-  }
-  def << "off" << map << edge_id << dim_name.str() << " = "
-      << "V" << v_id - 1 << " - E" << edge_id - 1 << off_def.str();
-  _offsets.push_back(def.str());
-}
-
-void GenerateSBGInput::addEdgeDef(int edge_id, int end, int dim)
-{
-  std::ostringstream def;
-  std::ostringstream dim_name;
-  if (dim >= 0) {
-    dim_name << "D" << dim;
-  }
-  def << "E" << edge_id << dim_name.str() << " = "
-      << "E" << edge_id - 1 << dim_name.str() << "+" << end;
-  _offsets.push_back(def.str());
-  def.str("");
-  def << "[E" << edge_id - 1 << dim_name.str() << "+1:1:E" << edge_id << dim_name.str() << "]";
-  _E.push_back(def.str());
-}
-
-void GenerateSBGInput::generatePWLMaps(Expression exp, const std::string& eq_id, int edge_id)
-{
-  assert(is<Reference>(exp));
-  const IndexList& dom = _eq_range[eq_id];
-  Integer dom_size = getSize(dom);
-  VarSymbolTable symbols = _mmo_class.syms();
-
-  Reference occur = get<Reference>(exp);
-  Ref names = occur.ref();
+  // Get expression of subscripts 
+  assert(is<Reference>(expr));
+  Reference occurrence = get<Reference>(expr);
+  Ref names = occurrence.ref();
   assert(names.size() > 0);
-  std::string node_name = get<0>(names[0]);
-  int node_id = _var_nodes[node_name];
-  int eq_node_id = _eq_nodes[eq_id];
-  ExpList indexes = get<1>(occur.ref().front());
-  addEdgeDef(edge_id, dom_size);
-  for (Expression idx : indexes) {
-    ConstantExpression constant_index(symbols);
-    if (Apply(constant_index, idx)) {
-      addOffset(edge_id, "M1", 0, node_id);
-      _m1_slopes.push_back(1);
-    } else {
-      PWLMapValues pwl_map_values(symbols);
-      Apply(pwl_map_values, idx);
-      assert(pwl_map_values.slope() != 0);
-      Usage usage = _eq_usage[eq_id];
-      int range_init_value = usage[pwl_map_values.variable()];
-      int map_first_value = 0;
-      map_first_value = pwl_map_values.constant() + pwl_map_values.slope() * range_init_value;
-      addOffset(edge_id, "M1", map_first_value, node_id);
-      _m1_slopes.push_back(pwl_map_values.slope());
+  ExpList indexes = get<1>(names.front());
+  Translation domain_trans{_max_dim, _edge_offset};
+
+  // Get order of counters
+  std::vector<std::string> order;
+  for (const Index& counter : counters) {
+    order.push_back(counter.name());
+  }
+
+  CompactTransformation t{_max_dim};
+  if (indexes.empty()) { // Access to scalar variable
+    for (std::size_t k = 0; k < _max_dim; ++k) {
+      Util::AffineExpr kth_expr{order};
+      t.setRow(k, kth_expr + (var_trans[k] + 1));
+    }
+  } else { // Access to array variable
+    std::size_t k = 0;
+    AffineExprVisitor affine_expr_visitor(_mmo_class.syms(), order);
+    for (Expression index : indexes) {
+      Util::AffineExpr kth_expr = Apply(affine_expr_visitor, index);
+      if (kth_expr.isConstant()) {
+        t.setRow(k, kth_expr + var_trans[k]);
+      } else {
+        t.setRow(k, kth_expr + (var_trans[k] - domain_trans[k]));
+      }
+      ++k;
     }
   }
-  if (indexes.empty()) {  // Scalar variable.
-    addOffset(edge_id, "M1", 0, node_id);
-    _m1_slopes.push_back(1);
-  }
-  std::for_each(dom.begin(), dom.end(), [this, edge_id, eq_node_id](auto) { addOffset(edge_id, "M2", 0, eq_node_id); });
-  if (dom.empty()) {  // Scalar variable.
-    addOffset(edge_id, "M2", 0, eq_node_id);
+
+  return t;
+}
+
+void GenerateSBGInput::addMaps(std::string name, CompactSet eq_nodes 
+  , CompactTransformation map1, CompactTransformation map2)
+{
+  Translation domain_trans{_max_dim, _edge_offset};
+  CompactSet domain = eq_nodes;
+  domain.translate(domain_trans);
+  SetEdge se{_edge_id, domain};
+
+  se.set_name(name);
+  se.set_map1(map1);
+  se.set_map2(map2);
+  _set_edges.push_back(se);
+
+  _edge_offset += eq_nodes.maxDimPerimetral();
+  ++_edge_id;
+}
+
+void GenerateSBGInput::addEdges()
+{
+  VarSymbolTable symbols = _mmo_class.syms();
+
+  for (auto& [eq_id, eq_info] : _equations_info) {
+    // Get vertices that represent this array of equations
+    std::string eq_name;
+    CompactSet eq_nodes;
+    Translation eq_nodes_trans;
+    for (const SetVertex& sv : _set_vertices) {
+      if (sv.node_id() == eq_id) {
+        eq_name = sv.name();
+        eq_nodes = sv.set();
+        eq_nodes_trans = sv.translation();
+      } 
+    }
+
+    // Get vertices of variables that appear in this array of equations
+    for (const SetVertex& sv : _set_vertices) {
+      Name var_name = sv.name();
+      if (sv.isEquation()) {
+        continue;
+      }
+
+      ERROR_UNLESS(is<Equality>(eq_info.equation())
+        , "GenerateSBGInput::addEdges: only equality equations supported");
+      const Equality eq = get<Equality>(eq_info.equation());
+      MatchingExps matching_exprs(var_name, isState(var_name, symbols));
+      Apply(matching_exprs, eq.left());
+      Apply(matching_exprs, eq.right());
+      std::set<Expression> matched_exprs = matching_exprs.matchedExps();
+      LOG << "Matched exprs for: " << var_name << " in " << eq << std::endl;
+
+      for (const Expression& expr : matched_exprs) {
+        LOG << "Expression: " << expr << std::endl;
+        std::string name = eq_name + "-" + var_name;
+        addMaps(name, eq_nodes, createMap1(eq_nodes, eq_nodes_trans)
+          , createMap2(expr, eq_info.indices(), sv.translation()));
+      }
+    }
   }
 }
+
+// Generate SBG program --------------------------------------------------------
 
 void GenerateSBGInput::setup()
 {
@@ -223,95 +330,13 @@ void GenerateSBGInput::setup()
   _node_id = 1;
   _edge_id = 1;
 
-  // Get max dim defined in the model.
+  // Get maximum dimension  between the arrays of variables defined in the model
   for (Name var_name : variables) {
     VarInfo variable = symbols[var_name].get();
     if (isVariable(var_name, symbols)) {
       Option<ExpList> indexes = variable.indices();
       if (indexes && (indexes->size() > _max_dim)) {
         _max_dim = indexes->size();
-      }
-    }
-  }
-}
-
-void GenerateSBGInput::addVariableNodes()
-{
-  IdentList variables = _mmo_class.variables();
-  VarSymbolTable symbols = _mmo_class.syms();
-
-  _offsets.emplace_back("V0 = 0");
-  _offsets.emplace_back("E0 = 0");
-  // Build unknown nodes.
-  foreach_(Name var_name, variables)
-  {
-    VarInfo variable = symbols[var_name].get();
-    if (isVariable(var_name, symbols)) {
-      buildSet(variable, _node_id);
-      _var_nodes.insert(std::make_pair(var_name, _node_id));
-      _node_id++;
-    }
-  }
-}
-
-void GenerateSBGInput::addEquationInfo(const std::string& eq_name, Equality eq, IndexList indexes, int node_id)
-{
-  _eqs.insert(std::make_pair(eq_name, eq));
-  _eq_range.insert(std::make_pair(eq_name, indexes));
-  _eq_nodes.insert(std::make_pair(eq_name, node_id));
-}
-
-void GenerateSBGInput::addEquationNodes()
-{
-  // Build equation nodes.
-  EquationList eqs = _mmo_class.equations().equations();
-  foreach_(Equation eq, eqs)
-  {
-    if (is<ForEq>(eq)) {
-      ForEq for_eq = get<ForEq>(eq);
-      std::vector<Equation> for_eqs = for_eq.elements();
-      Indexes range = for_eq.range();
-      foreach_(Equation for_el, for_eqs)
-      {
-        ERROR_UNLESS(is<Equality>(for_el), "Only causalization of for and equality equations");
-        std::string eq_name = "eq_" + std::to_string(_node_id);
-        buildSet(for_el, eq_name, _node_id, range);
-        addEquationInfo(eq_name, get<Equality>(for_el), range.indexes(), _node_id);
-        _node_id++;
-      }
-    } else if (is<Equality>(eq)) {
-      std::string eq_name = "eq_" + std::to_string(_node_id);
-      buildSet(eq, eq_name, _node_id);
-      addEquationInfo(eq_name, get<Equality>(eq), IndexList(), _node_id);
-      _node_id++;
-    } else {
-      ERROR("Only causalization of for and equality equations");
-    }
-  }
-}
-
-void GenerateSBGInput::addEdges()
-{
-  VarSymbolTable symbols = _mmo_class.syms();
-
-  foreach_(auto eq_desc, _eqs)
-  {
-    Equality eq = eq_desc.second;
-    Expression left = eq.left();
-    Expression right = eq.right();
-    foreach_(const auto& node, _var_nodes)
-    {
-      Name var_name = node.first;
-      MatchingExps matching_exps(var_name, isState(var_name, symbols));
-      Apply(matching_exps, left);
-      Apply(matching_exps, right);
-      std::set<Expression> matched_exps = matching_exps.matchedExps();
-      LOG << "Matched exps for: " << var_name << " in " << eq << std::endl;
-      foreach_(Expression exp, matched_exps)
-      {
-        LOG << "Expression: " << exp << std::endl;
-        generatePWLMaps(exp, eq_desc.first, _edge_id);
-        _edge_id++;
       }
     }
   }
@@ -326,52 +351,121 @@ void GenerateSBGInput::buildFromModel()
   generateSBGInput();
 }
 
-void GenerateSBGInput::generateEdgeMap(const std::string& map_name, const std::string& map_idx, bool fixed_slopes)
+void GenerateSBGInput::generateVSet()
 {
-  _sbg_input << map_name << ": <<";
-  unsigned long size = 1;
-  for (std::string def : _E) {
-    int slope = fixed_slopes ? 1 : _m1_slopes[size - 1];
-    _sbg_input << "{" << def << "} -> " << slope << "*x+off" << map_idx << size << ((size < _E.size()) ? " , " : "");
-    size++;
+  _sbg_input << "V: ";
+  CompactSet V;
+  for (const SetVertex& sv : _set_vertices) {
+    CompactSet jth_set = sv.set();
+    jth_set.translate(sv.translation());
+    V.setUnion(jth_set);
+  }
+  _sbg_input << V.toSBGFormat() << std::endl;
+}
+
+void GenerateSBGInput::generateVMap()
+{
+  _sbg_input << "Vmap: <<";
+  std::size_t size = _set_vertices.size();
+  std::size_t j = 1;
+  for (const SetVertex& sv : _set_vertices) {
+    _sbg_input << sv.toSBGFormat() << " -> ";
+    for (std::size_t k = 0; k + 1 < _max_dim; ++k) {
+      _sbg_input << "|0*x+" << j;
+    }
+    _sbg_input << "|0*x+" << j;
+    _sbg_input << ((j < size) ? "|, " : "|");
+    ++j;
   }
   _sbg_input << ">>" << std::endl;
+}
+
+void GenerateSBGInput::generateMap1()
+{
+  _sbg_input << "map1: <<";
+  std::size_t size = _set_edges.size();
+  std::size_t j = 1;
+  for (const SetEdge& se : _set_edges) {
+    _sbg_input << se.domainToSBGFormat() << " -> ";
+    _sbg_input << se.map1ToSBGFormat();
+    _sbg_input << ((j < size) ? ", " : "");
+    ++j;
+  }
+  _sbg_input << ">>" << std::endl;
+}
+
+void GenerateSBGInput::generateMap2()
+{
+  _sbg_input << "map2: <<";
+  std::size_t size = _set_edges.size();
+  std::size_t j = 1;
+  for (const SetEdge& se : _set_edges) {
+    _sbg_input << se.domainToSBGFormat() << " -> ";
+    _sbg_input << se.map2ToSBGFormat();
+    _sbg_input << ((j < size) ? ", " : "");
+    ++j;
+  }
+  _sbg_input << ">>" << std::endl;
+}
+
+void GenerateSBGInput::generateEMap()
+{
+  _sbg_input << "Emap: <<";
+  std::size_t size = _set_edges.size();
+  std::size_t j = 1;
+  for (const SetEdge& se : _set_edges) {
+    _sbg_input << se.domainToSBGFormat() << " -> ";
+    for (std::size_t k = 0; k + 1 < _max_dim; ++k) {
+      _sbg_input << "|0*x+" << j;
+    }
+    _sbg_input << "|0*x+" << j;
+    _sbg_input << ((j < size) ? "|, " : "|");
+    ++j;
+  }
+  _sbg_input << ">>" << std::endl;
+}
+
+void GenerateSBGInput::generatePartition()
+{
+  _sbg_input << "X: ";
+  CompactSet X;
+  for (const SetVertex& sv : _set_vertices) {
+    if (sv.isEquation()) {
+      CompactSet jth_set = sv.set();
+      jth_set.translate(sv.translation());
+      X.setUnion(jth_set);
+    }
+  }
+  _sbg_input << X.toSBGFormat() << std::endl;
+
+  _sbg_input << "Y: ";
+  CompactSet Y;
+  for (const SetVertex& sv : _set_vertices) {
+    if (sv.isVariable()) {
+      CompactSet jth_set = sv.set();
+      jth_set.translate(sv.translation());
+      Y.setUnion(jth_set);
+    }
+  }
+  _sbg_input << Y.toSBGFormat();
 }
 
 void GenerateSBGInput::generateSBGInput()
 {
-  for (std::string def : _offsets) {
-    _sbg_input << def << ";" << std::endl;
-  }
-  _sbg_input << std::endl;
-  _sbg_input << "matchSCCTS(" << std::endl;
-  _sbg_input << "V: {";
-  unsigned long size = 1;
-  for (std::string def : _V) {
-    _sbg_input << def << ((size < _V.size()) ? ", " : "");
-    size++;
-  }
-  _sbg_input << "}" << std::endl;
+  _sbg_input << "dims = " << _max_dim << ";\n";
 
-  _sbg_input << "Vmap: <<";
-  size = 1;
-  for (std::string def : _V) {
-    _sbg_input << "{" << def << "} -> 0*x+" << size << ((size < _V.size()) ? ", " : "");
-    size++;
-  }
-  _sbg_input << ">>" << std::endl;
-  generateEdgeMap("map1", "M1");
-  const bool FIXED_SLOPES = true;
-  generateEdgeMap("map2", "M2", FIXED_SLOPES);
-  _sbg_input << "Emap: <<";
-  size = 1;
-  for (std::string def : _E) {
-    _sbg_input << "{" << def << "} -> 0*x+" << size << ((size < _E.size()) ? " , " : "");
-    size++;
-  }
-  _sbg_input << ">>" << std::endl;
+  _sbg_input << "causalize(" << std::endl;
+  generateVSet();
+  generateVMap();
+  generateMap1();
+  generateMap2();
+  generateEMap();
+  generatePartition();
   _sbg_input << ", 1);" << std::endl;
+
   _sbg_input.close();
 }
 
-}  // namespace Causalize
+} // namespace Causalize
+
+} // namespace Modelica

@@ -17,21 +17,25 @@
 
 ******************************************************************************/
 
-#include <boost/variant/static_visitor.hpp>
-#include <ast/expression.hpp>
+#ifndef MODELICACC_UTIL_AST_VISITORS_IS_INTEGER_HPP_
+#define MODELICACC_UTIL_AST_VISITORS_IS_INTEGER_HPP_
 
-#ifndef AST_VISITOR_PWL_MAP_VALUES
-#define AST_VISITOR_PWL_MAP_VALUES
+#include <boost/variant/static_visitor.hpp>
+
+#include <ast/expression.hpp>
+#include <util/table.hpp>
 
 namespace Modelica {
 
-class PWLMapValues : public boost::static_visitor<bool> {
-  public:
-  explicit PWLMapValues(VarSymbolTable symbols);
+class IsInteger : public boost::static_visitor<bool> {
+public:
+  explicit IsInteger(const VarSymbolTable&);
+  IsInteger(const VarSymbolTable&, Name, Integer);
+
   bool operator()(Integer v) const;
   bool operator()(Boolean v) const;
-  bool operator()(AddAll v) const;
   bool operator()(String v) const;
+  bool operator()(AddAll v) const;
   bool operator()(Name v) const;
   bool operator()(Real v) const;
   bool operator()(SubEnd v) const;
@@ -49,18 +53,12 @@ class PWLMapValues : public boost::static_visitor<bool> {
   bool operator()(Reference) const;
   bool operator()(Range) const;
 
-  int constant() const;
-  int slope() const;
-  std::string variable() const;
-
-  protected:
-  void assign(Expression left, Expression right, bool var_left, bool var_right, int sign) const;
-
-  mutable int _constant;
-  mutable int _slope;
-  VarSymbolTable _symbols;
-  mutable std::string _variable;
+private:
+  const VarSymbolTable& _vtable;
+  Option<Name> _name;
+  Option<Integer> _value;
 };
 
 }  // namespace Modelica
-#endif
+
+#endif // MODELICACC_UTIL_AST_VISITORS_IS_INTEGER_HPP_
