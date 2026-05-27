@@ -1,4 +1,7 @@
-/* Simple resistor-inductor circuit with N algebraic loops */
+/* Model for causalization testing =============================================
+ * Description: model with N algebraic loops.
+   Ua[i] and Uc[i] must be simultaneously solved.
+==============================================================================*/
 
 model TestRL1
   constant Integer N = 100;

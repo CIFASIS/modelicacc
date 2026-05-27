@@ -1,9 +1,8 @@
-/* Simple resistor-inductor circuit without algebraic loops */
+/* Model for causalization testing =============================================
+ * Description: model without algebraic loops.
+==============================================================================*/
 
 model TestRL2
-  //iR[i] must be computed out of iR[i+1]
-  //uL[i+1] must be computed out of uL[i]
-
   constant Integer N=1000000;
   Real iL[N],iR[N],uL[N];
   parameter Real L=1,R=1,L1=1,I=1,R0=1;
