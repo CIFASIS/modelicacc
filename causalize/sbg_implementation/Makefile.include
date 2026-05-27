@@ -7,11 +7,12 @@ all: $(CAUSALIZE_SBG)
 
 # Sources
 CAUSALIZE_SBG_SRC := \
-    $(CAUSALIZE_SBG_DIR)/main.cpp\
-    $(CAUSALIZE_SBG_DIR)/equation_info.cpp\
-    $(CAUSALIZE_SBG_DIR)/generate_sbg_input.cpp\
-    $(CAUSALIZE_SBG_DIR)/set_vertex.cpp\
-    $(CAUSALIZE_SBG_DIR)/set_edge.cpp\
+    $(CAUSALIZE_SBG_DIR)/main.cpp \
+    $(CAUSALIZE_SBG_DIR)/equation_info.cpp \
+    $(CAUSALIZE_SBG_DIR)/generate_sbg_input.cpp \
+    $(CAUSALIZE_SBG_DIR)/horizontal_sorting.cpp \
+    $(CAUSALIZE_SBG_DIR)/set_vertex.cpp \
+    $(CAUSALIZE_SBG_DIR)/set_edge.cpp \
 	$(UTIL_DIR)/affine_transformation.cpp \
 	$(UTIL_DIR)/affine_diag_transformation.cpp \
 	$(UTIL_DIR)/compact_set.cpp \

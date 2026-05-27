@@ -35,15 +35,20 @@ class CompactSet {
 public:
   CompactSet();
   CompactSet(AST::Integer start, AST::Integer step, AST::Integer end);
+  CompactSet(SBG::LIB::Set s);
 
   std::size_t arity() const;
+
+  bool operator==(const CompactSet& other) const;
 
   /**
    * @brief Returns a string-like result that is parsable by the SBG parser.
    */
   std::string toSBGFormat() const;
 
+  std::size_t cardinal() const;
   void setUnion(const CompactSet& other);
+  void intersection(const CompactSet& other);
   void cartesianProduct(const CompactSet& other);
   void reflection();
   void translate(const Translation& t);

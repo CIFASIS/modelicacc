@@ -43,15 +43,29 @@ CompactSet::CompactSet(AST::Integer start, AST::Integer step
     , static_cast<SBG::LIB::NAT>(end));
 }
 
+CompactSet::CompactSet(SBG::LIB::Set s) { _set = s; }
+
 // Getters ---------------------------------------------------------------------
 
 std::size_t CompactSet::arity() const { return _set.arity(); }
 
 // Operators -------------------------------------------------------------------
 
+std::size_t CompactSet::cardinal() const { return _set.cardinal(); }
+
+bool CompactSet::operator==(const CompactSet& other) const
+{
+  return _set == other._set;
+}
+
 void CompactSet::setUnion(const CompactSet& other)
 {
   _set = _set.cup(other._set);
+}
+
+void CompactSet::intersection(const CompactSet& other)
+{
+  _set = _set.intersection(other._set);
 }
 
 void CompactSet::cartesianProduct(const CompactSet& other)

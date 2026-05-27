@@ -28,11 +28,11 @@ namespace Causalize {
 // Constructors/Destructors ----------------------------------------------------
 
 SetEdge::SetEdge(int edge_id, std::size_t arity)
-  : _edge_id(edge_id), _arity(arity), _map1(arity), _map2(arity) {}
+  : _edge_id(edge_id), _map1(arity), _map2(arity) {}
 
 SetEdge::SetEdge(int edge_id, CompactSet domain)
-  : _edge_id(edge_id), _domain(domain), _arity(domain.arity())
-    , _map1(domain.arity()), _map2(domain.arity()) {}
+  : _edge_id(edge_id), _domain(domain), _map1(domain.arity())
+    , _map2(domain.arity()) {}
 
 // Getters ---------------------------------------------------------------------
 
@@ -42,15 +42,31 @@ std::size_t SetEdge::arity() const { return _domain.arity(); }
 
 std::string SetEdge::name() const { return _name; }
 
+int SetEdge::var_id() const { return _var_id; }
+
+int SetEdge::eq_id() const { return _eq_id; }
+
+const CompactSet& SetEdge::domain() const { return _domain; }
+
+const Expression& SetEdge::access() const { return _access; }
+
 // Setters ---------------------------------------------------------------------
 
 void SetEdge::set_edge_id(int edge_id) { _edge_id = edge_id; }
 
 void SetEdge::set_name(std::string name) { _name = name; }
 
+void SetEdge::set_var_id(int var_id) { _var_id = var_id; }
+
+void SetEdge::set_eq_id(int eq_id) { _eq_id = eq_id; }
+
+void SetEdge::set_domain(CompactSet domain) { _domain = domain; }
+
 void SetEdge::set_map1(CompactTransformation map1) { _map1 = map1; }
 
 void SetEdge::set_map2(CompactTransformation map2) { _map2 = map2; }
+
+void SetEdge::set_access(Expression access) { _access = access; }
 
 // Operators -------------------------------------------------------------------
 
