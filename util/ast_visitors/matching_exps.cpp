@@ -119,7 +119,10 @@ bool MatchingExps::operator()(Output v) const
 bool MatchingExps::operator()(Reference v) const
 {
   if (get<0>(v.ref().front()) == _variable_name) {
-    if ((_state_var && _der_call) || !_state_var) {
+    if ((_state_var && _der_call)) {
+      _matched_exps.insert(Call{"der", v});
+      return true;
+    } else if (!_state_var) {
       _matched_exps.insert(v);
       return true;
     }

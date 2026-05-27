@@ -17,27 +17,44 @@
 
 ******************************************************************************/
 
+#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_GENERATE_SBG_INPUT_HPP_
+#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_GENERATE_SBG_INPUT_HPP_
+
 #include "causalize/sbg_implementation/equation_info.hpp"
-#include "util/compact_set.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
+#include "mmo/mmo_class.hpp"
+#include "util/compact_set.hpp"
+
+#include "sbg/bipartite_sbg.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <string>
 
-#include <mmo/mmo_class.hpp>
-
 namespace Modelica {
 
 namespace Causalize {
 
+/**
+ * @class GenerateSBGInput
+ * @brief Given a Modelica MMO_Class it generates a SBG program that defines
+ * a bipartite SBG as follows: it adds one vertex for each state variable
+ * (right) and equation (left), and then adds an edge between a variable and an
+ * equation if it is one of its unknowns.
+ */
 class GenerateSBGInput {
 public:
   explicit GenerateSBGInput(Modelica::MMO_Class& mmo_class);
   virtual ~GenerateSBGInput() = default;
-  virtual void buildFromModel();
+  virtual SBG::LIB::BipartiteSBG buildFromModel();
   virtual std::string fileName();
+
+  const Modelica::MMO_Class& mmo_class() const;
+  const unsigned int& max_dim() const;
+  const std::vector<SetVertex>& set_vertices() const;
+  const std::vector<SetEdge>& set_edges() const;
+  const std::map<int, EquationInfo>& equations_info() const;
 
 protected:
   void addVariableSet(const VarInfo& variable, const Name& name);
@@ -58,10 +75,22 @@ protected:
   /**
    * @brief Creates maps from edges to variables nodes.
    */
-  CompactTransformation createMap2(const Expression& expr
+  CompactTransformation createMap2(const Reference& reference
     , const IndexList& counters, const Translation& var_trans) const;
-  void addMaps(std::string name, CompactSet eq_nodes, CompactTransformation map1
-    , CompactTransformation map2);
+
+  /**
+   * @brief Adds maps definitions to a set-edge, and saves the element to
+   * _set_edges.
+   */
+  void addMaps(SetEdge se, const SetVertex& eq_sv, const SetVertex& var_sv
+    , const Reference& reference);
+
+  /**
+   * @brief Adds all edges between an equation and all of the occurences of a
+   * variable in that equations. It adds a set-edge for each occurence.
+   */
+  void addEdge(const SetVertex& eq_sv, const SetVertex& sv
+    , const EquationInfo& eq_info);
 
   void setup();
   void addVariableNodes();
@@ -92,3 +121,5 @@ private:
 } // namespace Causalize
 
 } // namespace Modelica
+
+#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_GENERATE_SBG_INPUT_HPP_

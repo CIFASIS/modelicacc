@@ -29,10 +29,14 @@
 #include "util/ast_visitors/eval_integer.hpp"
 #include "util/ast_visitors/matching_exps.hpp"
 
+#include "eval/file_evaluator.hpp"
+#include "eval/pretty_print.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <sstream>
 #include <tuple>
+#include <variant>
 
 namespace Modelica {
 
@@ -51,6 +55,28 @@ GenerateSBGInput::GenerateSBGInput(MMO_Class& mmo_class)
 
 std::string GenerateSBGInput::fileName() { return _mmo_class.name()
   + "_sbg_input.sbg"; }
+
+const Modelica::MMO_Class& GenerateSBGInput::mmo_class() const
+{
+  return _mmo_class;
+}
+
+const unsigned int& GenerateSBGInput::max_dim() const { return _max_dim; }
+
+const std::vector<SetVertex>& GenerateSBGInput::set_vertices() const
+{
+  return _set_vertices;
+}
+
+const std::vector<SetEdge>& GenerateSBGInput::set_edges() const
+{
+  return _set_edges;
+}
+
+const std::map<int, EquationInfo>& GenerateSBGInput::equations_info() const
+{
+  return _equations_info;
+}
 
 // Add variable vertices -------------------------------------------------------
 
@@ -218,15 +244,15 @@ CompactTransformation GenerateSBGInput::createMap1(const CompactSet& eq_nodes
   return map1;
 }
 
-CompactTransformation GenerateSBGInput::createMap2(const Expression& expr
+CompactTransformation GenerateSBGInput::createMap2(const Reference& reference
   , const IndexList& counters, const Translation& var_trans) const
 {
   // Get expression of subscripts 
-  assert(is<Reference>(expr));
-  Reference occurrence = get<Reference>(expr);
-  Ref names = occurrence.ref();
-  assert(names.size() > 0);
-  ExpList indexes = get<1>(names.front());
+  Ref ref = reference.ref();
+  assert(ref.size() > 0);
+  ERROR_UNLESS(ref.size() == 1, "GenerateSBGInput::createMap2: conversion of "
+    , "dotted references not implemented");
+  ExpList indexes = get<1>(ref.front());
   Translation domain_trans{_max_dim, _edge_offset};
 
   // Get order of counters
@@ -258,62 +284,93 @@ CompactTransformation GenerateSBGInput::createMap2(const Expression& expr
   return t;
 }
 
-void GenerateSBGInput::addMaps(std::string name, CompactSet eq_nodes 
-  , CompactTransformation map1, CompactTransformation map2)
+void GenerateSBGInput::addMaps(SetEdge se, const SetVertex& eq_sv
+  , const SetVertex& var_sv, const Reference& reference)
 {
+  CompactSet eq_nodes = eq_sv.set();
   Translation domain_trans{_max_dim, _edge_offset};
   CompactSet domain = eq_nodes;
   domain.translate(domain_trans);
-  SetEdge se{_edge_id, domain};
+  se.set_domain(domain);
 
-  se.set_name(name);
-  se.set_map1(map1);
-  se.set_map2(map2);
+  se.set_map1(createMap1(eq_nodes, eq_sv.translation()));
+  se.set_map2(createMap2(reference, _equations_info[eq_sv.node_id()].indices()
+    , var_sv.translation()));
   _set_edges.push_back(se);
 
   _edge_offset += eq_nodes.maxDimPerimetral();
   ++_edge_id;
 }
 
+/**
+ * @brief Gets a reference to a variable or the derivative of a variable.
+ */
+Reference getReference(Expression expr)
+{
+  if (is<Reference>(expr)) {
+    return get<Reference>(expr);
+  } else if (is<Call>(expr)) {
+    Call call = get<Call>(expr);
+    ERROR_UNLESS(call.name() == "der", "getReference: expression ", expr
+      , " is not a variable or a derivative");
+    ExpList args = call.args();
+    ERROR_UNLESS(args.size() == 1, "getReference: der applied to more than "
+      , "argument in ", args);
+    return getReference(args.front());
+  }
+
+  ERROR("getReference: expression ", expr, " is not a reference");
+  return Reference{};
+}
+
+void GenerateSBGInput::addEdge(const SetVertex& eq_sv, const SetVertex& sv
+  , const EquationInfo& eq_info)
+{
+  if (sv.isVariable()) {
+    Name var_name = sv.name();
+    const Equality eq = get<Equality>(eq_info.equation());
+    MatchingExps matching_exprs(var_name, isState(var_name, _mmo_class.syms()));
+    Apply(matching_exprs, eq.left());
+    Apply(matching_exprs, eq.right());
+    std::set<Expression> matched_exprs = matching_exprs.matchedExps();
+    LOG << "Matched exprs for: " << var_name << " in " << eq << std::endl;
+
+    CompactSet eq_nodes = eq_sv.set();
+    for (const Expression& expr : matched_exprs) {
+      LOG << "Expression: " << expr << std::endl;
+      std::stringstream ss;
+      ss << expr;
+      std::string name = eq_sv.name() + "-" + ss.str();
+
+      SetEdge se{_edge_id, _max_dim};
+      se.set_name(name);
+      se.set_var_id(sv.node_id());
+      se.set_eq_id(eq_sv.node_id());
+      se.set_access(expr);
+
+      addMaps(se, eq_sv, sv, getReference(expr));
+    }
+  }
+}
+
 void GenerateSBGInput::addEdges()
 {
-  VarSymbolTable symbols = _mmo_class.syms();
-
   for (auto& [eq_id, eq_info] : _equations_info) {
+    ERROR_UNLESS(is<Equality>(eq_info.equation())
+      , "GenerateSBGInput::addEdges: only equality equations supported");
+
     // Get vertices that represent this array of equations
-    std::string eq_name;
-    CompactSet eq_nodes;
-    Translation eq_nodes_trans;
+    SetVertex eq_sv{-1};
     for (const SetVertex& sv : _set_vertices) {
       if (sv.node_id() == eq_id) {
-        eq_name = sv.name();
-        eq_nodes = sv.set();
-        eq_nodes_trans = sv.translation();
+        eq_sv = sv;
+        break;
       } 
     }
 
     // Get vertices of variables that appear in this array of equations
     for (const SetVertex& sv : _set_vertices) {
-      Name var_name = sv.name();
-      if (sv.isEquation()) {
-        continue;
-      }
-
-      ERROR_UNLESS(is<Equality>(eq_info.equation())
-        , "GenerateSBGInput::addEdges: only equality equations supported");
-      const Equality eq = get<Equality>(eq_info.equation());
-      MatchingExps matching_exprs(var_name, isState(var_name, symbols));
-      Apply(matching_exprs, eq.left());
-      Apply(matching_exprs, eq.right());
-      std::set<Expression> matched_exprs = matching_exprs.matchedExps();
-      LOG << "Matched exprs for: " << var_name << " in " << eq << std::endl;
-
-      for (const Expression& expr : matched_exprs) {
-        LOG << "Expression: " << expr << std::endl;
-        std::string name = eq_name + "-" + var_name;
-        addMaps(name, eq_nodes, createMap1(eq_nodes, eq_nodes_trans)
-          , createMap2(expr, eq_info.indices(), sv.translation()));
-      }
+      addEdge(eq_sv, sv, eq_info);
     }
   }
 }
@@ -342,13 +399,26 @@ void GenerateSBGInput::setup()
   }
 }
 
-void GenerateSBGInput::buildFromModel()
+SBG::LIB::BipartiteSBG GenerateSBGInput::buildFromModel()
 {
+  // Write SBG program to _sbg_input
   setup();
   addVariableNodes();
   addEquationNodes();
   addEdges();
   generateSBGInput();
+
+  // Evaluate SBG program to obtain bipartite SBG
+  SBG::LIB::BipartiteSBG g;
+  SBG::Eval::ProgramIO eval_result = SBG::Eval::parseEvalFile(fileName()); 
+  for (const SBG::Eval::ExprResult& ev : eval_result.exprs()) {
+    SBG::Eval::ExprBaseType e = std::get<1>(ev);
+    if (std::holds_alternative<SBG::LIB::BipartiteSBG>(e)) {
+      g = std::get<SBG::LIB::BipartiteSBG>(e);
+    }
+  }
+
+  return g;
 }
 
 void GenerateSBGInput::generateVSet()
@@ -454,14 +524,13 @@ void GenerateSBGInput::generateSBGInput()
 {
   _sbg_input << "dims = " << _max_dim << ";\n";
 
-  _sbg_input << "causalize(" << std::endl;
   generateVSet();
   generateVMap();
   generateMap1();
   generateMap2();
   generateEMap();
   generatePartition();
-  _sbg_input << ", 1);" << std::endl;
+  _sbg_input << ";";
 
   _sbg_input.close();
 }
