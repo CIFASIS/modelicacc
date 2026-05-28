@@ -36,6 +36,43 @@ namespace Modelica {
 
 namespace Causalize {
 
+////////////////////////////////////////////////////////////////////////////////
+// Auxiliary definitions -------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+/*
+ * @class SBGGenerationInfo
+ * @brief Structure to keep and return relevant data after the SBG associated
+ * to a model has been generated.
+ */
+class SBGGenerationInfo {
+public:
+  explicit SBGGenerationInfo(Modelica::MMO_Class& mmo_class
+    , unsigned int max_dim, std::vector<SetVertex>& set_vertices
+    , std::vector<SetEdge>& set_edges
+    , std::map<int, EquationInfo>& equations_info
+    , SBG::LIB::BipartiteSBG bipartite_sbg);
+
+  const Modelica::MMO_Class& mmo_class() const;
+  const unsigned int& max_dim() const;
+  const std::vector<SetVertex>& set_vertices() const;
+  const std::vector<SetEdge>& set_edges() const;
+  const std::map<int, EquationInfo>& equations_info() const;
+  const SBG::LIB::BipartiteSBG bipartite_sbg() const;
+
+private:
+  const Modelica::MMO_Class& _mmo_class;
+  const unsigned int _max_dim;
+  const std::vector<SetVertex>& _set_vertices;
+  const std::map<int, EquationInfo>& _equations_info;
+  const std::vector<SetEdge>& _set_edges;
+  const SBG::LIB::BipartiteSBG _bipartite_sbg;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Generate SBG Input ----------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 /**
  * @class GenerateSBGInput
  * @brief Given a Modelica MMO_Class it generates a SBG program that defines
@@ -47,7 +84,7 @@ class GenerateSBGInput {
 public:
   explicit GenerateSBGInput(Modelica::MMO_Class& mmo_class);
   virtual ~GenerateSBGInput() = default;
-  virtual SBG::LIB::BipartiteSBG buildFromModel();
+  virtual SBGGenerationInfo buildFromModel();
   virtual std::string fileName();
 
   const Modelica::MMO_Class& mmo_class() const;

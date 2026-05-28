@@ -74,20 +74,15 @@ std::ostream& operator<<(std::ostream& out, const EqVarMatch& match);
  */
 class HorizontalSorting {
 public:
-  explicit HorizontalSorting(GenerateSBGInput& sbg_generator);
+  explicit HorizontalSorting(SBGGenerationInfo& sbg_gen_info);
   ~HorizontalSorting() = default;
   EqVarMatch sort();
 
 private:
   void sortEquation(SetEdge se, CompactSet se_match);
 
-  Modelica::MMO_Class _mmo_class;
-  unsigned int _max_dim;
-  std::vector<SetVertex> _set_vertices;
-  std::map<int, EquationInfo> _equations_info;
-  std::vector<SetEdge> _set_edges;
-  SBG::LIB::BipartiteSBG _bipartite_sbg;
-  EqVarMatch _match;
+  SBGGenerationInfo& _sbg_gen_info;
+  EqVarMatch _match; ///< Result of sorting
 };
 
 } // namespace Causalize

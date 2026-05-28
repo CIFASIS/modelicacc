@@ -43,6 +43,42 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
+// Auxiliary definitions -------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+SBGGenerationInfo::SBGGenerationInfo(MMO_Class& mmo_class, unsigned int max_dim
+  , std::vector<SetVertex>& set_vertices, std::vector<SetEdge>& set_edges
+  , std::map<int, EquationInfo>& equations_info
+  , SBG::LIB::BipartiteSBG bipartite_sbg)
+  : _mmo_class(mmo_class), _max_dim(max_dim), _set_vertices(set_vertices)
+    , _set_edges(set_edges), _equations_info(equations_info)
+    , _bipartite_sbg(bipartite_sbg) {}
+
+const MMO_Class& SBGGenerationInfo::mmo_class() const { return _mmo_class; }
+
+const unsigned int& SBGGenerationInfo::max_dim() const { return _max_dim; }
+
+const std::vector<SetVertex>& SBGGenerationInfo::set_vertices() const
+{
+  return _set_vertices;
+}
+
+const std::vector<SetEdge>& SBGGenerationInfo::set_edges() const
+{
+  return _set_edges;
+}
+
+const std::map<int, EquationInfo>& SBGGenerationInfo::equations_info() const
+{
+  return _equations_info;
+}
+
+const SBG::LIB::BipartiteSBG SBGGenerationInfo::bipartite_sbg() const
+{
+  return _bipartite_sbg;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Generate SBG Input ----------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -399,7 +435,7 @@ void GenerateSBGInput::setup()
   }
 }
 
-SBG::LIB::BipartiteSBG GenerateSBGInput::buildFromModel()
+SBGGenerationInfo GenerateSBGInput::buildFromModel()
 {
   // Write SBG program to _sbg_input
   setup();
@@ -418,7 +454,8 @@ SBG::LIB::BipartiteSBG GenerateSBGInput::buildFromModel()
     }
   }
 
-  return g;
+  return SBGGenerationInfo{_mmo_class, _max_dim, _set_vertices, _set_edges
+    , _equations_info, g};
 }
 
 void GenerateSBGInput::generateVSet()
