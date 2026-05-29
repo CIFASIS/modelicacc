@@ -19,4 +19,3 @@ equation
   U-uL[1]-R*iR[1]=0;
   uL[N]-(iR[N]-iL[N])*R0=0;
 end TestRL3;
-

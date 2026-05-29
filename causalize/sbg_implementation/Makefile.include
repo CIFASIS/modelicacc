@@ -8,6 +8,7 @@ all: $(CAUSALIZE_SBG)
 # Sources
 CAUSALIZE_SBG_SRC := \
     $(CAUSALIZE_SBG_DIR)/main.cpp \
+    $(CAUSALIZE_SBG_DIR)/algebraic_loops_detection.cpp \
     $(CAUSALIZE_SBG_DIR)/equation_info.cpp \
     $(CAUSALIZE_SBG_DIR)/generate_sbg_input.cpp \
     $(CAUSALIZE_SBG_DIR)/horizontal_sorting.cpp \

@@ -17,21 +17,14 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_HORIZONTAL_SORTING_HPP_
-#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_HORIZONTAL_SORTING_HPP_
+#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_ALGEBRAIC_LOOPS_DETECTION_HPP_
+#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_ALGEBRAIC_LOOPS_DETECTION_HPP_
 
 #include "ast/equation.hpp"
 #include "ast/expression.hpp"
-#include "causalize/sbg_implementation/equation_info.hpp"
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
-#include "causalize/sbg_implementation/set_edge.hpp"
-#include "causalize/sbg_implementation/set_vertex.hpp"
-#include "mmo/mmo_class.hpp"
-#include "sbg/bipartite_sbg.hpp"
 
 #include <iosfwd>
-#include <map>
-#include <tuple>
 #include <vector>
 
 namespace Modelica {
@@ -42,51 +35,64 @@ namespace Causalize {
 // Auxiliary definitions -------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- * @class EqVarMatch
- * @brief Represents the pairing between an equation and the unknown that will
- * be solved for it.
- */
-class EqVarMatch {
+class AlgebraicLoop {
 public:
-  EqVarMatch() = default;
+  AlgebraicLoop() = default;
+  AlgebraicLoop(EquationList equations, ExpList variables);
 
-  std::size_t size() const;
-  std::tuple<Equation, Expression> operator[](std::size_t k) const;
+  const EquationList& equations() const;
+  const ExpList& variables() const;
+  bool isEmpty() const;
 
-  void pushBack(Equation eq, Expression expr);
+  void pushBack(Equation eq, Expression variable);
 
 private:
-  EquationList _equation_list;
-  ExpList _expression_list;
+  EquationList _equations;
+  ExpList _variables;
 };
 
-std::ostream& operator<<(std::ostream& out, const EqVarMatch& match);
+std::ostream& operator<<(std::ostream& out, const AlgebraicLoop& loop);
+
+class AlgebraicLoops {
+public:
+  AlgebraicLoops() = default;
+
+  std::size_t size() const;
+  AlgebraicLoop operator[](std::size_t k) const;
+  auto begin() const;
+  auto end() const;
+
+  void pushBack(AlgebraicLoop loop);
+
+private:
+  std::vector<AlgebraicLoop> _loops;
+};
+
+std::ostream& operator<<(std::ostream& out, const AlgebraicLoops& loops);
 
 ////////////////////////////////////////////////////////////////////////////////
-// Horizontal Sorting ----------------------------------------------------------
+// Algebraic Loops Detection ---------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @class HorizontalSorting
- * @brief Returns a pairing between variables and the equations from which
- * they can be solved.
+ * @class AlgebraicLoopsDetector
+ * @brief 
  */
-class HorizontalSorting {
+class AlgebraicLoopsDetector {
 public:
-  explicit HorizontalSorting(SBGGenerationInfo& sbg_gen_info);
-  ~HorizontalSorting() = default;
-  EqVarMatch sort();
+  AlgebraicLoopsDetector(SBGGenerationInfo& sbg_generator);
+
+  AlgebraicLoops detect();
 
 private:
-  void sortEquation(SetEdge se, CompactSet se_match);
+  void detectLoop(SetEdge se, AlgebraicLoop& loop);
 
   SBGGenerationInfo& _sbg_gen_info;
-  EqVarMatch _match; ///< Result of sorting
+  AlgebraicLoops _loops;
 };
 
 } // namespace Causalize
 
 } // namespace Modelica
 
-#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_HORIZONTAL_SORTING_HPP_
+#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_ALGEBRAIC_LOOPS_DETECTION_HPP_
