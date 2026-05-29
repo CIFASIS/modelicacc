@@ -43,13 +43,21 @@ public:
   SetEdge(int edge_id, CompactSet domain);
 
   int edge_id() const;
-  std::size_t arity() const;
   std::string name() const;
+  int var_id() const;
+  int eq_id() const;
+  const CompactSet& domain() const;
+  std::size_t arity() const;
+  const Expression& access() const;
 
   void set_edge_id(int edge_id);
   void set_name(std::string name);
+  void set_var_id(int var_id);
+  void set_eq_id(int eq_id);
+  void set_domain(CompactSet domain);
   void set_map1(CompactTransformation map1);
   void set_map2(CompactTransformation map2);
+  void set_access(Expression access);
 
   std::string domainToSBGFormat() const;
   std::string map1ToSBGFormat() const;
@@ -61,10 +69,12 @@ public:
 private:
   int _edge_id;
   std::string _name;
-  std::size_t _arity;
+  int _var_id;
+  int _eq_id;
   CompactSet _domain;
   CompactTransformation _map1;
   CompactTransformation _map2;
+  Expression _access; ///< Expression of the access to the variable
 };
 
 std::ostream& operator<<(std::ostream& out, const SetEdge& sv);

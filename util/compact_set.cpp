@@ -43,15 +43,31 @@ CompactSet::CompactSet(AST::Integer start, AST::Integer step
     , static_cast<SBG::LIB::NAT>(end));
 }
 
+CompactSet::CompactSet(SBG::LIB::Set s) { _set = s; }
+
 // Getters ---------------------------------------------------------------------
+
+const SBG::LIB::Set& CompactSet::set() const { return _set; }
 
 std::size_t CompactSet::arity() const { return _set.arity(); }
 
-// Operators -------------------------------------------------------------------
+// Set operations --------------------------------------------------------------
+
+std::size_t CompactSet::cardinal() const { return _set.cardinal(); }
+
+bool CompactSet::operator==(const CompactSet& other) const
+{
+  return _set == other._set;
+}
 
 void CompactSet::setUnion(const CompactSet& other)
 {
   _set = _set.cup(other._set);
+}
+
+void CompactSet::intersection(const CompactSet& other)
+{
+  _set = _set.intersection(other._set);
 }
 
 void CompactSet::cartesianProduct(const CompactSet& other)
@@ -59,14 +75,7 @@ void CompactSet::cartesianProduct(const CompactSet& other)
   _set = _set.cartesianProduct(other._set);
 }
 
-std::string CompactSet::toSBGFormat() const
-{
-  std::ostringstream out;
-  out << _set;
-  return out.str();
-}
-
-// Methods ---------------------------------------------------------------------
+// Additional methods ----------------------------------------------------------
 
 void CompactSet::reflection()
 {
@@ -90,18 +99,6 @@ void CompactSet::scale(AST::Integer factor)
   ERROR("CompactSet::scale: not supported yet");
 }
 
-//AST::Integer CompactSet::maxDimSize() const
-//{
-//  AST::Integer maximum = 0;
-//
-//  //unsigned int arity = _starts.size();
-//  //for (unsigned int k = 0; k < arity; ++k) {
-//  //  maximum = std::max(maximum, (_ends[k] - _starts[k])/_steps[k]);
-//  //}
-//
-//  return maximum;
-//}
-
 AST::Integer CompactSet::maxDimPerimetral() const
 {
   SBG::LIB::NAT maximum = 0;
@@ -112,6 +109,13 @@ AST::Integer CompactSet::maxDimPerimetral() const
   }
 
   return static_cast<AST::Integer>(maximum);
+}
+
+std::string CompactSet::toSBGFormat() const
+{
+  std::ostringstream out;
+  out << _set;
+  return out.str();
 }
 
 } // namespace Modelica

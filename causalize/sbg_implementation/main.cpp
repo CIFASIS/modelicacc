@@ -17,22 +17,26 @@
 
 ******************************************************************************/
 
-#include <boost/variant/get.hpp>
-#include <getopt.h>
+#include "boost/variant/get.hpp"
+#include "getopt.h"
+#include <fstream>
+#include <sstream>
 
-#include <causalize/sbg_implementation/generate_sbg_input.hpp>
-#include <mmo/mmo_class.hpp>
-#include <parser/parser.hpp>
+
+#include "causalize/sbg_implementation/generate_sbg_input.hpp"
+#include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
+#include "causalize/sbg_implementation/horizontal_sorting.hpp"
+#include "mmo/mmo_class.hpp"
+#include "parser/parser.hpp"
+#include "util/ast_visitors/state_variables_finder.hpp"
+#include "util/debug.hpp"
+#include "util/logger.hpp"
 #include <util/ast_visitors/state_variables_finder.hpp>
-#include <util/debug.hpp>
-#include <util/logger.hpp>
 #include <util/solve/solve.hpp>
 #include <ast/equation.hpp>
 #include <util/table.hpp>
 #include <causalize/graph_implementation/apply_tarjan.h>
 #include <causalize/graph_implementation/graph/graph_definition.h>
-#include <fstream>
-#include <sstream>
 
 using namespace std;
 using namespace Modelica;
@@ -147,60 +151,9 @@ int main(int argc, char** argv)
   setup_state_var.findStateVariables();
 
   Modelica::Causalize::GenerateSBGInput gen_sbg_input(mmo_class);
-
-  gen_sbg_input.buildFromModel();
-
-  /// Temp hack to test the binaries, hardcoded paths should go on config files.
-  const std::string CAUSALIZE = "./3rd-party/sbg/sb-graph-dev/build/eval/sbg-eval ";
-  const std::string DEFAULT_CAUSALIZED_JSON = "./output.json";
-  const std::string CAUSALIZED_JSON = mmo_class.name() + "_causalized.json";
-  std::string ARGS = gen_sbg_input.fileName() + " > " + mmo_class.name() + "_causalized.sbg; mv " + DEFAULT_CAUSALIZED_JSON + " ./" + CAUSALIZED_JSON;
-  const std::string CAUSALIZE_CMD = CAUSALIZE + ARGS;
-
-  int res = std::system(CAUSALIZE_CMD.c_str());
-
-  std::cout << "Result: " << res << std::endl;
-
-  // Check if SBG processing succeeded
-  if (res != 0) {
-    std::cerr << "SBG processing failed with code: " << res << std::endl;
-    return res;
-  }
-
-  // Validate JSON file exists
-  std::ifstream json_file(CAUSALIZED_JSON);
-  if (!json_file.good()) {
-    std::cerr << "Failed to open SBG output file: " << CAUSALIZED_JSON << std::endl;
-    return -1;
-  }
-
-  try {
-    // Read and parse JSON output from SBG
-    std::string json_content = read_json_file(CAUSALIZED_JSON);
-    
-    // Convert JSON results to EquationList and ExpList
-    Modelica::AST::EquationList causalized_eqs = parse_json_to_equations(json_content);
-    Modelica::AST::ExpList unknowns = parse_json_to_unknowns(json_content);
-
-    // Apply EquationSolver to generate C code
-    std::stringstream output_path;
-    output_path << mmo_class.name() << ".c";
-    Modelica::AST::EquationList final_eqs = EquationSolver::Solve(
-        causalized_eqs, 
-        unknowns, 
-        mmo_class.syms_ref(), 
-        c_code, 
-        _cl, 
-        output_path.str()
-    );
-
-    std::cout << "EquationSolver processing completed successfully." << std::endl;
-    std::cout << "Generated C code in: " << output_path.str() << std::endl;
-
-  } catch (const std::exception& e) {
-    std::cerr << "Error during EquationSolver integration: " << e.what() << std::endl;
-    return -1;
-  }
-
-  return res;
+  Modelica::Causalize::SBGGenerationInfo info = gen_sbg_input.buildFromModel();
+  Modelica::Causalize::AlgebraicLoopsDetector loops_detector(info);
+  Modelica::Causalize::AlgebraicLoops loops = loops_detector.detect();
+  std::cout << "Algebraic Loops:\n" << loops << "\n";
+  return 0;
 }

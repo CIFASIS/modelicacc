@@ -1,6 +1,6 @@
 # Target variables
 MODE ?= Release
-sbg_branch ?= sb-graph-dev
+sbg_branch ?= iss-87-refine-interfaces
 build_sbg ?= True
 repo_checkout=ssh
 
@@ -35,11 +35,21 @@ CXXFLAGS 	+= -ggdb
 endif
 LIBMODELICA = lib/libmodelica.a
 LIBS     := -L./lib -lginac -lmodelica
-SBG_LIB_DEV_LINK := -L$(SBG_DEV_DIR)/build -lsbgraph -L$(SBG_DEV_DIR)/build/sbg -lsbg-dev
+SBG_LIB_DEV_LINK := -L$(SBG_DEV_DIR)/build \
+                    -L$(SBG_DEV_DIR)/build/sbg \
+                    -L$(SBG_DEV_DIR)/build/eval \
+                    -L$(SBG_DEV_DIR)/build/parser \
+                    -L$(SBG_DEV_DIR)/build/util \
+                    -Wl,--start-group \
+                    -lsbgraph \
+                    -lsbg-dev \
+                    -lsbg-eval-lib \
+                    -lsbg-parser-lib \
+                    -lsbg-util-lib \
+                    -Wl,--end-group
 SBG_LIB_1_0_0_LINK := -L$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0)/usr/lib -lsbgraph
 
-all: update-sbg $(LIBMODELICA)
-update-sbg: sbg_branch = iss-87-refine-interfaces
+all: $(LIBMODELICA)
 
 include antialias/Makefile.include
 include mmo/Makefile.include
@@ -65,6 +75,14 @@ COMMON_SRC := \
 
 # Objects
 COMMON_OBJ=$(addprefix $(BUILD_DIR)/, $(COMMON_SRC:.cpp=.o))
+
+$(BUILD_DIR)/util/ast_visitors/contains_expression_flatter.o : util/ast_visitors/contains_expression_flatter.cpp
+	$(CC) $(INCLUDES) $(SBG_LIB_1_0_0_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES) $(SBG_LIB_1_0_0_INCLUDE) -c $< -o $@ $(CXXFLAGS)
+
+$(BUILD_DIR)/util/ast_visitors/eval_expression_flatter.o : util/ast_visitors/eval_expression_flatter.cpp
+	$(CC) $(INCLUDES) $(SBG_LIB_1_0_0_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES) $(SBG_LIB_1_0_0_INCLUDE) -c $< -o $@ $(CXXFLAGS)
 
 $(BUILD_DIR)/util/compact_set.o : util/compact_set.cpp
 	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<

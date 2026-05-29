@@ -35,24 +35,31 @@ class CompactSet {
 public:
   CompactSet();
   CompactSet(AST::Integer start, AST::Integer step, AST::Integer end);
+  CompactSet(SBG::LIB::Set s);
 
+  const SBG::LIB::Set& set() const;
   std::size_t arity() const;
 
-  /**
-   * @brief Returns a string-like result that is parsable by the SBG parser.
-   */
-  std::string toSBGFormat() const;
+  bool operator==(const CompactSet& other) const;
 
+  std::size_t cardinal() const;
   void setUnion(const CompactSet& other);
+  void intersection(const CompactSet& other);
   void cartesianProduct(const CompactSet& other);
   void reflection();
   void translate(const Translation& t);
   void scale(Integer factor);
 
   /**
-   * @brief 
+   * @brief Returns the maximum coordinate between dimensions of any point of
+   * the set. For example, maxDimPerimetral({(1, 10), (15, 2)}) = 15. 
    */
   AST::Integer maxDimPerimetral() const;
+
+  /**
+   * @brief Returns a string-like result that is parsable by the SBG parser.
+   */
+  std::string toSBGFormat() const;
 
 private:
   SBG::LIB::Set _set;
