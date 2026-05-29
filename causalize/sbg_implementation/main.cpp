@@ -112,9 +112,6 @@ int main(int argc, char** argv)
 
   Modelica::Causalize::GenerateSBGInput gen_sbg_input(mmo_class);
   Modelica::Causalize::SBGGenerationInfo info = gen_sbg_input.buildFromModel();
-  //Modelica::Causalize::HorizontalSorting horizontal_sorter(info);
-  //Modelica::Causalize::EqVarMatch horizontal_sort = horizontal_sorter.sort();
-  //std::cout << "Horizontal sorting:\n" << horizontal_sort << "\n";
   Modelica::Causalize::AlgebraicLoopsDetector loops_detector(info);
   Modelica::Causalize::AlgebraicLoops loops = loops_detector.detect();
   std::cout << "Algebraic Loops:\n" << loops << "\n";

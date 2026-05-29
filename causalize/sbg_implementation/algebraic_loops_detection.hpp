@@ -85,7 +85,7 @@ public:
   AlgebraicLoops detect();
 
 private:
-  void detectLoop(SetEdge se, CompactSet se_in_loop, AlgebraicLoop& loop);
+  void detectLoop(SetEdge se, AlgebraicLoop& loop);
 
   SBGGenerationInfo& _sbg_gen_info;
   AlgebraicLoops _loops;

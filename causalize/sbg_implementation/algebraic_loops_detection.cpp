@@ -144,7 +144,7 @@ AlgebraicLoops AlgebraicLoopsDetector::detect()
       CompactSet jth_domain = se.domain();
       jth_domain.intersection(loop_elems);
       if (jth_domain.cardinal() > 0) {
-        detectLoop(se, jth_domain, loop);
+        detectLoop(se, loop);
         representatives = representatives.difference(se.domain().set());
       }
     }
