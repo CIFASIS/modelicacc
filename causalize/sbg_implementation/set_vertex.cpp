@@ -85,7 +85,6 @@ std::string SetVertex::toSBGFormat() const
 void SetVertex::cartesianProduct(const CompactSet& s)
 {
   _set.cartesianProduct(s);
-  std::cout << _set.toSBGFormat() << "\n";
 }
 
 void SetVertex::cartesianProduct(const SetVertex& other)

@@ -24,6 +24,8 @@
 #include "ast/expression.hpp"
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
 
+#include <algorithms/scc/scc_data.hpp>
+
 #include <iosfwd>
 #include <vector>
 
@@ -70,19 +72,37 @@ private:
 
 std::ostream& operator<<(std::ostream& out, const AlgebraicLoops& loops);
 
+class AlgebraicLoopsInfo {
+public:
+  AlgebraicLoopsInfo(const std::vector<SetVertex>& set_vertices
+    , const std::vector<SetEdge>& set_edges, SBG::LIB::SCCData scc_result
+    , AlgebraicLoops loops);
+
+  const std::vector<SetVertex>& set_vertices() const;
+  const std::vector<SetEdge>& set_edges() const;
+  const SBG::LIB::SCCData& scc_result() const;
+  const AlgebraicLoops& loops() const;
+
+private:
+  const std::vector<SetVertex>& _set_vertices;
+  const std::vector<SetEdge>& _set_edges;
+  SBG::LIB::SCCData _scc_result;
+  AlgebraicLoops _loops;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Algebraic Loops Detection ---------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @class AlgebraicLoopsDetector
- * @brief 
+ * @brief Identifies the algebraic loops of the model. 
  */
 class AlgebraicLoopsDetector {
 public:
   AlgebraicLoopsDetector(SBGGenerationInfo& sbg_generator);
 
-  AlgebraicLoops detect();
+  AlgebraicLoopsInfo detect();
 
 private:
   void detectLoop(SetEdge se, AlgebraicLoop& loop);

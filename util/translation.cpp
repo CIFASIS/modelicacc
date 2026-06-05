@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include "util/affine_diag_transformation.hpp"
+#include "util/translation.hpp"
 #include "util/debug.hpp"
 
 #include <iostream>
@@ -43,6 +43,19 @@ const AST::Integer& Translation::operator[](std::size_t i) const
   ERROR_UNLESS(i < _dimension, "Translation::operator[]: index ", i
     , "out of dimension ", _dimension);
   return _translation[i];
+}
+
+Translation Translation::operator-(const Translation& other) const
+{
+  ERROR_UNLESS(arity() == other.arity(), "Translation::operator-: dimensions "
+    , "are mismatched");
+
+  Translation result{arity()};
+  result._dimension = arity();
+  for (std::size_t k = 0; k < arity(); ++k) {
+    result._translation[k] = operator[](k) - other[k];
+  }
+  return result;
 }
 
 } // namespace Modelica
