@@ -65,6 +65,7 @@ public:
   auto end() const;
 
   void pushBack(AlgebraicLoop loop);
+  void reverse();
 
 private:
   std::vector<AlgebraicLoop> _loops;
