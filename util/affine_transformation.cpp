@@ -40,6 +40,11 @@ AffineTransformation::AffineTransformation(std::size_t n) : _impl(n)
   }
 }
 
+const SBG::LIB::Expression AffineTransformation::expr() const
+{
+  return std::visit([](auto& a) { return a.expr(); }, _impl);
+}
+
 AST::Integer& AffineTransformation::matrix(std::size_t i, std::size_t j)
 {
   return std::visit([i, j](auto& a) -> AST::Integer& { return a.matrix(i, j); }

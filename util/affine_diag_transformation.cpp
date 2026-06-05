@@ -31,6 +31,16 @@ namespace detail {
 AffineDiagTransformation::AffineDiagTransformation(std::size_t n)
   : _dimension(n), _diag(n, 0), _translation(n, 0) {}
 
+const SBG::LIB::Expression AffineDiagTransformation::expr() const
+{
+  SBG::LIB::Expression result;
+  for (std::size_t k = 0; k < _dimension; ++k) {
+    result = result.cartesianProduct(SBG::LIB::Expression{
+      SBG::LIB::RATIONAL{_diag[k]}, SBG::LIB::RATIONAL{_translation[k]}});
+  }
+  return result;
+}
+
 AST::Integer& AffineDiagTransformation::matrix(std::size_t i, std::size_t j)
 {
   ERROR_UNLESS(i < _dimension && j < _dimension,
