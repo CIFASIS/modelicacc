@@ -34,6 +34,8 @@ namespace Causalize {
 // Auxiliar definitions --------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
+// AlgebraicLoop ---------------------------------------------------------------
+
 AlgebraicLoop::AlgebraicLoop(EquationList equations, ExpList variables)
   : _equations(equations), _variables(variables) {}
 
@@ -60,6 +62,8 @@ std::ostream& operator<<(std::ostream& out, const AlgebraicLoop& loop)
 
   return out;
 }
+
+// AlgebraicLoops --------------------------------------------------------------
 
 std::size_t AlgebraicLoops::size() const { return _loops.size(); }
 
@@ -90,6 +94,32 @@ std::ostream& operator<<(std::ostream& out, const AlgebraicLoops& loops)
   return out;
 }
 
+// AlgebraicLoopsInfo ----------------------------------------------------------
+
+AlgebraicLoopsInfo::AlgebraicLoopsInfo(
+  const std::vector<SetVertex>& set_vertices
+  , const std::vector<SetEdge>& set_edges
+  , SBG::LIB::SCCData scc_result, AlgebraicLoops loops)
+  : _set_vertices(set_vertices), _set_edges(set_edges), _scc_result(scc_result)
+    , _loops(loops) {}
+
+const std::vector<SetVertex>& AlgebraicLoopsInfo::set_vertices() const
+{
+  return _set_vertices;
+}
+
+const std::vector<SetEdge>& AlgebraicLoopsInfo::set_edges() const
+{
+  return _set_edges;
+}
+
+const SBG::LIB::SCCData& AlgebraicLoopsInfo::scc_result() const
+{
+  return _scc_result;
+}
+
+const AlgebraicLoops& AlgebraicLoopsInfo::loops() const { return _loops; }
+
 ////////////////////////////////////////////////////////////////////////////////
 // Algebraic Loops Detector ----------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +143,7 @@ void AlgebraicLoopsDetector::detectLoop(SetEdge se, AlgebraicLoop& loop)
   loop.pushBack(eq, se.access());
 }
 
-AlgebraicLoops AlgebraicLoopsDetector::detect()
+AlgebraicLoopsInfo AlgebraicLoopsDetector::detect()
 {
   const SBG::LIB::BipartiteSBG& bipartite_sbg = _sbg_gen_info.bipartite_sbg();
   unsigned int num_variables = bipartite_sbg.Y().cardinal();
@@ -151,7 +181,8 @@ AlgebraicLoops AlgebraicLoopsDetector::detect()
     _loops.pushBack(loop);
   }
 
-  return _loops;
+  return AlgebraicLoopsInfo{_sbg_gen_info.set_vertices()
+    , _sbg_gen_info.set_edges(), scc_result, _loops};
 }
 
 } // namespace Causalize

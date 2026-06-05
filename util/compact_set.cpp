@@ -84,6 +84,7 @@ void CompactSet::reflection()
 
 void CompactSet::translate(const Translation& t)
 {
+  std::cout << t.arity() << " " << _set.arity() << "\n";
   ERROR_UNLESS(t.arity() == _set.arity(), "CompactSet::translate: dimensions "
     , "of compact set and translation are different");
 
@@ -117,5 +118,57 @@ std::string CompactSet::toSBGFormat() const
   out << _set;
   return out.str();
 }
+
+Index dimensionToModelicaIndices(const rapidjson::Value& dimension
+  , Integer offset, Name counter)
+{
+  std::vector<int> range; 
+  std::size_t k = 0;
+  for (const rapidjson::Value& v : dimension.GetArray()) {
+    ERROR_UNLESS(k < 3, "dimensionToModelicaIndices: more than three numbers "
+      "to define an interval");
+    range.push_back(k == 1 ? v.GetInt() : v.GetInt() - offset);
+    ++k;
+  }
+
+  return Index{counter, OptExp{Range{range[0], range[1], range[2]}}};
+}
+
+Indexes pieceToModelicaIndices(const rapidjson::Value& piece
+  , const Translation& t, const std::vector<Name>& counters)
+{
+  IndexList result;
+
+  std::size_t k = 0;
+  const rapidjson::Value& bounds = piece["bounds"]; 
+  for (const rapidjson::Value& dimension : bounds.GetArray()) {
+    result.push_back(dimensionToModelicaIndices(dimension, t[k], counters[k]));
+    ++k;
+  }
+
+  return Indexes{result};
+}
+
+std::vector<Indexes> CompactSet::toModelicaIndices(const Translation& t
+  , const std::vector<Name>& counters) const
+{
+  rapidjson::Document doc;
+  rapidjson::Value json = _set.toJSON(doc.GetAllocator());
+
+  ERROR_UNLESS(json.IsObject(), "CompactSet::toModelicaIndices: value is not "
+    "is not an object");
+
+  ERROR_UNLESS(json.HasMember("pieces"), "CompactSet::toModelicaIndices: "
+    , "incorrect SBG::LIB::Set format");
+
+  std::vector<Indexes> result;
+  const rapidjson::Value& pieces = json["pieces"];
+  for (const auto& piece : pieces.GetArray()) {
+    result.push_back(pieceToModelicaIndices(piece, t, counters));
+  }
+
+  return result;
+}
+
 
 } // namespace Modelica

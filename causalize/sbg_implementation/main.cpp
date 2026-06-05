@@ -20,6 +20,7 @@
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
+#include "causalize/sbg_implementation/tearing.hpp"
 #include "mmo/mmo_class.hpp"
 #include "parser/parser.hpp"
 #include "util/ast_visitors/state_variables_finder.hpp"
@@ -111,10 +112,15 @@ int main(int argc, char** argv)
   setup_state_var.findStateVariables();
 
   Modelica::Causalize::GenerateSBGInput gen_sbg_input(mmo_class);
-  Modelica::Causalize::SBGGenerationInfo info = gen_sbg_input.buildFromModel();
-  Modelica::Causalize::AlgebraicLoopsDetector loops_detector(info);
-  Modelica::Causalize::AlgebraicLoops loops = loops_detector.detect();
-  std::cout << "Algebraic Loops:\n" << loops << "\n";
+  Modelica::Causalize::SBGGenerationInfo sbg_info
+    = gen_sbg_input.buildFromModel();
+  Modelica::Causalize::AlgebraicLoopsDetector loops_detector(sbg_info);
+  Modelica::Causalize::AlgebraicLoopsInfo loops_info = loops_detector.detect();
+  std::cout << "Algebraic loops:\n" << loops_info.loops() << "\n";
+  Modelica::Causalize::TearingDetector tearing_detector(loops_info);
+  Modelica::Causalize::TearingVariables tearing_vars
+    = tearing_detector.detect();
+  std::cout << "Tearing variables:\n" << tearing_vars << "\n";
 
   return 0;
 }

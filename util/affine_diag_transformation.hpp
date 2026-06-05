@@ -24,6 +24,8 @@
 #include "util/affine_expr.hpp"
 #include "util/translation.hpp"
 
+#include <sbg/expression.hpp>
+
 #include <sstream>
 #include <vector>
 
@@ -36,6 +38,8 @@ namespace detail {
 class AffineDiagTransformation {
 public:
   AffineDiagTransformation(std::size_t n);
+
+  const SBG::LIB::Expression expr() const;
 
   AST::Integer& matrix(std::size_t i, std::size_t j);
   const AST::Integer& matrix(std::size_t i, std::size_t j) const;

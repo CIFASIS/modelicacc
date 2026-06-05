@@ -96,6 +96,14 @@ $(BUILD_DIR)/util/ast_visitors/equation_compact_set.o : util/ast_visitors/equati
 	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
 	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
 
+$(BUILD_DIR)/util/affine_transformation.o : util/affine_transformation.cpp
+	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
+
+$(BUILD_DIR)/util/affine_diag_transformation.o : util/affine_diag_transformation.cpp
+	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
+	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
+
 $(BUILD_DIR)/%.o : %.cpp
 	$(CC) $(INCLUDES) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
 	$(CC) $(INCLUDES) -c $< -o $@ $(CXXFLAGS)
