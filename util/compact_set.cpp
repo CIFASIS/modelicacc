@@ -84,7 +84,6 @@ void CompactSet::reflection()
 
 void CompactSet::translate(const Translation& t)
 {
-  std::cout << t.arity() << " " << _set.arity() << "\n";
   ERROR_UNLESS(t.arity() == _set.arity(), "CompactSet::translate: dimensions "
     , "of compact set and translation are different");
 
