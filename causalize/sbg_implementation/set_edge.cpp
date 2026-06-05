@@ -38,17 +38,23 @@ SetEdge::SetEdge(int edge_id, CompactSet domain)
 
 int SetEdge::edge_id() const { return _edge_id; }
 
-std::size_t SetEdge::arity() const { return _domain.arity(); }
-
 std::string SetEdge::name() const { return _name; }
 
 int SetEdge::var_id() const { return _var_id; }
 
 int SetEdge::eq_id() const { return _eq_id; }
 
+const Translation& SetEdge::translation() const { return _translation; }
+
 const CompactSet& SetEdge::domain() const { return _domain; }
 
+const CompactTransformation& SetEdge::map1() const { return _map1; }
+
+const CompactTransformation& SetEdge::map2() const { return _map2; }
+
 const Expression& SetEdge::access() const { return _access; }
+
+std::size_t SetEdge::arity() const { return _domain.arity(); }
 
 // Setters ---------------------------------------------------------------------
 
@@ -59,6 +65,11 @@ void SetEdge::set_name(std::string name) { _name = name; }
 void SetEdge::set_var_id(int var_id) { _var_id = var_id; }
 
 void SetEdge::set_eq_id(int eq_id) { _eq_id = eq_id; }
+
+void SetEdge::set_translation(Translation translation)
+{
+  _translation = translation;
+}
 
 void SetEdge::set_domain(CompactSet domain) { _domain = domain; }
 

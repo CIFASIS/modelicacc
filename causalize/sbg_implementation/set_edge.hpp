@@ -46,14 +46,18 @@ public:
   std::string name() const;
   int var_id() const;
   int eq_id() const;
+  const Translation& translation() const;
   const CompactSet& domain() const;
-  std::size_t arity() const;
+  const CompactTransformation& map1() const;
+  const CompactTransformation& map2() const;
   const Expression& access() const;
+  std::size_t arity() const;
 
   void set_edge_id(int edge_id);
   void set_name(std::string name);
   void set_var_id(int var_id);
   void set_eq_id(int eq_id);
+  void set_translation(Translation translation);
   void set_domain(CompactSet domain);
   void set_map1(CompactTransformation map1);
   void set_map2(CompactTransformation map2);
@@ -71,6 +75,7 @@ private:
   std::string _name;
   int _var_id;
   int _eq_id;
+  Translation _translation; ///< Avoids domain values collision
   CompactSet _domain;
   CompactTransformation _map1;
   CompactTransformation _map2;
