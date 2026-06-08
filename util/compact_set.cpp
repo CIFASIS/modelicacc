@@ -169,5 +169,4 @@ std::vector<Indexes> CompactSet::toModelicaIndices(const Translation& t
   return result;
 }
 
-
 } // namespace Modelica

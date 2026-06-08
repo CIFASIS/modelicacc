@@ -22,7 +22,7 @@
 
 #include "ast/equation.hpp"
 #include "ast/expression.hpp"
-#include "causalize/sbg_implementation/generate_sbg_input.hpp"
+#include "causalize/sbg_implementation/horizontal_sorting.hpp"
 
 #include <algorithms/scc/scc_data.hpp>
 
@@ -101,14 +101,14 @@ private:
  */
 class AlgebraicLoopsDetector {
 public:
-  AlgebraicLoopsDetector(SBGGenerationInfo& sbg_generator);
+  AlgebraicLoopsDetector(HorizontalSortingInfo& sbg_generator);
 
   AlgebraicLoopsInfo detect();
 
 private:
   void detectLoop(SetEdge se, AlgebraicLoop& loop);
 
-  SBGGenerationInfo& _sbg_gen_info;
+  HorizontalSortingInfo& _hs_info;
   AlgebraicLoops _loops;
 };
 

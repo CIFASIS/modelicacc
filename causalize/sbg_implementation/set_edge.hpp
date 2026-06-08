@@ -68,6 +68,9 @@ public:
   std::string map2ToSBGFormat() const;
   std::string toSBGFormat() const;
 
+  /**
+   * @brief Returns the maximum coordinate of the perimeter of _domain.
+   */
   AST::Integer maxDimPerimetral();
 
 private:
