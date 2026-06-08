@@ -126,15 +126,7 @@ void HorizontalSorting::sortEquation(SetEdge se, CompactSet se_match)
 
   // Create new equation and save it to current matching
   for (const Indexes& indexes : indices) {
-    Equation new_eq = eq_info.toEquation();
-    if (is<ForEq>(new_eq)) {
-      ForEq for_eq = get<ForEq>(new_eq);
-      ERROR_UNLESS(for_eq.elements().size() == 1
-        , "HorizontalSorting::sortEquation: ForEq should have should be "
-        , "composed by a singleton list");
-      new_eq = ForEq{indexes, EquationList{1, for_eq.elements().front()}};
-    }
-    _sort.pushBack(new_eq, se.access());
+    _sort.pushBack(eq_info.restrictEquation(indexes), se.access());
   }
 }
 

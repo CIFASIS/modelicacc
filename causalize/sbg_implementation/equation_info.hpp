@@ -40,7 +40,7 @@ public:
   const AST::IndexList& indices() const;
   const AST::Equation& equation() const;
 
-  AST::Equation toEquation() const;
+  AST::Equation restrictEquation(const AST::Indexes& indexes) const;
 
 private:
   AST::IndexList _indices;

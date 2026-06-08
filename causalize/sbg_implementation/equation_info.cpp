@@ -32,7 +32,7 @@ const AST::IndexList& EquationInfo::indices() const { return _indices; }
 
 const AST::Equation& EquationInfo::equation() const { return _equation; }
 
-AST::Equation EquationInfo::toEquation() const
+AST::Equation EquationInfo::restrictEquation(const AST::Indexes& indexes) const
 {
   AST::Equation result;
 
@@ -48,7 +48,7 @@ AST::Equation EquationInfo::toEquation() const
   if (for_indices.indexes().empty()) { // Scalar equation
     result = _equation;
   } else { // Array equation
-    result = AST::ForEq{for_indices, AST::EquationList{1, _equation}};
+    result = AST::ForEq{indexes, AST::EquationList{1, _equation}};
   }
 
   return result;
