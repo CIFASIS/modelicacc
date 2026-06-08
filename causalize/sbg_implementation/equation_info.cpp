@@ -19,6 +19,8 @@
 
 #include "causalize/sbg_implementation/equation_info.hpp"
 
+#include <string>
+
 namespace Modelica {
 
 namespace Causalize {
@@ -29,6 +31,28 @@ EquationInfo::EquationInfo(AST::IndexList indices, AST::Equation equation)
 const AST::IndexList& EquationInfo::indices() const { return _indices; }
 
 const AST::Equation& EquationInfo::equation() const { return _equation; }
+
+AST::Equation EquationInfo::toEquation() const
+{
+  AST::Equation result;
+
+  // Take out dummy counters that were added during SBG generation
+  AST::IndexList index_list;
+  for (const AST::Index& index : _indices) {
+    if (index.name().substr(0, 6) != "*dummy") {
+      index_list.push_back(index);
+    }
+  }
+  AST::Indexes for_indices{index_list};
+
+  if (for_indices.indexes().empty()) { // Scalar equation
+    result = _equation;
+  } else { // Array equation
+    result = AST::ForEq{for_indices, AST::EquationList{1, _equation}};
+  }
+
+  return result;
+}
 
 } // namespace Causalize
 

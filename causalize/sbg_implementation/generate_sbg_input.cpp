@@ -43,6 +43,42 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
+// Auxiliary definitions -------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+SBGGenerationInfo::SBGGenerationInfo(MMO_Class& mmo_class, unsigned int max_dim
+  , std::vector<SetVertex>& set_vertices, std::vector<SetEdge>& set_edges
+  , std::map<int, EquationInfo>& equations_info
+  , SBG::LIB::BipartiteSBG bipartite_sbg)
+  : _mmo_class(mmo_class), _max_dim(max_dim), _set_vertices(set_vertices)
+    , _set_edges(set_edges), _equations_info(equations_info)
+    , _bipartite_sbg(bipartite_sbg) {}
+
+const MMO_Class& SBGGenerationInfo::mmo_class() const { return _mmo_class; }
+
+const unsigned int& SBGGenerationInfo::max_dim() const { return _max_dim; }
+
+const std::vector<SetVertex>& SBGGenerationInfo::set_vertices() const
+{
+  return _set_vertices;
+}
+
+const std::vector<SetEdge>& SBGGenerationInfo::set_edges() const
+{
+  return _set_edges;
+}
+
+const std::map<int, EquationInfo>& SBGGenerationInfo::equations_info() const
+{
+  return _equations_info;
+}
+
+const SBG::LIB::BipartiteSBG& SBGGenerationInfo::bipartite_sbg() const
+{
+  return _bipartite_sbg;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Generate SBG Input ----------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -189,7 +225,7 @@ IndexList getIndices(Equation eq, unsigned int max_dim)
   } else {
     IndexList scalar_indices;
     for (std::size_t k = 0; k < max_dim; ++k) {
-      scalar_indices.emplace_back("dummy_" + k, Expression{0});
+      scalar_indices.emplace_back("*dummy_" + std::to_string(k), Expression{0});
     }
     return scalar_indices;
   }
@@ -253,7 +289,6 @@ CompactTransformation GenerateSBGInput::createMap2(const Reference& reference
   ERROR_UNLESS(ref.size() == 1, "GenerateSBGInput::createMap2: conversion of "
     , "dotted references not implemented");
   ExpList indexes = get<1>(ref.front());
-  Translation domain_trans{_max_dim, _edge_offset};
 
   // Get order of counters
   std::vector<std::string> order;
@@ -269,6 +304,7 @@ CompactTransformation GenerateSBGInput::createMap2(const Reference& reference
     }
   } else { // Access to array variable
     std::size_t k = 0;
+    Translation domain_trans{_max_dim, _edge_offset};
     AffineExprVisitor affine_expr_visitor(_mmo_class.syms(), order);
     for (Expression index : indexes) {
       Util::AffineExpr kth_expr = Apply(affine_expr_visitor, index);
@@ -288,9 +324,8 @@ void GenerateSBGInput::addMaps(SetEdge se, const SetVertex& eq_sv
   , const SetVertex& var_sv, const Reference& reference)
 {
   CompactSet eq_nodes = eq_sv.set();
-  Translation domain_trans{_max_dim, _edge_offset};
   CompactSet domain = eq_nodes;
-  domain.translate(domain_trans);
+  domain.translate(se.translation());
   se.set_domain(domain);
 
   se.set_map1(createMap1(eq_nodes, eq_sv.translation()));
@@ -347,6 +382,7 @@ void GenerateSBGInput::addEdge(const SetVertex& eq_sv, const SetVertex& sv
       se.set_var_id(sv.node_id());
       se.set_eq_id(eq_sv.node_id());
       se.set_access(expr);
+      se.set_translation(Translation{_max_dim, _edge_offset});
 
       addMaps(se, eq_sv, sv, getReference(expr));
     }
@@ -399,7 +435,7 @@ void GenerateSBGInput::setup()
   }
 }
 
-SBG::LIB::BipartiteSBG GenerateSBGInput::buildFromModel()
+SBGGenerationInfo GenerateSBGInput::buildFromModel()
 {
   // Write SBG program to _sbg_input
   setup();
@@ -418,7 +454,8 @@ SBG::LIB::BipartiteSBG GenerateSBGInput::buildFromModel()
     }
   }
 
-  return g;
+  return SBGGenerationInfo{_mmo_class, _max_dim, _set_vertices, _set_edges
+    , _equations_info, g};
 }
 
 void GenerateSBGInput::generateVSet()

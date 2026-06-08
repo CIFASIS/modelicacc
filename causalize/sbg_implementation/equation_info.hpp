@@ -28,8 +28,9 @@ namespace Modelica {
 namespace Causalize {
 
 /**
- * @brief Helper that saves all Modelica information about an array of
- * equations.
+ * @brief Helper that saves all Modelica information about an array of equations
+ * (the array can be of size 1). It saves the indices of the array and the
+ * contained equation separately.
  */
 class EquationInfo {
 public:
@@ -38,6 +39,8 @@ public:
 
   const AST::IndexList& indices() const;
   const AST::Equation& equation() const;
+
+  AST::Equation toEquation() const;
 
 private:
   AST::IndexList _indices;

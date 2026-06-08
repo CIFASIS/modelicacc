@@ -46,6 +46,8 @@ int SetEdge::var_id() const { return _var_id; }
 
 int SetEdge::eq_id() const { return _eq_id; }
 
+const Translation& SetEdge::translation() const { return _translation; }
+
 const CompactSet& SetEdge::domain() const { return _domain; }
 
 const Expression& SetEdge::access() const { return _access; }
@@ -59,6 +61,11 @@ void SetEdge::set_name(std::string name) { _name = name; }
 void SetEdge::set_var_id(int var_id) { _var_id = var_id; }
 
 void SetEdge::set_eq_id(int eq_id) { _eq_id = eq_id; }
+
+void SetEdge::set_translation(Translation translation)
+{
+  _translation = translation;
+}
 
 void SetEdge::set_domain(CompactSet domain) { _domain = domain; }
 
