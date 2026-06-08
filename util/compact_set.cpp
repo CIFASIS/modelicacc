@@ -47,9 +47,11 @@ CompactSet::CompactSet(SBG::LIB::Set s) { _set = s; }
 
 // Getters ---------------------------------------------------------------------
 
+const SBG::LIB::Set& CompactSet::set() const { return _set; }
+
 std::size_t CompactSet::arity() const { return _set.arity(); }
 
-// Operators -------------------------------------------------------------------
+// Set operations --------------------------------------------------------------
 
 std::size_t CompactSet::cardinal() const { return _set.cardinal(); }
 
@@ -73,14 +75,7 @@ void CompactSet::cartesianProduct(const CompactSet& other)
   _set = _set.cartesianProduct(other._set);
 }
 
-std::string CompactSet::toSBGFormat() const
-{
-  std::ostringstream out;
-  out << _set;
-  return out.str();
-}
-
-// Methods ---------------------------------------------------------------------
+// Additional methods ----------------------------------------------------------
 
 void CompactSet::reflection()
 {
@@ -104,18 +99,6 @@ void CompactSet::scale(AST::Integer factor)
   ERROR("CompactSet::scale: not supported yet");
 }
 
-//AST::Integer CompactSet::maxDimSize() const
-//{
-//  AST::Integer maximum = 0;
-//
-//  //unsigned int arity = _starts.size();
-//  //for (unsigned int k = 0; k < arity; ++k) {
-//  //  maximum = std::max(maximum, (_ends[k] - _starts[k])/_steps[k]);
-//  //}
-//
-//  return maximum;
-//}
-
 AST::Integer CompactSet::maxDimPerimetral() const
 {
   SBG::LIB::NAT maximum = 0;
@@ -126,6 +109,64 @@ AST::Integer CompactSet::maxDimPerimetral() const
   }
 
   return static_cast<AST::Integer>(maximum);
+}
+
+std::string CompactSet::toSBGFormat() const
+{
+  std::ostringstream out;
+  out << _set;
+  return out.str();
+}
+
+Index dimensionToModelicaIndices(const rapidjson::Value& dimension
+  , Integer offset, Name counter)
+{
+  std::vector<int> range; 
+  std::size_t k = 0;
+  for (const rapidjson::Value& v : dimension.GetArray()) {
+    ERROR_UNLESS(k < 3, "dimensionToModelicaIndices: more than three numbers "
+      "to define an interval");
+    range.push_back(k == 1 ? v.GetInt() : v.GetInt() - offset);
+    ++k;
+  }
+
+  return Index{counter, OptExp{Range{range[0], range[1], range[2]}}};
+}
+
+Indexes pieceToModelicaIndices(const rapidjson::Value& piece
+  , const Translation& t, const std::vector<Name>& counters)
+{
+  IndexList result;
+
+  std::size_t k = 0;
+  const rapidjson::Value& bounds = piece["bounds"]; 
+  for (const rapidjson::Value& dimension : bounds.GetArray()) {
+    result.push_back(dimensionToModelicaIndices(dimension, t[k], counters[k]));
+    ++k;
+  }
+
+  return Indexes{result};
+}
+
+std::vector<Indexes> CompactSet::toModelicaIndices(const Translation& t
+  , const std::vector<Name>& counters) const
+{
+  rapidjson::Document doc;
+  rapidjson::Value json = _set.toJSON(doc.GetAllocator());
+
+  ERROR_UNLESS(json.IsObject(), "CompactSet::toModelicaIndices: value is not "
+    "is not an object");
+
+  ERROR_UNLESS(json.HasMember("pieces"), "CompactSet::toModelicaIndices: "
+    , "incorrect SBG::LIB::Set format");
+
+  std::vector<Indexes> result;
+  const rapidjson::Value& pieces = json["pieces"];
+  for (const auto& piece : pieces.GetArray()) {
+    result.push_back(pieceToModelicaIndices(piece, t, counters));
+  }
+
+  return result;
 }
 
 } // namespace Modelica

@@ -24,7 +24,8 @@
 #include "util/affine_transformation.hpp"
 #include "util/table.hpp"
 #include "util/translation.hpp"
-#include "sbg/set.hpp"
+
+#include <sbg/set.hpp>
 
 #include <sstream>
 #include <vector>
@@ -37,14 +38,10 @@ public:
   CompactSet(AST::Integer start, AST::Integer step, AST::Integer end);
   CompactSet(SBG::LIB::Set s);
 
+  const SBG::LIB::Set& set() const;
   std::size_t arity() const;
 
   bool operator==(const CompactSet& other) const;
-
-  /**
-   * @brief Returns a string-like result that is parsable by the SBG parser.
-   */
-  std::string toSBGFormat() const;
 
   std::size_t cardinal() const;
   void setUnion(const CompactSet& other);
@@ -55,9 +52,28 @@ public:
   void scale(Integer factor);
 
   /**
-   * @brief 
+   * @brief Returns the maximum coordinate between dimensions of any point of
+   * the set. For example, maxDimPerimetral({(1, 10), (15, 2)}) = 15. 
    */
   AST::Integer maxDimPerimetral() const;
+
+  /**
+   * @brief Returns a string-like result that is parsable by the SBG parser.
+   * It will be used by GenerateSBGInput, during the SBG generation from the
+   * Modelica model.
+   */
+  std::string toSBGFormat() const;
+
+  /**
+   * @brief Returns a collection of indices that describe the same elements of
+   * the current _set using the names of \p counters, and the applies the
+   * translation \p t. For example, if _set is [1000:1500], \p t = -999
+   * and counters = ["i"], it returns: (i, [1:501]).
+   * It will be used by HorizontalSorting during causalization to traduce back
+   * the SBG to Modelica code.
+   */
+  std::vector<Indexes> toModelicaIndices(const Translation& t
+    , const std::vector<Name>& counters) const;
 
 private:
   SBG::LIB::Set _set;
