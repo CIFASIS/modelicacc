@@ -20,11 +20,19 @@
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
 #include "util/debug.hpp"
 
-#include "algorithms/matching/matching.hpp"
-#include "algorithms/matching/match_data.hpp"
-#include "algorithms/misc/causalization_builders.hpp"
-#include "algorithms/scc/scc.hpp"
-#include "algorithms/scc/scc_data.hpp"
+#include <algorithms/matching/matching.hpp>
+#include <algorithms/matching/match_data.hpp>
+#include <algorithms/mfvs/min_feedback_vertex_set.hpp>
+#include <algorithms/misc/causalization_builders.hpp>
+#include <algorithms/scc/scc.hpp>
+#include <algorithms/scc/scc_data.hpp>
+#include <algorithms/sorting/topological/topological_sorting.hpp>
+#include <sbg/bipartite_sbg.hpp>
+#include <sbg/directed_sbg.hpp>
+#include <sbg/pw_map.hpp>
+#include <sbg/set.hpp>
+
+#include <algorithm>
 
 namespace Modelica {
 
@@ -85,6 +93,8 @@ void AlgebraicLoops::pushBack(AlgebraicLoop loop)
   }
 }
 
+void AlgebraicLoops::reverse() { std::reverse(_loops.begin(), _loops.end()); }
+
 std::ostream& operator<<(std::ostream& out, const AlgebraicLoops& loops)
 {
   for (const AlgebraicLoop& loop : loops) {
@@ -120,6 +130,28 @@ const SBG::LIB::SCCData& AlgebraicLoopsInfo::scc_result() const
 
 const AlgebraicLoops& AlgebraicLoopsInfo::loops() const { return _loops; }
 
+// getSCCDSBG ------------------------------------------------------------------
+
+/**
+ * @brief Constructs a directed SBG where the vertices of \p dsbg are grouped
+ * according to \p scc_data.rmap(), and only edges in \p scc_data.Ediff()
+ * are preserved.
+ */
+SBG::LIB::DirectedSBG getSCCDSBG(SBG::LIB::DirectedSBG dsbg
+  , SBG::LIB::SCCData scc_data)
+{
+  SBG::LIB::PWMap rmap = scc_data.rmap();
+  SBG::LIB::Set V = rmap.image();
+  SBG::LIB::PWMap Vmap = dsbg.Vmap().restrict(V); 
+
+  SBG::LIB::Set E = scc_data.Ediff();
+  SBG::LIB::PWMap mapB = rmap.composition(dsbg.mapB().restrict(E));
+  SBG::LIB::PWMap mapD = rmap.composition(dsbg.mapD().restrict(E));
+  SBG::LIB::PWMap Emap = dsbg.Emap().restrict(E);
+
+  return SBG::LIB::DirectedSBG{V, Vmap, mapB, mapD, Emap};
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Algebraic Loops Detector ----------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,11 +171,10 @@ void AlgebraicLoopsDetector::detectLoop(SetEdge se, AlgebraicLoop& loop)
   }
 
   const auto& eqs_info = _sbg_gen_info.equations_info();
-  Equation eq;
-  if(eqs_info.at(eq_sv.node_id()).scalar()) {
-    eq = eqs_info.at(eq_sv.node_id()).equation();
-  } else {
-    eq = ForEq{eqs_info.at(eq_sv.node_id()).indices(), EquationList{1, eqs_info.at(eq_sv.node_id()).equation()}};
+  EquationInfo eq_info = eqs_info.at(eq_sv.node_id());
+  Equation eq = eq_info.equation();
+  if (se.domain().cardinal() > 1) { // Array equation
+    eq = ForEq{eq_info.indices(), EquationList{1, eq_info.equation()}};
   }
   loop.pushBack(eq, se.access());
 }
@@ -167,12 +198,18 @@ AlgebraicLoopsInfo AlgebraicLoopsDetector::detect()
     = misc::buildLoopDetectionSBG(matching_result);
   SBG::LIB::SCCData scc_result = SBG::LIB::SCC{}.calculate(loops_dsbg);
 
+  // Get a topological sorting for the SCCs of loops_dsbg (which represents a
+  // a topological sorting for the algebraic loops)
+  SBG::LIB::DirectedSBG scc_dsbg = getSCCDSBG(loops_dsbg, scc_result);
+  SBG::LIB::PWMap scc_sort
+    = SBG::LIB::TopologicalSorting{}.calculate(scc_dsbg, SBG::LIB::PWMap{});
+
   // Traverse SCCs of the directed SBG
   SBG::LIB::PWMap rmap = scc_result.rmap();
-  SBG::LIB::Set representatives = rmap.image();
+  SBG::LIB::Set representatives = scc_sort.domain();
+  SBG::LIB::Set independent = scc_sort.fixedPoints();
   while (!representatives.isEmpty()) {
-    SBG::LIB::Set min_elem_set{representatives.minElem()};
-    CompactSet loop_elems{rmap.preImage(min_elem_set)};
+    CompactSet loop_elems{rmap.preImage(independent)};
     AlgebraicLoop loop;
     // Get all equations and variables that belong to this loop
     for (const SetEdge& se : _sbg_gen_info.set_edges()) {
@@ -181,11 +218,15 @@ AlgebraicLoopsInfo AlgebraicLoopsDetector::detect()
       if (jth_domain.cardinal() > 0) {
         detectLoop(se, loop);
         representatives = representatives.difference(se.domain().set());
+        scc_sort = scc_sort.restrict(representatives);
+        SBG::LIB::Set aux = scc_sort.image().difference(scc_sort.domain());
+        independent = scc_sort.preImage(aux);
       }
     }
     _loops.pushBack(loop);
   }
 
+  _loops.reverse();
   return AlgebraicLoopsInfo{_sbg_gen_info.set_vertices()
     , _sbg_gen_info.set_edges(), scc_result, _loops};
 }

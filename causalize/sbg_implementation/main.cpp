@@ -152,12 +152,11 @@ int main(int argc, char** argv)
   setup_state_var.findStateVariables();
 
   Modelica::Causalize::GenerateSBGInput gen_sbg_input(mmo_class);
-  Modelica::Causalize::SBGGenerationInfo info = gen_sbg_input.buildFromModel();
-  Modelica::Causalize::AlgebraicLoopsDetector loops_detector(info);
+  Modelica::Causalize::SBGGenerationInfo sbg_info
+    = gen_sbg_input.buildFromModel();
+  Modelica::Causalize::AlgebraicLoopsDetector loops_detector(sbg_info);
   Modelica::Causalize::AlgebraicLoopsInfo loops_info = loops_detector.detect();
-
-  std::cout << "Algebraic Loops:\n" << loops_info.loops() << "\n";
-  
+  std::cout << "Algebraic loops:\n" << loops_info.loops() << "\n";
   Modelica::Causalize::TearingDetector tearing_detector(loops_info);
   Modelica::Causalize::TearingVariables tearing_vars
     = tearing_detector.detect();
