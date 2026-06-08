@@ -74,9 +74,9 @@ AlgebraicLoop AlgebraicLoops::operator[](std::size_t k) const
   return _loops[k];
 }
 
-auto AlgebraicLoops::begin() const { return _loops.begin(); }
+//auto AlgebraicLoops::begin() const { return _loops.begin(); }
 
-auto AlgebraicLoops::end() const { return _loops.end(); }
+//auto AlgebraicLoops::end() const { return _loops.end(); }
 
 void AlgebraicLoops::pushBack(AlgebraicLoop loop)
 {
@@ -139,7 +139,12 @@ void AlgebraicLoopsDetector::detectLoop(SetEdge se, AlgebraicLoop& loop)
   }
 
   const auto& eqs_info = _sbg_gen_info.equations_info();
-  Equation eq = eqs_info.at(eq_sv.node_id()).equation();
+  Equation eq;
+  if(eqs_info.at(eq_sv.node_id()).scalar()) {
+    eq = eqs_info.at(eq_sv.node_id()).equation();
+  } else {
+    eq = ForEq{eqs_info.at(eq_sv.node_id()).indices(), EquationList{1, eqs_info.at(eq_sv.node_id()).equation()}};
+  }
   loop.pushBack(eq, se.access());
 }
 
@@ -159,7 +164,7 @@ AlgebraicLoopsInfo AlgebraicLoopsDetector::detect()
     , "higher index system");
 
   SBG::LIB::DirectedSBG loops_dsbg
-    = misc::buildLoopDetectionSBG(matching_result); 
+    = misc::buildLoopDetectionSBG(matching_result);
   SBG::LIB::SCCData scc_result = SBG::LIB::SCC{}.calculate(loops_dsbg);
 
   // Traverse SCCs of the directed SBG

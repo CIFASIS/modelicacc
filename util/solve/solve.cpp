@@ -85,28 +85,36 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
     if (debugIsEnabled('s')) std::cerr << "Solving variables " << exp << ": GiNaC " << Apply(tog, exp) << "\n";
     vars.append(Apply(tog, exp));
   }
-  bool for_eq = false;
+
+  std::vector<bool> for_eqs;
+  std::vector<Modelica::AST::IndexList> for_idxs;
+
   foreach_(Equation e, eqs)
   {
     if (debugIsEnabled('s')) std::cerr << "Using equation " << e << "\n";
     if (is<ForEq>(e)) {
       ForEq feq = get<ForEq>(e);
       ERROR_UNLESS(is<Equality>(feq.elements().front()), "Trying to solve a for loop with a non suported equation inside");
-      for_eq = true;
+      for_eqs.emplace_back(true);
+      for_idxs.emplace_back(feq.range().indexes());
       Equality eq = get<Equality>(feq.elements().front());
-      Expression l = Apply(peval, eq.left_ref());
-      Expression r = Apply(peval, eq.right_ref());
+      //Expression l = Apply(peval, eq.left_ref());
+      //Expression r = Apply(peval, eq.right_ref());
+      Expression l=eq.left_ref();
+      Expression r=eq.right_ref();
       GiNaC::ex left = Apply(tog, l);
       GiNaC::ex right = Apply(tog, r);
       if (debugIsEnabled('s')) std::cerr << "GiNaC equation " << left << "=" << right << "\n";
       eqns.append(left == right);
     } else {
+      for_eqs.emplace_back(false);
+      for_idxs.emplace_back(Modelica::AST::IndexList());
       ERROR_UNLESS(is<Equality>(e), "Solve: Only equality equations are supported\n");
       Equality eq = get<Equality>(e);
-      Expression l = Apply(peval, eq.left_ref());
-      Expression r = Apply(peval, eq.right_ref());
-      /*Expression l=eq.left_ref();
-      Expression r=eq.right_ref();*/
+      //Expression l = Apply(peval, eq.left_ref());
+      //Expression r = Apply(peval, eq.right_ref());
+      Expression l=eq.left_ref();
+      Expression r=eq.right_ref();
       GiNaC::ex left = Apply(tog, l);
       GiNaC::ex right = Apply(tog, r);
       if (debugIsEnabled('s')) std::cerr << "GiNaC equation " << left << "=" << right << "\n";
@@ -116,25 +124,24 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
 
   EquationList ret;
   try {
-    /*if (size>1)
-      throw std::logic_error("Blahh");*/
     if (debugIsEnabled('s')) std::cerr << "GiNaC equations " << eqns << " variables " << vars << "\n";
     GiNaC::ex solved = lsolve(eqns, vars, GiNaC::solve_algo::gauss);
     if (solved.nops() == 0) {
       std::cerr << "EquationSolver: cannot solve equation" << eqns << std::endl;
       std::cerr << "EquationSolver: for variables " << vars << std::endl;
+      //throw std::logic_error("Test");
       abort();
     }
     for (unsigned int i = 0; i < solved.nops(); i++) {
+      bool for_eq = for_eqs[i];
       std::stringstream s(ios_base::out);
       set_print_func<power, print_dflt>(my_print_power_dflt);
       if (debugIsEnabled('s')) std::cerr << "GiNaC result " << solved.op(i) << "\n";
       Expression lhs = Modelica::ConvertToExp(solved.op(i).op(0));
       Expression rhs = Modelica::ConvertToExp(solved.op(i).op(1));
-      if (debugIsEnabled('s')) std::cerr << "Modelica result " << lhs << "=" << rhs << "\n";
+      if (debugIsEnabled('s')) std::cerr << "Modelica result " << lhs << "=" << rhs << " " << for_eq << "\n";
       if (for_eq) {
-        ForEq feq = get<ForEq>(eqs.front());
-        feq.elements_ref().front() = Equality(lhs, rhs);
+        ForEq feq = ForEq{for_idxs[i], EquationList{1, Equality(lhs, rhs)}};
         ret.push_back(feq);
       } else {
         ret.push_back(Equality(lhs, rhs));
@@ -409,6 +416,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
 
     ExpList exp_args(args.begin(), args.end());
     i = 0;
+    bool for_eq = false;
     if (for_eq) {
       ForEq feq = get<ForEq>(eqs.front());
       if (crs.size() > 1)

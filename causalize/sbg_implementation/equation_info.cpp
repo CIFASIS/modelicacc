@@ -23,12 +23,14 @@ namespace Modelica {
 
 namespace Causalize {
 
-EquationInfo::EquationInfo(AST::IndexList indices, AST::Equation equation)
-  : _indices(indices), _equation(equation) {}
+EquationInfo::EquationInfo(AST::IndexList indices, AST::Equation equation, bool scalar)
+  : _indices(indices), _equation(equation), _scalar(scalar) {}
 
 const AST::IndexList& EquationInfo::indices() const { return _indices; }
 
 const AST::Equation& EquationInfo::equation() const { return _equation; }
+
+bool EquationInfo::scalar() const { return _scalar; }
 
 } // namespace Causalize
 

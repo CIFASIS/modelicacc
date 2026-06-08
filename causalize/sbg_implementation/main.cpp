@@ -32,12 +32,11 @@
 #include "util/ast_visitors/state_variables_finder.hpp"
 #include "util/debug.hpp"
 #include "util/logger.hpp"
-#include <util/ast_visitors/state_variables_finder.hpp>
 #include <util/solve/solve.hpp>
 #include <ast/equation.hpp>
 #include <util/table.hpp>
-#include <causalize/graph_implementation/apply_tarjan.h>
-#include <causalize/graph_implementation/graph/graph_definition.h>
+// #include <causalize/graph_implementation/apply_tarjan.h>
+// #include <causalize/graph_implementation/graph/graph_definition.h>
 
 using namespace std;
 using namespace Modelica;
@@ -148,19 +147,34 @@ int main(int argc, char** argv)
 
   Class ast_c = boost::get<Class>(stored_def.classes().front());
   MMO_Class mmo_class(ast_c);
+
   StateVariablesFinder setup_state_var(mmo_class);
   setup_state_var.findStateVariables();
 
   Modelica::Causalize::GenerateSBGInput gen_sbg_input(mmo_class);
-  Modelica::Causalize::SBGGenerationInfo sbg_info
-    = gen_sbg_input.buildFromModel();
-  Modelica::Causalize::AlgebraicLoopsDetector loops_detector(sbg_info);
+  Modelica::Causalize::SBGGenerationInfo info = gen_sbg_input.buildFromModel();
+  Modelica::Causalize::AlgebraicLoopsDetector loops_detector(info);
   Modelica::Causalize::AlgebraicLoopsInfo loops_info = loops_detector.detect();
-  std::cout << "Algebraic loops:\n" << loops_info.loops() << "\n";
+
+  std::cout << "Algebraic Loops:\n" << loops_info.loops() << "\n";
+  
   Modelica::Causalize::TearingDetector tearing_detector(loops_info);
   Modelica::Causalize::TearingVariables tearing_vars
     = tearing_detector.detect();
   std::cout << "Tearing variables:\n" << tearing_vars << "\n";
+
+  debugInit("s");
+  std::list<std::string> c_code;
+  Modelica::AST::ClassList classes = stored_def.classes();
+  std::string path = "test.c";
+  EquationList causalized;
+  for (const Modelica::Causalize::AlgebraicLoop& l : loops_info.loops()) {
+    EquationList res = EquationSolver::Solve(l.equations(), l.variables(), mmo_class.syms_ref(), c_code, classes, path);
+    causalized.insert(causalized.end(), res.begin(), res.end());
+  }
+  
+  mmo_class.equations_ref().equations_ref() = causalized;  
+  std::cout << mmo_class << std::endl;
 
   return 0;
 }

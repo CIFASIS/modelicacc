@@ -261,7 +261,7 @@ void GenerateSBGInput::addEquationNodes()
     // Save equation set-vertex
     set_vertex.set_name("eq_" + std::to_string(_node_id));
     _equations_info[_node_id]
-      = EquationInfo{getIndices(eq, _max_dim), getEquality(eq)};
+      = EquationInfo{getIndices(eq, _max_dim), getEquality(eq), !is<ForEq>(eq)};
     _set_vertices.push_back(set_vertex);
     ++_node_id;
   }
