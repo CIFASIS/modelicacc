@@ -49,6 +49,8 @@ public:
   AST::Integer& operator[](std::size_t i);
   const AST::Integer& operator[](std::size_t i) const;
 
+  Translation operator-(const Translation& other) const;
+
 private:
   std::size_t _dimension;
   std::vector<AST::Integer> _translation;

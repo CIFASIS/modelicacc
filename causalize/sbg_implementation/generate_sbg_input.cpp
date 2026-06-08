@@ -137,6 +137,7 @@ void GenerateSBGInput::addVariableSet(const VarInfo& variable
     var_dimensions = dimensions.value().size();
   } else {
     var_set = CompactSet{1, 1, 1};
+    var_dimensions = 1;
   }
 
   // Fill remaining dimensions
@@ -381,6 +382,7 @@ void GenerateSBGInput::addEdge(const SetVertex& eq_sv, const SetVertex& sv
       se.set_name(name);
       se.set_var_id(sv.node_id());
       se.set_eq_id(eq_sv.node_id());
+      se.set_translation(Translation{_max_dim, _edge_offset});
       se.set_access(expr);
       se.set_translation(Translation{_max_dim, _edge_offset});
 

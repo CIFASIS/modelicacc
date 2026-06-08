@@ -24,6 +24,8 @@
 #include "util/affine_diag_transformation.hpp"
 #include "util/affine_expr.hpp"
 
+#include <sbg/expression.hpp>
+
 #include <variant>
 #include <sstream>
 
@@ -42,6 +44,8 @@ public:
    * vector of dimension n. 
    */
   AffineTransformation(std::size_t n);
+
+  const SBG::LIB::Expression expr() const;
 
   /**
    * @brief Works as operator[] for the matrix of the transformation.

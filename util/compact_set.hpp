@@ -67,7 +67,7 @@ public:
   /**
    * @brief Returns a collection of indices that describe the same elements of
    * the current _set using the names of \p counters, and the applies the
-   * translation \p t. For example, if _set is [1000:1500], \p t = -999
+   * translation \p -t. For example, if _set is [1000:1500], \p t = 999
    * and counters = ["i"], it returns: (i, [1:501]).
    * It will be used by HorizontalSorting during causalization to traduce back
    * the SBG to Modelica code.
