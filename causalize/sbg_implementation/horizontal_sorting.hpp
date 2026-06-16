@@ -29,6 +29,8 @@
 #include "mmo/mmo_class.hpp"
 #include "sbg/bipartite_sbg.hpp"
 
+#include <algorithms/matching/match_data.hpp>
+
 #include <iosfwd>
 #include <map>
 #include <tuple>
@@ -41,6 +43,8 @@ namespace Causalize {
 ////////////////////////////////////////////////////////////////////////////////
 // Auxiliary definitions -------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
+
+// EqVarMatch ------------------------------------------------------------------
 
 /**
  * @class EqVarMatch
@@ -63,6 +67,47 @@ private:
 
 std::ostream& operator<<(std::ostream& out, const EqVarMatch& match);
 
+// HorizontalSortingInfo -------------------------------------------------------
+
+/**
+ * @class HorizontalSortingInfo
+ * @brief Saves information of the newly generated equations from the matching.
+ * For example, if the array equation:
+ *  for i in 1:N loop
+ *    a[i] + b[i] = 0;
+ *  end for;
+ * matches with a[1:N/2] and b[N/2+1:N], it will be splitted into:
+ *  for i in 1:N/2 loop
+ *    a[i] + b[i] = 0;
+ *  end for;
+ *  for i in N/2+1:N loop
+ *    a[i] + b[i] = 0;
+ *  end for;
+ * so, this structure keeps track of how set-vertices and set-edges are modified
+ * to achieve this. 
+ */
+class HorizontalSortingInfo {
+public:
+  HorizontalSortingInfo(const std::vector<SetVertex>& set_vertices
+    , const std::vector<SetEdge>& set_edges
+    , const std::map<int, EquationInfo>& equations_info
+    , SBG::LIB::MatchData matching_result
+    , EqVarMatch horizontal_sorting);
+
+  const std::vector<SetVertex>& set_vertices() const;
+  const std::vector<SetEdge>& set_edges() const;
+  const std::map<int, EquationInfo>& equations_info() const;
+  const SBG::LIB::MatchData& matching_result() const;
+  const EqVarMatch& horizontal_sorting() const;
+
+private:
+  const std::vector<SetVertex>& _set_vertices;
+  const std::vector<SetEdge>& _set_edges;
+  const std::map<int, EquationInfo>& _equations_info;
+  SBG::LIB::MatchData _matching_result;
+  EqVarMatch _horizontal_sorting;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Horizontal Sorting ----------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,13 +121,13 @@ class HorizontalSorting {
 public:
   explicit HorizontalSorting(SBGGenerationInfo& sbg_gen_info);
   ~HorizontalSorting() = default;
-  EqVarMatch sort();
+  HorizontalSortingInfo sort();
 
 private:
   void sortEquation(SetEdge se, CompactSet se_match);
 
   SBGGenerationInfo& _sbg_gen_info;
-  EqVarMatch _match; ///< Result of sorting
+  EqVarMatch _sort; ///< Result of sorting
 };
 
 } // namespace Causalize

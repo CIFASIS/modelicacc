@@ -73,7 +73,7 @@ const std::map<int, EquationInfo>& SBGGenerationInfo::equations_info() const
   return _equations_info;
 }
 
-const SBG::LIB::BipartiteSBG SBGGenerationInfo::bipartite_sbg() const
+const SBG::LIB::BipartiteSBG& SBGGenerationInfo::bipartite_sbg() const
 {
   return _bipartite_sbg;
 }
@@ -384,6 +384,7 @@ void GenerateSBGInput::addEdge(const SetVertex& eq_sv, const SetVertex& sv
       se.set_eq_id(eq_sv.node_id());
       se.set_translation(Translation{_max_dim, _edge_offset});
       se.set_access(expr);
+      se.set_translation(Translation{_max_dim, _edge_offset});
 
       addMaps(se, eq_sv, sv, getReference(expr));
     }

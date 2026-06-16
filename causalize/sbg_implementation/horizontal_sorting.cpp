@@ -20,8 +20,8 @@
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
 #include "util/debug.hpp"
 
-#include "algorithms/matching/matching.hpp"
-#include "algorithms/matching/match_data.hpp"
+#include <algorithms/matching/matching.hpp>
+#include <boost/variant/get.hpp>
 
 namespace Modelica {
 
@@ -30,6 +30,8 @@ namespace Causalize {
 ////////////////////////////////////////////////////////////////////////////////
 // Auxiliar definitions --------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
+
+// EqVarMatch ------------------------------------------------------------------
 
 std::size_t EqVarMatch::size() const { return _equation_list.size(); }
 
@@ -57,6 +59,43 @@ std::ostream& operator<<(std::ostream& out, const EqVarMatch& match)
   return out;
 }
 
+// HorizontalSortingInfo -------------------------------------------------------
+
+HorizontalSortingInfo::HorizontalSortingInfo(
+  const std::vector<SetVertex>& set_vertices
+  , const std::vector<SetEdge>& set_edges
+  , const std::map<int, EquationInfo>& equations_info
+  , SBG::LIB::MatchData matching_result
+  , EqVarMatch horizontal_sorting)
+  : _set_vertices(set_vertices), _set_edges(set_edges)
+    , _equations_info(equations_info), _matching_result(matching_result)
+    , _horizontal_sorting(horizontal_sorting) {}
+
+const std::vector<SetVertex>& HorizontalSortingInfo::set_vertices() const
+{
+  return _set_vertices;
+}
+
+const std::vector<SetEdge>& HorizontalSortingInfo::set_edges() const
+{
+  return _set_edges;
+}
+
+const std::map<int, EquationInfo>& HorizontalSortingInfo::equations_info() const
+{
+  return _equations_info;
+}
+
+const SBG::LIB::MatchData& HorizontalSortingInfo::matching_result() const
+{
+  return _matching_result;
+}
+
+const EqVarMatch& HorizontalSortingInfo::horizontal_sorting() const
+{
+  return _horizontal_sorting;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Horizontal Sorting ----------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,30 +105,34 @@ HorizontalSorting::HorizontalSorting(SBGGenerationInfo& sbg_gen_info)
 
 void HorizontalSorting::sortEquation(SetEdge se, CompactSet se_match)
 {
-  const std::map<int, EquationInfo>& eqs_info = _sbg_gen_info.equations_info();
-  // Matched all edges of a set-edge, indices can be used without
-  // modifications (the equation remains as it is)
-  if (se_match == se.domain()) {
-    // Get variable and equation set-vertices referenced by the set-edge
-    SetVertex var_sv{-1};
-    SetVertex eq_sv{-1};
-    for (const SetVertex& sv : _sbg_gen_info.set_vertices()) {
-      if (sv.node_id() == se.var_id()) {
-        var_sv = sv;
-      }
-      if (sv.node_id() == se.eq_id()) {
-        eq_sv = sv;
-      }
+  // Get variable and equation set-vertices referenced by the set-edge
+  SetVertex eq_sv{-1};
+  for (const SetVertex& sv : _sbg_gen_info.set_vertices()) {
+    if (sv.node_id() == se.eq_id()) {
+      eq_sv = sv;
+      break;
     }
+  }
 
-    _match.pushBack(eqs_info.at(eq_sv.node_id()).equation(), se.access());
-  } else {
-    ERROR("HorizontalSorting::sortEquation: conversion not yet supported");
+  // Get adjusted indices of the equation
+  const std::map<int, EquationInfo>& eqs_info = _sbg_gen_info.equations_info();
+  EquationInfo eq_info = eqs_info.at(eq_sv.node_id());
+  std::vector<Name> counters;
+  for (const Index& index : eq_info.indices()) {
+    counters.push_back(index.name());
+  }
+  std::vector<Indexes> indices = se_match.toModelicaIndices(se.translation()
+    , counters);
+
+  // Create new equation and save it to current matching
+  for (const Indexes& indexes : indices) {
+    _sort.pushBack(eq_info.restrictEquation(indexes), se.access());
   }
 }
 
-EqVarMatch HorizontalSorting::sort()
+HorizontalSortingInfo HorizontalSorting::sort()
 {
+  // Get SBG matching result
   const SBG::LIB::BipartiteSBG& bipartite_sbg = _sbg_gen_info.bipartite_sbg();
   unsigned int num_variables = bipartite_sbg.Y().cardinal();
   unsigned int num_equations = bipartite_sbg.X().cardinal();
@@ -103,6 +146,7 @@ EqVarMatch HorizontalSorting::sort()
   ERROR_UNLESS(matching_result.full_match(), "HorizontalSorting::sort: "
     , "higher index system");
 
+  // Traverse set-edges to get equation-variable matching
   CompactSet sbg_match{matching_result.M()}; 
   for (const SetEdge& se : _sbg_gen_info.set_edges()) {
     CompactSet jth_eq_var_match = se.domain();
@@ -112,7 +156,9 @@ EqVarMatch HorizontalSorting::sort()
     }
   }
 
-  return _match;
+  return HorizontalSortingInfo{_sbg_gen_info.set_vertices()
+    , _sbg_gen_info.set_edges(), _sbg_gen_info.equations_info()
+    , matching_result, _sort};
 }
 
 } // namespace Causalize

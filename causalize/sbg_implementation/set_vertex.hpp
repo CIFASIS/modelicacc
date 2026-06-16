@@ -62,6 +62,9 @@ public:
   void cartesianProduct(const CompactSet& s);
   void cartesianProduct(const SetVertex& other);
 
+  /**
+   * @brief Returns the maximum coordinate of the perimeter of _set.
+   */
   AST::Integer maxDimPerimetral() const;
 
 private:

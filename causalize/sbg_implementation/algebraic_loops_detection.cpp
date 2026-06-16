@@ -156,21 +156,21 @@ SBG::LIB::DirectedSBG getSCCDSBG(SBG::LIB::DirectedSBG dsbg
 // Algebraic Loops Detector ----------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-AlgebraicLoopsDetector::AlgebraicLoopsDetector(SBGGenerationInfo& sbg_gen_info)
-  : _sbg_gen_info(sbg_gen_info) {}
+AlgebraicLoopsDetector::AlgebraicLoopsDetector(HorizontalSortingInfo& hs_info)
+  : _hs_info(hs_info) {}
 
 void AlgebraicLoopsDetector::detectLoop(SetEdge se, AlgebraicLoop& loop)
 {
   // Get equation set-vertex referenced by the set-edge
   SetVertex eq_sv{-1};
-  for (const SetVertex& sv : _sbg_gen_info.set_vertices()) {
+  for (const SetVertex& sv : _hs_info.set_vertices()) {
     if (sv.node_id() == se.eq_id()) {
       eq_sv = sv;
       break;
     }
   }
 
-  const auto& eqs_info = _sbg_gen_info.equations_info();
+  const auto& eqs_info = _hs_info.equations_info();
   EquationInfo eq_info = eqs_info.at(eq_sv.node_id());
   Equation eq = eq_info.equation();
   if (se.domain().cardinal() > 1) { // Array equation
@@ -181,21 +181,8 @@ void AlgebraicLoopsDetector::detectLoop(SetEdge se, AlgebraicLoop& loop)
 
 AlgebraicLoopsInfo AlgebraicLoopsDetector::detect()
 {
-  const SBG::LIB::BipartiteSBG& bipartite_sbg = _sbg_gen_info.bipartite_sbg();
-  unsigned int num_variables = bipartite_sbg.Y().cardinal();
-  unsigned int num_equations = bipartite_sbg.X().cardinal();
-  ERROR_UNLESS(num_variables == num_equations
-    , "AlgebraicLoopsDetector::detect: unbalanced system of equations.\n"
-    , "Number of variables: ", num_variables, "\n"
-    , "Number of equations: ", num_equations);
-
-  SBG::LIB::MatchData matching_result
-    = SBG::LIB::Matching{}.calculate(bipartite_sbg);
-  ERROR_UNLESS(matching_result.full_match(), "AlgebraicLoopsDetector::detect: "
-    , "higher index system");
-
   SBG::LIB::DirectedSBG loops_dsbg
-    = misc::buildLoopDetectionSBG(matching_result);
+    = misc::buildLoopDetectionSBG(_hs_info.matching_result()); 
   SBG::LIB::SCCData scc_result = SBG::LIB::SCC{}.calculate(loops_dsbg);
 
   // Get a topological sorting for the SCCs of loops_dsbg (which represents a
@@ -212,7 +199,7 @@ AlgebraicLoopsInfo AlgebraicLoopsDetector::detect()
     CompactSet loop_elems{rmap.preImage(independent)};
     AlgebraicLoop loop;
     // Get all equations and variables that belong to this loop
-    for (const SetEdge& se : _sbg_gen_info.set_edges()) {
+    for (const SetEdge& se : _hs_info.set_edges()) {
       CompactSet jth_domain = se.domain();
       jth_domain.intersection(loop_elems);
       if (jth_domain.cardinal() > 0) {
@@ -227,8 +214,8 @@ AlgebraicLoopsInfo AlgebraicLoopsDetector::detect()
   }
 
   _loops.reverse();
-  return AlgebraicLoopsInfo{_sbg_gen_info.set_vertices()
-    , _sbg_gen_info.set_edges(), scc_result, _loops};
+  return AlgebraicLoopsInfo{_hs_info.set_vertices()
+    , _hs_info.set_edges(), scc_result, _loops};
 }
 
 } // namespace Causalize

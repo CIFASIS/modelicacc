@@ -58,7 +58,7 @@ public:
   const std::vector<SetVertex>& set_vertices() const;
   const std::vector<SetEdge>& set_edges() const;
   const std::map<int, EquationInfo>& equations_info() const;
-  const SBG::LIB::BipartiteSBG bipartite_sbg() const;
+  const SBG::LIB::BipartiteSBG& bipartite_sbg() const;
 
 private:
   const Modelica::MMO_Class& _mmo_class;
