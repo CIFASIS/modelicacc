@@ -121,7 +121,7 @@ void HorizontalSorting::sortEquation(SetEdge se, CompactSet se_match)
   for (const Index& index : eq_info.indices()) {
     counters.push_back(index.name());
   }
-  std::vector<Indexes> indices = se_match.toModelicaIndices(se.translation()
+  std::vector<Indexes> indices = toModelicaIndices(se_match, se.translation()
     , counters);
 
   // Create new equation and save it to current matching
