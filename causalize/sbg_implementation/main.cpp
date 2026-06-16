@@ -17,6 +17,9 @@
 
 ******************************************************************************/
 
+#include "boost/variant/get.hpp"
+#include <getopt.h>
+
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
