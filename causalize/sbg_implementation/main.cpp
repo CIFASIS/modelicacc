@@ -21,6 +21,7 @@
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
 #include "causalize/sbg_implementation/tearing.hpp"
+#include "causalize/sbg_implementation/vertical_sorting.hpp"
 #include "mmo/mmo_class.hpp"
 #include "parser/parser.hpp"
 #include "util/ast_visitors/state_variables_finder.hpp"
@@ -121,9 +122,16 @@ int main(int argc, char** argv)
   Modelica::Causalize::AlgebraicLoopsInfo loops_info = loops_detector.detect();
   std::cout << "Algebraic loops:\n" << loops_info.loops() << "\n";
   Modelica::Causalize::TearingDetector tearing_detector(loops_info);
+  Modelica::Causalize::TearingResult tearing_result = tearing_detector.detect();
   Modelica::Causalize::TearingVariables tearing_vars
-    = tearing_detector.detect();
+    = tearing_result.toModelicaFormat(loops_info.set_vertices()
+      , loops_info.set_edges());
   std::cout << "Tearing variables:\n" << tearing_vars << "\n";
+  Modelica::Causalize::VerticalSorting vertical_sorter{loops_info
+    , tearing_result};
+  Modelica::Causalize::CausalizationResult result
+    = vertical_sorter.sort(hs_info.equations_info());
+  std::cout << "Causalization result:\n" << result << "\n";
 
   return 0;
 }

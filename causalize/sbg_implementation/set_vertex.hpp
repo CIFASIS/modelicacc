@@ -76,6 +76,8 @@ private:
 
 std::ostream& operator<<(std::ostream& out, const SetVertex& sv);
 
+using SetVertices = std::vector<SetVertex>;
+
 } // namespace Causalize
 
 } // namespace Modelica
