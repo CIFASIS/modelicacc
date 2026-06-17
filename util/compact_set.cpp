@@ -24,6 +24,7 @@
 #include <boost/variant/get.hpp>
 
 #include <iostream>
+#include <string>
 #include <utility>
 
 namespace Modelica {
@@ -118,55 +119,92 @@ std::string CompactSet::toSBGFormat() const
   return out.str();
 }
 
-Index dimensionToModelicaIndices(const rapidjson::Value& dimension
-  , Integer offset, Name counter)
+// Non-member functions -------------------------------------------------------
+
+// TODO: generalize this to return an expression.
+int toNumber(const rapidjson::Value& value)
 {
-  std::vector<int> range; 
-  std::size_t k = 0;
-  for (const rapidjson::Value& v : dimension.GetArray()) {
-    ERROR_UNLESS(k < 3, "dimensionToModelicaIndices: more than three numbers "
-      "to define an interval");
-    range.push_back(k == 1 ? v.GetInt() : v.GetInt() - offset);
-    ++k;
+  std::string str_expr(value.GetString(), value.GetStringLength());
+  try {
+    std::stoi(str_expr);
+  } 
+  catch (const std::invalid_argument& e) {
+    std::cerr << "Invalid argument: Could not parse string to int.\n";
+  } 
+  catch (const std::out_of_range& e) {
+    std::cerr << "Out of range: The number is too large for an int.\n";
   }
 
-  return Index{counter, OptExp{Range{range[0], range[1], range[2]}}};
+  return std::stoi(str_expr);
+}
+
+// TODO: generalize to analyze step, slope and offset.
+Index dimensionToModelicaIndices(const rapidjson::Value& kth_bounds
+  , const rapidjson::Value& kth_expr, Integer offset, Name counter)
+{
+  ERROR_UNLESS(kth_bounds.Size() == 3, "dimensionToModelicaIndices: interval "
+    , " not defined with three values");
+
+  int m = toNumber(kth_expr[0]);
+  int h = toNumber(kth_expr[1]);
+
+  int begin = kth_bounds[0].GetInt() - offset;
+  int step = kth_bounds[1].GetInt();
+  int end = kth_bounds[2].GetInt() - offset;
+  if (m*h < 0) {
+    step = -step;
+    std::swap(begin, end);
+  }
+
+  return Index{counter, OptExp{Range{begin, step, end}}};
 }
 
 Indexes pieceToModelicaIndices(const rapidjson::Value& piece
-  , const Translation& t, const std::vector<Name>& counters)
+  , const rapidjson::Value& expr_json, const Translation& t
+  , const std::vector<Name>& counters)
 {
   IndexList result;
 
   std::size_t k = 0;
   const rapidjson::Value& bounds = piece["bounds"]; 
-  for (const rapidjson::Value& dimension : bounds.GetArray()) {
-    result.push_back(dimensionToModelicaIndices(dimension, t[k], counters[k]));
+  for (const rapidjson::Value& kth_bounds : bounds.GetArray()) {
+    result.push_back(dimensionToModelicaIndices(kth_bounds, expr_json[k]
+      , t[k], counters[k]));
     ++k;
   }
 
   return Indexes{result};
 }
 
-std::vector<Indexes> CompactSet::toModelicaIndices(const Translation& t
-  , const std::vector<Name>& counters) const
+std::vector<Indexes> toModelicaIndices(const CompactSet& s, const Translation& t
+  , const std::vector<Name>& counters, const SBG::LIB::Expression& expr)
 {
-  rapidjson::Document doc;
-  rapidjson::Value json = _set.toJSON(doc.GetAllocator());
-
-  ERROR_UNLESS(json.IsObject(), "CompactSet::toModelicaIndices: value is not "
+  rapidjson::Document set_doc;
+  rapidjson::Value set_json = s.set().toJSON(set_doc.GetAllocator());
+  ERROR_UNLESS(set_json.IsObject(), "toModelicaIndices: value "
     "is not an object");
-
-  ERROR_UNLESS(json.HasMember("pieces"), "CompactSet::toModelicaIndices: "
+  ERROR_UNLESS(set_json.HasMember("pieces"), "toModelicaIndices: "
     , "incorrect SBG::LIB::Set format");
 
+  rapidjson::Document expr_doc;
+  rapidjson::Value expr_json = expr.toJSON(expr_doc.GetAllocator());
+  ERROR_UNLESS(expr_json.IsArray(), "toModelicaIndices: value "
+    "is not an expression");
+
   std::vector<Indexes> result;
-  const rapidjson::Value& pieces = json["pieces"];
+  const rapidjson::Value& pieces = set_json["pieces"];
   for (const auto& piece : pieces.GetArray()) {
-    result.push_back(pieceToModelicaIndices(piece, t, counters));
+    result.push_back(pieceToModelicaIndices(piece, expr_json, t, counters));
   }
 
   return result;
+}
+
+std::vector<Indexes> toModelicaIndices(const CompactSet& s, const Translation& t
+  , const std::vector<Name>& counters)
+{
+  return toModelicaIndices(s, t, counters
+    , SBG::LIB::Expression{counters.size()});
 }
 
 } // namespace Modelica

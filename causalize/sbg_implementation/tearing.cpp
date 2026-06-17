@@ -17,9 +17,14 @@
 
 ******************************************************************************/
 
-#include "ast/queries.hpp"
 #include "causalize/sbg_implementation/tearing.hpp"
+#include "ast/queries.hpp"
+#include "causalize/sbg_implementation/set_edge.hpp"
+#include "causalize/sbg_implementation/set_vertex.hpp"
 #include "util/debug.hpp"
+#include "util/affine_transformation.hpp"
+#include "util/compact_set.hpp"
+#include "util/translation.hpp"
 
 #include <algorithms/mfvs/min_feedback_vertex_set.hpp>
 #include <algorithms/misc/causalization_builders.hpp>
@@ -87,11 +92,13 @@ std::ostream& operator<<(std::ostream& out, const TearingVariables& vars)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Tearing variables detector --------------------------------------------------
+// Tearing return structure ----------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-TearingDetector::TearingDetector(AlgebraicLoopsInfo loops_info)
-  : _loops_info(loops_info) {}
+TearingResult::TearingResult(SBG::LIB::Set mfvs_result)
+  : _mfvs_result(mfvs_result) {}
+
+const SBG::LIB::Set& TearingResult::mfvs_result() const { return _mfvs_result; }
 
 CompactSet image(CompactSet domain, CompactTransformation trans)
 {
@@ -99,13 +106,15 @@ CompactSet image(CompactSet domain, CompactTransformation trans)
   return CompactSet{m.image()};
 }
 
-void TearingDetector::detectVariable(SetEdge se, CompactSet jth_tear)
+void variableToModelica(const SetEdge& se
+  , const SetVertices& set_vertices, CompactSet jth_tear
+  , TearingVariables& modelica_vars)
 {
   // Get variable information that is accessed by the set-edge
-  Name name;
+  AST::Name name;
   std::size_t arity = se.domain().arity();
   Translation sv_translation{arity};
-  for (const SetVertex& sv : _loops_info.set_vertices()) {
+  for (const SetVertex& sv : set_vertices) {
     if (sv.node_id() == se.var_id()) {
       name = sv.name();
       sv_translation = sv.translation();
@@ -115,34 +124,48 @@ void TearingDetector::detectVariable(SetEdge se, CompactSet jth_tear)
 
   // Convert jth_tear to bracket expression and save it to result
   CompactSet img = image(se.domain(), se.map2());
-  std::vector<Indexes> indices = img.toModelicaIndices(sv_translation
+  std::vector<AST::Indexes> indices = toModelicaIndices(img, sv_translation
     , std::vector<AST::Name>{arity, ""});
-  for (const Indexes& indexes : indices) {
-    ExpList expr_list;
-    for (const Index& index : indexes.indexes()) {
-      ERROR_UNLESS(index.exp().has_value(), "TearingDetector::detectVariable: "
+  for (const AST::Indexes& indexes : indices) {
+    AST::ExpList expr_list;
+    for (const AST::Index& index : indexes.indexes()) {
+      ERROR_UNLESS(index.exp().has_value(), "TearingDetector::variableToModelica: "
         , "empty index");
       expr_list.push_back(index.exp().value());
     }
-    Bracket subscripts{ExpListList{1, expr_list}};
-    _tearing.insert(TearingVariable{name, subscripts});
+    AST::Bracket subscripts{ExpListList{1, expr_list}};
+    modelica_vars.insert(TearingVariable{name, subscripts});
   }
 }
 
-TearingVariables TearingDetector::detect()
+TearingVariables TearingResult::toModelicaFormat(const SetVertices& set_vertices
+  , const SetEdges& set_edges) const
 {
-  SBG::LIB::DirectedSBG dsbg = misc::buildTearingSBG(_loops_info.scc_result());
-  CompactSet mfvs{SBG::LIB::MinFeedbackVertexSet{}.calculate(dsbg)};
+  TearingVariables result;
 
-  for (const SetEdge& se : _loops_info.set_edges()) {
+  CompactSet mfvs{_mfvs_result};
+  for (const SetEdge& se : set_edges) {
     CompactSet jth_domain = se.domain();
     jth_domain.intersection(mfvs);
     if (jth_domain.cardinal() > 0) {
-      detectVariable(se, jth_domain);
+      variableToModelica(se, set_vertices, jth_domain, result);
     }
   }
 
-  return _tearing;
+  return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Tearing variables detector --------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+TearingDetector::TearingDetector(AlgebraicLoopsInfo loops_info)
+  : _loops_info(loops_info) {}
+
+TearingResult TearingDetector::detect()
+{
+  SBG::LIB::DirectedSBG dsbg = misc::buildTearingSBG(_loops_info.scc_result());
+  return TearingResult{SBG::LIB::MinFeedbackVertexSet{}.calculate(dsbg)};
 }
 
 } // namespace Causalize
