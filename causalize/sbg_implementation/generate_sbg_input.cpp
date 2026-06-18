@@ -43,37 +43,23 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Auxiliary definitions -------------------------------------------------------
+// SBG generation return structure ---------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-SBGGenerationInfo::SBGGenerationInfo(MMO_Class& mmo_class, unsigned int max_dim
-  , std::vector<SetVertex>& set_vertices, std::vector<SetEdge>& set_edges
-  , std::map<int, EquationInfo>& equations_info
+SBGGenerationResult::SBGGenerationResult(MMO_Class& mmo_class
+  , ModelicaSBG modelica_bsbg
   , SBG::LIB::BipartiteSBG bipartite_sbg)
-  : _mmo_class(mmo_class), _max_dim(max_dim), _set_vertices(set_vertices)
-    , _set_edges(set_edges), _equations_info(equations_info)
+  : _mmo_class(mmo_class), _modelica_bsbg(modelica_bsbg)
     , _bipartite_sbg(bipartite_sbg) {}
 
-const MMO_Class& SBGGenerationInfo::mmo_class() const { return _mmo_class; }
+const MMO_Class& SBGGenerationResult::mmo_class() const { return _mmo_class; }
 
-const unsigned int& SBGGenerationInfo::max_dim() const { return _max_dim; }
-
-const std::vector<SetVertex>& SBGGenerationInfo::set_vertices() const
+const ModelicaSBG& SBGGenerationResult::modelica_bsbg() const
 {
-  return _set_vertices;
+  return _modelica_bsbg;
 }
 
-const std::vector<SetEdge>& SBGGenerationInfo::set_edges() const
-{
-  return _set_edges;
-}
-
-const std::map<int, EquationInfo>& SBGGenerationInfo::equations_info() const
-{
-  return _equations_info;
-}
-
-const SBG::LIB::BipartiteSBG& SBGGenerationInfo::bipartite_sbg() const
+const SBG::LIB::BipartiteSBG& SBGGenerationResult::bipartite_sbg() const
 {
   return _bipartite_sbg;
 }
@@ -85,34 +71,13 @@ const SBG::LIB::BipartiteSBG& SBGGenerationInfo::bipartite_sbg() const
 // Constructors/Destructors ----------------------------------------------------
 
 GenerateSBGInput::GenerateSBGInput(MMO_Class& mmo_class)
-  : _mmo_class(mmo_class), _vertex_offset(0), _edge_offset(0) {}
+  : _mmo_class(mmo_class), _max_dim(0), _node_id(1), _edge_id(1)
+    , _vertex_offset(0), _edge_offset(0) {}
 
 // Getters ---------------------------------------------------------------------
 
 std::string GenerateSBGInput::fileName() { return _mmo_class.name()
   + "_sbg_input.sbg"; }
-
-const Modelica::MMO_Class& GenerateSBGInput::mmo_class() const
-{
-  return _mmo_class;
-}
-
-const unsigned int& GenerateSBGInput::max_dim() const { return _max_dim; }
-
-const std::vector<SetVertex>& GenerateSBGInput::set_vertices() const
-{
-  return _set_vertices;
-}
-
-const std::vector<SetEdge>& GenerateSBGInput::set_edges() const
-{
-  return _set_edges;
-}
-
-const std::map<int, EquationInfo>& GenerateSBGInput::equations_info() const
-{
-  return _equations_info;
-}
 
 // Add variable vertices -------------------------------------------------------
 
@@ -122,7 +87,8 @@ void GenerateSBGInput::addVariableSet(const VarInfo& variable
   CompactSet var_set;
   std::size_t var_dimensions = 0;
   Option<ExpList> dimensions = variable.indices();
-  EvalInteger eval_int{_mmo_class.syms()};
+  VarSymbolTable symbols = _mmo_class.syms();
+  EvalInteger eval_int{symbols};
   if (dimensions) {
     std::size_t k = 0;
     for (const Expression& dimension : dimensions.value()) {
@@ -171,7 +137,7 @@ void GenerateSBGInput::addVariableNodes()
 
 // Add equations vertices ------------------------------------------------------
 
-namespace detail {
+namespace {
 
 EquationList flatterEq(Equation eq);
 
@@ -204,7 +170,7 @@ EquationList flatterEq(Equation eq)
   return result;
 }
 
-} // namespace detail
+} // namespace
 
 EquationList GenerateSBGInput::flatterForEqs() const
 {
@@ -212,12 +178,14 @@ EquationList GenerateSBGInput::flatterForEqs() const
 
   EquationList eqs = _mmo_class.equations().equations();
   for (const Equation& eq : eqs) {
-    EquationList flattened_eq = detail::flatterEq(eq);
+    EquationList flattened_eq = flatterEq(eq);
     result.insert(result.end(), flattened_eq.begin(), flattened_eq.end());
   }
 
   return result;
 }
+
+namespace {
 
 IndexList getIndices(Equation eq, unsigned int max_dim)
 {
@@ -247,6 +215,8 @@ Equality getEquality(Equation eq)
   return Equality{};
 }
 
+} // namespace
+
 void GenerateSBGInput::addEquationNodes()
 {
   EquationList eqs = flatterForEqs();
@@ -260,8 +230,8 @@ void GenerateSBGInput::addEquationNodes()
 
     // Save equation set-vertex
     set_vertex.set_name("eq_" + std::to_string(_node_id));
-    _equations_info[_node_id]
-      = EquationInfo{getIndices(eq, _max_dim), getEquality(eq)};
+    set_vertex.set_info(EquationInfo{getIndices(eq, _max_dim)
+      , getEquality(eq)});
     _set_vertices.push_back(set_vertex);
     ++_node_id;
   }
@@ -330,13 +300,15 @@ void GenerateSBGInput::addMaps(SetEdge se, const SetVertex& eq_sv
   se.set_domain(domain);
 
   se.set_map1(createMap1(eq_nodes, eq_sv.translation()));
-  se.set_map2(createMap2(reference, _equations_info[eq_sv.node_id()].indices()
+  se.set_map2(createMap2(reference, eq_sv.info().value().indices()
     , var_sv.translation()));
   _set_edges.push_back(se);
 
   _edge_offset += eq_nodes.maxDimPerimetral();
   ++_edge_id;
 }
+
+namespace {
 
 /**
  * @brief Gets a reference to a variable or the derivative of a variable.
@@ -359,13 +331,16 @@ Reference getReference(Expression expr)
   return Reference{};
 }
 
+} // namespace
+
 void GenerateSBGInput::addEdge(const SetVertex& eq_sv, const SetVertex& sv
   , const EquationInfo& eq_info)
 {
   if (sv.isVariable()) {
     Name var_name = sv.name();
     const Equality eq = get<Equality>(eq_info.equation());
-    MatchingExps matching_exprs(var_name, isState(var_name, _mmo_class.syms()));
+    VarSymbolTable symbols = _mmo_class.syms();
+    MatchingExps matching_exprs(var_name, isState(var_name, symbols));
     Apply(matching_exprs, eq.left());
     Apply(matching_exprs, eq.right());
     std::set<Expression> matched_exprs = matching_exprs.matchedExps();
@@ -384,7 +359,6 @@ void GenerateSBGInput::addEdge(const SetVertex& eq_sv, const SetVertex& sv
       se.set_eq_id(eq_sv.node_id());
       se.set_translation(Translation{_max_dim, _edge_offset});
       se.set_access(expr);
-      se.set_translation(Translation{_max_dim, _edge_offset});
 
       addMaps(se, eq_sv, sv, getReference(expr));
     }
@@ -393,22 +367,16 @@ void GenerateSBGInput::addEdge(const SetVertex& eq_sv, const SetVertex& sv
 
 void GenerateSBGInput::addEdges()
 {
-  for (auto& [eq_id, eq_info] : _equations_info) {
-    ERROR_UNLESS(is<Equality>(eq_info.equation())
-      , "GenerateSBGInput::addEdges: only equality equations supported");
+  for (const SetVertex& eq_sv : _set_vertices) {
+    if (eq_sv.isEquation()) {
+      EquationInfo eq_info = eq_sv.info().value();
+      ERROR_UNLESS(is<Equality>(eq_info.equation())
+        , "GenerateSBGInput::addEdges: only equality equations supported");
 
-    // Get vertices that represent this array of equations
-    SetVertex eq_sv{-1};
-    for (const SetVertex& sv : _set_vertices) {
-      if (sv.node_id() == eq_id) {
-        eq_sv = sv;
-        break;
-      } 
-    }
-
-    // Get vertices of variables that appear in this array of equations
-    for (const SetVertex& sv : _set_vertices) {
-      addEdge(eq_sv, sv, eq_info);
+      // Get vertices of variables that appear in this array of equations
+      for (const SetVertex& sv : _set_vertices) {
+        addEdge(eq_sv, sv, eq_info);
+      }
     }
   }
 }
@@ -437,7 +405,7 @@ void GenerateSBGInput::setup()
   }
 }
 
-SBGGenerationInfo GenerateSBGInput::buildFromModel()
+SBGGenerationResult GenerateSBGInput::buildFromModel()
 {
   // Write SBG program to _sbg_input
   setup();
@@ -445,6 +413,14 @@ SBGGenerationInfo GenerateSBGInput::buildFromModel()
   addEquationNodes();
   addEdges();
   generateSBGInput();
+
+  ModelicaSBG modelica_bsbg{_max_dim};
+  for (const SetVertex& sv : _set_vertices) {
+    modelica_bsbg.addSetVertex(sv);
+  }
+  for (const SetEdge& se : _set_edges) {
+    modelica_bsbg.addSetEdge(se);
+  }
 
   // Evaluate SBG program to obtain bipartite SBG
   SBG::LIB::BipartiteSBG g;
@@ -456,8 +432,7 @@ SBGGenerationInfo GenerateSBGInput::buildFromModel()
     }
   }
 
-  return SBGGenerationInfo{_mmo_class, _max_dim, _set_vertices, _set_edges
-    , _equations_info, g};
+  return SBGGenerationResult{_mmo_class, modelica_bsbg, g};
 }
 
 void GenerateSBGInput::generateVSet()
