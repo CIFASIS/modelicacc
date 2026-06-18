@@ -24,6 +24,8 @@
 
 namespace Modelica {
 
+Translation::Translation() : _dimension(0), _translation() {}
+
 Translation::Translation(std::size_t n) : _dimension(n), _translation(n, 0) {}
 
 Translation::Translation(std::size_t n, AST::Integer value)

@@ -44,13 +44,23 @@ const CompactSet& SetVertex::set() const { return _set; }
 
 const Translation& SetVertex::translation() const { return _translation; }
 
+const VertexInfo& SetVertex::info() const
+{
+  return _info;
+}
+
 // Setters ---------------------------------------------------------------------
 
 void SetVertex::set_node_id(int node_id) { _node_id = node_id; }
 
 void SetVertex::set_name(std::string name) { _name = name; }
 
-void SetVertex::set_translation(Translation t) { _translation = t; }
+void SetVertex::set_translation(Translation translation)
+{
+  _translation = translation;
+}
+
+void SetVertex::set_info(VertexInfo info) { _info = info; }
 
 // Operators -------------------------------------------------------------------
 

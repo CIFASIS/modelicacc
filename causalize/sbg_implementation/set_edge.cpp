@@ -116,6 +116,22 @@ AST::Integer SetEdge::maxDimPerimetral()
   return _domain.maxDimPerimetral();
 }
 
+SetEdge SetEdge::restrict(CompactSet restriction) const
+{
+  restriction.intersection(_domain);
+  SetEdge result{_edge_id, restriction};
+
+  result.set_name(_name);
+  result.set_var_id(_var_id);
+  result.set_eq_id(_eq_id);
+  result.set_translation(_translation);
+  result.set_map1(_map1);
+  result.set_map2(_map2);
+  result.set_access(_access);
+
+  return result;
+}
+
 } // namespace Causalize
 
 } // namespace Modelica

@@ -21,15 +21,23 @@
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_VERTEX_HPP_
 
 #include "ast/expression.hpp"
+#include "causalize/sbg_implementation/equation_info.hpp"
 #include "util/compact_set.hpp"
 
 #include <iosfwd>
+#include <optional>
 #include <sstream>
 #include <string>
 
 namespace Modelica {
 
 namespace Causalize {
+
+/**
+ * @brief Additional information attached to a set-vertex. Used to save
+ * information in the equation vertices.
+ */
+using VertexInfo = std::optional<EquationInfo>;
 
 /**
  * @brief Interface class between arrays of variables and equations of a model,
@@ -45,10 +53,12 @@ public:
   std::string name() const;
   const CompactSet& set() const;
   const Translation& translation() const;
+  const VertexInfo& info() const;
 
   void set_node_id(int node_id);
   void set_name(std::string name);
-  void set_translation(Translation t);
+  void set_translation(Translation translation);
+  void set_info(VertexInfo info);
 
   bool isVariable() const;
   bool isEquation() const;
@@ -72,6 +82,7 @@ private:
   std::string _name;
   CompactSet _set;
   Translation _translation;
+  VertexInfo _info;
 };
 
 std::ostream& operator<<(std::ostream& out, const SetVertex& sv);
