@@ -87,6 +87,8 @@ private:
 
 std::ostream& operator<<(std::ostream& out, const SetEdge& sv);
 
+using SetEdges = std::vector<SetEdge>;
+
 } // namespace Causalize
 
 } // namespace Modelica

@@ -34,7 +34,7 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Tearing variable ------------------------------------------------------------
+// ModelicaCC tearing variable representation ----------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 class TearingVariable {
@@ -69,6 +69,32 @@ private:
 std::ostream& operator<<(std::ostream& out, const TearingVariables& vars);
 
 ////////////////////////////////////////////////////////////////////////////////
+// Tearing return structure ----------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @class TearingResult
+ * @brief Structure to return after calculating the tearing variables, to pass
+ * to the next stages of causalization.
+ */
+class TearingResult {
+public:
+  TearingResult(SBG::LIB::Set mfvs_result);
+
+  const SBG::LIB::Set& mfvs_result() const;
+
+  /**
+   * @brief Converts the SBG obtained result to a ModelicaCC set of expressions
+   * that represent the tearing variables.
+   */
+  TearingVariables toModelicaFormat(const SetVertices& set_vertices
+    , const SetEdges& set_edges) const;
+
+private:
+  SBG::LIB::Set _mfvs_result;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 // Tearing variables detector --------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -80,13 +106,10 @@ class TearingDetector {
 public:
   TearingDetector(AlgebraicLoopsInfo loops_info);
 
-  TearingVariables detect();
+  TearingResult detect();
 
 private:
-  void detectVariable(SetEdge se, CompactSet jth_tear);
-
   AlgebraicLoopsInfo _loops_info;
-  TearingVariables _tearing;
 };
 
 } // namespace Causalize
