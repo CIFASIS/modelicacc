@@ -22,18 +22,14 @@
 
 #include "ast/equation.hpp"
 #include "ast/expression.hpp"
-#include "causalize/sbg_implementation/equation_info.hpp"
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
+#include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
-#include "causalize/sbg_implementation/set_vertex.hpp"
-#include "mmo/mmo_class.hpp"
-#include "sbg/bipartite_sbg.hpp"
+#include "util/compact_set.hpp"
 
 #include <algorithms/matching/match_data.hpp>
 
 #include <iosfwd>
-#include <map>
-#include <tuple>
 #include <vector>
 
 namespace Modelica {
@@ -41,10 +37,8 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Auxiliary definitions -------------------------------------------------------
+// ModelicaCC variable-equation matching ---------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
-
-// EqVarMatch ------------------------------------------------------------------
 
 /**
  * @class EqVarMatch
@@ -53,24 +47,46 @@ namespace Causalize {
  */
 class EqVarMatch {
 public:
-  EqVarMatch() = default;
+  EqVarMatch(Equation equation, Expression variable);
 
-  std::size_t size() const;
-  std::tuple<Equation, Expression> operator[](std::size_t k) const;
-
-  void pushBack(Equation eq, Expression expr);
+  const Equation& equation() const;
+  const Expression& variable() const;
 
 private:
-  EquationList _equation_list;
-  ExpList _expression_list;
+  Equation _equation;
+  Expression _variable;
 };
 
 std::ostream& operator<<(std::ostream& out, const EqVarMatch& match);
 
-// HorizontalSortingInfo -------------------------------------------------------
+/**
+ * @class ModelMatch
+ * @brief Represents the pairing between equations and variables for a whole
+ * Modelica model.
+ */
+class ModelMatch {
+public:
+  ModelMatch() = default;
+
+  std::size_t size() const;
+  EqVarMatch operator[](std::size_t k) const;
+
+  void pushBack(EqVarMatch match);
+
+  void concatenation(ModelMatch other);
+
+private:
+  std::vector<EqVarMatch> _model_match;
+};
+
+std::ostream& operator<<(std::ostream& out, const ModelMatch& match);
+
+////////////////////////////////////////////////////////////////////////////////
+// Horizontal sorting return structure -----------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @class HorizontalSortingInfo
+ * @class HorizontalSortingResult
  * @brief Saves information of the newly generated equations from the matching.
  * For example, if the array equation:
  *  for i in 1:N loop
@@ -86,26 +102,26 @@ std::ostream& operator<<(std::ostream& out, const EqVarMatch& match);
  * so, this structure keeps track of how set-vertices and set-edges are modified
  * to achieve this. 
  */
-class HorizontalSortingInfo {
+class HorizontalSortingResult {
 public:
-  HorizontalSortingInfo(const std::vector<SetVertex>& set_vertices
-    , const std::vector<SetEdge>& set_edges
-    , const std::map<int, EquationInfo>& equations_info
-    , SBG::LIB::MatchData matching_result
-    , EqVarMatch horizontal_sorting);
+  HorizontalSortingResult(ModelicaSBG modelica_bsbg
+    , SBG::LIB::MatchData matching_result);
 
-  const std::vector<SetVertex>& set_vertices() const;
-  const std::vector<SetEdge>& set_edges() const;
-  const std::map<int, EquationInfo>& equations_info() const;
+  const ModelicaSBG& modelica_bsbg() const;
   const SBG::LIB::MatchData& matching_result() const;
-  const EqVarMatch& horizontal_sorting() const;
+
+  /**
+   * @brief Converts the SBG result to a ModelicaCC representation of the
+   * matching between equations and variables.
+   */
+  ModelMatch toModelicaFormat() const;
 
 private:
-  const std::vector<SetVertex>& _set_vertices;
-  const std::vector<SetEdge>& _set_edges;
-  const std::map<int, EquationInfo>& _equations_info;
-  SBG::LIB::MatchData _matching_result;
-  EqVarMatch _horizontal_sorting;
+  ModelMatch equationToModelicaFormat(SetEdge se, CompactSet se_match) const;
+
+  ModelicaSBG _modelica_bsbg; ///< Resulting bipartite Modelica SBG
+    ///< after horizontal sorting
+  SBG::LIB::MatchData _matching_result; ///< SBG matching result
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,15 +135,12 @@ private:
  */
 class HorizontalSorting {
 public:
-  explicit HorizontalSorting(SBGGenerationInfo& sbg_gen_info);
-  ~HorizontalSorting() = default;
-  HorizontalSortingInfo sort();
+  HorizontalSorting(SBGGenerationResult& sbg_generation_result);
+
+  HorizontalSortingResult sort();
 
 private:
-  void sortEquation(SetEdge se, CompactSet se_match);
-
-  SBGGenerationInfo& _sbg_gen_info;
-  EqVarMatch _sort; ///< Result of sorting
+  SBGGenerationResult& _sbg_generation_result;
 };
 
 } // namespace Causalize
