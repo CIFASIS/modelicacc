@@ -23,6 +23,8 @@
 #include "ast/equation.hpp"
 #include "ast/expression.hpp"
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
+#include "causalize/sbg_implementation/modelica_sbg.hpp"
+#include "causalize/sbg_implementation/set_edge.hpp"
 
 #include <algorithms/scc/scc_data.hpp>
 
@@ -34,7 +36,7 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Auxiliary definitions -------------------------------------------------------
+// ModelicaCC algebraic loops --------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 class AlgebraicLoop {
@@ -48,6 +50,8 @@ public:
 
   void pushBack(Equation eq, Expression variable);
 
+  void concatenation(AlgebraicLoop other);
+
 private:
   EquationList _equations;
   ExpList _variables;
@@ -55,6 +59,10 @@ private:
 
 std::ostream& operator<<(std::ostream& out, const AlgebraicLoop& loop);
 
+/**
+ * @class AlgebraicLoops
+ * @brief Unordered collection of algebraic loops of the model.
+ */
 class AlgebraicLoops {
 public:
   AlgebraicLoops() = default;
@@ -73,26 +81,48 @@ private:
 
 std::ostream& operator<<(std::ostream& out, const AlgebraicLoops& loops);
 
-class AlgebraicLoopsInfo {
-public:
-  AlgebraicLoopsInfo(const std::vector<SetVertex>& set_vertices
-    , const std::vector<SetEdge>& set_edges, SBG::LIB::SCCData scc_result
-    , AlgebraicLoops loops);
+////////////////////////////////////////////////////////////////////////////////
+// Algebraic loops return structure --------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 
-  const std::vector<SetVertex>& set_vertices() const;
-  const std::vector<SetEdge>& set_edges() const;
+/**
+ * @brief Type for a single algebraic loop, using SBG structures.
+ */
+using LoopT = std::vector<SBG::LIB::Set>;
+
+/**
+ * @class AlgebraicLoopsResult
+ * @brief Structure to return after calculating the algebraic loops, to pass to
+ * the next stages of causalization.
+ */
+class AlgebraicLoopsResult {
+public:
+  AlgebraicLoopsResult(ModelicaSBG modelica_bsbg, SBG::LIB::SCCData scc_result);
+
+  const ModelicaSBG& modelica_bsbg() const;
   const SBG::LIB::SCCData& scc_result() const;
-  const AlgebraicLoops& loops() const;
+
+  /**
+   * @brief Converts the SBG result to a ModelicaCC representation of the
+   * algebraic loops.
+   */
+  AlgebraicLoops toModelicaFormat() const;
+
+  /**
+   * @brief Converts the SBG result to an intermediate result that only uses SBG
+   * structures. It will be used by the VerticalSorting module.
+   */
+  std::vector<LoopT> toSBGFormat() const;
 
 private:
-  const std::vector<SetVertex>& _set_vertices;
-  const std::vector<SetEdge>& _set_edges;
+  AlgebraicLoop loopToModelicaFormat(const SetEdge& se) const;
+
+  ModelicaSBG _modelica_bsbg; ///< TODO
   SBG::LIB::SCCData _scc_result;
-  AlgebraicLoops _loops;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Algebraic Loops Detection ---------------------------------------------------
+// Algebraic loops detection ---------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -101,15 +131,12 @@ private:
  */
 class AlgebraicLoopsDetector {
 public:
-  AlgebraicLoopsDetector(HorizontalSortingInfo& sbg_generator);
+  AlgebraicLoopsDetector(HorizontalSortingResult& hs_result);
 
-  AlgebraicLoopsInfo detect();
+  AlgebraicLoopsResult detect();
 
 private:
-  void detectLoop(SetEdge se, AlgebraicLoop& loop);
-
-  HorizontalSortingInfo& _hs_info;
-  AlgebraicLoops _loops;
+  HorizontalSortingResult& _hs_result;
 };
 
 } // namespace Causalize
