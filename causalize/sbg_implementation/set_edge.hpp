@@ -21,6 +21,7 @@
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_EDGE_HPP_
 
 #include "ast/expression.hpp"
+#include "causalize/sbg_implementation/equation_info.hpp"
 #include "util/affine_transformation.hpp"
 #include "util/compact_set.hpp"
 
@@ -34,6 +35,7 @@ namespace Modelica {
 namespace Causalize {
 
 /**
+ * @class SetEdge
  * @brief Interface class between usages of variables in equations of a model,
  * and set-edges of the corresponding causalization SBG. 
  */
@@ -73,6 +75,12 @@ public:
    */
   AST::Integer maxDimPerimetral();
 
+  /**
+   * @brief Returns a new set-edge with the same values, except for the domain
+   * which is restricted to \p new_domain.
+   */
+  SetEdge restrict(CompactSet new_domain) const;
+
 private:
   int _edge_id;
   std::string _name;
@@ -80,8 +88,8 @@ private:
   int _eq_id;
   Translation _translation; ///< Avoids domain values collision
   CompactSet _domain;
-  CompactTransformation _map1;
-  CompactTransformation _map2;
+  CompactTransformation _map1; ///< Map to equations nodes
+  CompactTransformation _map2; ///< Map to variables nodes
   Expression _access; ///< Expression of the access to the variable
 };
 

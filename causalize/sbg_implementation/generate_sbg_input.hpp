@@ -20,7 +20,7 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_GENERATE_SBG_INPUT_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_GENERATE_SBG_INPUT_HPP_
 
-#include "causalize/sbg_implementation/equation_info.hpp"
+#include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
 #include "mmo/mmo_class.hpp"
@@ -37,35 +37,27 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Auxiliary definitions -------------------------------------------------------
+// SBG generation return structure ---------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 /*
- * @class SBGGenerationInfo
+ * @class SBGGenerationResult
  * @brief Structure to keep and return relevant data after the SBG associated
  * to a model has been generated.
  */
-class SBGGenerationInfo {
+class SBGGenerationResult {
 public:
-  explicit SBGGenerationInfo(Modelica::MMO_Class& mmo_class
-    , unsigned int max_dim, std::vector<SetVertex>& set_vertices
-    , std::vector<SetEdge>& set_edges
-    , std::map<int, EquationInfo>& equations_info
+  explicit SBGGenerationResult(Modelica::MMO_Class& mmo_class
+    , ModelicaSBG modelica_bsbg
     , SBG::LIB::BipartiteSBG bipartite_sbg);
 
   const Modelica::MMO_Class& mmo_class() const;
-  const unsigned int& max_dim() const;
-  const std::vector<SetVertex>& set_vertices() const;
-  const std::vector<SetEdge>& set_edges() const;
-  const std::map<int, EquationInfo>& equations_info() const;
+  const ModelicaSBG& modelica_bsbg() const;
   const SBG::LIB::BipartiteSBG& bipartite_sbg() const;
 
 private:
   const Modelica::MMO_Class& _mmo_class;
-  const unsigned int _max_dim;
-  const std::vector<SetVertex>& _set_vertices;
-  const std::map<int, EquationInfo>& _equations_info;
-  const std::vector<SetEdge>& _set_edges;
+  const ModelicaSBG _modelica_bsbg;
   const SBG::LIB::BipartiteSBG _bipartite_sbg;
 };
 
@@ -84,14 +76,8 @@ class GenerateSBGInput {
 public:
   explicit GenerateSBGInput(Modelica::MMO_Class& mmo_class);
   virtual ~GenerateSBGInput() = default;
-  virtual SBGGenerationInfo buildFromModel();
+  virtual SBGGenerationResult buildFromModel();
   virtual std::string fileName();
-
-  const Modelica::MMO_Class& mmo_class() const;
-  const unsigned int& max_dim() const;
-  const std::vector<SetVertex>& set_vertices() const;
-  const std::vector<SetEdge>& set_edges() const;
-  const std::map<int, EquationInfo>& equations_info() const;
 
 protected:
   void addVariableSet(const VarInfo& variable, const Name& name);
@@ -145,9 +131,8 @@ protected:
 private:
   Modelica::MMO_Class& _mmo_class;
   unsigned int _max_dim;
-  std::vector<SetVertex> _set_vertices;
-  std::map<int, EquationInfo> _equations_info;
-  std::vector<SetEdge> _set_edges;
+  SetVertices _set_vertices;
+  SetEdges _set_edges;
   int _node_id; ///< Counter for set-vertices
   int _edge_id; ///< Counter for set-edges
   Integer _vertex_offset; ///< Current vertex offset
