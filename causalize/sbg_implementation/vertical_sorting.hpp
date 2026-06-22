@@ -25,6 +25,8 @@
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
 #include "causalize/sbg_implementation/tearing.hpp"
 
+#include <sbg/set.hpp>
+
 #include <iosfwd>
 #include <vector>
 
@@ -60,7 +62,8 @@ std::ostream& operator<<(std::ostream& out, const CausalEquations& causal_eqs);
 
 /**
  * @class CausalModel
- * @brief 
+ * @brief Data structure that represents in ModelicaCC format all the
+ * causalization information.
  */
 class CausalModel {
 public:
@@ -100,7 +103,26 @@ public:
   CausalModel toModelicaFormat(std::vector<LoopT> loops) const;
 
 private:
-  std::vector<LoopT> sortLoops(const std::vector<LoopT>& loops) const;
+  /**
+   * @brief Converts _sort to a list of ordered SBG::LIB::Sets. It is an
+   * intermediate step to obtain the final ModelicaCC result.
+   */
+  std::vector<SBG::LIB::Set> toIntermediateFormat() const;
+
+  /**
+   * @brief Groups algebraic loops, keeping the order of \p modelica_sort.
+   * Precondition: all elements of an algebraic loops must be in contiguous
+   * positions in \p modelica_sort. To achieve this, _sort must be calculated
+   * with an algorithm that sorts an algebraic loop completely, before
+   * starting with the next one.
+   */
+  std::vector<LoopT> groupLoops(std::vector<SBG::LIB::Set> modelica_sort
+    , std::vector<LoopT> loops) const;
+
+  /**
+   * @brief Converts a single algebraic loop to its final ModelicaCC
+   * representation.
+   */
   CausalEquations causalizeLoop(LoopT loop) const;
 
   ModelicaSBG _modelica_bsbg;
