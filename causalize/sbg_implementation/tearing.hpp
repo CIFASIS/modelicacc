@@ -22,6 +22,7 @@
 
 #include "ast/expression.hpp"
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
+#include "causalize/sbg_implementation/tearing_variables.hpp"
 
 #include <algorithms/scc/scc_data.hpp>
 
@@ -32,41 +33,6 @@
 namespace Modelica {
 
 namespace Causalize {
-
-////////////////////////////////////////////////////////////////////////////////
-// ModelicaCC tearing variable representation ----------------------------------
-////////////////////////////////////////////////////////////////////////////////
-
-class TearingVariable {
-public:
-  TearingVariable(AST::Name name, AST::Bracket subscripts);
-
-  const AST::Name& name() const;
-  const AST::Bracket& subscripts() const;
-
-private:
-  AST::Name _name;
-  AST::Bracket _subscripts;
-};
-
-std::ostream& operator<<(std::ostream& out, const TearingVariable& var);
-
-class TearingVariables {
-public:
-  TearingVariables() = default;
-
-  auto begin() const;
-  auto end() const;
-
-  std::set<AST::Bracket>& operator[](AST::Name name);
-  const std::set<AST::Bracket>& operator[](AST::Name name) const;
-  void insert(TearingVariable variable);
-
-private:
-  std::map<AST::Name, std::set<AST::Bracket>> _variables;
-};
-
-std::ostream& operator<<(std::ostream& out, const TearingVariables& vars);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Tearing return structure ----------------------------------------------------
