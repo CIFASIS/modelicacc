@@ -45,7 +45,8 @@ std::list<std::string> c_code;
 Modelica::AST::ClassList _cl;
 
 // JSON parsing functions
-std::string read_json_file(const std::string& filename) {
+std::string read_json_file(const std::string& filename)
+{
   std::ifstream file(filename);
   if (!file.is_open()) {
     throw std::runtime_error("Cannot open JSON file: " + filename);
@@ -55,7 +56,8 @@ std::string read_json_file(const std::string& filename) {
   return buffer.str();
 }
 
-Modelica::AST::EquationList parse_json_to_equations(const std::string& json_content) {
+Modelica::AST::EquationList parse_json_to_equations(const std::string& json_content)
+{
   // TODO: Implement JSON to EquationList conversion
   // This is a placeholder - you need to implement the actual parsing
   Modelica::AST::EquationList eqs;
@@ -63,8 +65,9 @@ Modelica::AST::EquationList parse_json_to_equations(const std::string& json_cont
   return eqs;
 }
 
-Modelica::AST::ExpList parse_json_to_unknowns(const std::string& json_content) {
-  // TODO: Implement JSON to ExpList conversion  
+Modelica::AST::ExpList parse_json_to_unknowns(const std::string& json_content)
+{
+  // TODO: Implement JSON to ExpList conversion
   // This is a placeholder - you need to implement the actual parsing
   Modelica::AST::ExpList unknowns;
   // Parse JSON and convert to variable expressions
@@ -150,37 +153,31 @@ int main(int argc, char** argv)
   setup_state_var.findStateVariables();
 
   Modelica::Causalize::GenerateSBGInput gen_sbg_input(mmo_class);
-  Modelica::Causalize::SBGGenerationInfo sbg_info
-    = gen_sbg_input.buildFromModel();
+  Modelica::Causalize::SBGGenerationInfo sbg_info = gen_sbg_input.buildFromModel();
   Modelica::Causalize::HorizontalSorting horizontal_sorter(sbg_info);
   Modelica::Causalize::HorizontalSortingInfo hs_info = horizontal_sorter.sort();
-  std::cout << "Matching:\n" << hs_info.horizontal_sorting() << "\n"; 
+  std::cout << "Matching:\n" << hs_info.horizontal_sorting() << "\n";
   Modelica::Causalize::AlgebraicLoopsDetector loops_detector(hs_info);
   Modelica::Causalize::AlgebraicLoopsInfo loops_info = loops_detector.detect();
   std::cout << "Algebraic loops:\n" << loops_info.loops() << "\n";
   Modelica::Causalize::TearingDetector tearing_detector(loops_info);
   Modelica::Causalize::TearingResult tearing_result = tearing_detector.detect();
-  Modelica::Causalize::TearingVariables tearing_vars
-    = tearing_result.toModelicaFormat(loops_info.set_vertices()
-      , loops_info.set_edges());
+  Modelica::Causalize::TearingVariables tearing_vars = tearing_result.toModelicaFormat(loops_info.set_vertices(), loops_info.set_edges());
   std::cout << "Tearing variables:\n" << tearing_vars << "\n";
-  Modelica::Causalize::VerticalSorting vertical_sorter{loops_info
-    , tearing_result};
-  Modelica::Causalize::CausalizationResult result
-    = vertical_sorter.sort(hs_info.equations_info());
+  Modelica::Causalize::VerticalSorting vertical_sorter{loops_info, tearing_result};
+  Modelica::Causalize::CausalizationResult result = vertical_sorter.sort(hs_info.equations_info());
   std::cout << "Causalization result:\n" << result << "\n";
 
   debugInit("s");
-  std::list<std::string> c_code;
   Modelica::AST::ClassList classes = stored_def.classes();
-  std::string path = "test.c";
   EquationList causalized;
-  for (const Modelica::Causalize::AlgebraicLoop& l : loops_info.loops()) {
-    EquationList res = EquationSolver::Solve(l.equations(), l.variables(), mmo_class.syms_ref(), c_code, classes, path);
+  for (const Modelica::Causalize::CausalEquations& l : result) {
+    EquationList res =
+        EquationSolver::Solve(l.equations(), l.variables(), mmo_class.syms_ref(), mmo_class.variables_ref(), classes, tearing_vars);
     causalized.insert(causalized.end(), res.begin(), res.end());
   }
-  
-  mmo_class.equations_ref().equations_ref() = causalized;  
+
+  mmo_class.equations_ref().equations_ref() = causalized;
   std::cout << mmo_class << std::endl;
 
   return 0;
