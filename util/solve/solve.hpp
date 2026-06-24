@@ -21,12 +21,13 @@
 #include <ast/equation.hpp>
 #include <mmo/mmo_class.hpp>
 #include <util/table.hpp>
+#include "causalize/sbg_implementation/tearing_variables.hpp"
 
 using namespace Modelica::AST;
 class EquationSolver {
   public:
-  static EquationList Solve(EquationList eqs, ExpList crs, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &cl,
-                            const std::string path);
-  static Equation Solve(Equation eq, Expression exp, VarSymbolTable &syms, std::list<std::string> &c_code, ClassList &cl,
-                        const std::string path);
+  static EquationList Solve(EquationList eqs, ExpList crs, VarSymbolTable &syms, std::vector<Name>& variables, ClassList &cl,
+                            Modelica::Causalize::TearingVariables tearing_vars);
+  static Equation Solve(Equation eq, Expression exp, VarSymbolTable &syms, std::vector<Name>& variables, ClassList &cl,
+                        Modelica::Causalize::TearingVariables tearing_vars);
 };
