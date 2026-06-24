@@ -17,11 +17,11 @@
 
 ******************************************************************************/
 
-#include <math.hpppppppppppppp>
-#include <util/debug.hpppppppppppppppp>
-#include <util/ast_visitors/replace_index.hpppppppppppppppp>
-#include <util/ast_visitors/eval_expression.hpppppppppppppppp>
-#include <ast/queries.hpppppppppppppppp>
+#include <math.hpp>
+#include <util/debug.hpp>
+#include <util/ast_visitors/replace_index.hpp>
+#include <util/ast_visitors/eval_expression.hpp>
+#include <ast/queries.hpp>
 
 namespace Modelica {
 
