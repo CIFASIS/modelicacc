@@ -44,8 +44,7 @@ namespace Causalize {
 
 // CausalEquations ---------------------------------------------------------------
 
-CausalEquations::CausalEquations(EquationList equations, ExpList variables)
-  : _equations(equations), _variables(variables) {}
+CausalEquations::CausalEquations(EquationList equations, ExpList variables) : _equations(equations), _variables(variables) {}
 
 const EquationList& CausalEquations::equations() const { return _equations; }
 
@@ -77,14 +76,9 @@ std::size_t CausalizationResult::size() const { return _causal_eqs.size(); }
 
 CausalEquations CausalizationResult::operator[](std::size_t k) const
 {
-  ERROR_UNLESS(k < _causal_eqs.size(), "CausalizationResult::operator[]: index ", k
-    , " out of range");
+  ERROR_UNLESS(k < _causal_eqs.size(), "CausalizationResult::operator[]: index ", k, " out of range");
   return _causal_eqs[k];
 }
-
-auto CausalizationResult::begin() const { return _causal_eqs.begin(); }
-
-auto CausalizationResult::end() const { return _causal_eqs.end(); }
 
 void CausalizationResult::pushBack(CausalEquations eqs)
 {
@@ -93,8 +87,7 @@ void CausalizationResult::pushBack(CausalEquations eqs)
   }
 }
 
-std::ostream& operator<<(std::ostream& out
-  , const CausalizationResult& causal_eqs)
+std::ostream& operator<<(std::ostream& out, const CausalizationResult& causal_eqs)
 {
   for (const CausalEquations& eqs : causal_eqs) {
     out << eqs << "\n";
@@ -115,12 +108,11 @@ std::ostream& operator<<(std::ostream& out
  * are preserved. This directed SBG is constructed to get the order between
  * algebraic loops.
  */
-SBG::LIB::DirectedSBG getSCCDSBG(SBG::LIB::DirectedSBG dsbg
-  , SBG::LIB::SCCData scc_data)
+SBG::LIB::DirectedSBG getSCCDSBG(SBG::LIB::DirectedSBG dsbg, SBG::LIB::SCCData scc_data)
 {
   SBG::LIB::PWMap rmap = scc_data.rmap();
   SBG::LIB::Set V = rmap.image();
-  SBG::LIB::PWMap Vmap = dsbg.Vmap().restrict(V); 
+  SBG::LIB::PWMap Vmap = dsbg.Vmap().restrict(V);
 
   SBG::LIB::Set E = scc_data.Ediff();
   SBG::LIB::PWMap mapB = rmap.composition(dsbg.mapB().restrict(E));
@@ -137,8 +129,7 @@ SBG::LIB::DirectedSBG getSCCDSBG(SBG::LIB::DirectedSBG dsbg
  * it calculates the expression of the composed \p sort that revisits the
  * elements of the domain of \p m for the first time.
  */
-SBG::LIB::Expression getExpr(const SBG::LIB::Set& m_domain
-  , const SBG::LIB::PWMap& sort)
+SBG::LIB::Expression getExpr(const SBG::LIB::Set& m_domain, const SBG::LIB::PWMap& sort)
 {
   SBG::LIB::PWMap m_sort = sort.restrict(m_domain);
   while (m_sort.image().intersection(m_domain).isEmpty()) {
@@ -158,8 +149,7 @@ SBG::LIB::Expression getExpr(const SBG::LIB::Set& m_domain
 
 // detectLoops -----------------------------------------------------------------
 
-std::vector<std::vector<SBG::LIB::Set>> detectLoops(const AlgebraicLoopsInfo&
-  loops_info)
+std::vector<std::vector<SBG::LIB::Set>> detectLoops(const AlgebraicLoopsInfo& loops_info)
 {
   std::vector<std::vector<SBG::LIB::Set>> result;
 
@@ -195,9 +185,7 @@ SBG::LIB::Set flatten(const std::vector<SBG::LIB::Set>& s_vector)
   return flat_set;
 }
 
-std::vector<std::vector<SBG::LIB::Set>> sortLoops(
-  const SBG::LIB::PWMap& sort
-  , const std::vector<std::vector<SBG::LIB::Set>>& loops)
+std::vector<std::vector<SBG::LIB::Set>> sortLoops(const SBG::LIB::PWMap& sort, const std::vector<std::vector<SBG::LIB::Set>>& loops)
 {
   std::vector<std::vector<SBG::LIB::Set>> result;
 
@@ -237,12 +225,12 @@ std::vector<std::vector<SBG::LIB::Set>> sortLoops(
 // Vertical Sorting ------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-VerticalSorting::VerticalSorting(AlgebraicLoopsInfo& loops_info
-  , TearingResult& tearing_result)
-  : _loops_info(loops_info), _tearing_result(tearing_result) {}
+VerticalSorting::VerticalSorting(AlgebraicLoopsInfo& loops_info, TearingResult& tearing_result)
+    : _loops_info(loops_info), _tearing_result(tearing_result)
+{
+}
 
-CausalizationResult VerticalSorting::toCausalEquations(
-  const SBG::LIB::PWMap& sort, std::map<int, EquationInfo> equations_info) const
+CausalizationResult VerticalSorting::toCausalEquations(const SBG::LIB::PWMap& sort, std::map<int, EquationInfo> equations_info) const
 {
   CausalizationResult result;
 
@@ -270,8 +258,7 @@ CausalizationResult VerticalSorting::toCausalEquations(
           for (const Index& index : eq_info.indices()) {
             counters.push_back(index.name());
           }
-          std::vector<Indexes> indices = toModelicaIndices(se_and_m_domain
-            , se.translation(), counters, expr);
+          std::vector<Indexes> indices = toModelicaIndices(se_and_m_domain, se.translation(), counters, expr);
           for (const Indexes& indexes : indices) {
             causal_eqs.pushBack(eq_info.restrictEquation(indexes), se.access());
           }
@@ -280,21 +267,18 @@ CausalizationResult VerticalSorting::toCausalEquations(
     }
     result.pushBack(causal_eqs);
   }
- 
+
   return result;
 }
 
-CausalizationResult VerticalSorting::sort(
-  std::map<int, EquationInfo> equations_info)
+CausalizationResult VerticalSorting::sort(std::map<int, EquationInfo> equations_info)
 {
-  SBG::LIB::DirectedSBG vertical_dsbg = misc::buildVerticalSortingSBG(
-    _loops_info.scc_result(), _tearing_result.mfvs_result());
-  SBG::LIB::PWMap vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(
-    vertical_dsbg, SBG::LIB::PWMap{});
+  SBG::LIB::DirectedSBG vertical_dsbg = misc::buildVerticalSortingSBG(_loops_info.scc_result(), _tearing_result.mfvs_result());
+  SBG::LIB::PWMap vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(vertical_dsbg, SBG::LIB::PWMap{});
 
   return toCausalEquations(vertical_sort, equations_info);
 }
 
-} // namespace Causalize
+}  // namespace Causalize
 
-} // namespace Modelica
+}  // namespace Modelica
