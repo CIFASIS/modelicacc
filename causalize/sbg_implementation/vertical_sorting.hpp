@@ -25,12 +25,15 @@
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
 #include "causalize/sbg_implementation/tearing.hpp"
 
+#include <iosfwd>
+#include <vector>
+
 namespace Modelica {
 
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Auxiliary structures --------------------------------------------------------
+// ModelicaCC causalized model -------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -53,11 +56,15 @@ private:
   ExpList _variables;
 };
 
-std::ostream& operator<<(std::ostream& out, const CausalEquations& eqs);
+std::ostream& operator<<(std::ostream& out, const CausalEquations& causal_eqs);
 
-class CausalizationResult {
+/**
+ * @class CausalModel
+ * @brief 
+ */
+class CausalModel {
 public:
-  CausalizationResult() = default;
+  CausalModel() = default;
 
   std::size_t size() const;
   CausalEquations operator[](std::size_t k) const;
@@ -71,11 +78,38 @@ private:
   std::vector<CausalEquations> _causal_eqs;
 };
 
-std::ostream& operator<<(std::ostream& out
-  , const CausalizationResult& causal_eqs);
+std::ostream& operator<<(std::ostream& out, const CausalModel& causal_model);
 
 ////////////////////////////////////////////////////////////////////////////////
-// Vertical Sorting ------------------------------------------------------------
+// Vertical sorting result -----------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+class VerticalSortingResult {
+public:
+  VerticalSortingResult(ModelicaSBG modelica_bsbg, SBG::LIB::PWMap sort);
+
+  const ModelicaSBG& modelica_bsbg() const;
+  const SBG::LIB::PWMap& sort() const;
+
+  /**
+   * @brief Converts the SBG obtained result to a ModelicaCC list of equations
+   * and expressions that indicate the horizontal sorting, and are grouped
+   * accordingly to represent algebraic loops. Additionally, the returned list
+   * has algebraic loops ordered (still there is no order inside each
+   * algebraic loop).
+   */
+  CausalModel toModelicaFormat(std::vector<LoopT> loops) const;
+
+private:
+  std::vector<LoopT> sortLoops(const std::vector<LoopT>& loops) const;
+  CausalEquations causalizeLoop(LoopT loop) const;
+
+  ModelicaSBG _modelica_bsbg;
+  SBG::LIB::PWMap _sort;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Vertical sorting ------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -84,16 +118,13 @@ std::ostream& operator<<(std::ostream& out
  */
 class VerticalSorting {
 public:
-  VerticalSorting(AlgebraicLoopsInfo& loops_info
+  VerticalSorting(AlgebraicLoopsResult& loops_result
     , TearingResult& tearing_result);
 
-  CausalizationResult sort(std::map<int, EquationInfo> equations_info);
+  VerticalSortingResult sort();
 
 private:
-  CausalizationResult toCausalEquations(const SBG::LIB::PWMap& sort
-    , std::map<int, EquationInfo> equations_info) const;
-
-  AlgebraicLoopsInfo& _loops_info;
+  AlgebraicLoopsResult& _loops_result;
   TearingResult& _tearing_result;
 };
 

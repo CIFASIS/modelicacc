@@ -22,11 +22,7 @@
 #include "boost/variant/get.hpp"
 #include <getopt.h>
 
-#include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
-#include "causalize/sbg_implementation/generate_sbg_input.hpp"
-#include "causalize/sbg_implementation/horizontal_sorting.hpp"
-#include "causalize/sbg_implementation/tearing.hpp"
-#include "causalize/sbg_implementation/vertical_sorting.hpp"
+#include "causalize/sbg_implementation/causalize.hpp"
 #include "mmo/mmo_class.hpp"
 #include "parser/parser.hpp"
 #include "util/ast_visitors/state_variables_finder.hpp"
@@ -118,28 +114,16 @@ int main(int argc, char** argv)
   StateVariablesFinder setup_state_var(mmo_class);
   setup_state_var.findStateVariables();
 
-  Modelica::Causalize::GenerateSBGInput gen_sbg_input(mmo_class);
-  Modelica::Causalize::SBGGenerationInfo sbg_info = gen_sbg_input.buildFromModel();
-  Modelica::Causalize::HorizontalSorting horizontal_sorter(sbg_info);
-  Modelica::Causalize::HorizontalSortingInfo hs_info = horizontal_sorter.sort();
-  std::cout << "Matching:\n" << hs_info.horizontal_sorting() << "\n";
-  Modelica::Causalize::AlgebraicLoopsDetector loops_detector(hs_info);
-  Modelica::Causalize::AlgebraicLoopsInfo loops_info = loops_detector.detect();
-  std::cout << "Algebraic loops:\n" << loops_info.loops() << "\n";
-  Modelica::Causalize::TearingDetector tearing_detector(loops_info);
-  Modelica::Causalize::TearingResult tearing_result = tearing_detector.detect();
-  Modelica::Causalize::TearingVariables tearing_vars = tearing_result.toModelicaFormat(loops_info.set_vertices(), loops_info.set_edges());
-  std::cout << "Tearing variables:\n" << tearing_vars << "\n";
-  Modelica::Causalize::VerticalSorting vertical_sorter{loops_info, tearing_result};
-  Modelica::Causalize::CausalizationResult result = vertical_sorter.sort(hs_info.equations_info());
-  std::cout << "Causalization result:\n" << result << "\n";
+  Modelica::Causalize::CausalizationResult result = Modelica::Causalize::Causalize{}.causalize(mmo_class);
+  std::cout << result << "\n";
 
   debugInit("s");
   Modelica::AST::ClassList classes = stored_def.classes();
+  const Modelica::Causalize::CausalModel& causal_model = result.vertical_sort();
   EquationList causalized;
-  for (const Modelica::Causalize::CausalEquations& l : result) {
+  for (const Modelica::Causalize::CausalEquations& l : causal_model) {
     EquationList res =
-        EquationSolver::Solve(l.equations(), l.variables(), mmo_class.syms_ref(), mmo_class.variables_ref(), classes, tearing_vars);
+        EquationSolver::Solve(l.equations(), l.variables(), mmo_class.syms_ref(), mmo_class.variables_ref(), classes, result.tearing());
     causalized.insert(causalized.end(), res.begin(), res.end());
   }
 

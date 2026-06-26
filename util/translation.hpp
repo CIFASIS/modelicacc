@@ -33,7 +33,7 @@ namespace Modelica {
  */
 class Translation {
 public:
-  Translation() = default;
+  Translation();
   /**
    * @brief Returns the identity translation of dimension n.
    */

@@ -27,12 +27,9 @@ namespace Causalize {
 
 // Constructors/Destructors ----------------------------------------------------
 
-SetEdge::SetEdge(int edge_id, std::size_t arity)
-  : _edge_id(edge_id), _map1(arity), _map2(arity) {}
+SetEdge::SetEdge(int edge_id, std::size_t arity) : _edge_id(edge_id), _map1(arity), _map2(arity) {}
 
-SetEdge::SetEdge(int edge_id, CompactSet domain)
-  : _edge_id(edge_id), _domain(domain), _map1(domain.arity())
-    , _map2(domain.arity()) {}
+SetEdge::SetEdge(int edge_id, CompactSet domain) : _edge_id(edge_id), _domain(domain), _map1(domain.arity()), _map2(domain.arity()) {}
 
 // Getters ---------------------------------------------------------------------
 
@@ -66,10 +63,7 @@ void SetEdge::set_var_id(int var_id) { _var_id = var_id; }
 
 void SetEdge::set_eq_id(int eq_id) { _eq_id = eq_id; }
 
-void SetEdge::set_translation(Translation translation)
-{
-  _translation = translation;
-}
+void SetEdge::set_translation(Translation translation) { _translation = translation; }
 
 void SetEdge::set_domain(CompactSet domain) { _domain = domain; }
 
@@ -90,32 +84,32 @@ std::ostream& operator<<(std::ostream& out, const SetEdge& se)
 
 // Methods ---------------------------------------------------------------------
 
-std::string SetEdge::domainToSBGFormat() const
+std::string SetEdge::domainToSBGFormat() const { return _domain.toSBGFormat(); }
+
+std::string SetEdge::map1ToSBGFormat() const { return _map1.toSBGFormat(); }
+
+std::string SetEdge::map2ToSBGFormat() const { return _map2.toSBGFormat(); }
+
+std::string SetEdge::toSBGFormat() const { return map1ToSBGFormat() + "<-" + _domain.toSBGFormat() + "->" + map2ToSBGFormat(); }
+
+AST::Integer SetEdge::maxDimPerimetral() { return _domain.maxDimPerimetral(); }
+
+SetEdge SetEdge::restrict(CompactSet restriction) const
 {
-  return _domain.toSBGFormat();
+  restriction.intersection(_domain);
+  SetEdge result{_edge_id, restriction};
+
+  result.set_name(_name);
+  result.set_var_id(_var_id);
+  result.set_eq_id(_eq_id);
+  result.set_translation(_translation);
+  result.set_map1(_map1);
+  result.set_map2(_map2);
+  result.set_access(_access);
+
+  return result;
 }
 
-std::string SetEdge::map1ToSBGFormat() const
-{
-  return _map1.toSBGFormat();
-}
+}  // namespace Causalize
 
-std::string SetEdge::map2ToSBGFormat() const
-{
-  return _map2.toSBGFormat();
-}
-
-std::string SetEdge::toSBGFormat() const
-{
-  return map1ToSBGFormat() + "<-" + _domain.toSBGFormat() + "->"
-    + map2ToSBGFormat();
-}
-
-AST::Integer SetEdge::maxDimPerimetral()
-{
-  return _domain.maxDimPerimetral();
-}
-
-} // namespace Causalize
-
-} // namespace Modelica
+}  // namespace Modelica

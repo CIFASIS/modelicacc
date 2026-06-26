@@ -22,9 +22,9 @@
 
 #include "ast/expression.hpp"
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
-#include "causalize/sbg_implementation/tearing_variables.hpp"
+#include "causalize/sbg_implementation/modelica_sbg.hpp"
 
-#include <algorithms/scc/scc_data.hpp>
+#include <sbg/set.hpp>
 
 #include <iosfwd>
 #include <map>
@@ -45,18 +45,22 @@ namespace Causalize {
  */
 class TearingResult {
 public:
-  TearingResult(SBG::LIB::Set mfvs_result);
+  TearingResult(ModelicaSBG modelica_bsbg, SBG::LIB::Set mfvs_result);
 
+  const ModelicaSBG& modelica_bsbg() const;
   const SBG::LIB::Set& mfvs_result() const;
 
   /**
    * @brief Converts the SBG obtained result to a ModelicaCC set of expressions
    * that represent the tearing variables.
    */
-  TearingVariables toModelicaFormat(const SetVertices& set_vertices
-    , const SetEdges& set_edges) const;
+  TearingVariables toModelicaFormat() const;
 
 private:
+  TearingVariables variableToModelicaFormat(const SetEdge& se
+    , CompactSet jth_tear) const;
+
+  ModelicaSBG _modelica_bsbg;
   SBG::LIB::Set _mfvs_result;
 };
 
@@ -70,12 +74,12 @@ private:
  */
 class TearingDetector {
 public:
-  TearingDetector(AlgebraicLoopsInfo loops_info);
+  TearingDetector(AlgebraicLoopsResult loops_result);
 
   TearingResult detect();
 
 private:
-  AlgebraicLoopsInfo _loops_info;
+  AlgebraicLoopsResult _loops_result;
 };
 
 } // namespace Causalize
