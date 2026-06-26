@@ -17,6 +17,8 @@
 
 ******************************************************************************/
 
+#include <fstream>
+#include <iostream>
 #include "boost/variant/get.hpp"
 #include <getopt.h>
 
@@ -33,46 +35,10 @@
 #include <util/solve/solve.hpp>
 #include <ast/equation.hpp>
 #include <util/table.hpp>
-// #include <causalize/graph_implementation/apply_tarjan.h>
-// #include <causalize/graph_implementation/graph/graph_definition.h>
 
 using namespace std;
 using namespace Modelica;
 using namespace Modelica::AST;
-
-// Data structures for EquationSolver integration
-std::list<std::string> c_code;
-Modelica::AST::ClassList _cl;
-
-// JSON parsing functions
-std::string read_json_file(const std::string& filename)
-{
-  std::ifstream file(filename);
-  if (!file.is_open()) {
-    throw std::runtime_error("Cannot open JSON file: " + filename);
-  }
-  std::stringstream buffer;
-  buffer << file.rdbuf();
-  return buffer.str();
-}
-
-Modelica::AST::EquationList parse_json_to_equations(const std::string& json_content)
-{
-  // TODO: Implement JSON to EquationList conversion
-  // This is a placeholder - you need to implement the actual parsing
-  Modelica::AST::EquationList eqs;
-  // Parse JSON and convert to Modelica equations
-  return eqs;
-}
-
-Modelica::AST::ExpList parse_json_to_unknowns(const std::string& json_content)
-{
-  // TODO: Implement JSON to ExpList conversion
-  // This is a placeholder - you need to implement the actual parsing
-  Modelica::AST::ExpList unknowns;
-  // Parse JSON and convert to variable expressions
-  return unknowns;
-}
 
 void usage()
 {
@@ -180,5 +146,39 @@ int main(int argc, char** argv)
   mmo_class.equations_ref().equations_ref() = causalized;
   std::cout << mmo_class << std::endl;
 
+  std::string causalized_file_name = mmo_class.name();
+
+  causalized_file_name.append("_causalized.mo");
+
+  std::ofstream out_stream(causalized_file_name);
+
+  static constexpr std::string_view annotation_string = R"(annotation(
+  experiment(
+    MMO_Description="",
+    MMO_Solver=DASSL,
+    Jacobian=Dense,
+    MMO_BDF_PDepth=1,
+    MMO_BDF_Max_Step=0,
+    StartTime=0.0,
+    StopTime=20,
+    Tolerance={1e-3},
+    AbsTolerance={1e-3}
+  ));)";
+
+  std::stringstream buffer;
+  buffer << mmo_class;
+  std::string content = buffer.str();
+
+  size_t last_pos = content.rfind("end");
+
+  if (last_pos != std::string::npos) {
+    content.insert(last_pos, std::string(annotation_string) + "\n");
+  }
+
+  if (out_stream.is_open()) {
+    out_stream << content << std::endl;
+  } else {
+    std::cerr << "Error: Could not open file " << causalized_file_name << " for writing." << std::endl;
+  }
   return 0;
 }
