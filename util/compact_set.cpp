@@ -125,7 +125,7 @@ Index dimensionToModelicaIndices(const rapidjson::Value& kth_bounds, const rapid
   int begin = kth_bounds[0].GetInt() - offset;
   int step = kth_bounds[1].GetInt();
   int end = kth_bounds[2].GetInt() - offset;
-  if (m * h < 0) {
+  if ((m * h < 0) || (m == 0 && h < 0) || (h == 0 && m < 0)) {
     step = -step;
     std::swap(begin, end);
   }

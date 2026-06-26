@@ -29,9 +29,8 @@
 #include <sbg/directed_sbg.hpp>
 #include <sbg/expression.hpp>
 #include <sbg/pw_map.hpp>
-#include <sbg/set.hpp>
 
-#include <algorithm>
+#include <utility>
 
 namespace Modelica {
 
@@ -114,16 +113,19 @@ SBG::LIB::Expression getExpr(const SBG::LIB::Set& m_domain, const SBG::LIB::PWMa
   while (m_sort.image().intersection(m_domain).isEmpty()) {
     m_sort = sort.composition(m_sort);
   }
-  m_sort = m_sort.restrict(m_domain);
-  m_sort = m_sort.restrict(m_sort.preImage(m_domain));
-  SBG::LIB::Set self_reps = m_sort.fixedPoints();
-  m_sort = m_sort.restrict(m_sort.domain().difference(self_reps));
+  SBG::LIB::Set aux = m_domain.intersection(m_sort.preImage(m_domain));
+  aux = aux.difference(m_sort.fixedPoints());
+  m_sort = m_sort.restrict(aux);
   unsigned int j = 0;
   for (const auto& _ : m_sort) {
     ++j;
   }
   ERROR_UNLESS(1 >= j, "getExpr: case not yet supported");
-  return (*(m_sort.begin())).law();
+
+  SBG::LIB::Expression result = (*(m_sort.begin())).law();
+  result = result.composition(SBG::LIB::Expression{m_domain.arity(), -1, 0});
+  result = SBG::LIB::Expression{m_domain.arity(), 0, 0} - result;
+  return result;
 }
 
 // flatten ---------------------------------------------------------------------
@@ -135,6 +137,39 @@ SBG::LIB::Set flatten(const std::vector<SBG::LIB::Set>& s_vector)
     flat_set = std::move(flat_set).disjointCup(s);
   }
   return flat_set;
+}
+
+// sortSets --------------------------------------------------------------------
+
+std::vector<SBG::LIB::Set> sortSets(const SBG::LIB::PWMap& sort, std::vector<SBG::LIB::Set> sets, SBG::LIB::Set start)
+{
+  std::vector<SBG::LIB::Set> result;
+
+  result.push_back(start);
+
+  SBG::LIB::PWMap jth_sort = sort.restrict(start);
+  SBG::LIB::Set sorted = start;
+  SBG::LIB::PWMap tail_sort = sort.restrict(sort.domain().difference(sorted));
+  SBG::LIB::Set sort_domain = sort.domain();
+  while (sorted != sort_domain) {
+    for (const SBG::LIB::Set& new_elems : sets) {
+      SBG::LIB::Set not_sorted = new_elems.difference(sorted);
+      SBG::LIB::Set ingoing = tail_sort.image(not_sorted).intersection(sorted);
+      if (!ingoing.isEmpty()) {
+        SBG::LIB::PWMap new_sort = sort.restrict(not_sorted);
+        SBG::LIB::PWMap jth_sort_copy = jth_sort.concatenation(new_sort);
+        SBG::LIB::Set reps = jth_sort_copy.mapInf().image();
+        if (!reps.isEmpty()) {
+          result.push_back(not_sorted);
+          sorted = std::move(sorted).disjointCup(not_sorted);
+          jth_sort = std::move(jth_sort).concatenation(std::move(new_sort));
+          break;
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 }  // namespace
@@ -151,46 +186,60 @@ const ModelicaSBG& VerticalSortingResult::modelica_bsbg() const { return _modeli
 
 const SBG::LIB::PWMap& VerticalSortingResult::sort() const { return _sort; }
 
-std::vector<LoopT> VerticalSortingResult::sortLoops(const std::vector<LoopT>& loops) const
+std::vector<SBG::LIB::Set> VerticalSortingResult::toIntermediateFormat() const
 {
-  std::vector<LoopT> result;
-
-  SBG::LIB::Set jth_flat_loop;
-  SBG::LIB::Set start = _sort.fixedPoints();
-  for (const LoopT& loop : loops) {
-    SBG::LIB::Set flat_loop = flatten(loop);
-    if (!flat_loop.intersection(start).isEmpty()) {
-      jth_flat_loop = flat_loop;
-      result.push_back(loop);
-      break;
-    }
-  }
-
-  SBG::LIB::Set sorted = jth_flat_loop;
-  SBG::LIB::PWMap aux = _sort.restrict(_sort.domain().difference(sorted));
-  SBG::LIB::Set sort_domain = _sort.domain();
-  while (sorted != sort_domain) {
-    for (const LoopT& loop : loops) {
-      SBG::LIB::Set new_loop = flatten(loop);
-      SBG::LIB::Set ingoing = aux.image(new_loop).intersection(jth_flat_loop);
-      SBG::LIB::Set new_sorted = new_loop.intersection(sorted);
-      if (!ingoing.isEmpty() && new_sorted.isEmpty()) {
-        sorted = std::move(sorted).disjointCup(new_loop);
-        jth_flat_loop = new_loop;
-        result.push_back(loop);
-        break;
+  std::vector<SBG::LIB::Set> modelica_sort;
+  for (const SBG::LIB::Map& m : const_cast<SBG::LIB::PWMap&>(_sort)) {
+    SBG::LIB::Set domain = m.domain();
+    for (const SetEdge& se : _modelica_bsbg.set_edges()) {
+      SBG::LIB::Set se_in_domain = se.domain().set().intersection(domain);
+      if (!se_in_domain.isEmpty()) {
+        modelica_sort.push_back(se_in_domain);
       }
     }
   }
 
-  std::reverse(result.begin(), result.end());
-  return result;
+  return sortSets(_sort, modelica_sort, _sort.fixedPoints());
+}
+
+std::vector<LoopT> VerticalSortingResult::groupLoops(std::vector<SBG::LIB::Set> modelica_sort, std::vector<LoopT> loops) const
+{
+  std::vector<LoopT> loops_copy = loops;
+  std::vector<LoopT> sorted_loops;
+  for (unsigned int j = 0; j < modelica_sort.size(); ++j) {
+    SBG::LIB::Set flattened_loop;
+    for (const LoopT& loop : loops_copy) {
+      flattened_loop = flatten(loop);
+      if (!flattened_loop.intersection(modelica_sort[j]).isEmpty()) {
+        break;
+      }
+    }
+
+    LoopT sorted_loop;
+    for (unsigned int h = j; h < modelica_sort.size(); ++h) {
+      if (flattened_loop.intersection(modelica_sort[h]).isEmpty()) {
+        j = h - 1;
+        sorted_loops.push_back(sorted_loop);
+        break;
+      } else if (h + 1 == modelica_sort.size()) {
+        j = h;
+        sorted_loop.push_back(modelica_sort[h]);
+        sorted_loops.push_back(sorted_loop);
+        break;
+      } else {
+        sorted_loop.push_back(modelica_sort[h]);
+      }
+    }
+  }
+
+  return sorted_loops;
 }
 
 CausalEquations VerticalSortingResult::causalizeLoop(LoopT loop) const
 {
   CausalEquations result;
 
+  // Convert to ModelicaCC representation
   for (const SBG::LIB::Set& s : loop) {
     SBG::LIB::Expression expr{s.arity(), 1, 0};
     if (s.cardinal() > 1) {
@@ -221,10 +270,13 @@ CausalModel VerticalSortingResult::toModelicaFormat(std::vector<LoopT> loops) co
 {
   CausalModel result;
 
-  // Sort between different algebraic loops (different SCCs of the SBG)
-  std::vector<LoopT> sorted_loops = sortLoops(loops);
+  // Convert _sort to equivalent SBG auxiliary representation
+  std::vector<SBG::LIB::Set> modelica_sort = toIntermediateFormat();
 
-  // Order each ModelicaCC array equation (inside each SCC of the SBG)
+  // Group algebraic loops
+  std::vector<LoopT> sorted_loops = groupLoops(modelica_sort, loops);
+
+  // Convert to final ModelicaCC format
   for (const LoopT& loop : sorted_loops) {
     result.pushBack(causalizeLoop(loop));
   }
@@ -244,9 +296,8 @@ VerticalSorting::VerticalSorting(AlgebraicLoopsResult& loops_result, TearingResu
 VerticalSortingResult VerticalSorting::sort()
 {
   SBG::LIB::DirectedSBG vertical_dsbg = misc::buildVerticalSortingSBG(_loops_result.scc_result(), _tearing_result.mfvs_result());
-  SBG::LIB::PWMap vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(vertical_dsbg, SBG::LIB::PWMap{});
+  SBG::LIB::PWMap vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(vertical_dsbg, _loops_result.scc_result().rmap());
 
-  // detectLoop(loops_result)
   return VerticalSortingResult{_tearing_result.modelica_bsbg(), vertical_sort};
 }
 
