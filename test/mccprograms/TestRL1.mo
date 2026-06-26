@@ -4,7 +4,7 @@
 ==============================================================================*/
 
 model TestRL1
-  constant Integer N = 1000000;
+  constant Integer N = 100;
   Real iL[N], Ua[N], Uc[N];
   parameter Real Ra = 1, Rb = 1, Rc = 1, L = 1;
 equation
