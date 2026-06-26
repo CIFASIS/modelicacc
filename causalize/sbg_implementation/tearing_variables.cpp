@@ -51,6 +51,15 @@ const std::set<AST::Bracket>& TearingVariables::operator[](AST::Name name) const
 
 void TearingVariables::insert(TearingVariable variable) { _variables[variable.name()].insert(variable.subscripts()); }
 
+void TearingVariables::concatenation(TearingVariables other)
+{
+  for (const auto& [name, access] : other) {
+    for (const AST::Bracket& subs : access) {
+      insert(TearingVariable{name, subs});
+    }
+  }
+}
+
 std::vector<AST::Name> TearingVariables::variables() const
 {
   std::vector<std::string> var_names;
@@ -61,9 +70,10 @@ std::vector<AST::Name> TearingVariables::variables() const
 std::ostream& operator<<(std::ostream& out, const TearingVariables& vars)
 {
   for (auto const& [name, access] : vars) {
-    out << name;
     for (const AST::Bracket& subs : access) {
+      out << name;
       out << subs;
+      out << "\n";
     }
     out << "\n";
   }

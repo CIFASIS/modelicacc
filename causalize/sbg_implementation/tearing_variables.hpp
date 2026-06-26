@@ -34,6 +34,9 @@ namespace Causalize {
 // Tearing variable ------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
+// ModelicaCC tearing variable representation ----------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 class TearingVariable {
 public:
   TearingVariable(AST::Name name, AST::Bracket subscripts);
@@ -60,7 +63,10 @@ public:
   std::set<AST::Bracket>& operator[](AST::Name name);
   const std::set<AST::Bracket>& operator[](AST::Name name) const;
   void insert(TearingVariable variable);
+
   std::vector<AST::Name> variables() const;
+  
+  void concatenation(TearingVariables other);
 
 private:
   std::map<AST::Name, std::set<AST::Bracket>> _variables;
