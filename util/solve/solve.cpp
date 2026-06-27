@@ -236,7 +236,7 @@ EquationList EquationSolver::Solve(EquationList eqs, ExpList crs, VarSymbolTable
       ret.push_back(tearing_eq);
     }
   } catch (std::logic_error &) {
-    std::cerr << "EquationSolver: cannot solve equation" << eqns << std::endl;
+    std::cerr << "EquationSolver: cannot solve equation " << eqns << std::endl;
     std::cerr << "EquationSolver: for variables " << vars << std::endl;
     abort();
   }

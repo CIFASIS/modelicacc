@@ -43,6 +43,7 @@ void usage()
   cout << endl;
   cout << "-h, --help      Display this information and exit" << endl;
   cout << "-o <path>, --output <path> Sets the output path for the generated graph dot file." << endl;
+  cout << "-t, --tearing Use tearing variables." << endl;
   cout << "-v, --version   Display version information and exit" << endl;
   cout << endl;
   cout << "Modelica C Compiler home page: https://github.com/CIFASIS/modelicacc " << endl;
@@ -61,12 +62,16 @@ int main(int argc, char** argv)
   int opt;
   extern char* optarg;
   string output_path = "";
+  bool tearing = false;
 
   while (true) {
-    static struct option long_options[] = {
-        {"version", no_argument, 0, 'v'}, {"help", no_argument, 0, 'h'}, {"output", required_argument, 0, 'o'}, {0, 0, 0, 0}};
+    static struct option long_options[] = {{"version", no_argument, 0, 'v'},
+                                           {"help", no_argument, 0, 'h'},
+                                           {"output", required_argument, 0, 'o'},
+                                           {"tearing", no_argument, 0, 't'},
+                                           {0, 0, 0, 0}};
     int option_index = 0;
-    opt = getopt_long(argc, argv, "vho:", long_options, &option_index);
+    opt = getopt_long(argc, argv, "vhot:", long_options, &option_index);
     if (opt == EOF) {
       break;
     }
@@ -79,6 +84,9 @@ int main(int argc, char** argv)
       exit(0);
     case 'o':
       output_path = optarg;
+      break;
+    case 't':
+      tearing = true;
       break;
     case '?':
       usage();
@@ -121,9 +129,13 @@ int main(int argc, char** argv)
   Modelica::AST::ClassList classes = stored_def.classes();
   const Modelica::Causalize::CausalModel& causal_model = result.vertical_sort();
   EquationList causalized;
-  for (const Modelica::Causalize::CausalEquations& l : causal_model) {
+  Modelica::Causalize::TearingVariables tearing_vars;
+  if (tearing) {
+    tearing_vars = result.tearing();
+  }
+  for (const Modelica::Causalize::CausalEquations& s : causal_model) {
     EquationList res =
-        EquationSolver::Solve(l.equations(), l.variables(), mmo_class.syms_ref(), mmo_class.variables_ref(), classes, result.tearing());
+        EquationSolver::Solve(s.equations(), s.variables(), mmo_class.syms_ref(), mmo_class.variables_ref(), classes, tearing_vars);
     causalized.insert(causalized.end(), res.begin(), res.end());
   }
 
