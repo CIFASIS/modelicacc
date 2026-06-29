@@ -24,6 +24,10 @@ jobs:
         sudo apt-get install make
         sudo apt-get install rapidjson-dev
 
+    - name: Generate config files.
+      working-directory: .
+      run: autoreconf -fi
+
     - name: Autoconf
       working-directory: .
       run: autoconf
