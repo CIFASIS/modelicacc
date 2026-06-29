@@ -30,6 +30,7 @@
 #include <sbg/expression.hpp>
 #include <sbg/pw_map.hpp>
 
+#include <algorithm>
 #include <utility>
 
 namespace Modelica {
@@ -116,6 +117,10 @@ namespace {
 SBG::LIB::Expression getExpr(const SBG::LIB::Set& m_domain
   , const SBG::LIB::PWMap& sort)
 {
+  if (m_domain.cardinal() == 1) {
+    return (*sort.restrict(m_domain).begin()).law();
+  }
+
   SBG::LIB::PWMap m_sort = sort.restrict(m_domain);
   while (m_sort.image().intersection(m_domain).isEmpty()) {
     m_sort = sort.composition(m_sort);
@@ -250,30 +255,73 @@ CausalEquations VerticalSortingResult::causalizeLoop(LoopT loop) const
 {
   CausalEquations result;
 
-  // Convert to ModelicaCC representation
-  for (const SBG::LIB::Set& s : loop) {
-    SBG::LIB::Expression expr{s.arity(), 1, 0};
-    if (s.cardinal() > 1) {
-      expr = getExpr(s, _sort);
-    }
+  // Merge border elements if possible
+  LoopT new_loop;
+  SBG::LIB::Set sorted;
+  for (const SBG::LIB::Set& s : LoopT{loop.rbegin(), loop.rend()}) {
+    SBG::LIB::Set new_s = s.difference(sorted);
+    if (!new_s.isEmpty()) {
+      SBG::LIB::PWMap m_sort = _sort.restrict(new_s);
+      unsigned int j = 0;
+      if (new_s.cardinal() == 1) {
+        m_sort = _sort.restrict(new_s);
+      } else {
+        while (m_sort.image().intersection(new_s).isEmpty()) {
+          m_sort = _sort.composition(m_sort);
+        }
+        SBG::LIB::Set aux = new_s.intersection(m_sort.preImage(new_s));
+        aux = aux.difference(m_sort.fixedPoints());
+        m_sort = m_sort.restrict(aux);
+        for (const auto& _ : m_sort) {
+          ++j;
+        }
+        ERROR_UNLESS(1 >= j, "getExpr: case not yet supported");
+      }
 
+      if (j > 0) {
+        SBG::LIB::Expression expr = (*(m_sort.begin())).law();
+        for (const SBG::LIB::Set& other_s : LoopT{loop.rbegin(), loop.rend()}) {
+          if (s != other_s) {
+            SBG::LIB::Set image_in_other = SBG::LIB::Map{new_s, expr}.image().intersection(other_s);
+            if (!image_in_other.isEmpty()) {
+              new_s = std::move(new_s).disjointCup(other_s).difference(sorted);
+              new_s.compact();
+              break;
+            }
+          }
+        }
+      }
+
+      new_loop.push_back(new_s);
+      sorted = std::move(sorted).cup(new_s);
+    }
+  }
+  std::reverse(new_loop.begin(), new_loop.end());
+
+  // Convert to ModelicaCC representation
+  SBG::LIB::Expression expr{sorted.arity(), 1, 0};
+  for (const SBG::LIB::Set& s : new_loop) {
+    std::cout << s << "\n";
     for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-      CompactSet se_and_m_domain = se.domain();
-      se_and_m_domain.intersection(CompactSet{s});
-      if (se_and_m_domain.cardinal() > 0) {
+      CompactSet se_and_s = se.domain();
+      se_and_s.intersection(CompactSet{s});
+      if (se_and_s.cardinal() > 0) {
         EquationInfo eq_info = _modelica_bsbg.setVertex(se.eq_id()).info().value();
         std::vector<Name> counters;
         for (const Index& index : eq_info.indices()) {
           counters.push_back(index.name());
         }
-        std::vector<Indexes> indices = toModelicaIndices(se_and_m_domain
+        expr = getExpr(se_and_s.set(), _sort);
+        std::vector<Indexes> indices = toModelicaIndices(se_and_s
           , se.translation(), counters, expr);
+
         for (const Indexes& indexes : indices) {
           result.pushBack(eq_info.restrictEquation(indexes), se.access());
         }
       }
     }
   }
+  std::cout << "\n";
 
   return result;
 }
