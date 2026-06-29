@@ -122,6 +122,7 @@ update-sbg:
 lib-sbg: lib-boost  
 ifeq ("$(wildcard $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0))","")
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB); tar -zxvf $(SBG_1_0_0).tar.gz
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0); autoreconf -fi
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0); autoconf
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0); ./configure
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0); make
