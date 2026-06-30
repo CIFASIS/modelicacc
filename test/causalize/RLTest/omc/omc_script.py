@@ -27,7 +27,7 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
     print(f"Values of N: {valores_n}")
     print(f"Number of runs: {runs}\n")
 
-    omc_stages = ["Tearing", "Solve"]
+    omc_stages = ["Causalize", "Tearing", "Solve"]
     resultados_totales = {}
 
     for n in valores_n:
@@ -42,7 +42,6 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
             f.write(modified_content);
 
         command = ["omc", "-s", "--newBackend", "-d=dumpBackendClocks", temp_filename]
-        #pattern = re.compile(r"^(.+?):\s*([\d.]+)\s*ms", re.MULTILINE)
         pattern = re.compile(r"^\s*([\w\s\d]+?)\.+\s*([\d.e+-]+)", re.MULTILINE)
         fases_tiempos = defaultdict(list)
 
@@ -54,6 +53,8 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
             try:
                 result = subprocess.run(command, capture_output=True, text=True, check=True)
                 output = result.stdout + result.stderr
+                lineas = output.splitlines()
+                output = "\n".join(lineas[19:])
                 
                 matches = pattern.findall(output)
                 for fase, tiempo_str in matches:
@@ -107,7 +108,7 @@ if __name__ == "__main__":
 
     input_runs = int(sys.argv[1])
     
-    lista_n = [10**i for i in range(2, 5)]
+    lista_n = [10**i for i in range(2, 3)]
     
     model_list = ["TestRL1.mo", "TestRL2.mo", "TestRL3.mo"]
     for model in model_list:
