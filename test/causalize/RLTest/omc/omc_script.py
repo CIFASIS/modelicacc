@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     input_runs = int(sys.argv[1])
     
-    lista_n = [10**i for i in range(2, 3)]
+    lista_n = [10**i for i in range(2, 5)]
     
     model_list = ["TestRL1.mo", "TestRL2.mo", "TestRL3.mo"]
     for model in model_list:
