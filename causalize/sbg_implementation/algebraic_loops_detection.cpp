@@ -29,6 +29,7 @@
 #include <sbg/directed_sbg.hpp>
 #include <sbg/pw_map.hpp>
 #include <sbg/set.hpp>
+#include <util/time_profiler.hpp>
 
 #include <algorithm>
 
@@ -83,10 +84,6 @@ AlgebraicLoop AlgebraicLoops::operator[](std::size_t k) const
   ERROR_UNLESS(k < _loops.size(), "AlgebraicLoops::operator[]: index ", k, " out of range");
   return _loops[k];
 }
-
-// auto AlgebraicLoops::begin() const { return _loops.begin(); }
-
-// auto AlgebraicLoops::end() const { return _loops.end(); }
 
 void AlgebraicLoops::pushBack(AlgebraicLoop loop)
 {
@@ -188,8 +185,18 @@ AlgebraicLoopsDetector::AlgebraicLoopsDetector(HorizontalSortingResult& hs_resul
 
 AlgebraicLoopsResult AlgebraicLoopsDetector::detect()
 {
-  SBG::LIB::DirectedSBG loops_dsbg = misc::buildLoopDetectionSBG(_hs_result.matching_result());
-  SBG::LIB::SCCData scc_result = SBG::LIB::SCC{}.calculate(loops_dsbg);
+
+  SBG::LIB::DirectedSBG loops_dsbg;
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Algebraic loops SBG builder"};
+    loops_dsbg = misc::buildLoopDetectionSBG(_hs_result.matching_result());
+  }
+  SBG::LIB::SCCData scc_result{SBG::LIB::DirectedSBG{}, SBG::LIB::PWMap{}
+    , SBG::LIB::Set{}};
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Algebraic loops detection"};
+    scc_result = SBG::LIB::SCC{}.calculate(loops_dsbg);
+  }
 
   return AlgebraicLoopsResult{_hs_result.modelica_bsbg(), scc_result};
 }

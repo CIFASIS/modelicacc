@@ -31,6 +31,9 @@
 #include <util/solve/solve.hpp>
 #include <ast/equation.hpp>
 #include <util/table.hpp>
+#include <sbg/pwmap_impl.hpp>
+#include <sbg/set_impl.hpp>
+#include <util/time_profiler.hpp>
 
 using namespace std;
 using namespace Modelica;
@@ -122,7 +125,13 @@ int main(int argc, char** argv)
   StateVariablesFinder setup_state_var(mmo_class);
   setup_state_var.findStateVariables();
 
-  Modelica::Causalize::CausalizationResult result = Modelica::Causalize::Causalize{}.causalize(mmo_class);
+  SBG::LIB::SET_IMPL.set_set_fact(SBG::LIB::SetKind::kOrdUnidimDense);
+  SBG::LIB::PWMAP_IMPL.set_pwmap_fact(SBG::LIB::PWMapKind::kUnordered);
+  Modelica::Causalize::CausalizationResult result;
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Causalization"};
+    result = Modelica::Causalize::Causalize{}.causalize(mmo_class);
+  }
   std::cout << result << "\n";
 
   debugInit("s");
@@ -176,5 +185,12 @@ int main(int argc, char** argv)
   } else {
     std::cerr << "Error: Could not open file " << causalized_file_name << " for writing." << std::endl;
   }
+
+  std::cout << "\n";
+  SBG::Util::Internal::TimeProfiler::print_execution_time("Algebraic loops SBG builder");
+  SBG::Util::Internal::TimeProfiler::print_execution_time("Algebraic loops detection");
+  SBG::Util::Internal::TimeProfiler::print_execution_time("Causalization");
+  std::cout << "\n\n";
+
   return 0;
 }

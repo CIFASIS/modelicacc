@@ -66,7 +66,6 @@ void CompactSet::reflection() { ERROR("CompactSet::reflection: not supported yet
 
 void CompactSet::translate(const Translation& t)
 {
-  std::cout << t.arity() << " " << _set.arity() << "\n";
   ERROR_UNLESS(t.arity() == _set.arity(), "CompactSet::translate: dimensions ", "of compact set ", "and translation are different");
 
   SBG::LIB::MD_NAT t_val;

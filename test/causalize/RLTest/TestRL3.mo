@@ -17,7 +17,7 @@ equation
     uL[i]-uL[i+1]-R*iR[i+1]=0;
   end for;
   U-uL[1]-R*iR[1]=0;
-  uL[N]-(iR[100]-iL[N])*R0=0;
+  uL[N]-(iR[N]-iL[N])*R0=0;
 end TestRL3;
 
 //Algebraic Loops:
