@@ -128,27 +128,30 @@ int main(int argc, char** argv)
   SBG::LIB::SET_IMPL.set_set_fact(SBG::LIB::SetKind::kOrdUnidimDense);
   SBG::LIB::PWMAP_IMPL.set_pwmap_fact(SBG::LIB::PWMapKind::kUnordered);
   Modelica::Causalize::CausalizationResult result;
+  EquationList causalized;
   {
     SBG::Util::Internal::TimeProfiler profiler{"Causalization"};
     result = Modelica::Causalize::Causalize{}.causalize(mmo_class);
-  }
-  std::cout << result << "\n";
 
-  debugInit("s");
-  Modelica::AST::ClassList classes = stored_def.classes();
-  const Modelica::Causalize::CausalModel& causal_model = result.vertical_sort();
-  EquationList causalized;
-  Modelica::Causalize::TearingVariables tearing_vars;
-  if (tearing) {
-    tearing_vars = result.tearing();
+    //debugInit("s");
+    {
+      SBG::Util::Internal::TimeProfiler solve_profiler{"GiNaC solve"};
+      Modelica::AST::ClassList classes = stored_def.classes();
+      const Modelica::Causalize::CausalModel& causal_model = result.vertical_sort();
+      Modelica::Causalize::TearingVariables tearing_vars;
+      if (tearing) {
+        tearing_vars = result.tearing();
+      }
+      for (const Modelica::Causalize::CausalEquations& s : causal_model) {
+        EquationList res =
+            EquationSolver::Solve(s.equations(), s.variables(), mmo_class.syms_ref(), mmo_class.variables_ref(), classes, tearing_vars);
+        causalized.insert(causalized.end(), res.begin(), res.end());
+      }
+    }
   }
-  for (const Modelica::Causalize::CausalEquations& s : causal_model) {
-    EquationList res =
-        EquationSolver::Solve(s.equations(), s.variables(), mmo_class.syms_ref(), mmo_class.variables_ref(), classes, tearing_vars);
-    causalized.insert(causalized.end(), res.begin(), res.end());
-  }
-
   mmo_class.equations_ref().equations_ref() = causalized;
+
+  std::cout << result << "\n";
   std::cout << mmo_class << std::endl;
 
   std::string causalized_file_name = mmo_class.name();
@@ -187,8 +190,15 @@ int main(int argc, char** argv)
   }
 
   std::cout << "\n";
+  SBG::Util::Internal::TimeProfiler::print_execution_time("Horizontal sorting SBG builder");
+  SBG::Util::Internal::TimeProfiler::print_execution_time("Horizontal sorting");
   SBG::Util::Internal::TimeProfiler::print_execution_time("Algebraic loops SBG builder");
   SBG::Util::Internal::TimeProfiler::print_execution_time("Algebraic loops detection");
+  SBG::Util::Internal::TimeProfiler::print_execution_time("Tearing SBG builder");
+  SBG::Util::Internal::TimeProfiler::print_execution_time("Tearing");
+  SBG::Util::Internal::TimeProfiler::print_execution_time("Vertical sorting SBG builder");
+  SBG::Util::Internal::TimeProfiler::print_execution_time("Vertical sorting");
+  SBG::Util::Internal::TimeProfiler::print_execution_time("GiNaC solve");
   SBG::Util::Internal::TimeProfiler::print_execution_time("Causalization");
   std::cout << "\n\n";
 

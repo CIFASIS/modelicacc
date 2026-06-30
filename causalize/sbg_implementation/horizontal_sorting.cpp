@@ -26,6 +26,7 @@
 #include <algorithms/matching/matching.hpp>
 #include <boost/variant/get.hpp>
 #include <sbg/bipartite_sbg.hpp>
+#include <util/time_profiler.hpp>
 
 namespace Modelica {
 
@@ -162,7 +163,11 @@ HorizontalSortingResult HorizontalSorting::sort()
   ERROR_UNLESS(num_variables == num_equations, "HorizontalSorting::sort: unbalanced system of equations.\n",
                "Number of variables: ", num_variables, "\n", "Number of equations: ", num_equations);
 
-  SBG::LIB::MatchData matching_result = SBG::LIB::Matching{}.calculate(bipartite_sbg);
+  SBG::LIB::MatchData matching_result{SBG::LIB::BipartiteSBG{}, SBG::LIB::Set{}, false};
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Horizontal sorting"};
+    matching_result = SBG::LIB::Matching{}.calculate(bipartite_sbg);
+  }
   ERROR_UNLESS(matching_result.full_match(), "HorizontalSorting::sort: ", "higher index system");
 
   ModelicaSBG old = _sbg_generation_result.modelica_bsbg();

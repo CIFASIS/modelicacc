@@ -185,7 +185,6 @@ AlgebraicLoopsDetector::AlgebraicLoopsDetector(HorizontalSortingResult& hs_resul
 
 AlgebraicLoopsResult AlgebraicLoopsDetector::detect()
 {
-
   SBG::LIB::DirectedSBG loops_dsbg;
   {
     SBG::Util::Internal::TimeProfiler profiler{"Algebraic loops SBG builder"};

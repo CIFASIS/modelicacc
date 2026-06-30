@@ -1,8 +1,9 @@
 ################################################################################
-# Script that executes omc -s -d=execstat filename.mo 10 times and calculates
-# the average times of the "matching and sort" and "tearingSystem" phases. It
-# repeats these for different values of N = 100, 1000 and 10000, for each
-# model: TestRL1.mo, TestRL2.mo and TestRL3.mo.
+# Script that executes ../../../bin/causalize 10 times and calculates the
+# average times all of the causalization phases, and also the compilation of
+# the C generated file. It repeats these for different values of
+# N = 100, 1000, 10000, 100000 and 1000000 for each model: TestRL1.mo,
+# TestRL2.mo and TestRL3.mo.
 ################################################################################
 
 import sys
@@ -10,6 +11,9 @@ import subprocess
 import re
 import os
 from collections import defaultdict
+from pathlib import Path
+import sys
+import time
 
 def run_omc_benchmarks(filename, valores_n, runs=10):
     try:
@@ -23,6 +27,7 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
     print(f"Values of N: {valores_n}")
     print(f"Number of runs: {runs}\n")
 
+    omc_stages = ["Tearing", "Solve"]
     resultados_totales = {}
 
     for n in valores_n:
@@ -34,13 +39,14 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
         
         temp_filename = f"temp_benchmark_{filename}"
         with open(temp_filename, 'w', encoding='utf-8') as f:
-            f.write(modified_content)
+            f.write(modified_content);
 
-        command = ["omc", "-s", "-d=execstat", temp_filename]
-        pattern = re.compile(r"Notification:\s*Performance\s*of\s*(.+?):\s*time\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)/")
+        command = ["omc", "-s", "--newBackend", "-d=dumpBackendClocks", temp_filename]
+        #pattern = re.compile(r"^(.+?):\s*([\d.]+)\s*ms", re.MULTILINE)
+        pattern = re.compile(r"^\s*([\w\s\d]+?)\.+\s*([\d.e+-]+)", re.MULTILINE)
         fases_tiempos = defaultdict(list)
 
-        resultados_totales[n] = {"matching and sorting": None, "tearingSystem": None}
+        resultados_totales[n] = dict.fromkeys(omc_stages)
         error_en_este_n = False
 
         for i in range(1, runs + 1):
@@ -51,10 +57,9 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
                 
                 matches = pattern.findall(output)
                 for fase, tiempo_str in matches:
-                    if "tearingSystem (simulation)" in fase:
-                        fases_tiempos["tearingSystem"].append(float(tiempo_str))
-                    elif "matching and sorting" in fase and "initialization" not in fase:
-                        fases_tiempos["matching and sorting"].append(float(tiempo_str))
+                    fase_clean = fase.strip()
+                    if fase_clean in omc_stages:
+                        fases_tiempos[fase_clean].append(float(tiempo_str))
                     
             except subprocess.CalledProcessError as e:
                 print(f"\nError: OMC with N={n}, run {i}:")
@@ -65,31 +70,34 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
         if os.path.exists(temp_filename):
             os.remove(temp_filename)
 
-        if error_en_este_n and not fases_tiempos["matching and sorting"] and not fases_tiempos["tearingSystem"]:
+        if error_en_este_n and not any(fases_tiempos.values()):
             print(f"Skipping N={n}.")
             continue
 
-        for fase in ["matching and sorting", "tearingSystem"]:
-            tiempos = fases_tiempos[fase]
+        for stage in omc_stages:
+            tiempos = fases_tiempos[stage]
             if tiempos:
-                resultados_totales[n][fase] = sum(tiempos) / len(tiempos)
-        
+                resultados_totales[n][stage] = 1e3*sum(tiempos) / len(tiempos)
+
         print("Finished.                      ")
 
-    print(f"\n\n====================== TIME MEASURES: {filename} ======================")
-    print(f"{'N':<10} | {'Matching & Sorting (s)':<25} | {'Tearing System (s)':<25}")
-    print("-" * 68)
+    print(f"\n\n============================== TIME MEASURES: {filename} ==============================")
+    print(f"{'N':<10} | {'Stage Name':<35} | {'Average Time (ms)':<20}")
+    print("-" * 73)
     
     for n in valores_n:
-        fases = resultados_totales.get(n, {"matching and sorting": None, "tearingSystem": None})
-        m_time = fases["matching and sorting"]
-        t_time = fases["tearingSystem"]
-        
-        m_str = f"{m_time:.4e}" if m_time and m_time < 0.001 else (f"{m_time:.6f}" if m_time else "N/A")
-        t_str = f"{t_time:.4e}" if t_time and t_time < 0.001 else (f"{t_time:.6f}" if t_time else "N/A")
-        
-        print(f"{n:<10} | {m_str:<25} | {t_str:<25}")
-    print("=======================================================================")
+        fases = resultados_totales.get(n, {})
+        for stage in omc_stages:
+            tiempo = fases.get(stage)
+            
+            if tiempo is not None:
+                t_str = f"{tiempo:.4e}" if tiempo < 0.001 else f"{tiempo:.6f}"
+            else:
+                t_str = "N/A"
+                
+            print(f"{n:<10} | {stage:<35} | {t_str:<20}")
+        print("-" * 73)
+    print("=======================================================================================")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -99,7 +107,7 @@ if __name__ == "__main__":
 
     input_runs = int(sys.argv[1])
     
-    lista_n = [100, 1000, 10000]
+    lista_n = [10**i for i in range(2, 5)]
     
     model_list = ["TestRL1.mo", "TestRL2.mo", "TestRL3.mo"]
     for model in model_list:

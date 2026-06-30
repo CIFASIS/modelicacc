@@ -1,8 +1,9 @@
 ################################################################################
 # Script that executes ../../../bin/causalize 10 times and calculates the
-# average times for the algebraic loops and complete causalization phases. It
-# repeats these for different values of N = 100, 1000, 10000, 100000 and 1000000
-# for each model: TestRL1.mo, TestRL2.mo and TestRL3.mo.
+# average times all of the causalization phases, and also the compilation of
+# the C generated file. It repeats these for different values of
+# N = 100, 1000, 10000, 100000 and 1000000 for each model: TestRL1.mo,
+# TestRL2.mo and TestRL3.mo.
 ################################################################################
 
 import sys
@@ -11,6 +12,15 @@ import re
 import os
 from collections import defaultdict
 from pathlib import Path
+import sys
+import time
+
+# TODO: erase dummy functions and import QSS actual functions
+def mmoc_compile_model(filename):
+    time.sleep(15 / 1000.0)
+
+def compile_c_model(filename):
+    time.sleep(15 / 1000.0)
 
 def run_modelicacc_benchmarks(filename, valores_n, runs=10):
     try:
@@ -24,6 +34,12 @@ def run_modelicacc_benchmarks(filename, valores_n, runs=10):
     print(f"Values of N: {valores_n}")
     print(f"Number of runs: {runs}\n")
 
+    modelicacc_stages = ["Horizontal sorting SBG builder", "Horizontal sorting"
+      , "Algebraic loops SBG builder", "Algebraic loops detection"
+      , "Tearing SBG builder", "Tearing"
+      , "Vertical sorting SBG builder", "Vertical sorting"
+      , "GiNaC solve", "Causalization"]
+    qss_stages = ["ModelicaCC compilation", "C compilation"]
     resultados_totales = {}
 
     for n in valores_n:
@@ -41,23 +57,21 @@ def run_modelicacc_benchmarks(filename, valores_n, runs=10):
         pattern = re.compile(r"^(.+?):\s*([\d.]+)\s*ms", re.MULTILINE)
         fases_tiempos = defaultdict(list)
 
-        resultados_totales[n] = {"loops builder": None, "loops": None, "causalize": None}
+        resultados_totales[n] = dict.fromkeys(modelicacc_stages) | dict.fromkeys(qss_stages)
         error_en_este_n = False
 
         for i in range(1, runs + 1):
             print(f"Run {i}/{runs}...", end="\r")
+            # ModelicaCC causalization
             try:
                 result = subprocess.run(command, capture_output=True, text=True, check=True)
                 output = result.stdout + result.stderr
                 
                 matches = pattern.findall(output)
                 for fase, tiempo_str in matches:
-                    if "Algebraic loops SBG builder" in fase:
-                        fases_tiempos["loops builder"].append(float(tiempo_str))
-                    elif "Algebraic loops detection" in fase:
-                        fases_tiempos["loops"].append(float(tiempo_str))
-                    elif "Causalization" in fase:
-                        fases_tiempos["causalize"].append(float(tiempo_str))
+                    fase_clean = fase.strip()
+                    if fase_clean in modelicacc_stages:
+                        fases_tiempos[fase_clean].append(float(tiempo_str))
                     
             except subprocess.CalledProcessError as e:
                 print(f"\nError: ModelicaCC with N={n}, run {i}:")
@@ -65,35 +79,54 @@ def run_modelicacc_benchmarks(filename, valores_n, runs=10):
                 error_en_este_n = True
                 break
 
+            # QSS compilation
+            start_time = time.perf_counter()
+            mmoc_compile_model(filename)
+            end_time = time.perf_counter()
+            execution_time = end_time - start_time
+            fases_tiempos[qss_stages[0]].append(float(execution_time))
+
+            start_time = time.perf_counter()
+            compile_c_model(filename)
+            end_time = time.perf_counter()
+            execution_time = end_time - start_time
+            fases_tiempos[qss_stages[1]].append(float(execution_time))
+                    
         if os.path.exists(temp_filename):
             os.remove(temp_filename)
 
-        if error_en_este_n and not fases_tiempos["loops builder"] and not fases_tiempos["loops"] and not fases_tiempos["causalize"]:
+        if error_en_este_n and not any(fases_tiempos.values()):
             print(f"Skipping N={n}.")
             continue
 
-        for fase in ["loops builder", "loops", "causalize"]:
-            tiempos = fases_tiempos[fase]
+        for stage in modelicacc_stages:
+            tiempos = fases_tiempos[stage]
             if tiempos:
-                resultados_totales[n][fase] = sum(tiempos) / len(tiempos)
+                resultados_totales[n][stage] = sum(tiempos) / len(tiempos)
+
+        for stage in qss_stages:
+            tiempos = fases_tiempos[stage]
+            if tiempos:
+                resultados_totales[n][stage] = sum(tiempos) / len(tiempos)
         
         print("Finished.                      ")
 
     print(f"\n\n============================== TIME MEASURES: {filename} ==============================")
-    print(f"{'N':<10} | {'SBG loops builder (ms)':<15} | {'SBG loops detection (ms)':<15} | {'SBG Causalization (ms)':<15}")
-    print("-" * 87)
+    print(f"{'N':<10} | {'Stage Name':<35} | {'Average Time (ms)':<20}")
+    print("-" * 73)
     
     for n in valores_n:
-        fases = resultados_totales.get(n, {"loops builder": None, "loops": None, "causalize": None})
-        b_time = fases["loops builder"]
-        l_time = fases["loops"]
-        c_time = fases["causalize"]
-        
-        b_str = f"{b_time:.4e}" if b_time and b_time < 0.001 else (f"{b_time:.6f}" if b_time else "N/A")
-        l_str = f"{l_time:.4e}" if l_time and l_time < 0.001 else (f"{l_time:.6f}" if l_time else "N/A")
-        c_str = f"{c_time:.4e}" if c_time and c_time < 0.001 else (f"{c_time:.6f}" if c_time else "N/A")
-        
-        print(f"{n:<10} | {b_str:<22} | {l_str:<24} | {c_str:<25}")
+        fases = resultados_totales.get(n, {})
+        for stage in modelicacc_stages + qss_stages:
+            tiempo = fases.get(stage)
+            
+            if tiempo is not None:
+                t_str = f"{tiempo:.4e}" if tiempo < 0.001 else f"{tiempo:.6f}"
+            else:
+                t_str = "N/A"
+                
+            print(f"{n:<10} | {stage:<35} | {t_str:<20}")
+        print("-" * 73)
     print("=======================================================================================")
 
 if __name__ == "__main__":
@@ -104,7 +137,7 @@ if __name__ == "__main__":
 
     input_runs = int(sys.argv[1])
     
-    lista_n = [100, 1000, 10000, 100000, 1000000]
+    lista_n = [10**i for i in range(2, 7)]
     
     model_list = ["TestRL1.mo", "TestRL2.mo", "TestRL3.mo"]
     for model in model_list:
@@ -113,9 +146,6 @@ if __name__ == "__main__":
 
     directorio_actual = Path(".")
 
-    # Contador para saber cuántos archivos se borraron
-    archivos_eliminados = 0
-    
     # Iteramos sobre todos los archivos del directorio
     for archivo in directorio_actual.iterdir():
         # Verificamos que sea un archivo y que contenga alguno de los dos textos en el nombre
@@ -123,6 +153,5 @@ if __name__ == "__main__":
             try:
                 archivo.unlink()  # Elimina el archivo
                 print(f"Deleted: {archivo.name}")
-                archivos_eliminados += 1
             except Exception as e:
                 print(f"Unable to delete {archivo.name}: {e}")

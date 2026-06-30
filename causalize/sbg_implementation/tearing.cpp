@@ -30,6 +30,7 @@
 #include <sbg/directed_sbg.hpp>
 #include <sbg/map.hpp>
 #include <sbg/set.hpp>
+#include <util/time_profiler.hpp>
 
 namespace Modelica {
 
@@ -97,8 +98,17 @@ TearingDetector::TearingDetector(AlgebraicLoopsResult loops_result) : _loops_res
 
 TearingResult TearingDetector::detect()
 {
-  SBG::LIB::DirectedSBG dsbg = misc::buildTearingSBG(_loops_result.scc_result());
-  return TearingResult{_loops_result.modelica_bsbg(), SBG::LIB::MinFeedbackVertexSet{}.calculate(dsbg)};
+  SBG::LIB::DirectedSBG dsbg;
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Tearing SBG builder"};
+    dsbg = misc::buildTearingSBG(_loops_result.scc_result());
+  }
+  SBG::LIB::Set mfvs;
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Tearing"};
+    mfvs = SBG::LIB::MinFeedbackVertexSet{}.calculate(dsbg);
+  }
+  return TearingResult{_loops_result.modelica_bsbg(), mfvs};
 }
 
 }  // namespace Causalize

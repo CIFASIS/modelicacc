@@ -30,6 +30,7 @@
 #include <sbg/expression.hpp>
 #include <sbg/pw_map.hpp>
 #include <sbg/set.hpp>
+#include <util/time_profiler.hpp>
 
 #include <algorithm>
 
@@ -243,10 +244,17 @@ VerticalSorting::VerticalSorting(AlgebraicLoopsResult& loops_result, TearingResu
 
 VerticalSortingResult VerticalSorting::sort()
 {
-  SBG::LIB::DirectedSBG vertical_dsbg = misc::buildVerticalSortingSBG(_loops_result.scc_result(), _tearing_result.mfvs_result());
-  SBG::LIB::PWMap vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(vertical_dsbg, SBG::LIB::PWMap{});
+  SBG::LIB::DirectedSBG vertical_dsbg;
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Vertical sorting SBG builder"};
+    vertical_dsbg = misc::buildVerticalSortingSBG(_loops_result.scc_result(), _tearing_result.mfvs_result());
+  }
+  SBG::LIB::PWMap vertical_sort;
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Vertical sorting"};
+    vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(vertical_dsbg, SBG::LIB::PWMap{});
+  }
 
-  // detectLoop(loops_result)
   return VerticalSortingResult{_tearing_result.modelica_bsbg(), vertical_sort};
 }
 

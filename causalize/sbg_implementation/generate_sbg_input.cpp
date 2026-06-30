@@ -29,8 +29,9 @@
 #include "util/ast_visitors/eval_integer.hpp"
 #include "util/ast_visitors/matching_exps.hpp"
 
-#include "eval/file_evaluator.hpp"
-#include "eval/pretty_print.hpp"
+#include <eval/file_evaluator.hpp>
+#include <eval/pretty_print.hpp>
+#include <util/time_profiler.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -389,6 +390,8 @@ void GenerateSBGInput::setup()
 
 SBGGenerationResult GenerateSBGInput::buildFromModel()
 {
+  SBG::Util::Internal::TimeProfiler profiler{"Horizontal sorting SBG builder"};
+
   // Write SBG program to _sbg_input
   setup();
   addVariableNodes();
