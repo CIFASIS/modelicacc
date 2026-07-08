@@ -33,3 +33,10 @@ test/util/PrintGraphs
 /test/causalize/RLTest/omc/*.json
 /test/causalize/RLTest/omc/*.xml
 /test/causalize/RLTest/omc/*.makefile
+/test/causalize/RLTest/causalized/*.h
+/test/causalize/RLTest/causalized/*.c
+/test/causalize/RLTest/causalized/*.ini
+/test/causalize/RLTest/causalized/*.makefile
+/test/causalize/RLTest/causalized/*.sh
+/test/causalize/RLTest/causalized/*.mo
+/test/causalize/RLTest/*_sbg_input.sbg
