@@ -40,3 +40,5 @@ test/util/PrintGraphs
 /test/causalize/RLTest/causalized/*.sh
 /test/causalize/RLTest/causalized/*.mo
 /test/causalize/RLTest/*_sbg_input.sbg
+/test/causalize/RLTest/TestRL*
+/test/causalize/RLTest/omc/TestRL*
