@@ -18,6 +18,7 @@ CAUSALIZE_SBG_SRC := \
     $(CAUSALIZE_SBG_DIR)/set_edge.cpp \
     $(CAUSALIZE_SBG_DIR)/tearing.cpp \
     $(CAUSALIZE_SBG_DIR)/vertical_sorting.cpp \
+	$(CAUSALIZE_SBG_DIR)/tearing_variables.cpp \
 	$(UTIL_DIR)/affine_transformation.cpp \
 	$(UTIL_DIR)/affine_diag_transformation.cpp \
 	$(UTIL_DIR)/compact_set.cpp \
@@ -25,6 +26,7 @@ CAUSALIZE_SBG_SRC := \
 	$(UTIL_DIR)/ast_visitors/affine_expr_visitor.cpp \
 	$(UTIL_DIR)/ast_visitors/compact_set_visitor.cpp \
 	$(UTIL_DIR)/ast_visitors/constant_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/replace_equation.cpp \
 	$(UTIL_DIR)/ast_visitors/matching_exps.cpp \
 	$(UTIL_DIR)/affine_expr.cpp \
 	$(UTIL_DIR)/logger.cpp
@@ -40,7 +42,7 @@ create-folders::
 	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/sbg_implementation
 
 $(CAUSALIZE_SBG): $(CAUSALIZE_SBG_OBJ) $(CAUSALIZE_COMMON_OBJ) $(LIBMODELICA)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(BOOST_1_81_INC) $(SBG_LIB_DEV_INCLUDE) -o $(CAUSALIZE_SBG) $(CAUSALIZE_COMMON_OBJ) $(CAUSALIZE_SBG_OBJ) $(LIBS) $(SBG_LIB_DEV_LINK)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -o $(CAUSALIZE_SBG) $(CAUSALIZE_COMMON_OBJ) $(CAUSALIZE_SBG_OBJ) $(SBG_LIB_DEV_LINK) $(LIBS)
 
 # Disable the tests until we have the binary/API interface working.
 $(CAUSALIZE_SBG_TEST):

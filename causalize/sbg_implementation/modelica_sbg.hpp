@@ -36,6 +36,7 @@ namespace Causalize {
  */
 class ModelicaSBG {
 public:
+  ModelicaSBG() = default;
   ModelicaSBG(std::size_t arity);
 
   std::size_t arity() const;

@@ -35,6 +35,7 @@ namespace Causalize {
 
 class CausalizationResult {
 public:
+  CausalizationResult() = default;
   CausalizationResult(ModelMatch horizontal_sort, AlgebraicLoops loops
     , TearingVariables tearing, CausalModel vertical_sort);
 

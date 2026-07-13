@@ -28,29 +28,25 @@ Translation::Translation() : _dimension(0), _translation() {}
 
 Translation::Translation(std::size_t n) : _dimension(n), _translation(n, 0) {}
 
-Translation::Translation(std::size_t n, AST::Integer value)
-  : _dimension(n), _translation(n, value) {}
+Translation::Translation(std::size_t n, AST::Integer value) : _dimension(n), _translation(n, value) {}
 
 std::size_t Translation::arity() const { return _dimension; }
 
 AST::Integer& Translation::operator[](std::size_t i)
 {
-  ERROR_UNLESS(i < _dimension, "Translation::operator[]: index ", i
-    , "out of dimension ", _dimension);
+  ERROR_UNLESS(i < _dimension, "Translation::operator[]: index ", i, "out of dimension ", _dimension);
   return _translation[i];
 }
 
 const AST::Integer& Translation::operator[](std::size_t i) const
 {
-  ERROR_UNLESS(i < _dimension, "Translation::operator[]: index ", i
-    , "out of dimension ", _dimension);
+  ERROR_UNLESS(i < _dimension, "Translation::operator[]: index ", i, "out of dimension ", _dimension);
   return _translation[i];
 }
 
 Translation Translation::operator-(const Translation& other) const
 {
-  ERROR_UNLESS(arity() == other.arity(), "Translation::operator-: dimensions "
-    , "are mismatched");
+  ERROR_UNLESS(arity() == other.arity(), "Translation::operator-: dimensions ", "are mismatched");
 
   Translation result{arity()};
   result._dimension = arity();
@@ -60,4 +56,4 @@ Translation Translation::operator-(const Translation& other) const
   return result;
 }
 
-} // namespace Modelica
+}  // namespace Modelica

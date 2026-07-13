@@ -26,6 +26,7 @@
 #include <algorithms/matching/matching.hpp>
 #include <boost/variant/get.hpp>
 #include <sbg/bipartite_sbg.hpp>
+#include <util/time_profiler.hpp>
 
 namespace Modelica {
 
@@ -37,8 +38,7 @@ namespace Causalize {
 
 // EqVarMatch ------------------------------------------------------------------
 
-EqVarMatch::EqVarMatch(Equation equation, Expression variable)
-  : _equation(equation), _variable(variable) {}
+EqVarMatch::EqVarMatch(Equation equation, Expression variable) : _equation(equation), _variable(variable) {}
 
 const Equation& EqVarMatch::equation() const { return _equation; }
 
@@ -56,20 +56,15 @@ std::size_t ModelMatch::size() const { return _model_match.size(); }
 
 EqVarMatch ModelMatch::operator[](std::size_t k) const
 {
-  ERROR_UNLESS(k < _model_match.size(), "ModelMatch::operator[]: index ", k
-    , " out of range");
+  ERROR_UNLESS(k < _model_match.size(), "ModelMatch::operator[]: index ", k, " out of range");
   return _model_match[k];
 }
 
-void ModelMatch::pushBack(EqVarMatch match)
-{
-  _model_match.push_back(match);
-}
+void ModelMatch::pushBack(EqVarMatch match) { _model_match.push_back(match); }
 
 void ModelMatch::concatenation(ModelMatch other)
 {
-  _model_match.insert(_model_match.end(), other._model_match.begin()
-    , other._model_match.end());
+  _model_match.insert(_model_match.end(), other._model_match.begin(), other._model_match.end());
 }
 
 std::ostream& operator<<(std::ostream& out, const ModelMatch& match)
@@ -85,23 +80,16 @@ std::ostream& operator<<(std::ostream& out, const ModelMatch& match)
 // Horizontal sorting return structure -----------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-HorizontalSortingResult::HorizontalSortingResult(
-  ModelicaSBG modelica_bsbg
-  , SBG::LIB::MatchData matching_result)
-    : _modelica_bsbg(modelica_bsbg), _matching_result(matching_result) {}
-
-const ModelicaSBG& HorizontalSortingResult::modelica_bsbg() const
+HorizontalSortingResult::HorizontalSortingResult(ModelicaSBG modelica_bsbg, SBG::LIB::MatchData matching_result)
+    : _modelica_bsbg(modelica_bsbg), _matching_result(matching_result)
 {
-  return _modelica_bsbg;
 }
 
-const SBG::LIB::MatchData& HorizontalSortingResult::matching_result() const
-{
-  return _matching_result;
-}
+const ModelicaSBG& HorizontalSortingResult::modelica_bsbg() const { return _modelica_bsbg; }
 
-ModelMatch HorizontalSortingResult::equationToModelicaFormat(SetEdge se
-  , CompactSet se_match) const
+const SBG::LIB::MatchData& HorizontalSortingResult::matching_result() const { return _matching_result; }
+
+ModelMatch HorizontalSortingResult::equationToModelicaFormat(SetEdge se, CompactSet se_match) const
 {
   // Get equation set-vertex referenced by the set-edge
   SetVertex eq_sv = _modelica_bsbg.setVertex(se.eq_id());
@@ -112,8 +100,7 @@ ModelMatch HorizontalSortingResult::equationToModelicaFormat(SetEdge se
   for (const Index& index : eq_info.indices()) {
     counters.push_back(index.name());
   }
-  std::vector<Indexes> indices = toModelicaIndices(se_match, se.translation()
-    , counters);
+  std::vector<Indexes> indices = toModelicaIndices(se_match, se.translation(), counters);
 
   // Create new equation and save it to current matching
   ModelMatch result;
@@ -128,7 +115,7 @@ ModelMatch HorizontalSortingResult::toModelicaFormat() const
   ModelMatch result;
 
   // Traverse set-edges to get equation-variable matching
-  CompactSet sbg_match{_matching_result.M()}; 
+  CompactSet sbg_match{_matching_result.M()};
   for (const SetEdge& se : _modelica_bsbg.set_edges()) {
     CompactSet jth_eq_var_match = se.domain();
     jth_eq_var_match.intersection(sbg_match);
@@ -144,8 +131,7 @@ ModelMatch HorizontalSortingResult::toModelicaFormat() const
 // Horizontal sorting ----------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-HorizontalSorting::HorizontalSorting(SBGGenerationResult& sbg_generation_result)
-  : _sbg_generation_result(sbg_generation_result) {}
+HorizontalSorting::HorizontalSorting(SBGGenerationResult& sbg_generation_result) : _sbg_generation_result(sbg_generation_result) {}
 
 namespace {
 
@@ -153,8 +139,7 @@ namespace {
  * @brief Constructs the new Modelica bipartite SBG with the necessary
  * partitions of the set-edges induced by the matching.
  */
-ModelicaSBG constructNewModelicaSBG(ModelicaSBG old
-  , SBG::LIB::MatchData matching_result)
+ModelicaSBG constructNewModelicaSBG(ModelicaSBG old, SBG::LIB::MatchData matching_result)
 {
   ModelicaSBG result{old.arity()};
 
@@ -167,31 +152,28 @@ ModelicaSBG constructNewModelicaSBG(ModelicaSBG old
   return result;
 }
 
-} // namespace
+}  // namespace
 
 HorizontalSortingResult HorizontalSorting::sort()
 {
   // Get SBG matching result
-  const SBG::LIB::BipartiteSBG& bipartite_sbg
-    = _sbg_generation_result.bipartite_sbg();
+  const SBG::LIB::BipartiteSBG& bipartite_sbg = _sbg_generation_result.bipartite_sbg();
   unsigned int num_variables = bipartite_sbg.Y().cardinal();
   unsigned int num_equations = bipartite_sbg.X().cardinal();
-  ERROR_UNLESS(num_variables == num_equations
-    , "HorizontalSorting::sort: unbalanced system of equations.\n"
-    , "Number of variables: ", num_variables, "\n"
-    , "Number of equations: ", num_equations);
+  ERROR_UNLESS(num_variables == num_equations, "HorizontalSorting::sort: unbalanced system of equations.\n",
+               "Number of variables: ", num_variables, "\n", "Number of equations: ", num_equations);
 
-  SBG::LIB::MatchData matching_result
-    = SBG::LIB::Matching{}.calculate(bipartite_sbg);
-  ERROR_UNLESS(matching_result.full_match(), "HorizontalSorting::sort: "
-    , "higher index system");
+  SBG::LIB::MatchData matching_result{SBG::LIB::BipartiteSBG{}, SBG::LIB::Set{}, false};
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Horizontal sorting"};
+    matching_result = SBG::LIB::Matching{}.calculate(bipartite_sbg);
+  }
+  ERROR_UNLESS(matching_result.full_match(), "HorizontalSorting::sort: ", "higher index system");
 
   ModelicaSBG old = _sbg_generation_result.modelica_bsbg();
-  return HorizontalSortingResult{
-    constructNewModelicaSBG(old, matching_result)
-    , matching_result};
+  return HorizontalSortingResult{constructNewModelicaSBG(old, matching_result), matching_result};
 }
 
-} // namespace Causalize
+}  // namespace Causalize
 
-} // namespace Modelica
+}  // namespace Modelica

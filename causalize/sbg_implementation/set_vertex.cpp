@@ -29,8 +29,7 @@ namespace Causalize {
 
 SetVertex::SetVertex(int node_id) : _node_id(node_id) {}
 
-SetVertex::SetVertex(int node_id, CompactSet s)
-  : _node_id(node_id), _set(s), _translation(s.arity()) {}
+SetVertex::SetVertex(int node_id, CompactSet s) : _node_id(node_id), _set(s), _translation(s.arity()) {}
 
 // Getters ---------------------------------------------------------------------
 
@@ -44,10 +43,7 @@ const CompactSet& SetVertex::set() const { return _set; }
 
 const Translation& SetVertex::translation() const { return _translation; }
 
-const VertexInfo& SetVertex::info() const
-{
-  return _info;
-}
+const VertexInfo& SetVertex::info() const { return _info; }
 
 // Setters ---------------------------------------------------------------------
 
@@ -55,10 +51,7 @@ void SetVertex::set_node_id(int node_id) { _node_id = node_id; }
 
 void SetVertex::set_name(std::string name) { _name = name; }
 
-void SetVertex::set_translation(Translation translation)
-{
-  _translation = translation;
-}
+void SetVertex::set_translation(Translation translation) { _translation = translation; }
 
 void SetVertex::set_info(VertexInfo info) { _info = info; }
 
@@ -81,7 +74,7 @@ std::ostream& SetVertex::print(std::ostream& out) const
 {
   CompactSet copy = _set;
   copy.translate(_translation);
-  out << _name << ": " << copy.toSBGFormat(); 
+  out << _name << ": " << copy.toSBGFormat();
   return out;
 }
 
@@ -92,21 +85,12 @@ std::string SetVertex::toSBGFormat() const
   return copy.toSBGFormat();
 }
 
-void SetVertex::cartesianProduct(const CompactSet& s)
-{
-  _set.cartesianProduct(s);
-}
+void SetVertex::cartesianProduct(const CompactSet& s) { _set.cartesianProduct(s); }
 
-void SetVertex::cartesianProduct(const SetVertex& other)
-{
-  _set.cartesianProduct(other._set);
-}
+void SetVertex::cartesianProduct(const SetVertex& other) { _set.cartesianProduct(other._set); }
 
-AST::Integer SetVertex::maxDimPerimetral() const
-{
-  return _set.maxDimPerimetral();
-}
+AST::Integer SetVertex::maxDimPerimetral() const { return _set.maxDimPerimetral(); }
 
-} // namespace Causalize
+}  // namespace Causalize
 
-} // namespace Modelica
+}  // namespace Modelica

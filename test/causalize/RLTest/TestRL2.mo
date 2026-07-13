@@ -1,0 +1,35 @@
+/* Model for causalization testing =============================================
+ * Description: model without algebraic loops.
+==============================================================================*/
+
+model TestRL2
+  constant Integer N=1000000;
+  Real iL[N],iR[N],uL[N];
+  parameter Real L=1,R=1,L1=1,I=1,R0=1;
+equation
+  for i in 1:N loop
+    L*der(iL[i])=uL[i];
+  end for;  
+  for i in 1:N-1 loop
+    iR[i]-iR[i+1]-iL[i]=0;
+    uL[i]-uL[i+1]-R*iR[i+1]=0;
+  end for;  
+  iR[N]-iL[N]+I=0;
+  uL[1]+(R+R0)*iR[1]=0;
+end TestRL2;
+
+//Algebraic Loops:
+//der(iL[i])
+//L*der(iL[i]) = uL[i]
+//
+//iR[i]
+//iR[i]-iR[i+1]-iL[i] = 0
+//
+//uL[i+1]
+//uL[i]-uL[i+1]-R*iR[i+1] = 0
+//
+//iR[N]
+//iR[N]-iL[N]+I = 0
+//
+//uL[1]
+//uL[1]+(R+R0)*iR[1] = 0

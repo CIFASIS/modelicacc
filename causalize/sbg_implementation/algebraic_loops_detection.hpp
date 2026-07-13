@@ -69,8 +69,8 @@ public:
 
   std::size_t size() const;
   AlgebraicLoop operator[](std::size_t k) const;
-  auto begin() const;
-  auto end() const;
+  auto begin() const { return _loops.begin(); };
+  auto end() const { return _loops.end(); };
 
   void pushBack(AlgebraicLoop loop);
   void reverse();

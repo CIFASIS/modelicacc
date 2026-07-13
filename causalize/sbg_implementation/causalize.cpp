@@ -27,30 +27,21 @@ namespace Causalize {
 // Causalization result --------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-CausalizationResult::CausalizationResult(ModelMatch horizontal_sort
-  , AlgebraicLoops loops, TearingVariables tearing, CausalModel vertical_sort)
-  : _horizontal_sort(horizontal_sort), _loops(loops), _tearing(tearing)
-    , _vertical_sort(vertical_sort) {}
-
-const ModelMatch& CausalizationResult::horizontal_sort() const
+CausalizationResult::CausalizationResult(ModelMatch horizontal_sort, AlgebraicLoops loops, TearingVariables tearing,
+                                         CausalModel vertical_sort)
+    : _horizontal_sort(horizontal_sort), _loops(loops), _tearing(tearing), _vertical_sort(vertical_sort)
 {
-  return _horizontal_sort;
 }
+
+const ModelMatch& CausalizationResult::horizontal_sort() const { return _horizontal_sort; }
 
 const AlgebraicLoops& CausalizationResult::loops() const { return _loops; }
 
-const TearingVariables& CausalizationResult::tearing() const
-{
-  return _tearing;
-}
+const TearingVariables& CausalizationResult::tearing() const { return _tearing; }
 
-const CausalModel& CausalizationResult::vertical_sort() const
-{
-  return _vertical_sort;
-}
+const CausalModel& CausalizationResult::vertical_sort() const { return _vertical_sort; }
 
-std::ostream& operator<<(std::ostream& out
-  , const CausalizationResult& causalized)
+std::ostream& operator<<(std::ostream& out, const CausalizationResult& causalized)
 {
   out << "Horizontal sort:\n";
   out << causalized.horizontal_sort() << "\n";
@@ -87,12 +78,11 @@ CausalizationResult Causalize::causalize(MMO_Class& mmo_class) const
 
   VerticalSorting vertical_sorter{loops_result, tearing_result};
   VerticalSortingResult vs_result = vertical_sorter.sort();
-  CausalModel vertical_sort
-    = vs_result.toModelicaFormat(loops_result.toSBGFormat());
+  CausalModel vertical_sort = vs_result.toModelicaFormat(loops_result.toSBGFormat());
 
   return CausalizationResult{horizontal_sort, loops, tearing, vertical_sort};
 }
 
-} // namespace Causalize
+}  // namespace Causalize
 
-} // namespace Modelica
+}  // namespace Modelica

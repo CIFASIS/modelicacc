@@ -23,53 +23,69 @@
 namespace Modelica {
 
 ReplaceExpression::ReplaceExpression(Expression l, Expression r) : look(l), rep(r), check_indexes(true){};
+
 Expression ReplaceExpression::operator()(Integer v) const
 {
   if (look == Expression(v)) return rep;
   return v;
 }
+
 Expression ReplaceExpression::operator()(Boolean v) const
 {
   if (look == Expression(v)) return rep;
   return v;
 }
+
 Expression ReplaceExpression::operator()(AddAll v) const
 {
   // TODO
   if (look == Expression(v)) return rep;
   return v;
 }
+
 Expression ReplaceExpression::operator()(String v) const
 {
   if (look == Expression(v)) return rep;
   return v;
 }
+
 Expression ReplaceExpression::operator()(Name v) const
 {
   if (look == Expression(v)) return rep;
   return v;
 }
+
 Expression ReplaceExpression::operator()(Real v) const
 {
   if (look == Expression(v)) return rep;
   return v;
 }
+
 Expression ReplaceExpression::operator()(SubEnd v) const
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
   if (look == Expression(v)) return rep;
+#pragma GCC diagnostic pop
   return v;
 }
+
 Expression ReplaceExpression::operator()(SubAll v) const
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
   if (look == Expression(v)) return rep;
+#pragma GCC diagnostic pop
   return v;
 }
+
 Expression ReplaceExpression::operator()(BinOp v) const
 {
   if (look == Expression(v)) return rep;
   Expression l = v.left(), r = v.right();
   return BinOp(ApplyThis(l), v.op(), ApplyThis(r));
 }
+
 Expression ReplaceExpression::operator()(UnaryOp v) const
 {
   // TODO
@@ -77,30 +93,35 @@ Expression ReplaceExpression::operator()(UnaryOp v) const
   Expression exp = v.exp();
   return UnaryOp(ApplyThis(exp), v.op());
 }
+
 Expression ReplaceExpression::operator()(IfExp v) const
 {
   if (look == Expression(v)) return rep;
   Expression c = v.cond(), then = v.then(), elseexp = v.elseexp();
   return IfExp(ApplyThis(c), ApplyThis(then), List<ExpPair>(), ApplyThis(elseexp));
 }
+
 Expression ReplaceExpression::operator()(Range v) const
 {
   // TODO
   if (look == Expression(v)) return rep;
   return v;
 }
+
 Expression ReplaceExpression::operator()(Brace v) const
 {
   // TODO
   if (look == Expression(v)) return rep;
   return v;
 }
+
 Expression ReplaceExpression::operator()(Bracket v) const
 {
   // TODO
   if (look == Expression(v)) return rep;
   return v;
 }
+
 Expression ReplaceExpression::operator()(Call v) const
 {
   // TODO
@@ -108,24 +129,28 @@ Expression ReplaceExpression::operator()(Call v) const
   foreach_(Expression & e, v.args_ref()) e = ApplyThis(e);
   return v;
 }
+
 Expression ReplaceExpression::operator()(FunctionExp v) const
 {
   // TODO
   if (look == Expression(v)) return rep;
   return v;
 }
+
 Expression ReplaceExpression::operator()(ForExp v) const
 {
   // TODO
   if (look == Expression(v)) return rep;
   return v;
 }
+
 Expression ReplaceExpression::operator()(Named v) const
 {
   // TODO
   if (look == Expression(v)) return rep;
   return v;
 }
+
 Expression ReplaceExpression::operator()(Output v) const
 {
   if (look == Expression(v)) return rep;
@@ -135,6 +160,7 @@ Expression ReplaceExpression::operator()(Output v) const
   }
   return v;
 }
+
 Expression ReplaceExpression::operator()(Reference v) const
 {
   // TODO
@@ -156,4 +182,5 @@ Expression ReplaceExpression::operator()(Reference v) const
   }
   return Reference(aux);
 }
+
 }  // namespace Modelica

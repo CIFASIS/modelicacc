@@ -35,16 +35,18 @@ namespace Causalize {
 class EquationInfo {
 public:
   EquationInfo() = default;
-  EquationInfo(AST::IndexList indices, AST::Equation equation);
+  EquationInfo(AST::IndexList indices, AST::Equation equation, bool scalar);
 
   const AST::IndexList& indices() const;
   const AST::Equation& equation() const;
+  bool scalar() const;
 
   AST::Equation restrictEquation(const AST::Indexes& indexes) const;
 
 private:
   AST::IndexList _indices;
   AST::Equation _equation;
+  bool _scalar;
 };
 
 } // namespace Causalize

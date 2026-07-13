@@ -30,93 +30,26 @@
 #include <sbg/directed_sbg.hpp>
 #include <sbg/map.hpp>
 #include <sbg/set.hpp>
+#include <util/time_profiler.hpp>
 
 namespace Modelica {
 
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Tearing variables -----------------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
-
-// TearingVariable -------------------------------------------------------------
-
-TearingVariable::TearingVariable(AST::Name name, AST::Bracket subscripts)
-  : _name(name), _subscripts(subscripts) {}
-
-const AST::Name& TearingVariable::name() const { return _name; }
-
-const AST::Bracket& TearingVariable::subscripts() const
-{
-  return _subscripts;
-}
-
-std::ostream& operator<<(std::ostream& out, const TearingVariable& var)
-{
-  out << var.name() << var.subscripts();
-  return out;
-}
-
-// TearingVariables ------------------------------------------------------------
-
-auto TearingVariables::begin() const { return _variables.begin(); }
-
-auto TearingVariables::end() const { return _variables.end(); }
-
-std::set<AST::Bracket>& TearingVariables::operator[](AST::Name name)
-{
-  return _variables[name];
-}
-
-const std::set<AST::Bracket>& TearingVariables::operator[](AST::Name name) const
-{
-  return _variables.at(name);
-}
-
-void TearingVariables::insert(TearingVariable variable)
-{
-  _variables[variable.name()].insert(variable.subscripts());
-}
-
-void TearingVariables::concatenation(TearingVariables other)
-{
-  for (const auto& [name, access] : other) {
-    for (const AST::Bracket& subs : access) {
-      insert(TearingVariable{name, subs});
-    }
-  }
-}
-
-std::ostream& operator<<(std::ostream& out, const TearingVariables& vars)
-{
-  for (auto const& [name, access] : vars) {
-    for (const AST::Bracket& subs : access) {
-      out << name;
-      out << subs;
-      out << "\n";
-    }
-    out << "\n";
-  }
-  return out;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // Tearing return structure ----------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-TearingResult::TearingResult(ModelicaSBG modelica_bsbg
-  , SBG::LIB::Set mfvs_result)
-  : _modelica_bsbg(modelica_bsbg), _mfvs_result(mfvs_result) {}
-
-const ModelicaSBG& TearingResult::modelica_bsbg() const
+TearingResult::TearingResult(ModelicaSBG modelica_bsbg, SBG::LIB::Set mfvs_result)
+    : _modelica_bsbg(modelica_bsbg), _mfvs_result(mfvs_result)
 {
-  return _modelica_bsbg;
 }
+
+const ModelicaSBG& TearingResult::modelica_bsbg() const { return _modelica_bsbg; }
 
 const SBG::LIB::Set& TearingResult::mfvs_result() const { return _mfvs_result; }
 
-TearingVariables TearingResult::variableToModelicaFormat(const SetEdge& se
-  , CompactSet jth_tear) const
+TearingVariables TearingResult::variableToModelicaFormat(const SetEdge& se, CompactSet jth_tear) const
 {
   TearingVariables result;
 
@@ -127,13 +60,11 @@ TearingVariables TearingResult::variableToModelicaFormat(const SetEdge& se
 
   // Convert jth_tear to bracket expression and save it to result
   CompactSet img{SBG::LIB::Map{jth_tear.set(), se.map2().expr()}.image()};
-  std::vector<AST::Indexes> indices = toModelicaIndices(img, var_translation
-    , std::vector<AST::Name>{var_sv.arity(), ""});
+  std::vector<AST::Indexes> indices = toModelicaIndices(img, var_translation, std::vector<AST::Name>{var_sv.arity(), ""});
   for (const AST::Indexes& indexes : indices) {
     AST::ExpList expr_list;
     for (const AST::Index& index : indexes.indexes()) {
-      ERROR_UNLESS(index.exp().has_value(), "TearingDetector::variableToModelica: "
-        , "empty index");
+      ERROR_UNLESS(index.exp().has_value(), "TearingDetector::variableToModelica: ", "empty index");
       expr_list.push_back(index.exp().value());
     }
     AST::Bracket subscripts{ExpListList{1, expr_list}};
@@ -163,17 +94,23 @@ TearingVariables TearingResult::toModelicaFormat() const
 // Tearing variables detector --------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-TearingDetector::TearingDetector(AlgebraicLoopsResult loops_result)
-  : _loops_result(loops_result) {}
+TearingDetector::TearingDetector(AlgebraicLoopsResult loops_result) : _loops_result(loops_result) {}
 
 TearingResult TearingDetector::detect()
 {
-  SBG::LIB::DirectedSBG dsbg = misc::buildTearingSBG(
-    _loops_result.scc_result());
-  return TearingResult{_loops_result.modelica_bsbg()
-    , SBG::LIB::MinFeedbackVertexSet{}.calculate(dsbg)};
+  SBG::LIB::DirectedSBG dsbg;
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Tearing SBG builder"};
+    dsbg = misc::buildTearingSBG(_loops_result.scc_result());
+  }
+  SBG::LIB::Set mfvs;
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Tearing"};
+    mfvs = SBG::LIB::MinFeedbackVertexSet{}.calculate(dsbg);
+  }
+  return TearingResult{_loops_result.modelica_bsbg(), mfvs};
 }
 
-} // namespace Causalize
+}  // namespace Causalize
 
-} // namespace Modelica
+}  // namespace Modelica

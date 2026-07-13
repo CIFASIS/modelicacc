@@ -113,7 +113,8 @@ std::ostream& operator<<(std::ostream& out, const ShortClass& c)  // output
   out << c.name() << " = ";
   if (c.derived()) {
     if (c.type_prefixes()) {
-      foreach_(Option<TypePrefix> tp, c.type_prefixes().get()) out << typePrefix(tp);
+      auto type_prefixes = c.type_prefixes().get();
+      foreach_(Option<TypePrefix> tp, type_prefixes) out << typePrefix(tp);
     }
 
     out << c.derived().get();

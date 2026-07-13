@@ -29,6 +29,7 @@
 #include <sbg/directed_sbg.hpp>
 #include <sbg/pw_map.hpp>
 #include <sbg/set.hpp>
+#include <util/time_profiler.hpp>
 
 #include <algorithm>
 
@@ -42,8 +43,7 @@ namespace Causalize {
 
 // AlgebraicLoop ---------------------------------------------------------------
 
-AlgebraicLoop::AlgebraicLoop(EquationList equations, ExpList variables)
-  : _equations(equations), _variables(variables) {}
+AlgebraicLoop::AlgebraicLoop(EquationList equations, ExpList variables) : _equations(equations), _variables(variables) {}
 
 const EquationList& AlgebraicLoop::equations() const { return _equations; }
 
@@ -59,10 +59,8 @@ void AlgebraicLoop::pushBack(Equation equation, Expression variable)
 
 void AlgebraicLoop::concatenation(AlgebraicLoop other)
 {
-  _equations.insert(_equations.end(), other._equations.begin()
-    , other._equations.end());
-  _variables.insert(_variables.end(), other._variables.begin()
-    , other._variables.end());
+  _equations.insert(_equations.end(), other._equations.begin(), other._equations.end());
+  _variables.insert(_variables.end(), other._variables.begin(), other._variables.end());
 }
 
 std::ostream& operator<<(std::ostream& out, const AlgebraicLoop& loop)
@@ -83,14 +81,9 @@ std::size_t AlgebraicLoops::size() const { return _loops.size(); }
 
 AlgebraicLoop AlgebraicLoops::operator[](std::size_t k) const
 {
-  ERROR_UNLESS(k < _loops.size(), "AlgebraicLoops::operator[]: index ", k
-    , " out of range");
+  ERROR_UNLESS(k < _loops.size(), "AlgebraicLoops::operator[]: index ", k, " out of range");
   return _loops[k];
 }
-
-auto AlgebraicLoops::begin() const { return _loops.begin(); }
-
-auto AlgebraicLoops::end() const { return _loops.end(); }
 
 void AlgebraicLoops::pushBack(AlgebraicLoop loop)
 {
@@ -114,22 +107,16 @@ std::ostream& operator<<(std::ostream& out, const AlgebraicLoops& loops)
 // Algebraic loops return structure --------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-AlgebraicLoopsResult::AlgebraicLoopsResult(ModelicaSBG modelica_bsbg
-  , SBG::LIB::SCCData scc_result)
-  : _modelica_bsbg(modelica_bsbg), _scc_result(scc_result) {}
-
-const ModelicaSBG& AlgebraicLoopsResult::modelica_bsbg() const
+AlgebraicLoopsResult::AlgebraicLoopsResult(ModelicaSBG modelica_bsbg, SBG::LIB::SCCData scc_result)
+    : _modelica_bsbg(modelica_bsbg), _scc_result(scc_result)
 {
-  return _modelica_bsbg;
 }
 
-const SBG::LIB::SCCData& AlgebraicLoopsResult::scc_result() const
-{
-  return _scc_result;
-}
+const ModelicaSBG& AlgebraicLoopsResult::modelica_bsbg() const { return _modelica_bsbg; }
 
-AlgebraicLoop AlgebraicLoopsResult::loopToModelicaFormat(const SetEdge& se)
-  const
+const SBG::LIB::SCCData& AlgebraicLoopsResult::scc_result() const { return _scc_result; }
+
+AlgebraicLoop AlgebraicLoopsResult::loopToModelicaFormat(const SetEdge& se) const
 {
   AlgebraicLoop result;
 
@@ -194,19 +181,25 @@ std::vector<LoopT> AlgebraicLoopsResult::toSBGFormat() const
 // Algebraic loops detector ----------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-AlgebraicLoopsDetector::AlgebraicLoopsDetector(
-  HorizontalSortingResult& hs_result)
-  : _hs_result(hs_result) {}
+AlgebraicLoopsDetector::AlgebraicLoopsDetector(HorizontalSortingResult& hs_result) : _hs_result(hs_result) {}
 
 AlgebraicLoopsResult AlgebraicLoopsDetector::detect()
 {
-  SBG::LIB::DirectedSBG loops_dsbg
-    = misc::buildLoopDetectionSBG(_hs_result.matching_result()); 
-  SBG::LIB::SCCData scc_result = SBG::LIB::SCC{}.calculate(loops_dsbg);
+  SBG::LIB::DirectedSBG loops_dsbg;
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Algebraic loops SBG builder"};
+    loops_dsbg = misc::buildLoopDetectionSBG(_hs_result.matching_result());
+  }
+  SBG::LIB::SCCData scc_result{SBG::LIB::DirectedSBG{}, SBG::LIB::PWMap{}
+    , SBG::LIB::Set{}};
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Algebraic loops detection"};
+    scc_result = SBG::LIB::SCC{}.calculate(loops_dsbg);
+  }
 
   return AlgebraicLoopsResult{_hs_result.modelica_bsbg(), scc_result};
 }
 
-} // namespace Causalize
+}  // namespace Causalize
 
-} // namespace Modelica
+}  // namespace Modelica

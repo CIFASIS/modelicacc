@@ -30,12 +30,9 @@ ModelicaSBG::ModelicaSBG(std::size_t arity) : _arity(arity) {}
 
 // Getters ---------------------------------------------------------------------
 
-std::size_t ModelicaSBG::arity() const { return _arity;}
+std::size_t ModelicaSBG::arity() const { return _arity; }
 
-const SetVertices& ModelicaSBG::set_vertices() const
-{
-  return _set_vertices;
-}
+const SetVertices& ModelicaSBG::set_vertices() const { return _set_vertices; }
 
 const SetEdges& ModelicaSBG::set_edges() const { return _set_edges; }
 
@@ -53,15 +50,9 @@ SetVertex ModelicaSBG::setVertex(int id) const
 
 // Setters ---------------------------------------------------------------------
 
-void ModelicaSBG::addSetVertex(SetVertex sv)
-{
-  _set_vertices.push_back(sv);
-}
+void ModelicaSBG::addSetVertex(SetVertex sv) { _set_vertices.push_back(sv); }
 
-void ModelicaSBG::addSetVertices(const SetVertices& svs)
-{
-  _set_vertices.insert(_set_vertices.end(), svs.begin(), svs.end());
-}
+void ModelicaSBG::addSetVertices(const SetVertices& svs) { _set_vertices.insert(_set_vertices.end(), svs.begin(), svs.end()); }
 
 void ModelicaSBG::addSetEdge(SetEdge se)
 {
@@ -70,6 +61,6 @@ void ModelicaSBG::addSetEdge(SetEdge se)
   }
 }
 
-} // namespace Causalize
+}  // namespace Causalize
 
-} // namespace Modelica
+}  // namespace Modelica

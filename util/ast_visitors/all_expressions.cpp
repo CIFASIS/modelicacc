@@ -27,12 +27,42 @@ AllExpressions::AllExpressions(Expression e) : exp(e){};
 AllExpressions::AllExpressions(Expression e, VarSymbolTable vst) : exp(e), st(vst){};
 Lexp AllExpressions::operator()(AddAll v) const { return Lexp(); }
 Lexp AllExpressions::operator()(Integer v) const { return (exp == Expression(v) ? Lexp(1, v) : Lexp()); }
-Lexp AllExpressions::operator()(Boolean v) const { return (exp == Expression(v) ? Lexp(1, v) : Lexp()); }
-Lexp AllExpressions::operator()(String v) const { return (exp == Expression(v) ? Lexp(1, v) : Lexp()); }
-Lexp AllExpressions::operator()(Name v) const { return (exp == Expression(v) ? Lexp(1, v) : Lexp()); }
-Lexp AllExpressions::operator()(Real v) const { return (exp == Expression(v) ? Lexp(1, v) : Lexp()); }
-Lexp AllExpressions::operator()(SubEnd v) const { return (exp == Expression(v) ? Lexp(1, v) : Lexp()); }
-Lexp AllExpressions::operator()(SubAll v) const { return (exp == Expression(v) ? Lexp(1, v) : Lexp()); }
+Lexp AllExpressions::operator()(Boolean v) const { 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  return (exp == Expression(v) ? Lexp(1, v) : Lexp()); 
+#pragma GCC diagnostic pop
+}
+Lexp AllExpressions::operator()(String v) const { 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  return (exp == Expression(v) ? Lexp(1, v) : Lexp()); 
+#pragma GCC diagnostic pop
+}
+Lexp AllExpressions::operator()(Name v) const { 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  return (exp == Expression(v) ? Lexp(1, v) : Lexp()); 
+#pragma GCC diagnostic pop
+}
+Lexp AllExpressions::operator()(Real v) const { 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  return (exp == Expression(v) ? Lexp(1, v) : Lexp()); 
+#pragma GCC diagnostic pop
+}
+Lexp AllExpressions::operator()(SubEnd v) const { 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  return (exp == Expression(v) ? Lexp(1, v) : Lexp()); 
+#pragma GCC diagnostic pop
+}
+Lexp AllExpressions::operator()(SubAll v) const { 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  return (exp == Expression(v) ? Lexp(1, v) : Lexp()); 
+#pragma GCC diagnostic pop
+}
 Lexp AllExpressions::operator()(BinOp v) const
 {
   Lexp rta = (exp == Expression(v) ? Lexp(1, v) : Lexp());

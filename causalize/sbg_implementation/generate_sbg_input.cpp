@@ -29,8 +29,9 @@
 #include "util/ast_visitors/eval_integer.hpp"
 #include "util/ast_visitors/matching_exps.hpp"
 
-#include "eval/file_evaluator.hpp"
-#include "eval/pretty_print.hpp"
+#include <eval/file_evaluator.hpp>
+#include <eval/pretty_print.hpp>
+#include <util/time_profiler.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -46,23 +47,16 @@ namespace Causalize {
 // SBG generation return structure ---------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-SBGGenerationResult::SBGGenerationResult(MMO_Class& mmo_class
-  , ModelicaSBG modelica_bsbg
-  , SBG::LIB::BipartiteSBG bipartite_sbg)
-  : _mmo_class(mmo_class), _modelica_bsbg(modelica_bsbg)
-    , _bipartite_sbg(bipartite_sbg) {}
+SBGGenerationResult::SBGGenerationResult(MMO_Class& mmo_class, ModelicaSBG modelica_bsbg, SBG::LIB::BipartiteSBG bipartite_sbg)
+    : _mmo_class(mmo_class), _modelica_bsbg(modelica_bsbg), _bipartite_sbg(bipartite_sbg)
+{
+}
 
 const MMO_Class& SBGGenerationResult::mmo_class() const { return _mmo_class; }
 
-const ModelicaSBG& SBGGenerationResult::modelica_bsbg() const
-{
-  return _modelica_bsbg;
-}
+const ModelicaSBG& SBGGenerationResult::modelica_bsbg() const { return _modelica_bsbg; }
 
-const SBG::LIB::BipartiteSBG& SBGGenerationResult::bipartite_sbg() const
-{
-  return _bipartite_sbg;
-}
+const SBG::LIB::BipartiteSBG& SBGGenerationResult::bipartite_sbg() const { return _bipartite_sbg; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Generate SBG Input ----------------------------------------------------------
@@ -71,18 +65,17 @@ const SBG::LIB::BipartiteSBG& SBGGenerationResult::bipartite_sbg() const
 // Constructors/Destructors ----------------------------------------------------
 
 GenerateSBGInput::GenerateSBGInput(MMO_Class& mmo_class)
-  : _mmo_class(mmo_class), _max_dim(0), _node_id(1), _edge_id(1)
-    , _vertex_offset(0), _edge_offset(0) {}
+    : _mmo_class(mmo_class), _max_dim(0), _node_id(1), _edge_id(1), _vertex_offset(0), _edge_offset(0)
+{
+}
 
 // Getters ---------------------------------------------------------------------
 
-std::string GenerateSBGInput::fileName() { return _mmo_class.name()
-  + "_sbg_input.sbg"; }
+std::string GenerateSBGInput::fileName() { return _mmo_class.name() + "_sbg_input.sbg"; }
 
 // Add variable vertices -------------------------------------------------------
 
-void GenerateSBGInput::addVariableSet(const VarInfo& variable
-  , const Name& name)
+void GenerateSBGInput::addVariableSet(const VarInfo& variable, const Name& name)
 {
   CompactSet var_set;
   std::size_t var_dimensions = 0;
@@ -161,8 +154,7 @@ EquationList flatterEq(Equation eq)
 
   if (is<ForEq>(eq)) {
     EquationList flattened_for_eq = flatterForEq(get<ForEq>(eq));
-    result.insert(result.end(), flattened_for_eq.begin()
-      , flattened_for_eq.end());
+    result.insert(result.end(), flattened_for_eq.begin(), flattened_for_eq.end());
   } else {
     result.push_back(eq);
   }
@@ -170,7 +162,7 @@ EquationList flatterEq(Equation eq)
   return result;
 }
 
-} // namespace
+}  // namespace
 
 EquationList GenerateSBGInput::flatterForEqs() const
 {
@@ -215,7 +207,7 @@ Equality getEquality(Equation eq)
   return Equality{};
 }
 
-} // namespace
+}  // namespace
 
 void GenerateSBGInput::addEquationNodes()
 {
@@ -230,8 +222,7 @@ void GenerateSBGInput::addEquationNodes()
 
     // Save equation set-vertex
     set_vertex.set_name("eq_" + std::to_string(_node_id));
-    set_vertex.set_info(EquationInfo{getIndices(eq, _max_dim)
-      , getEquality(eq)});
+    set_vertex.set_info(EquationInfo{getIndices(eq, _max_dim), getEquality(eq), !is<ForEq>(eq)});
     _set_vertices.push_back(set_vertex);
     ++_node_id;
   }
@@ -239,8 +230,7 @@ void GenerateSBGInput::addEquationNodes()
 
 // Add edges -------------------------------------------------------------------
 
-CompactTransformation GenerateSBGInput::createMap1(const CompactSet& eq_nodes
-  , const Translation& eq_nodes_trans) const
+CompactTransformation GenerateSBGInput::createMap1(const CompactSet& eq_nodes, const Translation& eq_nodes_trans) const
 {
   Translation domain_trans{_max_dim, _edge_offset};
   CompactTransformation map1{_max_dim};
@@ -251,14 +241,13 @@ CompactTransformation GenerateSBGInput::createMap1(const CompactSet& eq_nodes
   return map1;
 }
 
-CompactTransformation GenerateSBGInput::createMap2(const Reference& reference
-  , const IndexList& counters, const Translation& var_trans) const
+CompactTransformation GenerateSBGInput::createMap2(const Reference& reference, const IndexList& counters,
+                                                   const Translation& var_trans) const
 {
-  // Get expression of subscripts 
+  // Get expression of subscripts
   Ref ref = reference.ref();
   assert(ref.size() > 0);
-  ERROR_UNLESS(ref.size() == 1, "GenerateSBGInput::createMap2: conversion of "
-    , "dotted references not implemented");
+  ERROR_UNLESS(ref.size() == 1, "GenerateSBGInput::createMap2: conversion of ", "dotted references not implemented");
   ExpList indexes = get<1>(ref.front());
 
   // Get order of counters
@@ -268,12 +257,12 @@ CompactTransformation GenerateSBGInput::createMap2(const Reference& reference
   }
 
   CompactTransformation t{_max_dim};
-  if (indexes.empty()) { // Access to scalar variable
+  if (indexes.empty()) {  // Access to scalar variable
     for (std::size_t k = 0; k < _max_dim; ++k) {
       Util::AffineExpr kth_expr{order};
       t.setRow(k, kth_expr + (var_trans[k] + 1));
     }
-  } else { // Access to array variable
+  } else {  // Access to array variable
     std::size_t k = 0;
     Translation domain_trans{_max_dim, _edge_offset};
     AffineExprVisitor affine_expr_visitor(_mmo_class.syms(), order);
@@ -291,8 +280,7 @@ CompactTransformation GenerateSBGInput::createMap2(const Reference& reference
   return t;
 }
 
-void GenerateSBGInput::addMaps(SetEdge se, const SetVertex& eq_sv
-  , const SetVertex& var_sv, const Reference& reference)
+void GenerateSBGInput::addMaps(SetEdge se, const SetVertex& eq_sv, const SetVertex& var_sv, const Reference& reference)
 {
   CompactSet eq_nodes = eq_sv.set();
   CompactSet domain = eq_nodes;
@@ -300,8 +288,7 @@ void GenerateSBGInput::addMaps(SetEdge se, const SetVertex& eq_sv
   se.set_domain(domain);
 
   se.set_map1(createMap1(eq_nodes, eq_sv.translation()));
-  se.set_map2(createMap2(reference, eq_sv.info().value().indices()
-    , var_sv.translation()));
+  se.set_map2(createMap2(reference, eq_sv.info().value().indices(), var_sv.translation()));
   _set_edges.push_back(se);
 
   _edge_offset += eq_nodes.maxDimPerimetral();
@@ -319,11 +306,9 @@ Reference getReference(Expression expr)
     return get<Reference>(expr);
   } else if (is<Call>(expr)) {
     Call call = get<Call>(expr);
-    ERROR_UNLESS(call.name() == "der", "getReference: expression ", expr
-      , " is not a variable or a derivative");
+    ERROR_UNLESS(call.name() == "der", "getReference: expression ", expr, " is not a variable or a derivative");
     ExpList args = call.args();
-    ERROR_UNLESS(args.size() == 1, "getReference: der applied to more than "
-      , "argument in ", args);
+    ERROR_UNLESS(args.size() == 1, "getReference: der applied to more than ", "argument in ", args);
     return getReference(args.front());
   }
 
@@ -331,10 +316,9 @@ Reference getReference(Expression expr)
   return Reference{};
 }
 
-} // namespace
+}  // namespace
 
-void GenerateSBGInput::addEdge(const SetVertex& eq_sv, const SetVertex& sv
-  , const EquationInfo& eq_info)
+void GenerateSBGInput::addEdge(const SetVertex& eq_sv, const SetVertex& sv, const EquationInfo& eq_info)
 {
   if (sv.isVariable()) {
     Name var_name = sv.name();
@@ -370,8 +354,7 @@ void GenerateSBGInput::addEdges()
   for (const SetVertex& eq_sv : _set_vertices) {
     if (eq_sv.isEquation()) {
       EquationInfo eq_info = eq_sv.info().value();
-      ERROR_UNLESS(is<Equality>(eq_info.equation())
-        , "GenerateSBGInput::addEdges: only equality equations supported");
+      ERROR_UNLESS(is<Equality>(eq_info.equation()), "GenerateSBGInput::addEdges: only equality equations supported");
 
       // Get vertices of variables that appear in this array of equations
       for (const SetVertex& sv : _set_vertices) {
@@ -407,6 +390,8 @@ void GenerateSBGInput::setup()
 
 SBGGenerationResult GenerateSBGInput::buildFromModel()
 {
+  SBG::Util::Internal::TimeProfiler profiler{"Horizontal sorting SBG builder"};
+
   // Write SBG program to _sbg_input
   setup();
   addVariableNodes();
@@ -424,7 +409,7 @@ SBGGenerationResult GenerateSBGInput::buildFromModel()
 
   // Evaluate SBG program to obtain bipartite SBG
   SBG::LIB::BipartiteSBG g;
-  SBG::Eval::ProgramIO eval_result = SBG::Eval::parseEvalFile(fileName()); 
+  SBG::Eval::ProgramIO eval_result = SBG::Eval::parseEvalFile(fileName());
   for (const SBG::Eval::ExprResult& ev : eval_result.exprs()) {
     SBG::Eval::ExprBaseType e = std::get<1>(ev);
     if (std::holds_alternative<SBG::LIB::BipartiteSBG>(e)) {
@@ -549,6 +534,6 @@ void GenerateSBGInput::generateSBGInput()
   _sbg_input.close();
 }
 
-} // namespace Causalize
+}  // namespace Causalize
 
-} // namespace Modelica
+}  // namespace Modelica

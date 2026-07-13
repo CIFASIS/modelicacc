@@ -30,6 +30,7 @@
 #include <sbg/expression.hpp>
 #include <sbg/pw_map.hpp>
 #include <sbg/set.hpp>
+#include <util/time_profiler.hpp>
 
 #include <algorithm>
 
@@ -43,8 +44,7 @@ namespace Causalize {
 
 // CausalEquations -------------------------------------------------------------
 
-CausalEquations::CausalEquations(EquationList equations, ExpList variables)
-  : _equations(equations), _variables(variables) {}
+CausalEquations::CausalEquations(EquationList equations, ExpList variables) : _equations(equations), _variables(variables) {}
 
 const EquationList& CausalEquations::equations() const { return _equations; }
 
@@ -76,14 +76,9 @@ std::size_t CausalModel::size() const { return _causal_eqs.size(); }
 
 CausalEquations CausalModel::operator[](std::size_t k) const
 {
-  ERROR_UNLESS(k < _causal_eqs.size(), "CausalModel::operator[]: index ", k
-    , " out of range");
+  ERROR_UNLESS(k < _causal_eqs.size(), "CausalModel::operator[]: index ", k, " out of range");
   return _causal_eqs[k];
 }
-
-auto CausalModel::begin() const { return _causal_eqs.begin(); }
-
-auto CausalModel::end() const { return _causal_eqs.end(); }
 
 void CausalModel::pushBack(CausalEquations eqs)
 {
@@ -114,8 +109,7 @@ namespace {
  * it calculates the expression of the composed \p sort that revisits the
  * elements of the domain of \p m for the first time.
  */
-SBG::LIB::Expression getExpr(const SBG::LIB::Set& m_domain
-  , const SBG::LIB::PWMap& sort)
+SBG::LIB::Expression getExpr(const SBG::LIB::Set& m_domain, const SBG::LIB::PWMap& sort)
 {
   SBG::LIB::PWMap m_sort = sort.restrict(m_domain);
   while (m_sort.image().intersection(m_domain).isEmpty()) {
@@ -144,24 +138,21 @@ SBG::LIB::Set flatten(const std::vector<SBG::LIB::Set>& s_vector)
   return flat_set;
 }
 
-} // namespace
+}  // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 // Vertical sorting return structure -------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-VerticalSortingResult::VerticalSortingResult(ModelicaSBG modelica_bsbg
-  , SBG::LIB::PWMap sort) : _modelica_bsbg(modelica_bsbg), _sort(sort) {}
-
-const ModelicaSBG& VerticalSortingResult::modelica_bsbg() const
+VerticalSortingResult::VerticalSortingResult(ModelicaSBG modelica_bsbg, SBG::LIB::PWMap sort) : _modelica_bsbg(modelica_bsbg), _sort(sort)
 {
-  return _modelica_bsbg;
 }
+
+const ModelicaSBG& VerticalSortingResult::modelica_bsbg() const { return _modelica_bsbg; }
 
 const SBG::LIB::PWMap& VerticalSortingResult::sort() const { return _sort; }
 
-std::vector<LoopT> VerticalSortingResult::sortLoops(
-  const std::vector<LoopT>& loops) const
+std::vector<LoopT> VerticalSortingResult::sortLoops(const std::vector<LoopT>& loops) const
 {
   std::vector<LoopT> result;
 
@@ -216,8 +207,7 @@ CausalEquations VerticalSortingResult::causalizeLoop(LoopT loop) const
         for (const Index& index : eq_info.indices()) {
           counters.push_back(index.name());
         }
-        std::vector<Indexes> indices = toModelicaIndices(se_and_m_domain
-          , se.translation(), counters, expr);
+        std::vector<Indexes> indices = toModelicaIndices(se_and_m_domain, se.translation(), counters, expr);
         for (const Indexes& indexes : indices) {
           result.pushBack(eq_info.restrictEquation(indexes), se.access());
         }
@@ -228,8 +218,7 @@ CausalEquations VerticalSortingResult::causalizeLoop(LoopT loop) const
   return result;
 }
 
-CausalModel VerticalSortingResult::toModelicaFormat(std::vector<LoopT> loops)
-  const
+CausalModel VerticalSortingResult::toModelicaFormat(std::vector<LoopT> loops) const
 {
   CausalModel result;
 
@@ -240,7 +229,7 @@ CausalModel VerticalSortingResult::toModelicaFormat(std::vector<LoopT> loops)
   for (const LoopT& loop : sorted_loops) {
     result.pushBack(causalizeLoop(loop));
   }
- 
+
   return result;
 }
 
@@ -248,22 +237,27 @@ CausalModel VerticalSortingResult::toModelicaFormat(std::vector<LoopT> loops)
 // Vertical sorting ------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-VerticalSorting::VerticalSorting(AlgebraicLoopsResult& loops_result
-  , TearingResult& tearing_result)
-  : _loops_result(loops_result), _tearing_result(tearing_result) {}
+VerticalSorting::VerticalSorting(AlgebraicLoopsResult& loops_result, TearingResult& tearing_result)
+    : _loops_result(loops_result), _tearing_result(tearing_result)
+{
+}
 
 VerticalSortingResult VerticalSorting::sort()
 {
-  SBG::LIB::DirectedSBG vertical_dsbg = misc::buildVerticalSortingSBG(
-    _loops_result.scc_result(), _tearing_result.mfvs_result());
-  SBG::LIB::PWMap vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(
-    vertical_dsbg, SBG::LIB::PWMap{});
+  SBG::LIB::DirectedSBG vertical_dsbg;
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Vertical sorting SBG builder"};
+    vertical_dsbg = misc::buildVerticalSortingSBG(_loops_result.scc_result(), _tearing_result.mfvs_result());
+  }
+  SBG::LIB::PWMap vertical_sort;
+  {
+    SBG::Util::Internal::TimeProfiler profiler{"Vertical sorting"};
+    vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(vertical_dsbg, SBG::LIB::PWMap{});
+  }
 
-  // detectLoop(loops_result)
-  return VerticalSortingResult{_tearing_result.modelica_bsbg()
-    , vertical_sort};
+  return VerticalSortingResult{_tearing_result.modelica_bsbg(), vertical_sort};
 }
 
-} // namespace Causalize
+}  // namespace Causalize
 
-} // namespace Modelica
+}  // namespace Modelica

@@ -12,6 +12,7 @@ configure
 .settings
 *.Td
 *.dot
+*.bin
 
 # 3rd-party files.
 /3rd-party/gtest/usr/*
@@ -27,3 +28,17 @@ configure
 /causalize/sbg_implementation/test/bin/*
 test/util/GraphTest
 test/util/PrintGraphs
+/test/causalize/RLTest/omc/*.c
+/test/causalize/RLTest/omc/*.h
+/test/causalize/RLTest/omc/*.json
+/test/causalize/RLTest/omc/*.xml
+/test/causalize/RLTest/omc/*.makefile
+/test/causalize/RLTest/causalized/*.h
+/test/causalize/RLTest/causalized/*.c
+/test/causalize/RLTest/causalized/*.ini
+/test/causalize/RLTest/causalized/*.makefile
+/test/causalize/RLTest/causalized/*.sh
+/test/causalize/RLTest/causalized/*.mo
+/test/causalize/RLTest/*_sbg_input.sbg
+/test/causalize/RLTest/TestRL*
+/test/causalize/RLTest/omc/TestRL*

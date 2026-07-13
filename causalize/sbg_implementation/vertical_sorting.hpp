@@ -68,8 +68,9 @@ public:
 
   std::size_t size() const;
   CausalEquations operator[](std::size_t k) const;
-  auto begin() const;
-  auto end() const;
+
+  auto begin() const { return _causal_eqs.begin(); }
+  auto end() const { return _causal_eqs.end(); }
 
   void pushBack(CausalEquations eqs);
 
