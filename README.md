@@ -1,4 +1,4 @@
-## ModelicaCC
+## ModelicaCC 5.0
 
 ModelicaCC is a Modelica C Compiler implemented in C++, the main goal of this project is to provide an environment to develop and test novel algorithms involved in the different compilation stages of large scale Modelica models. The different stages of the compilation pipeline follows the usual order: 
 
@@ -78,6 +78,11 @@ If Python3 is not installed, replace the occurrences of `python3` with
 
 ## Changelog
 
+## [5.0] - 2026-07-13
+### Added
+- Integrate **SCC** SBG library algorithm for causalization.
+- Generate Modelica code to solve algebraic loops.
+
 ## [4.0] - 2022-05-04
 ### Added
 - Implemented SBGraphs as an independent library. As such, new algorithms
@@ -87,18 +92,6 @@ for causalization will be listed in its corresponding repository.
 ### Added
 - Implemented SBGraphs data structures and helper classes.
 - Implemented **new flatter** algorithm based on **SBGraphs**.
-
-## [2.0] - 2020-11-17
-### Added
-- Implemented vector graph [**data structures**](https://github.com/CIFASIS/modelicacc/blob/modelicacc-dev/causalize/vg_implementation/vector/vector_graph_definition.h)
-- Implemented matching algorithm using vector graph data structures.
-- Implemented Tarjan algorithm using vector graph data structures.
-
-## [1.0] - 2020-11-04
-### Added
-- Implemented first version of flattening algorithm
-- Implemented Tarjan algorithm
-- Implemented causalization algorithm
 
 ## Licensing
 
