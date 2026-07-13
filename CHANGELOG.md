@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.0] - 2026-07-13
+### Added
+- Integrate **SCC** SBG library algorithm for causalization.
+- Generate Modelica code to solve algebraic loops.
+
 ## [4.0] - 2022-05-04
 ### Added
 - Implemented SBGraphs as an independent library.
