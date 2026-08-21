@@ -21,10 +21,10 @@
 #include "causalize/sbg_implementation/equation_info.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
+#include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 #include "util/debug.hpp"
 #include "util/compact_set.hpp"
 
-#include <algorithms/misc/causalization_builders.hpp>
 #include <algorithms/scc/scc.hpp>
 #include <sbg/directed_sbg.hpp>
 #include <sbg/pw_map.hpp>
@@ -188,7 +188,7 @@ AlgebraicLoopsResult AlgebraicLoopsDetector::detect()
   SBG::LIB::DirectedSBG loops_dsbg;
   {
     SBG::Util::Internal::TimeProfiler profiler{"Algebraic loops SBG builder"};
-    loops_dsbg = misc::buildLoopDetectionSBG(_hs_result.matching_result());
+    loops_dsbg = buildLoopDetectionSBG(_hs_result.matching_result());
   }
   SBG::LIB::SCCData scc_result{SBG::LIB::DirectedSBG{}, SBG::LIB::PWMap{}
     , SBG::LIB::Set{}};

@@ -20,10 +20,10 @@
 #include "causalize/sbg_implementation/vertical_sorting.hpp"
 #include "causalize/sbg_implementation/equation_info.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
+#include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 #include "util/compact_set.hpp"
 #include "util/debug.hpp"
 
-#include <algorithms/misc/causalization_builders.hpp>
 #include <algorithms/sorting/topological/topological_sorting.hpp>
 #include <boost/variant/get.hpp>
 #include <sbg/directed_sbg.hpp>
@@ -244,15 +244,16 @@ VerticalSorting::VerticalSorting(AlgebraicLoopsResult& loops_result, TearingResu
 
 VerticalSortingResult VerticalSorting::sort()
 {
-  SBG::LIB::DirectedSBG vertical_dsbg;
+  VerticalSortingBuilder vs_builder{_loops_result.scc_result(), _tearing_result.mfvs_result()};
   {
     SBG::Util::Internal::TimeProfiler profiler{"Vertical sorting SBG builder"};
-    vertical_dsbg = misc::buildVerticalSortingSBG(_loops_result.scc_result(), _tearing_result.mfvs_result());
+    vs_builder.build();
   }
   SBG::LIB::PWMap vertical_sort;
   {
     SBG::Util::Internal::TimeProfiler profiler{"Vertical sorting"};
-    vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(vertical_dsbg, SBG::LIB::PWMap{});
+    vertical_sort = SBG::LIB::TopologicalSorting{}
+      .calculate(vs_builder.dsbg(), vs_builder.rmap());
   }
 
   return VerticalSortingResult{_tearing_result.modelica_bsbg(), vertical_sort};

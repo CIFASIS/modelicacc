@@ -1,6 +1,6 @@
 # Target variables
 MODE ?= Release
-sbg_branch ?= iss-87-refine-interfaces
+sbg_branch ?= sb-graph-dev
 build_sbg ?= True
 repo_checkout=ssh
 
