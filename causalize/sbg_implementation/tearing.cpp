@@ -20,13 +20,13 @@
 #include "causalize/sbg_implementation/tearing.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
+#include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 #include "util/debug.hpp"
 #include "util/affine_transformation.hpp"
 #include "util/compact_set.hpp"
 #include "util/translation.hpp"
 
 #include <algorithms/mfvs/min_feedback_vertex_set.hpp>
-#include <algorithms/misc/causalization_builders.hpp>
 #include <sbg/directed_sbg.hpp>
 #include <sbg/map.hpp>
 #include <sbg/set.hpp>
@@ -101,7 +101,7 @@ TearingResult TearingDetector::detect()
   SBG::LIB::DirectedSBG dsbg;
   {
     SBG::Util::Internal::TimeProfiler profiler{"Tearing SBG builder"};
-    dsbg = misc::buildTearingSBG(_loops_result.scc_result());
+    dsbg = buildTearingSBG(_loops_result.scc_result());
   }
   SBG::LIB::Set mfvs;
   {
