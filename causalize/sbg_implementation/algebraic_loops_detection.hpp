@@ -39,22 +39,44 @@ namespace Causalize {
 // ModelicaCC algebraic loops --------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * @class AlgebraicLoop
+ * @brief Group of equations that must be solved simultaneously.
+ *
+ * This has to be done after a pairing of equations and variables has been
+ * decided. So this result makes sense only in conjunction with that of the
+ * matching stage.
+ *
+ * This structure describes large loops and also arrays of small algebraic
+ * loops. For example:
+ *   for ... loop
+ *     eq1;
+ *     ...;
+ *     eqk;
+ *   end for;
+ * describes an array of small algebraic loops. So, here eq1[i], ..., eq[k]
+ * must be solved together for all i described by the loop bounds. On the other
+ * hand:
+ *   eq1;
+ *   ...;
+ *   eqk;
+ * describes a large algebraic loop. If eqi is an array equation, then
+ * eqi[1] to eqi[j] must be solved together with the other remaining eqm.
+ */
 class AlgebraicLoop {
 public:
   AlgebraicLoop() = default;
-  AlgebraicLoop(EquationList equations, ExpList variables);
+  AlgebraicLoop(EquationList equations);
 
   const EquationList& equations() const;
-  const ExpList& variables() const;
   bool isEmpty() const;
 
-  void pushBack(Equation eq, Expression variable);
+  void pushBack(Equation eq);
 
   void concatenation(AlgebraicLoop other);
 
 private:
   EquationList _equations;
-  ExpList _variables;
 };
 
 std::ostream& operator<<(std::ostream& out, const AlgebraicLoop& loop);
@@ -74,6 +96,8 @@ public:
 
   void pushBack(AlgebraicLoop loop);
   void reverse();
+
+  void concatenation(AlgebraicLoops other);
 
 private:
   std::vector<AlgebraicLoop> _loops;
@@ -115,9 +139,24 @@ public:
   std::vector<LoopT> toSBGFormat() const;
 
 private:
-  AlgebraicLoop loopToModelicaFormat(const SetEdge& se) const;
+  /**
+   * @brief Converts a single algebraic loop, or a single array of algebraic
+   * loops.
+   */
+  EquationList loopToModelicaFormat(
+    const CompactSet& reps, const CompactSet& represented
+    , const AST::Indexes& indexes
+  ) const;
 
-  ModelicaSBG _modelica_bsbg; ///< TODO
+  /**
+   * @brief Converts all of the scalar (or array of) algebraic loops described
+   * by a single set-edge, i.e. equations that share a repetitive definition. 
+   */
+  AlgebraicLoops loopsToModelicaFormat(
+    const SetEdge& se, const CompactSet& s
+  ) const;
+
+  ModelicaSBG _modelica_bsbg; ///< Output SBG after matching.
   SBG::LIB::SCCData _scc_result;
 };
 
