@@ -179,16 +179,16 @@ EquationList GenerateSBGInput::flatterForEqs() const
 
 namespace {
 
-IndexList getIndices(Equation eq, unsigned int max_dim)
+Indexes getIndices(Equation eq, unsigned int max_dim)
 {
   if (is<ForEq>(eq)) {
-    return get<ForEq>(eq).range().indexes();
+    return get<ForEq>(eq).range();
   } else {
     IndexList scalar_indices;
     for (std::size_t k = 0; k < max_dim; ++k) {
       scalar_indices.emplace_back("*dummy_" + std::to_string(k), Expression{0});
     }
-    return scalar_indices;
+    return Indexes{scalar_indices};
   }
 }
 
@@ -241,7 +241,7 @@ CompactTransformation GenerateSBGInput::createMap1(const CompactSet& eq_nodes, c
   return map1;
 }
 
-CompactTransformation GenerateSBGInput::createMap2(const Reference& reference, const IndexList& counters,
+CompactTransformation GenerateSBGInput::createMap2(const Reference& reference, const Indexes& counters,
                                                    const Translation& var_trans) const
 {
   // Get expression of subscripts
@@ -252,7 +252,7 @@ CompactTransformation GenerateSBGInput::createMap2(const Reference& reference, c
 
   // Get order of counters
   std::vector<std::string> order;
-  for (const Index& counter : counters) {
+  for (const Index& counter : counters.indexes()) {
     order.push_back(counter.name());
   }
 

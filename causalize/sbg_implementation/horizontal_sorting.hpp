@@ -44,17 +44,21 @@ namespace Causalize {
  * @class EqVarMatch
  * @brief Represents the pairing between an equation and the unknown that will
  * be solved for it.
+ *
+ * As there equations such as for equations that have a list of equations
+ * inside, we use an ExpList to indicate which variable will be solved for
+ * each element of the list.
  */
 class EqVarMatch {
 public:
-  EqVarMatch(Equation equation, Expression variable);
+  EqVarMatch(Equation equation, ExpList variable);
 
   const Equation& equation() const;
-  const Expression& variable() const;
+  const ExpList& variables() const;
 
 private:
   Equation _equation;
-  Expression _variable;
+  ExpList _variables;
 };
 
 std::ostream& operator<<(std::ostream& out, const EqVarMatch& match);

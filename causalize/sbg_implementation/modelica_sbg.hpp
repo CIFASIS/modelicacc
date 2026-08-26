@@ -23,6 +23,8 @@
 #include "causalize/sbg_implementation/set_edge.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
 
+#include <tuple>
+
 namespace Modelica {
 
 namespace Causalize {
@@ -44,11 +46,10 @@ public:
   const SetEdges& set_edges() const;
 
   void addSetVertex(SetVertex sv);
-  void addSetVertices(const SetVertices& svs);
   void addSetEdge(SetEdge se);
 
   /**
-   * @brief Returns the  set-vertex identified by \p id.
+   * @brief Returns the set-vertex identified by \p id.
    */
   SetVertex setVertex(int id) const;
 
@@ -59,6 +60,18 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, const ModelicaSBG& bsbg);
+
+// Non-member functions --------------------------------------------------------
+
+using EquationAccess = std::pair<EquationInfo, Accesses>;
+
+/**
+ * @brief Given a set-edge, and a sub-group of elements of that set-edge, get
+ * the corresponding equation expression, and Modelica indices to access them.
+ */
+EquationAccess getAccess(
+  const ModelicaSBG& modelica_sbg, const SetEdge& se, const CompactSet& s
+);
 
 } // namespace Causalize
 

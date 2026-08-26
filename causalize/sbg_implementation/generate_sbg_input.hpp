@@ -99,7 +99,7 @@ protected:
    * @brief Creates maps from edges to variables nodes.
    */
   CompactTransformation createMap2(const Reference& reference
-    , const IndexList& counters, const Translation& var_trans) const;
+    , const Indexes& counters, const Translation& var_trans) const;
 
   /**
    * @brief Adds maps definitions to a set-edge, and saves the element to

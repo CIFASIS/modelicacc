@@ -114,9 +114,13 @@ int toNumber(const rapidjson::Value& value)
 }
 
 // TODO: generalize to analyze step, slope and offset.
-Index dimensionToModelicaIndices(const rapidjson::Value& kth_bounds, const rapidjson::Value& kth_expr, Integer offset, Name counter)
+std::pair<SBG::LIB::Set, Index> dimensionToModelicaIndices(
+  const rapidjson::Value& kth_bounds, const rapidjson::Value& kth_expr
+  , Integer offset, Name counter
+)
 {
-  ERROR_UNLESS(kth_bounds.Size() == 3, "dimensionToModelicaIndices: interval ", " not defined with three values");
+  ERROR_UNLESS(kth_bounds.Size() == 3, "dimensionToModelicaIndices: interval "
+    , " not defined with three values");
 
   int m = toNumber(kth_expr[0]);
   int h = toNumber(kth_expr[1]);
@@ -129,26 +133,41 @@ Index dimensionToModelicaIndices(const rapidjson::Value& kth_bounds, const rapid
     std::swap(begin, end);
   }
 
-  return Index{counter, OptExp{Range{begin, step, end}}};
+  return {SBG::LIB::Set{begin, step, end}
+    , Index{counter, OptExp{Range{begin, step, end}}}};
 }
 
-Indexes pieceToModelicaIndices(const rapidjson::Value& piece, const rapidjson::Value& expr_json, const Translation& t,
-                               const std::vector<Name>& counters)
+Access pieceToModelicaIndices(
+  const rapidjson::Value& piece, const rapidjson::Value& expr_json
+  , const Translation& t, const std::vector<Name>& counters
+)
 {
   IndexList result;
 
+  CompactSet s;
   std::size_t k = 0;
   const rapidjson::Value& bounds = piece["bounds"];
   for (const rapidjson::Value& kth_bounds : bounds.GetArray()) {
-    result.push_back(dimensionToModelicaIndices(kth_bounds, expr_json[k], t[k], counters[k]));
+    auto [kth_set, idx] = dimensionToModelicaIndices(
+       kth_bounds, expr_json[k], t[k], counters[k]
+    );
+    result.push_back(idx);
+    if (k == 0) {
+      s = kth_set;
+    } else {
+      s.cartesianProduct(kth_set);
+    }
     ++k;
   }
+  s.translate(t);
 
-  return Indexes{result};
+  return {s, Indexes{result}};
 }
 
-std::vector<Indexes> toModelicaIndices(const CompactSet& s, const Translation& t, const std::vector<Name>& counters,
-                                       const SBG::LIB::Expression& expr)
+Accesses toModelicaIndices(
+  const CompactSet& s, const Translation& t, const std::vector<Name>& counters,
+  const SBG::LIB::Expression& expr
+)
 {
   rapidjson::Document set_doc;
   rapidjson::Value set_json = s.set().toJSON(set_doc.GetAllocator());
@@ -163,7 +182,7 @@ std::vector<Indexes> toModelicaIndices(const CompactSet& s, const Translation& t
                "toModelicaIndices: value "
                "is not an expression");
 
-  std::vector<Indexes> result;
+  Accesses result;
   const rapidjson::Value& pieces = set_json["pieces"];
   for (const auto& piece : pieces.GetArray()) {
     result.push_back(pieceToModelicaIndices(piece, expr_json, t, counters));
@@ -172,7 +191,7 @@ std::vector<Indexes> toModelicaIndices(const CompactSet& s, const Translation& t
   return result;
 }
 
-std::vector<Indexes> toModelicaIndices(const CompactSet& s, const Translation& t, const std::vector<Name>& counters)
+Accesses toModelicaIndices(const CompactSet& s, const Translation& t, const std::vector<Name>& counters)
 {
   return toModelicaIndices(s, t, counters, SBG::LIB::Expression{counters.size()});
 }
