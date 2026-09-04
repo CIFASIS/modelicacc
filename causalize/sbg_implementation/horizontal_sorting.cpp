@@ -18,7 +18,6 @@
 ******************************************************************************/
 
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
-#include "causalize/sbg_implementation/causalization_utils.hpp"
 #include "causalize/sbg_implementation/equation_info.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
 #include "util/debug.hpp"
@@ -34,64 +33,16 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// ModelicaCC variable-equation matching ---------------------------------------
-////////////////////////////////////////////////////////////////////////////////
-
-// EqVarMatch ------------------------------------------------------------------
-
-EqVarMatch::EqVarMatch(Equation equation, ExpList variables)
-  : _equation(equation), _variables(variables) {}
-
-const Equation& EqVarMatch::equation() const { return _equation; }
-
-const ExpList& EqVarMatch::variables() const { return _variables; }
-
-std::ostream& operator<<(std::ostream& out, const EqVarMatch& match)
-{
-  for (const Expression& var : match.variables()) {
-    out << var << " ";
-  }
-  out << "solved in " << match.equation();
-  return out;
-}
-
-// ModelMatch ------------------------------------------------------------------
-
-std::size_t ModelMatch::size() const { return _model_match.size(); }
-
-EqVarMatch ModelMatch::operator[](std::size_t k) const
-{
-  ERROR_UNLESS(k < _model_match.size(), "ModelMatch::operator[]: index ", k
-    , " out of range");
-  return _model_match[k];
-}
-
-void ModelMatch::pushBack(EqVarMatch match) { _model_match.push_back(match); }
-
-void ModelMatch::concatenation(ModelMatch other)
-{
-  _model_match.insert(
-    _model_match.end(), other._model_match.begin(), other._model_match.end()
-  );
-}
-
-std::ostream& operator<<(std::ostream& out, const ModelMatch& match)
-{
-  for (std::size_t k = 0; k < match.size(); ++k) {
-    out << match[k] << "\n";
-  }
-
-  return out;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // Horizontal sorting return structure -----------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
+// Constructors/Destructors ----------------------------------------------------
+
 HorizontalSortingResult::HorizontalSortingResult(
   ModelicaSBG modelica_bsbg, SBG::LIB::MatchData matching_result
-)
-    : _modelica_bsbg(modelica_bsbg), _matching_result(matching_result) {}
+) : _modelica_bsbg(modelica_bsbg), _matching_result(matching_result) {}
+
+// Getters ---------------------------------------------------------------------
 
 const ModelicaSBG& HorizontalSortingResult::modelica_bsbg() const
 {
@@ -102,6 +53,8 @@ const SBG::LIB::MatchData& HorizontalSortingResult::matching_result() const
 {
   return _matching_result;
 }
+
+// Extra functions -------------------------------------------------------------
 
 ModelMatch HorizontalSortingResult::equationToModelicaFormat(
   SetEdge se, CompactSet se_match
@@ -126,7 +79,7 @@ ModelMatch HorizontalSortingResult::toModelicaFormat() const
   // Traverse set-edges to get equation-variable matching.
   CompactSet sbg_match{_matching_result.M()};
   for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-    CompactSet jth_eq_var_match = se.domain();
+    CompactSet jth_eq_var_match = se.translatedDomain();
     jth_eq_var_match.intersection(sbg_match);
     if (jth_eq_var_match.cardinal() > 0) {
       result.concatenation(equationToModelicaFormat(se, jth_eq_var_match));
@@ -152,15 +105,15 @@ namespace {
  * reduces lookup times in the following phases.
  */
 ModelicaSBG constructNewModelicaSBG(
-  ModelicaSBG old, SBG::LIB::MatchData matching_result
+  const ModelicaSBG& old, SBG::LIB::MatchData matching_result
 )
 {
-  ModelicaSBG result{old.arity()};
+  ModelicaSBG result;
 
   // Add all vertices.
   const SetVertices& old_svs = old.set_vertices();
-  for (const SetVertex& SV : old_svs) {
-    result.addSetVertex(SV);
+  for (const SetVertex& sv : old_svs) {
+    result.addSetVertex(sv);
   }
 
   // Leave only matched edges in the SBG.
@@ -197,7 +150,7 @@ HorizontalSortingResult HorizontalSorting::sort()
   ERROR_UNLESS(matching_result.full_match(), "HorizontalSorting::sort: "
     , "higher index system");
 
-  ModelicaSBG old = _sbg_generation_result.modelica_bsbg();
+  const ModelicaSBG& old = _sbg_generation_result.modelica_bsbg();
   return HorizontalSortingResult{
     constructNewModelicaSBG(old, matching_result), matching_result
   };

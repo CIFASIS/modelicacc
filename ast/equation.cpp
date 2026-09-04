@@ -21,12 +21,19 @@
 
 namespace Modelica {
 namespace AST {
+
+member_imp(EquationBase, Option<Comment>, comment);
+
 Equality::Equality(Expression l, Expression r) : left_(l), right_(r){};
 member_imp(Equality, Expression, left);
 member_imp(Equality, Expression, right);
 std::ostream& operator<<(std::ostream& out, const Equality& e)  // output
 {
   out << e.left() << " = " << e.right();
+  Option<Comment> comment = e.comment();
+  if (comment) {
+    out << " " << (*(*comment).st_comment())[0];
+  }
   return out;
 }
 bool Equality::operator==(const Equality& other) const { return (other.left() == left() && other.right() == right()); }
