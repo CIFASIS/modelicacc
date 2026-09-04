@@ -18,7 +18,6 @@
 ******************************************************************************/
 
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
-#include "causalize/sbg_implementation/causalization_utils.hpp"
 #include "causalize/sbg_implementation/equation_info.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
@@ -39,79 +38,16 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// ModelicaCC algebraic loops --------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
-
-// AlgebraicLoop ---------------------------------------------------------------
-
-AlgebraicLoop::AlgebraicLoop(EquationList equations) : _equations(equations) {}
-
-const EquationList& AlgebraicLoop::equations() const { return _equations; }
-
-bool AlgebraicLoop::isEmpty() const { return _equations.empty(); }
-
-void AlgebraicLoop::pushBack(Equation equation)
-{
-  _equations.push_back(equation);
-}
-
-void AlgebraicLoop::concatenation(AlgebraicLoop other)
-{
-  _equations.insert(
-    _equations.end(), other._equations.begin(), other._equations.end()
-  );
-}
-
-std::ostream& operator<<(std::ostream& out, const AlgebraicLoop& loop)
-{
-  for (const Equation& eq : loop.equations()) {
-    out << eq << "\n";
-  }
-
-  return out;
-}
-
-// AlgebraicLoops --------------------------------------------------------------
-
-std::size_t AlgebraicLoops::size() const { return _loops.size(); }
-
-AlgebraicLoop AlgebraicLoops::operator[](std::size_t k) const
-{
-  ERROR_UNLESS(k < _loops.size(), "AlgebraicLoops::operator[]: index ", k
-    , " out of range");
-  return _loops[k];
-}
-
-void AlgebraicLoops::pushBack(AlgebraicLoop loop)
-{
-  if (!loop.isEmpty()) {
-    _loops.push_back(loop);
-  }
-}
-
-void AlgebraicLoops::reverse() { std::reverse(_loops.begin(), _loops.end()); }
-
-void AlgebraicLoops::concatenation(AlgebraicLoops other)
-{
-  _loops.insert(_loops.end(), other.begin(), other.end());
-}
-
-std::ostream& operator<<(std::ostream& out, const AlgebraicLoops& loops)
-{
-  for (const AlgebraicLoop& loop : loops) {
-    out << loop << "\n";
-  }
-
-  return out;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // Algebraic loops return structure --------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
+
+// Constructors/Destructors ----------------------------------------------------
 
 AlgebraicLoopsResult::AlgebraicLoopsResult(
   ModelicaSBG modelica_bsbg, SBG::LIB::SCCData scc_result
 ) : _modelica_bsbg(modelica_bsbg), _scc_result(scc_result) {}
+
+// Getters ---------------------------------------------------------------------
 
 const ModelicaSBG& AlgebraicLoopsResult::modelica_bsbg() const
 {
@@ -123,6 +59,25 @@ const SBG::LIB::SCCData& AlgebraicLoopsResult::scc_result() const
   return _scc_result;
 }
 
+// Extra functions -------------------------------------------------------------
+
+namespace {
+
+AST::Equation innerBounds(
+  const EquationInfo& eq_info, const CompactSet& reps
+  , const AST::Indexes& indexes, const AST::Indexes& other_indexes
+)
+{
+  if (reps.cardinal() == 1) { // Scalar algebraic loop.
+    return eq_info.restrictBounds(other_indexes);
+  }
+
+  // Array of algebraic loops.
+  return eq_info.adjustSubscripts(indexes, other_indexes);
+}
+
+} // namespace
+
 EquationList AlgebraicLoopsResult::loopToModelicaFormat(
   const CompactSet& reps, const CompactSet& represented
   , const AST::Indexes& indexes
@@ -130,26 +85,14 @@ EquationList AlgebraicLoopsResult::loopToModelicaFormat(
 {
   EquationList result;
 
-  for (const SetEdge& other_se : _modelica_bsbg.set_edges()) {
-    CompactSet other_se_scc = other_se.domain();
-    other_se_scc.intersection(represented);
-    if (other_se_scc.cardinal() > 0) {
+  for (const SetEdge& se : _modelica_bsbg.set_edges()) {
+    CompactSet se_scc = se.translatedDomain();
+    se_scc.intersection(represented);
+    if (se_scc.cardinal() > 0) {
       // Bounds for arrays of equations inside an algebraic loop.
-      auto [other_eq_info, other_accesses] = getAccess(
-        _modelica_bsbg, other_se, other_se_scc
-      );
-      for (const auto& [_, other_indexes] : other_accesses) {
-        if (reps.cardinal() == 1) { // Scalar algebraic loop.
-          result.push_back(
-            other_eq_info.restrictBounds(other_indexes)
-          );
-        } else { // Array of algebraic loops.
-          ERROR_UNLESS(reps.cardinal() == other_se_scc.cardinal()
-          , "AlgebraicLoopsResult::loopToModelicaFormat: incompatible"
-          , " repetitives structures");
-          result.push_back(other_eq_info
-            .adjustSubscripts(indexes, other_indexes));
-        }
+      auto [eq_info, accesses] = getAccess(_modelica_bsbg, se, se_scc);
+      for (const auto& [_, other_indexes] : accesses) {
+        result.push_back(innerBounds(eq_info, reps, indexes, other_indexes));
       }
     }
   }
@@ -157,29 +100,40 @@ EquationList AlgebraicLoopsResult::loopToModelicaFormat(
   return result;
 }
 
+namespace {
+
+AlgebraicLoop outerBounds(
+  const CompactSet& reps, const AST::EquationList& eq_list, const AST::Indexes indexes
+)
+{
+  // Bounds for arrays of algebraic loops.
+  if (reps.cardinal() == 1) { // Scalar algebraic loop.
+    return AlgebraicLoop{eq_list};
+  }
+
+  // Array of algebraic loops.
+  ForEq for_eq{indexes, eq_list};
+  return AlgebraicLoop{EquationList{1, for_eq}};
+}
+
+} // namespace
+
 AlgebraicLoops AlgebraicLoopsResult::loopsToModelicaFormat(
   const SetEdge& se, const CompactSet& se_scc
 ) const
 {
-  // Create the indices for an array of algebraic loops (possibly unary if there
+  // Create the indices for an array of algebraic loops (possibly empty if there
   // is a large algebraic loop).
   auto [eq_info, accesses] = getAccess(_modelica_bsbg, se, se_scc);
 
   // Get other equations that belong to the current SCCs determined by
   // \p se_scc.
-  SBG::LIB::PWMap rmap = _scc_result.rmap();
   AlgebraicLoops result;
+  const SBG::LIB::PWMap& rmap = _scc_result.rmap();
   for (const auto& [reps, indexes] : accesses) {
     CompactSet represented{rmap.preImage(reps.set())};
     EquationList eq_list = loopToModelicaFormat(reps, represented, indexes);
-
-    // Bounds for arrays of algebraic loops.
-    if (reps.cardinal() == 1) { // Scalar algebraic loop.
-      result.pushBack(AlgebraicLoop{eq_list});
-    } else { // Array of algebraic loops.
-      ForEq for_eq{indexes, eq_list};
-      result.pushBack(AlgebraicLoop{EquationList{1, for_eq}});
-    }
+    result.pushBack(outerBounds(reps, eq_list, indexes));
   }
   return result;
 }
@@ -190,7 +144,7 @@ AlgebraicLoops AlgebraicLoopsResult::toModelicaFormat() const
 
   CompactSet representatives{_scc_result.rmap().fixedPoints()};
   for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-    CompactSet se_scc = se.domain();
+    CompactSet se_scc = se.translatedDomain();
     se_scc.intersection(representatives);
     if (se_scc.cardinal() > 0) {
       result.concatenation(loopsToModelicaFormat(se, se_scc));
@@ -200,36 +154,13 @@ AlgebraicLoops AlgebraicLoopsResult::toModelicaFormat() const
   return result;
 }
 
-std::vector<LoopT> AlgebraicLoopsResult::toSBGFormat() const
-{
-  std::vector<LoopT> result;
-
-  SBG::LIB::PWMap rmap = _scc_result.rmap();
-  SBG::LIB::Set representatives = rmap.image();
-  while (!representatives.isEmpty()) {
-    SBG::LIB::Set min_elem_set{representatives.minElem()};
-    SBG::LIB::Set represented = rmap.preImage(min_elem_set);
-    // Get all equations and variables that belong to this loop
-    LoopT loop;
-    for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-      SBG::LIB::Set se_domain = se.domain().set();
-      SBG::LIB::Set loop_in_se = se_domain.intersection(represented);
-      if (loop_in_se.cardinal() > 0) {
-        loop.push_back(se.domain().set());
-        representatives = representatives.difference(se_domain);
-      }
-    }
-    result.push_back(loop);
-  }
-
-  return result;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Algebraic loops detector ----------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-AlgebraicLoopsDetector::AlgebraicLoopsDetector(HorizontalSortingResult& hs_result) : _hs_result(hs_result) {}
+AlgebraicLoopsDetector::AlgebraicLoopsDetector(
+  HorizontalSortingResult& hs_result
+) : _hs_result(hs_result) {}
 
 AlgebraicLoopsResult AlgebraicLoopsDetector::detect()
 {

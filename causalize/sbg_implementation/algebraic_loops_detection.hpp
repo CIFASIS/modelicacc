@@ -20,8 +20,7 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_ALGEBRAIC_LOOPS_DETECTION_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_ALGEBRAIC_LOOPS_DETECTION_HPP_
 
-#include "ast/equation.hpp"
-#include "ast/expression.hpp"
+#include "causalize/sbg_implementation/algebraic_loops.hpp"
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
 #include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
@@ -36,83 +35,8 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// ModelicaCC algebraic loops --------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- * @class AlgebraicLoop
- * @brief Group of equations that must be solved simultaneously.
- *
- * This has to be done after a pairing of equations and variables has been
- * decided. So this result makes sense only in conjunction with that of the
- * matching stage.
- *
- * This structure describes large loops and also arrays of small algebraic
- * loops. For example:
- *   for ... loop
- *     eq1;
- *     ...;
- *     eqk;
- *   end for;
- * describes an array of small algebraic loops. So, here eq1[i], ..., eq[k]
- * must be solved together for all i described by the loop bounds. On the other
- * hand:
- *   eq1;
- *   ...;
- *   eqk;
- * describes a large algebraic loop. If eqi is an array equation, then
- * eqi[1] to eqi[j] must be solved together with the other remaining eqm.
- */
-class AlgebraicLoop {
-public:
-  AlgebraicLoop() = default;
-  AlgebraicLoop(EquationList equations);
-
-  const EquationList& equations() const;
-  bool isEmpty() const;
-
-  void pushBack(Equation eq);
-
-  void concatenation(AlgebraicLoop other);
-
-private:
-  EquationList _equations;
-};
-
-std::ostream& operator<<(std::ostream& out, const AlgebraicLoop& loop);
-
-/**
- * @class AlgebraicLoops
- * @brief Unordered collection of algebraic loops of the model.
- */
-class AlgebraicLoops {
-public:
-  AlgebraicLoops() = default;
-
-  std::size_t size() const;
-  AlgebraicLoop operator[](std::size_t k) const;
-  auto begin() const { return _loops.begin(); };
-  auto end() const { return _loops.end(); };
-
-  void pushBack(AlgebraicLoop loop);
-  void reverse();
-
-  void concatenation(AlgebraicLoops other);
-
-private:
-  std::vector<AlgebraicLoop> _loops;
-};
-
-std::ostream& operator<<(std::ostream& out, const AlgebraicLoops& loops);
-
-////////////////////////////////////////////////////////////////////////////////
 // Algebraic loops return structure --------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief Type for a single algebraic loop, using SBG structures.
- */
-using LoopT = std::vector<SBG::LIB::Set>;
 
 /**
  * @class AlgebraicLoopsResult
@@ -131,12 +55,6 @@ public:
    * algebraic loops.
    */
   AlgebraicLoops toModelicaFormat() const;
-
-  /**
-   * @brief Converts the SBG result to an intermediate result that only uses SBG
-   * structures. It will be used by the VerticalSorting module.
-   */
-  std::vector<LoopT> toSBGFormat() const;
 
 private:
   /**
