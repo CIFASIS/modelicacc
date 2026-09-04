@@ -25,7 +25,7 @@
 #include <iostream>
 
 namespace Modelica {
-MMO_Class::MMO_Class() { father_ = NULL; }
+MMO_Class::MMO_Class() { father_ = nullptr; }
 MMO_Class::MMO_Class(Class &c) : variables_()
 {
   using namespace boost;
@@ -34,17 +34,18 @@ MMO_Class::MMO_Class(Class &c) : variables_()
   statements_.set_initial(false);
   initial_eqs_.set_initial(true);
   initial_sts_.set_initial(true);
-  father_ = NULL;
-  annotation_ = c.composition().annotation();
+  father_ = nullptr;
+  const auto& composition = c.composition();
+  annotation_ = composition.annotation();
   name_ = c.name();
   prefixes_ = c.prefixes();
-  if (c.composition().external()) {
-    external_ = c.composition().call();
-    external_annot_ = c.composition().ext_annot();
-    language_ = c.composition().language();
+  if (composition.external()) {
+    external_ = composition.call();
+    external_annot_ = composition.ext_annot();
+    language_ = composition.language();
   }
-  foreach_(Element ce, c.composition().elements()) insertElement(ce);
-  foreach_(Element ce, c.composition().elements())
+  foreach_(Element ce, composition.elements()) insertElement(ce);
+  foreach_(Element ce, composition.elements())
   {
     if (is<Component>(ce)) {
       Component comp = boost::get<Component>(ce);
@@ -64,7 +65,7 @@ MMO_Class::MMO_Class(Class &c) : variables_()
     }
   }
 
-  foreach_(CompElement ce, c.composition().comp_elem())
+  foreach_(CompElement ce, composition.comp_elem())
   {
     if (is<EquationSection>(ce)) {
       EquationSection eqs = boost::get<EquationSection>(ce);
