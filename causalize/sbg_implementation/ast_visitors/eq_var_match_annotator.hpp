@@ -20,7 +20,7 @@
 /**
  * @file
  * @brief Visitor to annotate in Modelica equations which variable will be
- * solved from it. The output will be something of the form:
+ * solved from it. The output will an ostringstream of the form:
  *   eq1; // var1
  * or, if it is an array equation:
  *   for ... loop
@@ -39,23 +39,24 @@
 
 #include <boost/variant/static_visitor.hpp>
 
+#include <sstream>
+
 namespace Modelica {
 
 namespace Causalize {
 
 /**
- * @brief Given the original equation, it constructs the modified equation that
- * uses the residual of the original variable. 
+ * @brief Annotates the variable that will be solved from each equation.
  */
-class EqVarMatchAnnotator : public boost::static_visitor<AST::Equation> {
+class EqVarMatchAnnotator : public boost::static_visitor<std::ostringstream> {
 public:
   EqVarMatchAnnotator(AST::ExpList var_list);
-  AST::Equation operator()(AST::Connect eq);
-  AST::Equation operator()(AST::Equality eq);
-  AST::Equation operator()(AST::CallEq eq);
-  AST::Equation operator()(AST::ForEq eq);
-  AST::Equation operator()(AST::IfEq eq);
-  AST::Equation operator()(AST::WhenEq eq);
+  std::ostringstream operator()(AST::Connect eq);
+  std::ostringstream operator()(AST::Equality eq);
+  std::ostringstream operator()(AST::CallEq eq);
+  std::ostringstream operator()(AST::ForEq eq);
+  std::ostringstream operator()(AST::IfEq eq);
+  std::ostringstream operator()(AST::WhenEq eq);
 
 private:
   AST::ExpList _var_list; ///< Variables of the matching.

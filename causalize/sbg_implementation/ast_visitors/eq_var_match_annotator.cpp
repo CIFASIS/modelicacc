@@ -31,49 +31,55 @@ namespace Causalize {
 EqVarMatchAnnotator::EqVarMatchAnnotator(AST::ExpList var_list)
   : _var_list(var_list), _annotated_index(0) {}
 
-AST::Equation EqVarMatchAnnotator::operator()(AST::Connect eq)
+std::ostringstream EqVarMatchAnnotator::operator()(AST::Connect eq)
 {
   ERROR("EqVarMatchAnnotator: Connect not yet supported");
-  return AST::Equation{};
+  return std::ostringstream{};
 }
 
-AST::Equation EqVarMatchAnnotator::operator()(AST::Equality eq)
+std::ostringstream EqVarMatchAnnotator::operator()(AST::Equality eq)
 {
-  AST::Equality result = eq;
-  std::ostringstream strm;
-  strm << _var_list[_annotated_index];
-  result.set_comment(AST::Comment{
-    AST::StringComment{AST::StringList{strm.str()}}
-  });
+  std::ostringstream result;
+  result << eq << " \"" << _var_list[_annotated_index] << "\";";
   return result;
 }
 
-AST::Equation EqVarMatchAnnotator::operator()(AST::CallEq eq)
+std::ostringstream EqVarMatchAnnotator::operator()(AST::CallEq eq)
 {
   ERROR("EqVarMatchAnnotator: trying to convert a CallEq");
-  return AST::Equation{};
+  return std::ostringstream{};
 }
 
-AST::Equation EqVarMatchAnnotator::operator()(AST::ForEq eq)
+std::ostringstream EqVarMatchAnnotator::operator()(AST::ForEq eq)
 {
-  AST::EquationList eq_list;
+  std::ostringstream result;
+  std::size_t elems_sz = eq.elements().size();
+  std::size_t j = 1;
+  result << "for " << eq.range() << " loop\n";
+  BEGIN_BLOCK;
   for (const AST::Equation& jth_eq : eq.elements()) {
-    eq_list.push_back(ApplyThis(jth_eq));
+    result << INDENT << ApplyThis(jth_eq).str();
+    if (j < elems_sz) {
+      result << "\n";
+    }
     ++_annotated_index;
+    ++j;
   }
-  return AST::ForEq{eq.range(), eq_list};
+  END_BLOCK;
+  result << "\nend for;";
+  return result;
 }
 
-AST::Equation EqVarMatchAnnotator::operator()(AST::IfEq eq)
+std::ostringstream EqVarMatchAnnotator::operator()(AST::IfEq eq)
 {
   ERROR("EqVarMatchAnnotator: trying to convert an IfEq");
-  return AST::Equation{};
+  return std::ostringstream{};
 }
 
-AST::Equation EqVarMatchAnnotator::operator()(AST::WhenEq eq)
+std::ostringstream EqVarMatchAnnotator::operator()(AST::WhenEq eq)
 {
   ERROR("EqVarMatchAnnotator: trying to convert a WhenEq");
-  return AST::Equation{};
+  return std::ostringstream{};
 }
 
 } // namespace Causalize

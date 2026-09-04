@@ -30,10 +30,6 @@ member_imp(Equality, Expression, right);
 std::ostream& operator<<(std::ostream& out, const Equality& e)  // output
 {
   out << e.left() << " = " << e.right();
-  Option<Comment> comment = e.comment();
-  if (comment) {
-    out << " " << (*(*comment).st_comment())[0];
-  }
   return out;
 }
 bool Equality::operator==(const Equality& other) const { return (other.left() == left() && other.right() == right()); }

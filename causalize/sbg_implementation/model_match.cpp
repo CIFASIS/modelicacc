@@ -39,7 +39,7 @@ const AST::ExpList& EqVarMatch::variables() const { return _variables; }
 std::ostream& operator<<(std::ostream& out, const EqVarMatch& match)
 {
   EqVarMatchAnnotator annotator{match.variables()};
-  out << Apply(annotator, match.equation());
+  out << Apply(annotator, match.equation()).str();
   return out;
 }
 
