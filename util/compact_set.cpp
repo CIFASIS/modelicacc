@@ -23,6 +23,8 @@
 
 #include <boost/variant/get.hpp>
 
+#include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <string>
 #include <utility>
@@ -128,12 +130,15 @@ std::pair<SBG::LIB::Set, Index> dimensionToModelicaIndices(
   int begin = kth_bounds[0].GetInt() - offset;
   int step = kth_bounds[1].GetInt();
   int end = kth_bounds[2].GetInt() - offset;
-  if (m * h < 0) {
+  if (m*begin + h > begin) {
     step = -step;
     std::swap(begin, end);
   }
+  SBG::LIB::NAT set_begin = std::min(begin, end);
+  SBG::LIB::NAT set_step = std::abs(step);
+  SBG::LIB::NAT set_end = std::max(begin, end);
 
-  return {SBG::LIB::Set{begin, step, end}
+  return {SBG::LIB::Set{set_begin, set_step, set_end}
     , Index{counter, OptExp{Range{begin, step, end}}}};
 }
 

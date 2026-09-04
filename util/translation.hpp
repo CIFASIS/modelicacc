@@ -40,7 +40,8 @@ public:
   Translation(std::size_t n);
 
   /**
-   * @brief Returns the identity translation of dimension n.
+   * @brief Returns the translation of dimension \p n, with \p value in each
+   * dimension.
    */
   Translation(std::size_t n, AST::Integer value);
 
