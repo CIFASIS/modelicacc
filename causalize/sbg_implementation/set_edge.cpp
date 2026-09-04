@@ -84,19 +84,42 @@ std::ostream& operator<<(std::ostream& out, const SetEdge& se)
 
 // Methods ---------------------------------------------------------------------
 
-std::string SetEdge::domainToSBGFormat() const { return _domain.toSBGFormat(); }
+std::string SetEdge::domainToSBGFormat() const
+{
+  CompactSet copy = _domain;
+  copy.translate(_translation);
+  return copy.toSBGFormat();
+}
 
 std::string SetEdge::map1ToSBGFormat() const { return _map1.toSBGFormat(); }
 
 std::string SetEdge::map2ToSBGFormat() const { return _map2.toSBGFormat(); }
 
-std::string SetEdge::toSBGFormat() const { return map1ToSBGFormat() + "<-" + _domain.toSBGFormat() + "->" + map2ToSBGFormat(); }
+std::string SetEdge::toSBGFormat() const
+{
+  return map1ToSBGFormat() + "<-" + domainToSBGFormat() + "->"
+    + map2ToSBGFormat();
+}
+
+CompactSet SetEdge::translatedDomain() const
+{
+  CompactSet copy = _domain;
+  copy.translate(_translation);
+  return copy;
+}
 
 AST::Integer SetEdge::maxDimPerimetral() { return _domain.maxDimPerimetral(); }
 
 SetEdge SetEdge::restrict(CompactSet restriction) const
 {
-  restriction.intersection(_domain);
+  CompactSet domain = _domain;
+  domain.translate(_translation);
+  restriction.intersection(domain);
+  if (restriction.cardinal() == 0) {
+    return SetEdge{_edge_id, 0};
+  }
+
+  restriction.translate(Translation{domain.arity()} - _translation);
   SetEdge result{_edge_id, restriction};
 
   result.set_name(_name);

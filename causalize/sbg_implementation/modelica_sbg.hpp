@@ -23,6 +23,7 @@
 #include "causalize/sbg_implementation/set_edge.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
 
+#include <string>
 #include <tuple>
 
 namespace Modelica {
@@ -38,25 +39,65 @@ namespace Causalize {
  */
 class ModelicaSBG {
 public:
-  ModelicaSBG() = default;
-  ModelicaSBG(std::size_t arity);
+  ModelicaSBG();
 
-  std::size_t arity() const;
   const SetVertices& set_vertices() const;
   const SetEdges& set_edges() const;
+  SetEdges& set_edges();
+
+  void set_arity(std::size_t arity);
 
   void addSetVertex(SetVertex sv);
+
+  /**
+   * @brief TODO
+   * @result Identifier of the newly created set-vertex.
+   */
+  int addSetVertex(CompactSet elems, std::string name);
+
+  int addSetVertex(
+    CompactSet elems, std::string name, VertexInfo info
+  );
+
   void addSetEdge(SetEdge se);
+
+  /**
+   * @brief TODO
+   * @result Identifier of the newly created set-edge.
+   */
+  int addSetEdge(
+    int var_id, int eq_id, CompactSet domain, AST::Expression access
+    , std::string name
+  );
+
+  int addSetEdge(
+    int var_id, int eq_id, CompactSet domain, Translation t
+    , AST::Expression access, std::string name
+  );
+
+  int addSetEdge(
+    int var_id, int eq_id, CompactSet domain, CompactTransformation map1
+    , CompactTransformation map2, AST::Expression access, std::string name
+  );
 
   /**
    * @brief Returns the set-vertex identified by \p id.
    */
-  SetVertex setVertex(int id) const;
+  SetVertex& setVertex(int id);
+  const SetVertex& setVertex(int id) const;
+
+  /**
+   * @brief Returns the set-vertex identified by \p id.
+   */
+  SetEdge& setEdge(int id);
+  const SetEdge& setEdge(int id) const;
 
 private:
-  std::size_t _arity;
   SetVertices _set_vertices;
   SetEdges _set_edges;
+  Integer _vertex_offset;
+  Integer _edge_offset;
+  std::size_t _arity;
 };
 
 std::ostream& operator<<(std::ostream& out, const ModelicaSBG& bsbg);
@@ -71,6 +112,16 @@ using EquationAccess = std::pair<EquationInfo, Accesses>;
  */
 EquationAccess getAccess(
   const ModelicaSBG& modelica_sbg, const SetEdge& se, const CompactSet& s
+);
+
+/**
+ * @brief Given a set-edge, and a sub-group of elements of that set-edge, get
+ * the corresponding equation expression, and Modelica sorted indices according
+ * to \p expr.
+ */
+EquationAccess getAccess(
+  const ModelicaSBG& modelica_sbg, const SetEdge& se, const CompactSet& s
+  , const SBG::LIB::Expression& expr
 );
 
 } // namespace Causalize

@@ -47,16 +47,27 @@ namespace Causalize {
 // SBG generation return structure ---------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-SBGGenerationResult::SBGGenerationResult(MMO_Class& mmo_class, ModelicaSBG modelica_bsbg, SBG::LIB::BipartiteSBG bipartite_sbg)
-    : _mmo_class(mmo_class), _modelica_bsbg(modelica_bsbg), _bipartite_sbg(bipartite_sbg)
+SBGGenerationResult::SBGGenerationResult(
+  MMO_Class& mmo_class
+  , ModelicaSBG modelica_bsbg
+  , SBG::LIB::BipartiteSBG bipartite_sbg
+) : _mmo_class(mmo_class), _modelica_bsbg(modelica_bsbg)
+    , _bipartite_sbg(bipartite_sbg) {}
+
+const MMO_Class& SBGGenerationResult::mmo_class() const
 {
+  return _mmo_class;
 }
 
-const MMO_Class& SBGGenerationResult::mmo_class() const { return _mmo_class; }
+const ModelicaSBG& SBGGenerationResult::modelica_bsbg() const
+{
+  return _modelica_bsbg;
+}
 
-const ModelicaSBG& SBGGenerationResult::modelica_bsbg() const { return _modelica_bsbg; }
-
-const SBG::LIB::BipartiteSBG& SBGGenerationResult::bipartite_sbg() const { return _bipartite_sbg; }
+const SBG::LIB::BipartiteSBG& SBGGenerationResult::bipartite_sbg() const
+{
+  return _bipartite_sbg;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Generate SBG Input ----------------------------------------------------------
@@ -65,9 +76,7 @@ const SBG::LIB::BipartiteSBG& SBGGenerationResult::bipartite_sbg() const { retur
 // Constructors/Destructors ----------------------------------------------------
 
 GenerateSBGInput::GenerateSBGInput(MMO_Class& mmo_class)
-    : _mmo_class(mmo_class), _max_dim(0), _node_id(1), _edge_id(1), _vertex_offset(0), _edge_offset(0)
-{
-}
+    : _mmo_class(mmo_class), _max_dim(0) {}
 
 // Getters ---------------------------------------------------------------------
 
@@ -100,19 +109,12 @@ void GenerateSBGInput::addVariableSet(const VarInfo& variable, const Name& name)
   }
 
   // Fill remaining dimensions
-  SetVertex set_vertex{_node_id, var_set};
   for (std::size_t k = var_dimensions; k < _max_dim; ++k) {
-    set_vertex.cartesianProduct(CompactSet{1, 1, 1});
+    var_set.cartesianProduct(CompactSet{1, 1, 1});
   }
 
-  // Translate to avoid repeating nodes values
-  set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
-  _vertex_offset += set_vertex.maxDimPerimetral();
-
   // Save variable set-vertex
-  set_vertex.set_name(name);
-  _set_vertices.push_back(set_vertex);
-  ++_node_id;
+  _modelica_bsbg.addSetVertex(var_set, name);
 }
 
 void GenerateSBGInput::addVariableNodes()
@@ -214,25 +216,24 @@ void GenerateSBGInput::addEquationNodes()
   EquationList eqs = flatterForEqs();
   for (const Equation& eq : eqs) {
     EquationCompactSet eq_to_compact_set{_mmo_class.syms(), _max_dim};
-    SetVertex set_vertex{_node_id, Apply(eq_to_compact_set, eq)};
-
-    // Translate to avoid repeating nodes values
-    set_vertex.set_translation(Translation{_max_dim, _vertex_offset});
-    _vertex_offset += set_vertex.maxDimPerimetral();
-
-    // Save equation set-vertex
-    set_vertex.set_name("eq_" + std::to_string(_node_id));
-    set_vertex.set_info(EquationInfo{getIndices(eq, _max_dim), getEquality(eq), !is<ForEq>(eq)});
-    _set_vertices.push_back(set_vertex);
-    ++_node_id;
+    CompactSet eq_vertices = Apply(eq_to_compact_set, eq);
+    std::string name = "eq_"
+      + std::to_string(_modelica_bsbg.set_vertices().size() + 1);
+    EquationInfo eq_info{
+      getIndices(eq, _max_dim), getEquality(eq), !is<ForEq>(eq)
+     };
+    _modelica_bsbg.addSetVertex(eq_vertices, name, eq_info);
   }
 }
 
 // Add edges -------------------------------------------------------------------
 
-CompactTransformation GenerateSBGInput::createMap1(const CompactSet& eq_nodes, const Translation& eq_nodes_trans) const
+CompactTransformation GenerateSBGInput::createMap1(
+  const SetEdge& eq_se, const SetVertex& eq_sv
+) const
 {
-  Translation domain_trans{_max_dim, _edge_offset};
+  Translation domain_trans = eq_se.translation();
+  Translation eq_nodes_trans = eq_sv.translation();
   CompactTransformation map1{_max_dim};
   for (std::size_t k = 0; k < _max_dim; ++k) {
     map1.matrix(k, k) = 1;
@@ -241,30 +242,61 @@ CompactTransformation GenerateSBGInput::createMap1(const CompactSet& eq_nodes, c
   return map1;
 }
 
-CompactTransformation GenerateSBGInput::createMap2(const Reference& reference, const Indexes& counters,
-                                                   const Translation& var_trans) const
+namespace {
+
+/**
+ * @brief Gets a reference to a variable or the derivative of a variable.
+ */
+Reference getReference(Expression expr)
 {
-  // Get expression of subscripts
-  Ref ref = reference.ref();
+  if (is<Reference>(expr)) {
+    return get<Reference>(expr);
+  } else if (is<Call>(expr)) {
+    Call call = get<Call>(expr);
+    ERROR_UNLESS(call.name() == "der", "getReference: expression ", expr
+      , " is not a variable or a derivative");
+    ExpList args = call.args();
+    ERROR_UNLESS(args.size() == 1, "getReference: der applied to more than "
+      , "argument in ", args);
+    return getReference(args.front());
+  }
+
+  ERROR("getReference: expression ", expr, " is not a reference");
+  return Reference{};
+}
+
+}  // namespace
+
+CompactTransformation GenerateSBGInput::createMap2(
+  const SetEdge& eq_se, const SetVertex& var_sv
+) const
+{
+  const Translation& var_trans = var_sv.translation();
+
+  // Get expression of subscripts.
+  Ref ref = getReference(eq_se.access()).ref();
   assert(ref.size() > 0);
-  ERROR_UNLESS(ref.size() == 1, "GenerateSBGInput::createMap2: conversion of ", "dotted references not implemented");
+  ERROR_UNLESS(ref.size() == 1, "GenerateSBGInput::createMap2: conversion of "
+    , "dotted references not implemented");
   ExpList indexes = get<1>(ref.front());
 
-  // Get order of counters
+  // Get order of counters.
+  AST::Indexes counters
+    = _modelica_bsbg.setVertex(eq_se.eq_id()).info().value().indices();
   std::vector<std::string> order;
   for (const Index& counter : counters.indexes()) {
     order.push_back(counter.name());
   }
 
   CompactTransformation t{_max_dim};
-  if (indexes.empty()) {  // Access to scalar variable
+  if (indexes.empty()) {  // Access to scalar variable.
     for (std::size_t k = 0; k < _max_dim; ++k) {
       Util::AffineExpr kth_expr{order};
       t.setRow(k, kth_expr + (var_trans[k] + 1));
     }
-  } else {  // Access to array variable
+  } else {  // Access to array variable.
     std::size_t k = 0;
-    Translation domain_trans{_max_dim, _edge_offset};
+    Translation domain_trans = eq_se.translation();
     AffineExprVisitor affine_expr_visitor(_mmo_class.syms(), order);
     for (Expression index : indexes) {
       Util::AffineExpr kth_expr = Apply(affine_expr_visitor, index);
@@ -280,45 +312,9 @@ CompactTransformation GenerateSBGInput::createMap2(const Reference& reference, c
   return t;
 }
 
-void GenerateSBGInput::addMaps(SetEdge se, const SetVertex& eq_sv, const SetVertex& var_sv, const Reference& reference)
-{
-  CompactSet eq_nodes = eq_sv.set();
-  CompactSet domain = eq_nodes;
-  domain.translate(se.translation());
-  se.set_domain(domain);
-
-  se.set_map1(createMap1(eq_nodes, eq_sv.translation()));
-  se.set_map2(createMap2(reference, eq_sv.info().value().indices(), var_sv.translation()));
-  _set_edges.push_back(se);
-
-  _edge_offset += eq_nodes.maxDimPerimetral();
-  ++_edge_id;
-}
-
-namespace {
-
-/**
- * @brief Gets a reference to a variable or the derivative of a variable.
- */
-Reference getReference(Expression expr)
-{
-  if (is<Reference>(expr)) {
-    return get<Reference>(expr);
-  } else if (is<Call>(expr)) {
-    Call call = get<Call>(expr);
-    ERROR_UNLESS(call.name() == "der", "getReference: expression ", expr, " is not a variable or a derivative");
-    ExpList args = call.args();
-    ERROR_UNLESS(args.size() == 1, "getReference: der applied to more than ", "argument in ", args);
-    return getReference(args.front());
-  }
-
-  ERROR("getReference: expression ", expr, " is not a reference");
-  return Reference{};
-}
-
-}  // namespace
-
-void GenerateSBGInput::addEdge(const SetVertex& eq_sv, const SetVertex& sv, const EquationInfo& eq_info)
+void GenerateSBGInput::addEdge(
+  const SetVertex& eq_sv, const SetVertex& sv, const EquationInfo& eq_info
+)
 {
   if (sv.isVariable()) {
     Name var_name = sv.name();
@@ -337,27 +333,27 @@ void GenerateSBGInput::addEdge(const SetVertex& eq_sv, const SetVertex& sv, cons
       ss << expr;
       std::string name = eq_sv.name() + "-" + ss.str();
 
-      SetEdge se{_edge_id, _max_dim};
-      se.set_name(name);
-      se.set_var_id(sv.node_id());
-      se.set_eq_id(eq_sv.node_id());
-      se.set_translation(Translation{_max_dim, _edge_offset});
-      se.set_access(expr);
-
-      addMaps(se, eq_sv, sv, getReference(expr));
+      int se_id = _modelica_bsbg.addSetEdge(
+        sv.node_id(), eq_sv.node_id(), eq_nodes, expr, name
+      );
+      SetEdge& se = _modelica_bsbg.setEdge(se_id);
+      se.set_map1(createMap1(se, eq_sv));
+      se.set_map2(createMap2(se, sv));
     }
   }
 }
 
 void GenerateSBGInput::addEdges()
 {
-  for (const SetVertex& eq_sv : _set_vertices) {
+  SetVertices svs = _modelica_bsbg.set_vertices();
+  for (const SetVertex& eq_sv : svs) {
     if (eq_sv.isEquation()) {
       EquationInfo eq_info = eq_sv.info().value();
-      ERROR_UNLESS(is<Equality>(eq_info.equation()), "GenerateSBGInput::addEdges: only equality equations supported");
+      ERROR_UNLESS(is<Equality>(eq_info.equation())
+        , "GenerateSBGInput::addEdges: only equality equations supported");
 
-      // Get vertices of variables that appear in this array of equations
-      for (const SetVertex& sv : _set_vertices) {
+      // Get vertices of variables that appear in this array of equations.
+      for (const SetVertex& sv : svs) {
         addEdge(eq_sv, sv, eq_info);
       }
     }
@@ -373,8 +369,6 @@ void GenerateSBGInput::setup()
 
   _sbg_input.open(fileName());
   _max_dim = 1;
-  _node_id = 1;
-  _edge_id = 1;
 
   // Get maximum dimension  between the arrays of variables defined in the model
   for (Name var_name : variables) {
@@ -386,6 +380,8 @@ void GenerateSBGInput::setup()
       }
     }
   }
+
+  _modelica_bsbg.set_arity(_max_dim);
 }
 
 SBGGenerationResult GenerateSBGInput::buildFromModel()
@@ -399,32 +395,24 @@ SBGGenerationResult GenerateSBGInput::buildFromModel()
   addEdges();
   generateSBGInput();
 
-  ModelicaSBG modelica_bsbg{_max_dim};
-  for (const SetVertex& sv : _set_vertices) {
-    modelica_bsbg.addSetVertex(sv);
-  }
-  for (const SetEdge& se : _set_edges) {
-    modelica_bsbg.addSetEdge(se);
-  }
-
   // Evaluate SBG program to obtain bipartite SBG
   SBG::LIB::BipartiteSBG g;
   SBG::Eval::ProgramIO eval_result = SBG::Eval::parseEvalFile(fileName());
-  for (const SBG::Eval::ExprResult& ev : eval_result.exprs()) {
+  for (SBG::Eval::ExprResult ev : eval_result.exprs()) {
     SBG::Eval::ExprBaseType e = std::get<1>(ev);
     if (std::holds_alternative<SBG::LIB::BipartiteSBG>(e)) {
       g = std::get<SBG::LIB::BipartiteSBG>(e);
     }
   }
 
-  return SBGGenerationResult{_mmo_class, modelica_bsbg, g};
+  return SBGGenerationResult{_mmo_class, _modelica_bsbg, g};
 }
 
 void GenerateSBGInput::generateVSet()
 {
   _sbg_input << "V: ";
   CompactSet V;
-  for (const SetVertex& sv : _set_vertices) {
+  for (const SetVertex& sv : _modelica_bsbg.set_vertices()) {
     CompactSet jth_set = sv.set();
     jth_set.translate(sv.translation());
     V.setUnion(jth_set);
@@ -435,9 +423,10 @@ void GenerateSBGInput::generateVSet()
 void GenerateSBGInput::generateVMap()
 {
   _sbg_input << "Vmap: <<";
-  std::size_t size = _set_vertices.size();
+  SetVertices svs = _modelica_bsbg.set_vertices();
+  std::size_t size = svs.size();
   std::size_t j = 1;
-  for (const SetVertex& sv : _set_vertices) {
+  for (const SetVertex& sv : svs) {
     _sbg_input << sv.toSBGFormat() << " -> ";
     for (std::size_t k = 0; k + 1 < _max_dim; ++k) {
       _sbg_input << "|0*x+" << j;
@@ -452,9 +441,10 @@ void GenerateSBGInput::generateVMap()
 void GenerateSBGInput::generateMap1()
 {
   _sbg_input << "map1: <<";
-  std::size_t size = _set_edges.size();
+  SetEdges ses = _modelica_bsbg.set_edges();
+  std::size_t size = ses.size();
   std::size_t j = 1;
-  for (const SetEdge& se : _set_edges) {
+  for (const SetEdge& se : ses) {
     _sbg_input << se.domainToSBGFormat() << " -> ";
     _sbg_input << se.map1ToSBGFormat();
     _sbg_input << ((j < size) ? ", " : "");
@@ -466,9 +456,10 @@ void GenerateSBGInput::generateMap1()
 void GenerateSBGInput::generateMap2()
 {
   _sbg_input << "map2: <<";
-  std::size_t size = _set_edges.size();
+  SetEdges ses = _modelica_bsbg.set_edges();
+  std::size_t size = ses.size();
   std::size_t j = 1;
-  for (const SetEdge& se : _set_edges) {
+  for (const SetEdge& se : ses) {
     _sbg_input << se.domainToSBGFormat() << " -> ";
     _sbg_input << se.map2ToSBGFormat();
     _sbg_input << ((j < size) ? ", " : "");
@@ -480,9 +471,10 @@ void GenerateSBGInput::generateMap2()
 void GenerateSBGInput::generateEMap()
 {
   _sbg_input << "Emap: <<";
-  std::size_t size = _set_edges.size();
+  SetEdges ses = _modelica_bsbg.set_edges();
+  std::size_t size = ses.size();
   std::size_t j = 1;
-  for (const SetEdge& se : _set_edges) {
+  for (const SetEdge& se : ses) {
     _sbg_input << se.domainToSBGFormat() << " -> ";
     for (std::size_t k = 0; k + 1 < _max_dim; ++k) {
       _sbg_input << "|0*x+" << j;
@@ -497,8 +489,9 @@ void GenerateSBGInput::generateEMap()
 void GenerateSBGInput::generatePartition()
 {
   _sbg_input << "X: ";
+  SetVertices svs = _modelica_bsbg.set_vertices();
   CompactSet X;
-  for (const SetVertex& sv : _set_vertices) {
+  for (const SetVertex& sv : svs) {
     if (sv.isEquation()) {
       CompactSet jth_set = sv.set();
       jth_set.translate(sv.translation());
@@ -509,7 +502,7 @@ void GenerateSBGInput::generatePartition()
 
   _sbg_input << "Y: ";
   CompactSet Y;
-  for (const SetVertex& sv : _set_vertices) {
+  for (const SetVertex& sv : svs) {
     if (sv.isVariable()) {
       CompactSet jth_set = sv.set();
       jth_set.translate(sv.translation());
