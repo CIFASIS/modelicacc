@@ -18,6 +18,7 @@
 ******************************************************************************/
 
 #include "causalize/sbg_implementation/ast_visitors/residual_equation.hpp"
+#include "causalize/sbg_implementation/ast_visitors/variable_renamer.hpp"
 #include "util/debug.hpp"
 
 namespace Modelica {
@@ -35,8 +36,9 @@ AST::Equation ResidualEqVisitor::operator()(AST::Connect eq)
 
 AST::Equation ResidualEqVisitor::operator()(AST::Equality eq)
 {
+  VariableRenamer renamer{"res_"};
   AST::Expression left{AST::BinOp{
-    AST::Call{"res", _original_expr}, AST::BinOpType::Add, eq.left()
+    Apply(renamer, _original_expr), AST::BinOpType::Add, eq.left()
   }};
 
   return AST::Equation{AST::Equality{left, eq.right()}};

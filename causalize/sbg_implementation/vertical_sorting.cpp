@@ -111,11 +111,15 @@ detail::SortedMatchs MatchToModelicaFormat::format(
 // Vertical sorting return structure -------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
+// Constructors/destructors ----------------------------------------------------
+
 VerticalSortingResult::VerticalSortingResult(
   const ModelicaSBG& modelica_bsbg, const SBG::LIB::PWMap& sort
   , const VerticalSortingBuilder& builder
 ) : _modelica_bsbg(modelica_bsbg), _sort(sort), _builder(builder)
-    , _is_guess(false), _is_unary(false) {}
+    , _added_variables(builder.added_variables()) {}
+
+// Getters ---------------------------------------------------------------------
 
 const ModelicaSBG& VerticalSortingResult::modelica_bsbg() const
 {
@@ -123,6 +127,13 @@ const ModelicaSBG& VerticalSortingResult::modelica_bsbg() const
 }
 
 const SBG::LIB::PWMap& VerticalSortingResult::sort() const { return _sort; }
+
+const SetVertices& VerticalSortingResult::added_variables() const
+{
+  return _added_variables;
+}
+
+// Member functions ------------------------------------------------------------
 
 SortedAlgebraicLoop VerticalSortingResult::outerBounds(
   const detail::SortedMatchs& matchs, bool is_scalar

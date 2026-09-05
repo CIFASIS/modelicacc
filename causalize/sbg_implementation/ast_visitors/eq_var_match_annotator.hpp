@@ -20,7 +20,9 @@
 /**
  * @file
  * @brief Visitor to annotate in Modelica equations which variable will be
- * solved from it. The output will an ostringstream of the form:
+ * solved from it.
+ *
+ * The output will an ostringstream of the form:
  *   eq1; // var1
  * or, if it is an array equation:
  *   for ... loop

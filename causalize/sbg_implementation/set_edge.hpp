@@ -79,8 +79,8 @@ public:
 
   /**
    * @brief Returns a new set-edge with the same values for each field, except
-   * that _domain is translated by _translation, intersected with \p new_domain
-   * and the translated by -_translation again.
+   * that _domain is intersected with the result of the translation of
+   * \p new_domain with -_translation.
    */
   SetEdge restrict(CompactSet new_domain) const;
 

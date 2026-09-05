@@ -29,6 +29,7 @@
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_BUILDERS_CAUSALIZATION_BUILDERS_HPP_
 
 #include "causalize/sbg_implementation/modelica_sbg.hpp"
+#include "causalize/sbg_implementation/set_vertex.hpp"
 
 #include <algorithms/matching/match_data.hpp>
 #include <algorithms/scc/scc_data.hpp>
@@ -80,10 +81,10 @@ public:
 
   const SBG::LIB::DirectedSBG& dsbg() const;
   const SBG::LIB::PWMap& rmap() const;
-  SBG::LIB::Set guess_vertices() const;
   const SBG::LIB::Set& residual_vertices() const;
   const SBG::LIB::PWMap& guess_offset() const;
   const SBG::LIB::Set& end_points() const;
+  const SetVertices& added_variables() const;
 
 private:
   void addGuessVertices();
@@ -115,6 +116,8 @@ private:
   SBG::LIB::PWMap _guess_offset;
   SBG::LIB::Set _end_points;
   ModelicaSBG _modelica_bsbg;
+  SetVertices _added_variables; ///< Expressions of variables from which
+    ///< guesses and residuals are created.
 };
 
 } // namespace Causalize

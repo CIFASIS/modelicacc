@@ -22,8 +22,9 @@ CAUSALIZE_SBG_SRC := \
     $(CAUSALIZE_SBG_DIR)/tearing.cpp \
     $(CAUSALIZE_SBG_DIR)/vertical_sorting.cpp \
 	$(CAUSALIZE_SBG_DIR)/tearing_variables.cpp \
-	$(CAUSALIZE_SBG_DIR)/ast_visitors/residual_equation.cpp \
 	$(CAUSALIZE_SBG_DIR)/ast_visitors/eq_var_match_annotator.cpp \
+	$(CAUSALIZE_SBG_DIR)/ast_visitors/residual_equation.cpp \
+	$(CAUSALIZE_SBG_DIR)/ast_visitors/variable_renamer.cpp \
 	$(CAUSALIZE_SBG_DIR)/builders/causalization_builders.cpp \
 	$(CAUSALIZE_SBG_DIR)/builders/causalization_json.cpp \
 	$(UTIL_DIR)/affine_transformation.cpp \

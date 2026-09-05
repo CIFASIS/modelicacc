@@ -18,12 +18,16 @@
  ******************************************************************************/
 
 #include "causalize/sbg_implementation/builders/causalization_builders.hpp"
+#include "ast/equation.hpp"
+#include "ast/expression.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
 #include "causalize/sbg_implementation/ast_visitors/residual_equation.hpp"
+#include "causalize/sbg_implementation/ast_visitors/variable_renamer.hpp"
 #include "util/compact_set.hpp"
 #include "util/translation.hpp"
 
+#include <boost/variant/get.hpp>
 #include <sbg/bipartite_sbg.hpp>
 #include <sbg/map.hpp>
 #include <sbg/pw_map.hpp>
@@ -209,11 +213,6 @@ const SBG::LIB::Set& VerticalSortingBuilder::residual_vertices() const
   return _residual_vertices;
 }
 
-SBG::LIB::Set VerticalSortingBuilder::guess_vertices() const
-{
-  return _guess_offset.image(_residual_vertices);
-}
-
 const SBG::LIB::PWMap& VerticalSortingBuilder::guess_offset() const
 {
   return _guess_offset;
@@ -222,6 +221,11 @@ const SBG::LIB::PWMap& VerticalSortingBuilder::guess_offset() const
 const SBG::LIB::Set& VerticalSortingBuilder::end_points() const
 {
   return _end_points;
+}
+
+const SetVertices& VerticalSortingBuilder::added_variables() const
+{
+  return _added_variables;
 }
 
 // Member functions ------------------------------------------------------------
@@ -371,17 +375,18 @@ void VerticalSortingBuilder::addGuessMatchs(ModelicaSBG& modelica_bsbg)
     std::size_t arity = se_res.arity();
     if (!se_res.isEmpty()) {
       // Add guess equation vertices.
-      CompactSet guess_sv{_guess_offset.image(se_res)};
       SetVertex original_eq_sv = modelica_bsbg.setVertex(se.eq_id());
       std::string name = "guess(" + original_eq_sv.name() + ")";
+      VariableRenamer renamer{"guess_"};
       AST::Equation guess_eq{AST::Equality{
-        se.access(), AST::Expression{AST::Call{"guess", se.access()}}
+        se.access(), Apply(renamer, se.access())
       }};
       EquationInfo original_info = original_eq_sv.info().value();
       EquationInfo guess_info{
         original_info.indices(), guess_eq, original_info.scalar()
       };
-      CompactSet guess_vertices = se.domain();
+      CompactSet guess_vertices{se_res};
+      guess_vertices.translate(-se.translation());
       int guess_eq_id = modelica_bsbg.addSetVertex(
         guess_vertices, name, VertexInfo{guess_info}
       );
@@ -418,14 +423,19 @@ void VerticalSortingBuilder::modifyResidualMatchs(ModelicaSBG& modelica_bsbg)
       });
 
       // Add residual variable vertices.
-      std::string name = "res(" + modelica_bsbg.setVertex(se.var_id()).name()
-        + ")";
-      CompactSet res_vertices = se.domain();
+      std::string name = "res_" + modelica_bsbg.setVertex(se.var_id()).name();
+      CompactSet res_vertices{se_res};
+      res_vertices.translate(-se.translation());
       int res_var_id = modelica_bsbg.addSetVertex(res_vertices, name);
 
       // Modify matched variable.
       se.set_var_id(res_var_id);
-      se.set_access(AST::Call{"res", se.access()});
+      VariableRenamer renamer{"res_"};
+      se.set_access(Apply(renamer, se.access()));
+
+      // Register variable as residual.
+      SetVertex& var_sv = modelica_bsbg.setVertex(se.var_id());
+      _added_variables.push_back(var_sv);
     }
   }
 }

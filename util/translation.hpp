@@ -50,6 +50,7 @@ public:
   AST::Integer& operator[](std::size_t i);
   const AST::Integer& operator[](std::size_t i) const;
 
+  Translation operator-() const;
   Translation operator-(const Translation& other) const;
 
 private:

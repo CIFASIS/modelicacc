@@ -27,9 +27,12 @@ namespace Causalize {
 
 // Constructors/Destructors ----------------------------------------------------
 
-SetEdge::SetEdge(int edge_id, std::size_t arity) : _edge_id(edge_id), _map1(arity), _map2(arity) {}
+SetEdge::SetEdge(int edge_id, std::size_t arity)
+  : _edge_id(edge_id), _map1(arity), _map2(arity) {}
 
-SetEdge::SetEdge(int edge_id, CompactSet domain) : _edge_id(edge_id), _domain(domain), _map1(domain.arity()), _map2(domain.arity()) {}
+SetEdge::SetEdge(int edge_id, CompactSet domain)
+  : _edge_id(edge_id), _domain(domain), _map1(domain.arity())
+    , _map2(domain.arity()) {}
 
 // Getters ---------------------------------------------------------------------
 
@@ -112,14 +115,12 @@ AST::Integer SetEdge::maxDimPerimetral() { return _domain.maxDimPerimetral(); }
 
 SetEdge SetEdge::restrict(CompactSet restriction) const
 {
-  CompactSet domain = _domain;
-  domain.translate(_translation);
-  restriction.intersection(domain);
   if (restriction.cardinal() == 0) {
     return SetEdge{_edge_id, 0};
   }
+  restriction.translate(-_translation);
+  restriction.intersection(_domain);
 
-  restriction.translate(Translation{domain.arity()} - _translation);
   SetEdge result{_edge_id, restriction};
 
   result.set_name(_name);

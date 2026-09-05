@@ -22,6 +22,7 @@
 
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
 #include "causalize/sbg_implementation/causal_model.hpp"
+#include "causalize/sbg_implementation/set_vertex.hpp"
 #include "causalize/sbg_implementation/tearing.hpp"
 #include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 
@@ -81,6 +82,7 @@ public:
 
   const ModelicaSBG& modelica_bsbg() const;
   const SBG::LIB::PWMap& sort() const;
+  const SetVertices& added_variables() const;
 
   /**
    * @brief Converts the SBG obtained result to a ModelicaCC list of equations
@@ -113,31 +115,10 @@ private:
    */
   CausalModel sortLoops() const;
 
-  //AST::Equation innerBounds(
-  //  const EquationInfo& eq_info, const AST::Indexes& elems_indexes
-  //  , bool is_scalar
-  //) const;
-
-  //EqVarMatchs matchToModelicaFormat(
-  //  const SetEdge& se, const CompactSet& se_scc, bool is_scalar
-  //);
-
-  ///**
-  // * @brief Creates a for equation for arrays of algebraic loops. If not, it
-  // * only returns the input collection \p matchs_list.
-  // */
-  //SortedAlgebraicLoop outerBounds(
-  //  const EqVarMatchs& matchs_list, bool is_scalar
-  //) const;
-
-  //SortedAlgebraicLoop loopToModelicaFormat(const SBGLoop& loop);
-
   ModelicaSBG _modelica_bsbg;
   SBG::LIB::PWMap _sort;
   VerticalSortingBuilder _builder;
-  Accesses _accesses;
-  bool _is_guess;
-  bool _is_unary;
+  SetVertices _added_variables;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
