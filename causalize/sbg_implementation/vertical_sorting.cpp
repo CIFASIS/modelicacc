@@ -18,24 +18,199 @@
 ******************************************************************************/
 
 #include "causalize/sbg_implementation/vertical_sorting.hpp"
-#include "causalize/sbg_implementation/equation_info.hpp"
+#include "ast/equation.hpp"
+#include "ast/modification.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
+#include "causalize/sbg_implementation/set_vertex.hpp"
+#include "causalize/sbg_implementation/ast_visitors/residual_equation.hpp"
+#include "causalize/sbg_implementation/ast_visitors/variable_renamer.hpp"
 #include "util/compact_set.hpp"
 #include "util/debug.hpp"
+#include "util/translation.hpp"
 
 #include <algorithms/sorting/topological/topological_sorting.hpp>
-#include <boost/variant/get.hpp>
 #include <sbg/directed_sbg.hpp>
 #include <sbg/expression.hpp>
+#include <sbg/natural.hpp>
 #include <sbg/pw_map.hpp>
 #include <sbg/set.hpp>
 #include <util/time_profiler.hpp>
 
 #include <algorithm>
+#include <string>
+#include <variant>
 
 namespace Modelica {
 
 namespace Causalize {
+
+////////////////////////////////////////////////////////////////////////////////
+// ModelicaSBG modifier --------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+// Getters ---------------------------------------------------------------------
+
+const ModelicaSBG& ModelicaSBGModifier::modelica_bsbg() const
+{
+  return _output_modelica_bsbg;
+}
+
+const std::vector<std::pair<AST::Name, VarInfo>>&
+  ModelicaSBGModifier::added_variables() const
+{
+  return _added_variables;
+}
+
+// Member functions ------------------------------------------------------------
+
+void ModelicaSBGModifier::addVarsDeclarations()
+{
+  for (SetEdge& se : _input_modelica_bsbg.set_edges()) {
+    SBG::LIB::Set se_res = se.translatedDomain().set()
+      .intersection(_residual_vertices);
+    if (!se_res.isEmpty()) {
+      AST::Name start_mod = "start";
+      AST::ClassModification class_mod;
+      class_mod.push_back(AST::ElMod{start_mod, AST::ModEq{AST::Expression{1}}});
+      SetVertex var_sv = _input_modelica_bsbg.setVertex(se.var_id());
+      VarInfo var_info = std::get<VarInfo>(var_sv.info());
+      var_info.set_modification(AST::Modification{AST::ModClass{class_mod}});
+      _added_variables.push_back(
+        {"guess_" + var_sv.name(), var_info}
+      );
+      _added_variables.push_back(
+        {"res_" + var_sv.name(), var_info}
+      );
+    }
+  }
+}
+
+void ModelicaSBGModifier::partition(const SBG::LIB::Set& not_residual)
+{
+  // Partition equation/variable matchings according to residual vertices, i.e,
+  // tearing variables.
+  SetVertices svs = _input_modelica_bsbg.set_vertices();
+  for (const SetVertex& sv : svs) {
+    _output_modelica_bsbg.addSetVertex(sv);
+  }
+
+  SetEdges ses = _input_modelica_bsbg.set_edges();
+  for (const SetEdge& se : ses) {
+    _output_modelica_bsbg.addSetEdge(se.restrict(
+      CompactSet{_residual_vertices}
+    ));
+    _output_modelica_bsbg.addSetEdge(se.restrict(CompactSet{not_residual}));
+  }
+}
+
+void ModelicaSBGModifier::addGuess(
+  const SetEdge& se, const CompactSet& se_res, const SBG::LIB::MD_NAT& max_elem
+)
+{
+  // Add guess equation vertices.
+  SetVertex original_eq_sv = _output_modelica_bsbg.setVertex(se.eq_id());
+  std::string name = "guess(" + original_eq_sv.name() + ")";
+  VariableRenamer renamer{"guess_"};
+  AST::Equation guess_eq{AST::Equality{
+    se.access(), Apply(renamer, se.access())
+  }};
+  EquationInfo original_info = std::get<EquationInfo>(original_eq_sv.info());
+  EquationInfo guess_info{
+    original_info.indices(), guess_eq, original_info.scalar()
+  };
+  CompactSet guess_vertices{se_res};
+  guess_vertices.translate(-se.translation());
+  int guess_eq_id = _output_modelica_bsbg.addSetVertex(
+    guess_vertices, name, guess_info
+  );
+
+  // Add guess/equation matching edges.
+  CompactSet edges = se.domain();
+  Translation se_translation = se.translation();
+  std::size_t arity = se_res.arity();
+  Translation t{arity};
+  for (std::size_t k = 0; k < arity; ++k) {
+    t[k] = max_elem[k] + se_translation[k];
+  }
+  name = "guess equation of " + se.name();
+  _output_modelica_bsbg.addSetEdge(
+    se.var_id(), guess_eq_id, edges, t, se.access(), name
+  );
+}
+
+void ModelicaSBGModifier::addGuessMatchs(const SBG::LIB::MD_NAT& max_elem)
+{
+  SetEdges ses = _input_modelica_bsbg.set_edges(); 
+  for (const SetEdge& se : ses) {
+    SBG::LIB::Set se_res = se.translatedDomain().set()
+      .intersection(_residual_vertices);
+    if (!se_res.isEmpty()) {
+      addGuess(se, se_res, max_elem);
+    }
+  }
+}
+
+void ModelicaSBGModifier::modifyResidual(
+  SetEdge& se, const CompactSet& se_res
+)
+{
+  // Modify equation expression.
+  SetVertex& eq_sv = _output_modelica_bsbg.setVertex(se.eq_id());
+  EquationInfo eq_info = std::get<EquationInfo>(eq_sv.info());
+  ResidualEqVisitor res_visit{se.access()};
+  eq_sv.set_info(EquationInfo{
+    eq_info.indices()
+    , Apply(res_visit, eq_info.equation())
+    , eq_info.scalar()
+  });
+
+  // Add residual variable vertices.
+  std::string name = "res_" + _output_modelica_bsbg
+    .setVertex(se.var_id()).name();
+  CompactSet res_vertices{se_res};
+  res_vertices.translate(-se.translation());
+  int res_var_id = _output_modelica_bsbg.addSetVertex(res_vertices, name);
+
+  // Modify matched variable.
+  se.set_var_id(res_var_id);
+  VariableRenamer renamer{"res_"};
+  se.set_access(Apply(renamer, se.access()));
+}
+
+void ModelicaSBGModifier::modifyResidualMatchs()
+{
+  SetEdges ses = _output_modelica_bsbg.set_edges(); 
+  for (SetEdge& se : ses) {
+    SBG::LIB::Set se_res = se.translatedDomain().set()
+      .intersection(_residual_vertices);
+    if (!se_res.isEmpty()) {
+      modifyResidual(se, se_res);
+    }
+  }
+}
+
+ModelicaSBG ModelicaSBGModifier::modify(
+  ModelicaSBG modelica_bsbg, const VerticalSortingBuilder& builder
+)
+{
+  _input_modelica_bsbg = modelica_bsbg;
+  _output_modelica_bsbg = ModelicaSBG{};
+  _added_variables = std::vector<std::pair<AST::Name, VarInfo>>{};
+  _residual_vertices = builder.residual_vertices();
+
+  addVarsDeclarations();
+  SBG::LIB::Set not_residual = builder.dsbg().V()
+    .difference(_residual_vertices);
+  partition(not_residual);
+  SBG::LIB::Set guess_vertices = builder.guess_offset()
+    .image(_residual_vertices);
+  SBG::LIB::MD_NAT max_elem = builder.dsbg().V().difference(guess_vertices)
+    .maxElem();
+  addGuessMatchs(max_elem);
+  modifyResidualMatchs();
+
+  return _output_modelica_bsbg;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Converter to Modelica code of an equation/variable pairing ------------------
@@ -116,8 +291,7 @@ detail::SortedMatchs MatchToModelicaFormat::format(
 VerticalSortingResult::VerticalSortingResult(
   const ModelicaSBG& modelica_bsbg, const SBG::LIB::PWMap& sort
   , const VerticalSortingBuilder& builder
-) : _modelica_bsbg(modelica_bsbg), _sort(sort), _builder(builder)
-    , _added_variables(builder.added_variables()) {}
+) : _modelica_bsbg(modelica_bsbg), _sort(sort), _builder(builder) {}
 
 // Getters ---------------------------------------------------------------------
 
@@ -263,6 +437,8 @@ CausalModel VerticalSortingResult::sortLoops() const
   const SBG::LIB::Set reps = rmap.fixedPoints();
   SBG::LIB::PWMap sccs_smap = _builder.guess_offset()
     .composition(_sort.restrict(_builder.end_points()));
+  std::cout << "sort: " << _sort << "\n";
+  std::cout << "sccs_map: " << sccs_smap << "\n";
   SBG::LIB::Set unsorted_sccs = reps;
   SBG::LIB::Set jth_scc = sccs_smap.fixedPoints();
   while (!unsorted_sccs.isEmpty()) {
@@ -297,6 +473,10 @@ void VerticalSortingResult::partitionSort()
 
 CausalModel VerticalSortingResult::toModelicaFormat()
 {
+  ModelicaSBGModifier modifier;
+  modifier.modify(_modelica_bsbg, _builder);
+  _modelica_bsbg = modifier.modelica_bsbg();
+
   partitionSort();
   return sortLoops();
 }
@@ -311,12 +491,11 @@ VerticalSorting::VerticalSorting(
 
 VerticalSortingResult VerticalSorting::sort()
 {
-  ModelicaSBG modelica_bsbg;
   VerticalSortingBuilder vs_builder{_loops_result.scc_result()
     , _tearing_result.mfvs_result()};
   {
     SBG::Util::Internal::TimeProfiler profiler{"Vertical sorting SBG builder"};
-    modelica_bsbg = vs_builder.build(_tearing_result.modelica_bsbg());
+    vs_builder.build();
   }
   SBG::LIB::PWMap vertical_sort;
   {
@@ -325,7 +504,9 @@ VerticalSortingResult VerticalSorting::sort()
       .calculate(vs_builder.dsbg(), vs_builder.rmap());
   }
 
-  return VerticalSortingResult{modelica_bsbg, vertical_sort, vs_builder};
+  return VerticalSortingResult{
+    _tearing_result.modelica_bsbg(), vertical_sort, vs_builder
+  };
 }
 
 }  // namespace Causalize

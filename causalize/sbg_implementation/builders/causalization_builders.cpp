@@ -1,29 +1,23 @@
-/*******************************************************************************
+/*****************************************************************************
 
- This file is part of Set--Based Graph Library.
+    This file is part of Modelica C Compiler.
 
- SBG Library is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+    Modelica C Compiler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
- SBG Library is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+    Modelica C Compiler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
- You should have received a copy of the GNU General Public License
- along with SBG Library.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with Modelica C Compiler.  If not, see <http://www.gnu.org/licenses/>.
 
- ******************************************************************************/
+******************************************************************************/
 
 #include "causalize/sbg_implementation/builders/causalization_builders.hpp"
-#include "ast/equation.hpp"
-#include "ast/expression.hpp"
-#include "causalize/sbg_implementation/set_edge.hpp"
-#include "causalize/sbg_implementation/set_vertex.hpp"
-#include "causalize/sbg_implementation/ast_visitors/residual_equation.hpp"
-#include "causalize/sbg_implementation/ast_visitors/variable_renamer.hpp"
 #include "util/compact_set.hpp"
 #include "util/translation.hpp"
 
@@ -223,15 +217,7 @@ const SBG::LIB::Set& VerticalSortingBuilder::end_points() const
   return _end_points;
 }
 
-const std::vector<std::pair<AST::Name, VarInfo>>&
-  VerticalSortingBuilder::added_variables() const
-{
-  return _added_variables;
-}
-
 // Member functions ------------------------------------------------------------
-
-// SBG functions ---------------------------------------------------------------
 
 void VerticalSortingBuilder::addGuessVertices()
 {
@@ -343,125 +329,7 @@ void VerticalSortingBuilder::redirectEdiff(
   }
 }
 
-// Modelica SBG functions ------------------------------------------------------
-
-void VerticalSortingBuilder::addVariables(ModelicaSBG modelica_bsbg)
-{
-  for (SetEdge& se : modelica_bsbg.set_edges()) {
-    SBG::LIB::Set se_res = se.translatedDomain().set()
-      .intersection(_residual_vertices);
-    if (!se_res.isEmpty()) {
-      AST::Name start_mod = "start";
-      AST::ClassModification class_mod;
-      class_mod.push_back(AST::ElMod{start_mod, AST::ModEq{AST::Expression{1}}});
-      SetVertex var_sv = modelica_bsbg.setVertex(se.var_id());
-      VarInfo var_info = std::get<VarInfo>(var_sv.info());
-      var_info.set_modification(AST::Modification{AST::ModClass{class_mod}});
-      _added_variables.push_back(
-        {"guess_" + var_sv.name(), var_info}
-      );
-      _added_variables.push_back(
-        {"res_" + var_sv.name(), var_info}
-      );
-    }
-  }
-}
-
-ModelicaSBG VerticalSortingBuilder::partition(ModelicaSBG modelica_bsbg)
-{
-  ModelicaSBG result;
-
-  // Partition equation/variable matchings according to residual vertices, i.e,
-  // tearing variables.
-  SetVertices svs = modelica_bsbg.set_vertices();
-  for (const SetVertex& sv : svs) {
-    result.addSetVertex(sv);
-  }
-
-  SBG::LIB::Set not_residual = _output_dsbg.V().difference(_residual_vertices);
-  SetEdges ses = modelica_bsbg.set_edges();
-  for (const SetEdge& se : ses) {
-    result.addSetEdge(se.restrict(CompactSet{_residual_vertices}));
-    result.addSetEdge(se.restrict(CompactSet{not_residual}));
-  }
-
-  return result;
-}
-
-void VerticalSortingBuilder::addGuessMatchs(ModelicaSBG& modelica_bsbg)
-{
-  SBG::LIB::MD_NAT max_elem = _input_dsbg.V().maxElem();
-  SetEdges ses = modelica_bsbg.set_edges(); 
-  for (const SetEdge& se : ses) {
-    SBG::LIB::Set se_res = se.translatedDomain().set()
-      .intersection(_residual_vertices);
-    std::size_t arity = se_res.arity();
-    if (!se_res.isEmpty()) {
-      // Add guess equation vertices.
-      SetVertex original_eq_sv = modelica_bsbg.setVertex(se.eq_id());
-      std::string name = "guess(" + original_eq_sv.name() + ")";
-      VariableRenamer renamer{"guess_"};
-      AST::Equation guess_eq{AST::Equality{
-        se.access(), Apply(renamer, se.access())
-      }};
-      EquationInfo original_info = std::get<EquationInfo>(
-        original_eq_sv.info()
-      );
-      EquationInfo guess_info{
-        original_info.indices(), guess_eq, original_info.scalar()
-      };
-      CompactSet guess_vertices{se_res};
-      guess_vertices.translate(-se.translation());
-      int guess_eq_id = modelica_bsbg.addSetVertex(
-        guess_vertices, name, guess_info
-      );
-
-      // Add guess/equation matching edges.
-      CompactSet edges = se.domain();
-      Translation se_translation = se.translation();
-      Translation t{arity};
-      for (std::size_t k = 0; k < arity; ++k) {
-        t[k] = max_elem[k] + se_translation[k];
-      }
-      name = "guess equation of " + se.name();
-      modelica_bsbg.addSetEdge(
-        se.var_id(), guess_eq_id, edges, t, se.access(), name
-      );
-    }
-  }
-}
-
-void VerticalSortingBuilder::modifyResidualMatchs(ModelicaSBG& modelica_bsbg)
-{
-  for (SetEdge& se : modelica_bsbg.set_edges()) {
-    SBG::LIB::Set se_res = se.translatedDomain().set()
-      .intersection(_residual_vertices);
-    if (!se_res.isEmpty()) {
-      // Modify equation expression.
-      SetVertex& eq_sv = modelica_bsbg.setVertex(se.eq_id());
-      EquationInfo eq_info = std::get<EquationInfo>(eq_sv.info());
-      ResidualEqVisitor res_visit{se.access()};
-      eq_sv.set_info(EquationInfo{
-        eq_info.indices()
-        , Apply(res_visit, eq_info.equation())
-        , eq_info.scalar()
-      });
-
-      // Add residual variable vertices.
-      std::string name = "res_" + modelica_bsbg.setVertex(se.var_id()).name();
-      CompactSet res_vertices{se_res};
-      res_vertices.translate(-se.translation());
-      int res_var_id = modelica_bsbg.addSetVertex(res_vertices, name);
-
-      // Modify matched variable.
-      se.set_var_id(res_var_id);
-      VariableRenamer renamer{"res_"};
-      se.set_access(Apply(renamer, se.access()));
-    }
-  }
-}
-
-ModelicaSBG VerticalSortingBuilder::build(ModelicaSBG modelica_bsbg)
+void VerticalSortingBuilder::build()
 {
   SBG::Util::Internal::TimeProfiler profiler{"SBG Vertical Sorting builder"};
 
@@ -489,15 +357,6 @@ ModelicaSBG VerticalSortingBuilder::build(ModelicaSBG modelica_bsbg)
   // Transform edges that connect different SCC so that the endings correspond
   // to start and end points of the SCC.
   redirectEdiff(reps_to_endpoint);
-
-  addVariables(modelica_bsbg);
-
-  // Modify Modelica SBG.
-  modelica_bsbg = partition(modelica_bsbg);
-  addGuessMatchs(modelica_bsbg);
-  modifyResidualMatchs(modelica_bsbg);
-
-  return modelica_bsbg;
 }
 
 } // namespace Causalize

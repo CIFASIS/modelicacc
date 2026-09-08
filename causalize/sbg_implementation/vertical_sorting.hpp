@@ -23,17 +23,61 @@
 #include "ast/expression.hpp"
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
 #include "causalize/sbg_implementation/causal_model.hpp"
-#include "causalize/sbg_implementation/set_vertex.hpp"
+#include "causalize/sbg_implementation/equation_info.hpp"
+#include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "causalize/sbg_implementation/tearing.hpp"
 #include "causalize/sbg_implementation/builders/causalization_builders.hpp"
+#include "util/table.hpp"
+
+#include <sbg/set.hpp>
 
 #include <iosfwd>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 namespace Modelica {
 
 namespace Causalize {
+
+////////////////////////////////////////////////////////////////////////////////
+// ModelicaSBG modifier --------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Handles the addition of guess and residual vertices in Modelica
+ * format. 
+ */
+class ModelicaSBGModifier {
+public:
+  ModelicaSBGModifier() = default;
+
+  const ModelicaSBG& modelica_bsbg() const;
+  const std::vector<std::pair<AST::Name, VarInfo>>& added_variables() const;
+
+  ModelicaSBG modify(
+    ModelicaSBG modelica_bsbg, const VerticalSortingBuilder& builder
+  );
+
+private:
+  void partition(const SBG::LIB::Set& not_residual);
+
+  void addGuess(
+    const SetEdge& se, const CompactSet& se_res
+    , const SBG::LIB::MD_NAT& max_elem
+  );
+  void addGuessMatchs(const SBG::LIB::MD_NAT& max_elem);
+
+  void modifyResidual(SetEdge& se, const CompactSet& se_res);
+  void modifyResidualMatchs();
+
+  void addVarsDeclarations();
+
+  ModelicaSBG _input_modelica_bsbg;
+  ModelicaSBG _output_modelica_bsbg;
+  std::vector<std::pair<AST::Name, VarInfo>> _added_variables;
+  SBG::LIB::Set _residual_vertices;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Converter to Modelica code of an equation/variable pairing ------------------

@@ -1,36 +1,24 @@
-/** @file causalization_builders.hpp
+/*****************************************************************************
 
- @brief <b>Causalization SBG builders</b>
+    This file is part of Modelica C Compiler.
 
- These builders are not part of the library per se, but are included here to
- test faster the causalization of Modelica models using the SBG approach. In
- the future it should belong to ModelicaCC instead.
+    Modelica C Compiler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
- <hr>
+    Modelica C Compiler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
- This file is part of Set--Based Graph Library.
+    You should have received a copy of the GNU General Public License
+    along with Modelica C Compiler.  If not, see <http://www.gnu.org/licenses/>.
 
- SBG Library is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- SBG Library is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with SBG Library.  If not, see <http://www.gnu.org/licenses/>.
-
- ******************************************************************************/
+******************************************************************************/
 
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_BUILDERS_CAUSALIZATION_BUILDERS_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_BUILDERS_CAUSALIZATION_BUILDERS_HPP_
-
-#include "causalize/sbg_implementation/modelica_sbg.hpp"
-#include "causalize/sbg_implementation/set_vertex.hpp"
-#include "util/table.hpp"
 
 #include <algorithms/matching/match_data.hpp>
 #include <algorithms/scc/scc_data.hpp>
@@ -81,14 +69,13 @@ public:
   VerticalSortingBuilder(const SBG::LIB::SCCData& data
     , const SBG::LIB::Set& mfvs);
 
-  ModelicaSBG build(ModelicaSBG modelica_bsbg);
+  void build();
 
   const SBG::LIB::DirectedSBG& dsbg() const;
   const SBG::LIB::PWMap& rmap() const;
   const SBG::LIB::Set& residual_vertices() const;
   const SBG::LIB::PWMap& guess_offset() const;
   const SBG::LIB::Set& end_points() const;
-  const std::vector<std::pair<AST::Name, VarInfo>>& added_variables() const;
 
 private:
   void addGuessVertices();
@@ -105,14 +92,6 @@ private:
    */
   void redirectEdiff(const SBG::LIB::PWMap& reps_to_endpoint);
 
-  void addVariables(ModelicaSBG modelica_bsbg);
-
-  ModelicaSBG partition(ModelicaSBG modelica_bsbg);
-
-  void addGuessMatchs(ModelicaSBG& modelica_bsbg);
-
-  void modifyResidualMatchs(ModelicaSBG& modelica_bsbg);
-
   SBG::LIB::DirectedSBG _input_dsbg;
   SBG::LIB::PWMap _input_rmap;
   SBG::LIB::Set _Ediff;
@@ -121,9 +100,6 @@ private:
   SBG::LIB::Set _residual_vertices;
   SBG::LIB::PWMap _guess_offset;
   SBG::LIB::Set _end_points;
-  ModelicaSBG _modelica_bsbg;
-  std::vector<std::pair<AST::Name, VarInfo>> _added_variables; ///< Information
-    ///< of guess and residual variables.
 };
 
 } // namespace Causalize
