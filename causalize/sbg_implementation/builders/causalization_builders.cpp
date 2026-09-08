@@ -35,7 +35,7 @@
 #include <util/time_profiler.hpp>
 
 #include <string>
-#include <tuple>
+#include <variant>
 
 namespace Modelica {
 
@@ -223,7 +223,8 @@ const SBG::LIB::Set& VerticalSortingBuilder::end_points() const
   return _end_points;
 }
 
-const SetVertices& VerticalSortingBuilder::added_variables() const
+const std::vector<std::pair<AST::Name, VarInfo>>&
+  VerticalSortingBuilder::added_variables() const
 {
   return _added_variables;
 }
@@ -344,6 +345,28 @@ void VerticalSortingBuilder::redirectEdiff(
 
 // Modelica SBG functions ------------------------------------------------------
 
+void VerticalSortingBuilder::addVariables(ModelicaSBG modelica_bsbg)
+{
+  for (SetEdge& se : modelica_bsbg.set_edges()) {
+    SBG::LIB::Set se_res = se.translatedDomain().set()
+      .intersection(_residual_vertices);
+    if (!se_res.isEmpty()) {
+      AST::Name start_mod = "start";
+      AST::ClassModification class_mod;
+      class_mod.push_back(AST::ElMod{start_mod, AST::ModEq{AST::Expression{1}}});
+      SetVertex var_sv = modelica_bsbg.setVertex(se.var_id());
+      VarInfo var_info = std::get<VarInfo>(var_sv.info());
+      var_info.set_modification(AST::Modification{AST::ModClass{class_mod}});
+      _added_variables.push_back(
+        {"guess_" + var_sv.name(), var_info}
+      );
+      _added_variables.push_back(
+        {"res_" + var_sv.name(), var_info}
+      );
+    }
+  }
+}
+
 ModelicaSBG VerticalSortingBuilder::partition(ModelicaSBG modelica_bsbg)
 {
   ModelicaSBG result;
@@ -381,14 +404,16 @@ void VerticalSortingBuilder::addGuessMatchs(ModelicaSBG& modelica_bsbg)
       AST::Equation guess_eq{AST::Equality{
         se.access(), Apply(renamer, se.access())
       }};
-      EquationInfo original_info = original_eq_sv.info().value();
+      EquationInfo original_info = std::get<EquationInfo>(
+        original_eq_sv.info()
+      );
       EquationInfo guess_info{
         original_info.indices(), guess_eq, original_info.scalar()
       };
       CompactSet guess_vertices{se_res};
       guess_vertices.translate(-se.translation());
       int guess_eq_id = modelica_bsbg.addSetVertex(
-        guess_vertices, name, VertexInfo{guess_info}
+        guess_vertices, name, guess_info
       );
 
       // Add guess/equation matching edges.
@@ -414,7 +439,7 @@ void VerticalSortingBuilder::modifyResidualMatchs(ModelicaSBG& modelica_bsbg)
     if (!se_res.isEmpty()) {
       // Modify equation expression.
       SetVertex& eq_sv = modelica_bsbg.setVertex(se.eq_id());
-      EquationInfo eq_info = eq_sv.info().value();
+      EquationInfo eq_info = std::get<EquationInfo>(eq_sv.info());
       ResidualEqVisitor res_visit{se.access()};
       eq_sv.set_info(EquationInfo{
         eq_info.indices()
@@ -432,10 +457,6 @@ void VerticalSortingBuilder::modifyResidualMatchs(ModelicaSBG& modelica_bsbg)
       se.set_var_id(res_var_id);
       VariableRenamer renamer{"res_"};
       se.set_access(Apply(renamer, se.access()));
-
-      // Register variable as residual.
-      SetVertex& var_sv = modelica_bsbg.setVertex(se.var_id());
-      _added_variables.push_back(var_sv);
     }
   }
 }
@@ -468,6 +489,8 @@ ModelicaSBG VerticalSortingBuilder::build(ModelicaSBG modelica_bsbg)
   // Transform edges that connect different SCC so that the endings correspond
   // to start and end points of the SCC.
   redirectEdiff(reps_to_endpoint);
+
+  addVariables(modelica_bsbg);
 
   // Modify Modelica SBG.
   modelica_bsbg = partition(modelica_bsbg);

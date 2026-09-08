@@ -30,10 +30,14 @@
 
 #include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
+#include "util/table.hpp"
 
 #include <algorithms/matching/match_data.hpp>
 #include <algorithms/scc/scc_data.hpp>
 #include <sbg/directed_sbg.hpp>
+
+#include <tuple>
+#include <vector>
 
 namespace Modelica {
 
@@ -84,7 +88,7 @@ public:
   const SBG::LIB::Set& residual_vertices() const;
   const SBG::LIB::PWMap& guess_offset() const;
   const SBG::LIB::Set& end_points() const;
-  const SetVertices& added_variables() const;
+  const std::vector<std::pair<AST::Name, VarInfo>>& added_variables() const;
 
 private:
   void addGuessVertices();
@@ -101,6 +105,8 @@ private:
    */
   void redirectEdiff(const SBG::LIB::PWMap& reps_to_endpoint);
 
+  void addVariables(ModelicaSBG modelica_bsbg);
+
   ModelicaSBG partition(ModelicaSBG modelica_bsbg);
 
   void addGuessMatchs(ModelicaSBG& modelica_bsbg);
@@ -116,8 +122,8 @@ private:
   SBG::LIB::PWMap _guess_offset;
   SBG::LIB::Set _end_points;
   ModelicaSBG _modelica_bsbg;
-  SetVertices _added_variables; ///< Expressions of variables from which
-    ///< guesses and residuals are created.
+  std::vector<std::pair<AST::Name, VarInfo>> _added_variables; ///< Information
+    ///< of guess and residual variables.
 };
 
 } // namespace Causalize

@@ -114,7 +114,7 @@ void GenerateSBGInput::addVariableSet(const VarInfo& variable, const Name& name)
   }
 
   // Save variable set-vertex
-  _modelica_bsbg.addSetVertex(var_set, name);
+  _modelica_bsbg.addSetVertex(var_set, name, variable);
 }
 
 void GenerateSBGInput::addVariableNodes()
@@ -281,8 +281,10 @@ CompactTransformation GenerateSBGInput::createMap2(
   ExpList indexes = get<1>(ref.front());
 
   // Get order of counters.
-  AST::Indexes counters
-    = _modelica_bsbg.setVertex(eq_se.eq_id()).info().value().indices();
+  EquationInfo eq_info = std::get<EquationInfo>(
+    _modelica_bsbg.setVertex(eq_se.eq_id()).info()
+  );
+  AST::Indexes counters = eq_info.indices();
   std::vector<std::string> order;
   for (const Index& counter : counters.indexes()) {
     order.push_back(counter.name());
@@ -348,7 +350,7 @@ void GenerateSBGInput::addEdges()
   SetVertices svs = _modelica_bsbg.set_vertices();
   for (const SetVertex& eq_sv : svs) {
     if (eq_sv.isEquation()) {
-      EquationInfo eq_info = eq_sv.info().value();
+      EquationInfo eq_info = std::get<EquationInfo>(eq_sv.info());
       ERROR_UNLESS(is<Equality>(eq_info.equation())
         , "GenerateSBGInput::addEdges: only equality equations supported");
 

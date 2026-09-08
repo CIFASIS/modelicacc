@@ -128,7 +128,8 @@ const ModelicaSBG& VerticalSortingResult::modelica_bsbg() const
 
 const SBG::LIB::PWMap& VerticalSortingResult::sort() const { return _sort; }
 
-const SetVertices& VerticalSortingResult::added_variables() const
+const std::vector<std::pair<AST::Name, VarInfo>>
+  VerticalSortingResult::added_variables() const
 {
   return _added_variables;
 }

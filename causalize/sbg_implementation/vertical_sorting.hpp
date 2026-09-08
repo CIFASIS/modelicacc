@@ -20,6 +20,7 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_VERTICAL_SORTING_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_VERTICAL_SORTING_HPP_
 
+#include "ast/expression.hpp"
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
 #include "causalize/sbg_implementation/causal_model.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
@@ -82,7 +83,7 @@ public:
 
   const ModelicaSBG& modelica_bsbg() const;
   const SBG::LIB::PWMap& sort() const;
-  const SetVertices& added_variables() const;
+  const std::vector<std::pair<AST::Name, VarInfo>> added_variables() const;
 
   /**
    * @brief Converts the SBG obtained result to a ModelicaCC list of equations
@@ -118,7 +119,7 @@ private:
   ModelicaSBG _modelica_bsbg;
   SBG::LIB::PWMap _sort;
   VerticalSortingBuilder _builder;
-  SetVertices _added_variables;
+  std::vector<std::pair<AST::Name, VarInfo>> _added_variables;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

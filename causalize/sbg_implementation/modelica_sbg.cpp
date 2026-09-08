@@ -21,6 +21,7 @@
 #include "util/debug.hpp"
 
 #include <algorithm>
+#include <variant>
 
 namespace Modelica {
 
@@ -210,7 +211,7 @@ EquationAccess getAccess(
   SetVertex eq_sv = modelica_sbg.setVertex(se.eq_id());
 
   // Get adjusted indices of the equation.
-  EquationInfo eq_info = eq_sv.info().value();
+  EquationInfo eq_info = std::get<EquationInfo>(eq_sv.info());
   std::vector<Name> counters;
   for (const Index& index : eq_info.indices().indexes()) {
     counters.push_back(index.name());
@@ -228,7 +229,7 @@ EquationAccess getAccess(
   SetVertex eq_sv = modelica_sbg.setVertex(se.eq_id());
 
   // Get adjusted indices of the equation.
-  EquationInfo eq_info = eq_sv.info().value();
+  EquationInfo eq_info = std::get<EquationInfo>(eq_sv.info());
   std::vector<Name> counters;
   for (const Index& index : eq_info.indices().indexes()) {
     counters.push_back(index.name());
