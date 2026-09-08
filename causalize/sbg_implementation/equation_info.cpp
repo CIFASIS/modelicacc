@@ -18,6 +18,7 @@
 ******************************************************************************/
 
 #include "causalize/sbg_implementation/equation_info.hpp"
+#include "util/debug.hpp"
 
 #include <string>
 
@@ -25,35 +26,35 @@ namespace Modelica {
 
 namespace Causalize {
 
-EquationInfo::EquationInfo(AST::IndexList indices, AST::Equation equation, bool scalar)
+EquationInfo::EquationInfo(AST::Indexes indices, AST::Equation equation, bool scalar)
   : _indices(indices), _equation(equation), _scalar(scalar) {}
 
-const AST::IndexList& EquationInfo::indices() const { return _indices; }
+const AST::Indexes& EquationInfo::indices() const { return _indices; }
 
 const AST::Equation& EquationInfo::equation() const { return _equation; }
 
 bool EquationInfo::scalar() const { return _scalar; }
 
-AST::Equation EquationInfo::restrictEquation(const AST::Indexes& indexes) const
+AST::Equation EquationInfo::restrictBounds(const AST::Indexes& indexes) const
 {
   AST::Equation result;
 
-  // Take out dummy counters that were added during SBG generation
-  AST::IndexList index_list;
-  for (const AST::Index& index : _indices) {
-    if (index.name().substr(0, 6) != "*dummy") {
-      index_list.push_back(index);
-    }
-  }
-  AST::Indexes for_indices{index_list};
-
-  if (for_indices.indexes().empty()) { // Scalar equation
+  if (_scalar) { // Scalar equation.
     result = _equation;
-  } else { // Array equation
+  } else { // Array equation.
     result = AST::ForEq{indexes, AST::EquationList{1, _equation}};
   }
 
   return result;
+}
+
+AST::Equation EquationInfo::adjustSubscripts(
+  const AST::Indexes& old_indexes, const AST::Indexes& new_indexes
+) const
+{
+  ERROR_UNLESS(old_indexes == new_indexes, "EquationInfo::adjustSubscripts:"
+    , " conversion not yet supported");
+  return _equation;
 }
 
 } // namespace Causalize

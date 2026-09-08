@@ -17,47 +17,39 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_UTIL_TRANSLATION_HPP_
-#define MODELICACC_UTIL_TRANSLATION_HPP_ 
+#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_RESIDUAL_EQUATION_HPP_
+#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_RESIDUAL_EQUATION_HPP_
 
+#include "ast/equation.hpp"
 #include "ast/expression.hpp"
+#include "util/table.hpp"
 
-#include <sstream>
-#include <vector>
+#include <boost/variant/static_visitor.hpp>
 
 namespace Modelica {
 
+namespace Causalize {
+
 /**
- * @brief Encodes geometric translation, i.e. the vector of an affine
- * transformation.
+ * @brief Given the original equation, it constructs the modified equation that
+ * uses the residual of the original variable. 
  */
-class Translation {
+class ResidualEqVisitor : public boost::static_visitor<AST::Equation> {
 public:
-  Translation();
-  /**
-   * @brief Returns the identity translation of dimension n.
-   */
-  Translation(std::size_t n);
-
-  /**
-   * @brief Returns the translation of dimension \p n, with \p value in each
-   * dimension.
-   */
-  Translation(std::size_t n, AST::Integer value);
-
-  std::size_t arity() const;
-
-  AST::Integer& operator[](std::size_t i);
-  const AST::Integer& operator[](std::size_t i) const;
-
-  Translation operator-() const;
-  Translation operator-(const Translation& other) const;
+  ResidualEqVisitor(AST::Expression expr);
+  AST::Equation operator()(AST::Connect eq);
+  AST::Equation operator()(AST::Equality eq);
+  AST::Equation operator()(AST::CallEq eq);
+  AST::Equation operator()(AST::ForEq eq);
+  AST::Equation operator()(AST::IfEq eq);
+  AST::Equation operator()(AST::WhenEq eq);
 
 private:
-  std::size_t _dimension;
-  std::vector<AST::Integer> _translation;
+  AST::Expression _original_expr;
 };
 
-} // namespace Modelica
+} // namespace Causalize
 
-#endif // MODELICACC_UTIL_TRANSLATION_HPP_ 
+}  // namespace Modelica
+
+#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_RESIDUAL_EQUATION_HPP_

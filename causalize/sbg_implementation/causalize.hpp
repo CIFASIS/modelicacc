@@ -20,10 +20,14 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_CAUSALIZE_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_CAUSALIZE_HPP_
 
+#include "causalize/sbg_implementation/algebraic_loops.hpp"
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
+#include "causalize/sbg_implementation/causal_model.hpp"
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
+#include "causalize/sbg_implementation/model_match.hpp"
 #include "causalize/sbg_implementation/tearing.hpp"
+#include "causalize/sbg_implementation/tearing_variables.hpp"
 #include "causalize/sbg_implementation/vertical_sorting.hpp"
 #include "mmo/mmo_class.hpp"
 

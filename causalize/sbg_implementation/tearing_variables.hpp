@@ -34,9 +34,6 @@ namespace Causalize {
 // Tearing variable ------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-// ModelicaCC tearing variable representation ----------------------------------
-////////////////////////////////////////////////////////////////////////////////
-
 class TearingVariable {
 public:
   TearingVariable(AST::Name name, AST::Bracket subscripts);
@@ -51,11 +48,15 @@ private:
 
 std::ostream& operator<<(std::ostream& out, const TearingVariable& var);
 
+////////////////////////////////////////////////////////////////////////////////
+// Tearing variables -----------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 class TearingVariables {
 public:
   TearingVariables() = default;
 
-  bool empty() const { return _variables.empty(); }
+  bool empty() const;
 
   auto begin() const { return _variables.begin(); }
   auto end() const { return _variables.end(); }

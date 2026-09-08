@@ -40,31 +40,41 @@ namespace Causalize {
 // Tearing return structure ----------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-TearingResult::TearingResult(ModelicaSBG modelica_bsbg, SBG::LIB::Set mfvs_result)
-    : _modelica_bsbg(modelica_bsbg), _mfvs_result(mfvs_result)
+TearingResult::TearingResult(
+  ModelicaSBG modelica_bsbg, SBG::LIB::Set mfvs_result
+) : _modelica_bsbg(modelica_bsbg), _mfvs_result(mfvs_result) {}
+
+const ModelicaSBG& TearingResult::modelica_bsbg() const
 {
+  return _modelica_bsbg;
 }
 
-const ModelicaSBG& TearingResult::modelica_bsbg() const { return _modelica_bsbg; }
+const SBG::LIB::Set& TearingResult::mfvs_result() const
+{
+  return _mfvs_result;
+}
 
-const SBG::LIB::Set& TearingResult::mfvs_result() const { return _mfvs_result; }
-
-TearingVariables TearingResult::variableToModelicaFormat(const SetEdge& se, CompactSet jth_tear) const
+TearingVariables TearingResult::variableToModelicaFormat(
+  const SetEdge& se, CompactSet se_tear
+) const
 {
   TearingVariables result;
 
-  // Get variable information that is accessed by the set-edge
+  // Get variable information that is accessed by the set-edge.
   SetVertex var_sv = _modelica_bsbg.setVertex(se.var_id());
   AST::Name name = var_sv.name();
   Translation var_translation = var_sv.translation();
 
-  // Convert jth_tear to bracket expression and save it to result
-  CompactSet img{SBG::LIB::Map{jth_tear.set(), se.map2().expr()}.image()};
-  std::vector<AST::Indexes> indices = toModelicaIndices(img, var_translation, std::vector<AST::Name>{var_sv.arity(), ""});
-  for (const AST::Indexes& indexes : indices) {
+  // Convert se_tear to bracket expression and save it to result.
+  CompactSet img{SBG::LIB::Map{se_tear.set(), se.map2().expr()}.image()};
+  Accesses accesses = toModelicaIndices(
+    img, var_translation, std::vector<AST::Name>{var_sv.arity(), ""}
+  );
+  for (const auto& [_, indexes] : accesses) {
     AST::ExpList expr_list;
     for (const AST::Index& index : indexes.indexes()) {
-      ERROR_UNLESS(index.exp().has_value(), "TearingDetector::variableToModelica: ", "empty index");
+      ERROR_UNLESS(index.exp().has_value()
+        , "TearingDetector::variableToModelica: empty index");
       expr_list.push_back(index.exp().value());
     }
     AST::Bracket subscripts{ExpListList{1, expr_list}};
@@ -80,10 +90,10 @@ TearingVariables TearingResult::toModelicaFormat() const
 
   CompactSet mfvs{_mfvs_result};
   for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-    CompactSet jth_tear = se.domain();
-    jth_tear.intersection(mfvs);
-    if (jth_tear.cardinal() > 0) {
-      result.concatenation(variableToModelicaFormat(se, jth_tear));
+    CompactSet se_tear = se.translatedDomain();
+    se_tear.intersection(mfvs);
+    if (se_tear.cardinal() > 0) {
+      result.concatenation(variableToModelicaFormat(se, se_tear));
     }
   }
 
@@ -94,7 +104,8 @@ TearingVariables TearingResult::toModelicaFormat() const
 // Tearing variables detector --------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-TearingDetector::TearingDetector(AlgebraicLoopsResult loops_result) : _loops_result(loops_result) {}
+TearingDetector::TearingDetector(AlgebraicLoopsResult loops_result)
+  : _loops_result(loops_result) {}
 
 TearingResult TearingDetector::detect()
 {

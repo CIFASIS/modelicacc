@@ -28,9 +28,16 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_BUILDERS_CAUSALIZATION_BUILDERS_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_BUILDERS_CAUSALIZATION_BUILDERS_HPP_
 
+#include "causalize/sbg_implementation/modelica_sbg.hpp"
+#include "causalize/sbg_implementation/set_vertex.hpp"
+#include "util/table.hpp"
+
 #include <algorithms/matching/match_data.hpp>
 #include <algorithms/scc/scc_data.hpp>
 #include <sbg/directed_sbg.hpp>
+
+#include <tuple>
+#include <vector>
 
 namespace Modelica {
 
@@ -74,10 +81,14 @@ public:
   VerticalSortingBuilder(const SBG::LIB::SCCData& data
     , const SBG::LIB::Set& mfvs);
 
-  void build();
+  ModelicaSBG build(ModelicaSBG modelica_bsbg);
 
   const SBG::LIB::DirectedSBG& dsbg() const;
   const SBG::LIB::PWMap& rmap() const;
+  const SBG::LIB::Set& residual_vertices() const;
+  const SBG::LIB::PWMap& guess_offset() const;
+  const SBG::LIB::Set& end_points() const;
+  const std::vector<std::pair<AST::Name, VarInfo>>& added_variables() const;
 
 private:
   void addGuessVertices();
@@ -94,6 +105,14 @@ private:
    */
   void redirectEdiff(const SBG::LIB::PWMap& reps_to_endpoint);
 
+  void addVariables(ModelicaSBG modelica_bsbg);
+
+  ModelicaSBG partition(ModelicaSBG modelica_bsbg);
+
+  void addGuessMatchs(ModelicaSBG& modelica_bsbg);
+
+  void modifyResidualMatchs(ModelicaSBG& modelica_bsbg);
+
   SBG::LIB::DirectedSBG _input_dsbg;
   SBG::LIB::PWMap _input_rmap;
   SBG::LIB::Set _Ediff;
@@ -101,6 +120,10 @@ private:
   SBG::LIB::PWMap _output_rmap;
   SBG::LIB::Set _residual_vertices;
   SBG::LIB::PWMap _guess_offset;
+  SBG::LIB::Set _end_points;
+  ModelicaSBG _modelica_bsbg;
+  std::vector<std::pair<AST::Name, VarInfo>> _added_variables; ///< Information
+    ///< of guess and residual variables.
 };
 
 } // namespace Causalize

@@ -20,12 +20,15 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_VERTICAL_SORTING_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_VERTICAL_SORTING_HPP_
 
-#include "ast/equation.hpp"
 #include "ast/expression.hpp"
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
+#include "causalize/sbg_implementation/causal_model.hpp"
+#include "causalize/sbg_implementation/set_vertex.hpp"
 #include "causalize/sbg_implementation/tearing.hpp"
+#include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 
 #include <iosfwd>
+#include <utility>
 #include <vector>
 
 namespace Modelica {
@@ -33,52 +36,39 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// ModelicaCC causalized model -------------------------------------------------
+// Converter to Modelica code of an equation/variable pairing ------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- * @class CausalEquations
- * @brief Group of causalized equations that must be solved together.
- */
-class CausalEquations {
+namespace detail {
+
+using SortedMatch = std::pair<EquationInfo, AST::Expression>;
+using SortedMatchs = std::vector<SortedMatch>;
+
+} // namespace detail
+
+class MatchToModelicaFormat {
 public:
-  CausalEquations() = default;
-  CausalEquations(EquationList equations, ExpList variables);
+  MatchToModelicaFormat(
+    const ModelicaSBG& modelica_bsbg, const SBG::LIB::PWMap& sort
+    , const VerticalSortingBuilder& builder, const SBG::LIB::Map& jth_scc_smap
+  );
 
-  const EquationList& equations() const;
-  const ExpList& variables() const;
-  bool isEmpty() const;
-
-  void pushBack(Equation eq, Expression variable);
+  detail::SortedMatchs format(
+    const SBG::LIB::Map& match, const SBG::LIB::Expression& expr
+  );
 
 private:
-  EquationList _equations;
-  ExpList _variables;
+  detail::SortedMatchs equationToModelicaFormat(
+    const SetEdge& se, const CompactSet& se_match
+    , const SBG::LIB::Expression& expr
+  );
+
+  ModelicaSBG _modelica_bsbg;
+  SBG::LIB::PWMap _sort;
+  VerticalSortingBuilder _builder;
+  SBG::LIB::Map _jth_scc_smap;
+  detail::SortedMatchs _residual_zero;
 };
-
-std::ostream& operator<<(std::ostream& out, const CausalEquations& causal_eqs);
-
-/**
- * @class CausalModel
- * @brief 
- */
-class CausalModel {
-public:
-  CausalModel() = default;
-
-  std::size_t size() const;
-  CausalEquations operator[](std::size_t k) const;
-
-  auto begin() const { return _causal_eqs.begin(); }
-  auto end() const { return _causal_eqs.end(); }
-
-  void pushBack(CausalEquations eqs);
-
-private:
-  std::vector<CausalEquations> _causal_eqs;
-};
-
-std::ostream& operator<<(std::ostream& out, const CausalModel& causal_model);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Vertical sorting result -----------------------------------------------------
@@ -86,26 +76,50 @@ std::ostream& operator<<(std::ostream& out, const CausalModel& causal_model);
 
 class VerticalSortingResult {
 public:
-  VerticalSortingResult(ModelicaSBG modelica_bsbg, SBG::LIB::PWMap sort);
+  VerticalSortingResult(
+    const ModelicaSBG& modelica_bsbg, const SBG::LIB::PWMap& sort
+    , const VerticalSortingBuilder& builder
+  );
 
   const ModelicaSBG& modelica_bsbg() const;
   const SBG::LIB::PWMap& sort() const;
+  const std::vector<std::pair<AST::Name, VarInfo>> added_variables() const;
 
   /**
    * @brief Converts the SBG obtained result to a ModelicaCC list of equations
    * and expressions that indicate the horizontal sorting, and are grouped
-   * accordingly to represent algebraic loops. Additionally, the returned list
-   * has algebraic loops ordered (still there is no order inside each
-   * algebraic loop).
+   * accordingly to represent vertically sorted algebraic loops, after applying
+   * tearing.
    */
-  CausalModel toModelicaFormat(std::vector<LoopT> loops) const;
+  CausalModel toModelicaFormat();
 
 private:
-  std::vector<LoopT> sortLoops(const std::vector<LoopT>& loops) const;
-  CausalEquations causalizeLoop(LoopT loop) const;
+  /**
+   * @brief Partitions _sort so that the domain of each map only contains
+   * elements of the same set-edge, i.e., same array of equations.
+   */
+  void partitionSort();
+
+  SortedAlgebraicLoop outerBounds(
+    const detail::SortedMatchs& matchs, bool is_scalar
+  ) const;
+
+  /**
+   * @brief Sorts inside a single algebraic loop, or array of algebraic loops.
+   */
+  SortedAlgebraicLoop sortLoop(const SBG::LIB::Map& jth_scc_smap) const;
+
+  /**
+   * @brief Sorts between different algebraic loops or different arrays of
+   * algebraic loops. It is equivalent to decide the order of different SCCs
+   * in the directed SBG.
+   */
+  CausalModel sortLoops() const;
 
   ModelicaSBG _modelica_bsbg;
   SBG::LIB::PWMap _sort;
+  VerticalSortingBuilder _builder;
+  std::vector<std::pair<AST::Name, VarInfo>> _added_variables;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

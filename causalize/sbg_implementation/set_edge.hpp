@@ -70,14 +70,17 @@ public:
   std::string map2ToSBGFormat() const;
   std::string toSBGFormat() const;
 
+  CompactSet translatedDomain() const;
+
   /**
    * @brief Returns the maximum coordinate of the perimeter of _domain.
    */
   AST::Integer maxDimPerimetral();
 
   /**
-   * @brief Returns a new set-edge with the same values, except for the domain
-   * which is restricted to \p new_domain.
+   * @brief Returns a new set-edge with the same values for each field, except
+   * that _domain is intersected with the result of the translation of
+   * \p new_domain with -_translation.
    */
   SetEdge restrict(CompactSet new_domain) const;
 

@@ -20,8 +20,7 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_ALGEBRAIC_LOOPS_DETECTION_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_ALGEBRAIC_LOOPS_DETECTION_HPP_
 
-#include "ast/equation.hpp"
-#include "ast/expression.hpp"
+#include "causalize/sbg_implementation/algebraic_loops.hpp"
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
 #include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
@@ -36,59 +35,8 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// ModelicaCC algebraic loops --------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
-
-class AlgebraicLoop {
-public:
-  AlgebraicLoop() = default;
-  AlgebraicLoop(EquationList equations, ExpList variables);
-
-  const EquationList& equations() const;
-  const ExpList& variables() const;
-  bool isEmpty() const;
-
-  void pushBack(Equation eq, Expression variable);
-
-  void concatenation(AlgebraicLoop other);
-
-private:
-  EquationList _equations;
-  ExpList _variables;
-};
-
-std::ostream& operator<<(std::ostream& out, const AlgebraicLoop& loop);
-
-/**
- * @class AlgebraicLoops
- * @brief Unordered collection of algebraic loops of the model.
- */
-class AlgebraicLoops {
-public:
-  AlgebraicLoops() = default;
-
-  std::size_t size() const;
-  AlgebraicLoop operator[](std::size_t k) const;
-  auto begin() const { return _loops.begin(); };
-  auto end() const { return _loops.end(); };
-
-  void pushBack(AlgebraicLoop loop);
-  void reverse();
-
-private:
-  std::vector<AlgebraicLoop> _loops;
-};
-
-std::ostream& operator<<(std::ostream& out, const AlgebraicLoops& loops);
-
-////////////////////////////////////////////////////////////////////////////////
 // Algebraic loops return structure --------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief Type for a single algebraic loop, using SBG structures.
- */
-using LoopT = std::vector<SBG::LIB::Set>;
 
 /**
  * @class AlgebraicLoopsResult
@@ -108,16 +56,25 @@ public:
    */
   AlgebraicLoops toModelicaFormat() const;
 
-  /**
-   * @brief Converts the SBG result to an intermediate result that only uses SBG
-   * structures. It will be used by the VerticalSorting module.
-   */
-  std::vector<LoopT> toSBGFormat() const;
-
 private:
-  AlgebraicLoop loopToModelicaFormat(const SetEdge& se) const;
+  /**
+   * @brief Converts a single algebraic loop, or a single array of algebraic
+   * loops.
+   */
+  EquationList loopToModelicaFormat(
+    const CompactSet& reps, const CompactSet& represented
+    , const AST::Indexes& indexes
+  ) const;
 
-  ModelicaSBG _modelica_bsbg; ///< TODO
+  /**
+   * @brief Converts all of the scalar (or array of) algebraic loops described
+   * by a single set-edge, i.e. equations that share a repetitive definition. 
+   */
+  AlgebraicLoops loopsToModelicaFormat(
+    const SetEdge& se, const CompactSet& s
+  ) const;
+
+  ModelicaSBG _modelica_bsbg; ///< Output SBG after matching.
   SBG::LIB::SCCData _scc_result;
 };
 

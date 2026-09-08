@@ -8,17 +8,23 @@ all: $(CAUSALIZE_SBG)
 # Sources
 CAUSALIZE_SBG_SRC := \
     $(CAUSALIZE_SBG_DIR)/main.cpp \
+    $(CAUSALIZE_SBG_DIR)/algebraic_loops.cpp \
     $(CAUSALIZE_SBG_DIR)/algebraic_loops_detection.cpp \
     $(CAUSALIZE_SBG_DIR)/causalize.cpp \
+    $(CAUSALIZE_SBG_DIR)/causal_model.cpp \
     $(CAUSALIZE_SBG_DIR)/equation_info.cpp \
     $(CAUSALIZE_SBG_DIR)/generate_sbg_input.cpp \
     $(CAUSALIZE_SBG_DIR)/horizontal_sorting.cpp \
     $(CAUSALIZE_SBG_DIR)/modelica_sbg.cpp \
+    $(CAUSALIZE_SBG_DIR)/model_match.cpp \
     $(CAUSALIZE_SBG_DIR)/set_vertex.cpp \
     $(CAUSALIZE_SBG_DIR)/set_edge.cpp \
     $(CAUSALIZE_SBG_DIR)/tearing.cpp \
     $(CAUSALIZE_SBG_DIR)/vertical_sorting.cpp \
 	$(CAUSALIZE_SBG_DIR)/tearing_variables.cpp \
+	$(CAUSALIZE_SBG_DIR)/ast_visitors/eq_var_match_annotator.cpp \
+	$(CAUSALIZE_SBG_DIR)/ast_visitors/residual_equation.cpp \
+	$(CAUSALIZE_SBG_DIR)/ast_visitors/variable_renamer.cpp \
 	$(CAUSALIZE_SBG_DIR)/builders/causalization_builders.cpp \
 	$(CAUSALIZE_SBG_DIR)/builders/causalization_json.cpp \
 	$(UTIL_DIR)/affine_transformation.cpp \
@@ -42,6 +48,7 @@ $(BUILD_DIR)/$(CAUSALIZE_SBG_DIR)/%.o : $(CAUSALIZE_SBG_DIR)/%.cpp
 
 create-folders::
 	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/sbg_implementation
+	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/sbg_implementation/ast_visitors
 	@mkdir -p $(BUILD_DIR)/$(CAUSALIZE_DIR)/sbg_implementation/builders
 
 $(CAUSALIZE_SBG): $(CAUSALIZE_SBG_OBJ) $(CAUSALIZE_COMMON_OBJ) $(LIBMODELICA)

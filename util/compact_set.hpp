@@ -69,6 +69,15 @@ private:
   SBG::LIB::Set _set;
 };
 
+// Non-member functions --------------------------------------------------------
+
+/*
+ * @brief A collection of elements, and the corresponding indices to access
+ * them.
+ */
+using Access = std::pair<CompactSet, Indexes>;
+using Accesses = std::vector<Access>;
+
 /**
  * @brief Returns a collection of indices that describe the same elements of
  * the current _set using the names of \p counters, and the applies the
@@ -77,10 +86,10 @@ private:
  * It will be used by HorizontalSorting during causalization to traduce back
  * the SBG to Modelica code.
  */
-std::vector<Indexes> toModelicaIndices(const CompactSet& s, const Translation& t
+Accesses toModelicaIndices(const CompactSet& s, const Translation& t
   , const std::vector<Name>& counters);
 
-std::vector<Indexes> toModelicaIndices(const CompactSet& s, const Translation& t
+Accesses toModelicaIndices(const CompactSet& s, const Translation& t
   , const std::vector<Name>& counters, const SBG::LIB::Expression& expr);
 
 } // namespace Modelica

@@ -27,9 +27,12 @@ namespace Causalize {
 
 // Constructors/Destructors ----------------------------------------------------
 
-SetEdge::SetEdge(int edge_id, std::size_t arity) : _edge_id(edge_id), _map1(arity), _map2(arity) {}
+SetEdge::SetEdge(int edge_id, std::size_t arity)
+  : _edge_id(edge_id), _map1(arity), _map2(arity) {}
 
-SetEdge::SetEdge(int edge_id, CompactSet domain) : _edge_id(edge_id), _domain(domain), _map1(domain.arity()), _map2(domain.arity()) {}
+SetEdge::SetEdge(int edge_id, CompactSet domain)
+  : _edge_id(edge_id), _domain(domain), _map1(domain.arity())
+    , _map2(domain.arity()) {}
 
 // Getters ---------------------------------------------------------------------
 
@@ -84,19 +87,40 @@ std::ostream& operator<<(std::ostream& out, const SetEdge& se)
 
 // Methods ---------------------------------------------------------------------
 
-std::string SetEdge::domainToSBGFormat() const { return _domain.toSBGFormat(); }
+std::string SetEdge::domainToSBGFormat() const
+{
+  CompactSet copy = _domain;
+  copy.translate(_translation);
+  return copy.toSBGFormat();
+}
 
 std::string SetEdge::map1ToSBGFormat() const { return _map1.toSBGFormat(); }
 
 std::string SetEdge::map2ToSBGFormat() const { return _map2.toSBGFormat(); }
 
-std::string SetEdge::toSBGFormat() const { return map1ToSBGFormat() + "<-" + _domain.toSBGFormat() + "->" + map2ToSBGFormat(); }
+std::string SetEdge::toSBGFormat() const
+{
+  return map1ToSBGFormat() + "<-" + domainToSBGFormat() + "->"
+    + map2ToSBGFormat();
+}
+
+CompactSet SetEdge::translatedDomain() const
+{
+  CompactSet copy = _domain;
+  copy.translate(_translation);
+  return copy;
+}
 
 AST::Integer SetEdge::maxDimPerimetral() { return _domain.maxDimPerimetral(); }
 
 SetEdge SetEdge::restrict(CompactSet restriction) const
 {
+  if (restriction.cardinal() == 0) {
+    return SetEdge{_edge_id, 0};
+  }
+  restriction.translate(-_translation);
   restriction.intersection(_domain);
+
   SetEdge result{_edge_id, restriction};
 
   result.set_name(_name);

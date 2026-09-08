@@ -35,16 +35,30 @@ namespace Causalize {
 class EquationInfo {
 public:
   EquationInfo() = default;
-  EquationInfo(AST::IndexList indices, AST::Equation equation, bool scalar);
+  EquationInfo(AST::Indexes indices, AST::Equation equation, bool scalar);
 
-  const AST::IndexList& indices() const;
+  const AST::Indexes& indices() const;
   const AST::Equation& equation() const;
   bool scalar() const;
 
-  AST::Equation restrictEquation(const AST::Indexes& indexes) const;
+  /**
+   * @brief If it is a scalar equation, it leaves the equation unchanged. If it
+   * is an array equation, sets the bounds to \p indexes.
+   */
+  AST::Equation restrictBounds(const AST::Indexes& indexes) const;
+
+  /**
+   * @brief Calculates the transformation to convert \p old_indexes to
+   * \p new_indexes, and applies it to the subscripts of _equation.
+   *
+   * @return Equation that accesses the subscripts described by \p new_indexes.
+   */
+  AST::Equation adjustSubscripts(
+    const AST::Indexes& old_indexes, const AST::Indexes& new_indexes
+  ) const;
 
 private:
-  AST::IndexList _indices;
+  AST::Indexes _indices;
   AST::Equation _equation;
   bool _scalar;
 };

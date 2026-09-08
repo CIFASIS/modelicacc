@@ -23,11 +23,13 @@
 #include "ast/expression.hpp"
 #include "causalize/sbg_implementation/equation_info.hpp"
 #include "util/compact_set.hpp"
+#include "util/table.hpp"
 
 #include <iosfwd>
-#include <optional>
 #include <sstream>
 #include <string>
+#include <tuple>
+#include <variant>
 
 namespace Modelica {
 
@@ -37,7 +39,7 @@ namespace Causalize {
  * @brief Additional information attached to a set-vertex. Used to save
  * information in the equation vertices.
  */
-using VertexInfo = std::optional<EquationInfo>;
+using VertexInfo = std::variant<VarInfo, EquationInfo>;
 
 /**
  * @brief Interface class between arrays of variables and equations of a model,

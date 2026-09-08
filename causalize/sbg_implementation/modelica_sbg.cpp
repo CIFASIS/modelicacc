@@ -20,23 +20,37 @@
 #include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "util/debug.hpp"
 
+#include <algorithm>
+#include <variant>
+
 namespace Modelica {
 
 namespace Causalize {
 
 // Constructors/Destructors ----------------------------------------------------
 
-ModelicaSBG::ModelicaSBG(std::size_t arity) : _arity(arity) {}
+ModelicaSBG::ModelicaSBG() : _vertex_offset(0), _edge_offset(0), _arity(0) {}
 
 // Getters ---------------------------------------------------------------------
-
-std::size_t ModelicaSBG::arity() const { return _arity; }
 
 const SetVertices& ModelicaSBG::set_vertices() const { return _set_vertices; }
 
 const SetEdges& ModelicaSBG::set_edges() const { return _set_edges; }
 
-SetVertex ModelicaSBG::setVertex(int id) const
+SetEdges& ModelicaSBG::set_edges() { return _set_edges; }
+
+SetVertex& ModelicaSBG::setVertex(int id)
+{
+  for (SetVertex& sv : _set_vertices) {
+    if (sv.node_id() == id) {
+      return sv;
+    }
+  }
+
+  ERROR("ModelicaSBG::setVertex: set-vertex ", id, " doesn't exist");
+}
+
+const SetVertex& ModelicaSBG::setVertex(int id) const
 {
   for (const SetVertex& sv : _set_vertices) {
     if (sv.node_id() == id) {
@@ -45,20 +59,183 @@ SetVertex ModelicaSBG::setVertex(int id) const
   }
 
   ERROR("ModelicaSBG::setVertex: set-vertex ", id, " doesn't exist");
-  return SetVertex{-1};
+}
+
+SetEdge& ModelicaSBG::setEdge(int id)
+{
+  for (SetEdge& se : _set_edges) {
+    if (se.edge_id() == id) {
+      return se;
+    }
+  }
+
+  ERROR("ModelicaSBG::setEdge: set-edge ", id, " doesn't exist");
+}
+
+const SetEdge& ModelicaSBG::setEdge(int id) const
+{
+  for (const SetEdge& se : _set_edges) {
+    if (se.edge_id() == id) {
+      return se;
+    }
+  }
+
+  ERROR("ModelicaSBG::setEdge: set-edge ", id, " doesn't exist");
 }
 
 // Setters ---------------------------------------------------------------------
 
-void ModelicaSBG::addSetVertex(SetVertex sv) { _set_vertices.push_back(sv); }
+void ModelicaSBG::set_arity(std::size_t arity) { _arity = arity; }
 
-void ModelicaSBG::addSetVertices(const SetVertices& svs) { _set_vertices.insert(_set_vertices.end(), svs.begin(), svs.end()); }
+void ModelicaSBG::addSetVertex(SetVertex sv)
+{
+  if (sv.set().cardinal() > 0) {
+    int max_node_id = _set_vertices.size() + 1;
+    sv.set_node_id(max_node_id);
+    _set_vertices.push_back(sv);
+    CompactSet translated = sv.set();
+    translated.translate(sv.translation());
+    _vertex_offset = translated.maxDimPerimetral();
+  }
+}
+
+int ModelicaSBG::addSetVertex(
+  CompactSet elems, std::string name
+)
+{
+  int max_node_id = _set_vertices.size() + 1;
+  SetVertex sv{max_node_id, elems};
+  sv.set_name(name);
+  sv.set_translation(Translation{elems.arity(), _vertex_offset});
+
+  CompactSet translated = sv.set();
+  translated.translate(sv.translation());
+  _vertex_offset = translated.maxDimPerimetral();
+  _set_vertices.push_back(sv);
+
+  return max_node_id;
+}
+
+int ModelicaSBG::addSetVertex(
+  CompactSet elems, std::string name, VertexInfo info
+)
+{
+  int node_id = addSetVertex(elems, name);
+  SetVertex& sv = setVertex(node_id);
+  sv.set_info(info);
+
+  return node_id;
+}
 
 void ModelicaSBG::addSetEdge(SetEdge se)
 {
   if (se.domain().cardinal() > 0) {
+    int max_edge_id = _set_edges.size() + 1;
+    se.set_edge_id(max_edge_id);
+
+    CompactSet translated = se.domain();
+    translated.translate(se.translation());
+    _edge_offset = translated.maxDimPerimetral();
     _set_edges.push_back(se);
   }
+}
+
+int ModelicaSBG::addSetEdge(
+  int var_id, int eq_id, CompactSet domain, AST::Expression access
+  , std::string name
+)
+{
+  std::size_t arity = domain.arity();
+  return addSetEdge(
+    var_id, eq_id
+    , domain, CompactTransformation{arity}, CompactTransformation{arity}
+    , access, name
+  );
+}
+
+int ModelicaSBG::addSetEdge(
+  int var_id, int eq_id, CompactSet domain, Translation t
+  , AST::Expression access, std::string name
+)
+{
+  std::size_t arity = domain.arity();
+  int max_edge_id = _set_edges.size();
+  SetEdge se{max_edge_id, domain};
+  se.set_translation(t);
+  se.set_var_id(var_id);
+  se.set_eq_id(eq_id);
+  se.set_map1(CompactTransformation{arity});
+  se.set_map2(CompactTransformation{arity});
+  se.set_name(name);
+  se.set_access(access);
+
+  CompactSet translated = se.domain();
+  translated.translate(se.translation());
+  _edge_offset = translated.maxDimPerimetral();
+  _set_edges.push_back(se);
+
+  return max_edge_id;
+}
+
+int ModelicaSBG::addSetEdge(
+  int var_id, int eq_id, CompactSet domain
+  , CompactTransformation map1, CompactTransformation map2
+  , AST::Expression access, std::string name
+)
+{
+  int max_edge_id = _set_edges.size();
+  SetEdge se{max_edge_id, domain};
+  se.set_var_id(var_id);
+  se.set_eq_id(eq_id);
+  se.set_map1(map1);
+  se.set_map2(map2);
+  se.set_translation(Translation{domain.arity(), _edge_offset});
+  se.set_name(name);
+  se.set_access(access);
+
+  CompactSet translated = se.domain();
+  translated.translate(se.translation());
+  _edge_offset = translated.maxDimPerimetral();
+  _set_edges.push_back(se);
+
+  return max_edge_id;
+}
+
+// Non-member functions --------------------------------------------------------
+
+EquationAccess getAccess(
+  const ModelicaSBG& modelica_sbg, const SetEdge& se, const CompactSet& s
+)
+{
+  // Get equation set-vertex referenced by the set-edge.
+  SetVertex eq_sv = modelica_sbg.setVertex(se.eq_id());
+
+  // Get adjusted indices of the equation.
+  EquationInfo eq_info = std::get<EquationInfo>(eq_sv.info());
+  std::vector<Name> counters;
+  for (const Index& index : eq_info.indices().indexes()) {
+    counters.push_back(index.name());
+  }
+
+  return {eq_info, toModelicaIndices(s, se.translation(), counters)};
+}
+
+EquationAccess getAccess(
+  const ModelicaSBG& modelica_sbg, const SetEdge& se, const CompactSet& s
+  , const SBG::LIB::Expression& expr
+)
+{
+  // Get equation set-vertex referenced by the set-edge.
+  SetVertex eq_sv = modelica_sbg.setVertex(se.eq_id());
+
+  // Get adjusted indices of the equation.
+  EquationInfo eq_info = std::get<EquationInfo>(eq_sv.info());
+  std::vector<Name> counters;
+  for (const Index& index : eq_info.indices().indexes()) {
+    counters.push_back(index.name());
+  }
+
+  return {eq_info, toModelicaIndices(s, se.translation(), counters, expr)};
 }
 
 }  // namespace Causalize

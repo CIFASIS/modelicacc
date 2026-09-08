@@ -92,21 +92,16 @@ protected:
   /**
    * @brief Creates maps from edges to equations nodes.
    */
-  CompactTransformation createMap1(const CompactSet& eq_nodes
-    , const Translation& eq_nodes_trans) const;
+  CompactTransformation createMap1(
+    const SetEdge& eq_se, const SetVertex& eq_sv
+  ) const;
 
   /**
    * @brief Creates maps from edges to variables nodes.
    */
-  CompactTransformation createMap2(const Reference& reference
-    , const IndexList& counters, const Translation& var_trans) const;
-
-  /**
-   * @brief Adds maps definitions to a set-edge, and saves the element to
-   * _set_edges.
-   */
-  void addMaps(SetEdge se, const SetVertex& eq_sv, const SetVertex& var_sv
-    , const Reference& reference);
+  CompactTransformation createMap2(
+    const SetEdge& eq_se, const SetVertex& var_sv
+   ) const;
 
   /**
    * @brief Adds all edges between an equation and all of the occurences of a
@@ -130,13 +125,8 @@ protected:
 
 private:
   Modelica::MMO_Class& _mmo_class;
+  ModelicaSBG _modelica_bsbg;
   unsigned int _max_dim;
-  SetVertices _set_vertices;
-  SetEdges _set_edges;
-  int _node_id; ///< Counter for set-vertices
-  int _edge_id; ///< Counter for set-edges
-  Integer _vertex_offset; ///< Current vertex offset
-  Integer _edge_offset; ///< Current edge offset
   std::ofstream _sbg_input;
 };
 
