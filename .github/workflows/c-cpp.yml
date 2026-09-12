@@ -24,24 +24,20 @@ jobs:
         sudo apt-get install make
         sudo apt-get install rapidjson-dev
 
-    - name: Generate config files.
+    - name: Create build folder. 
       working-directory: .
-      run: autoreconf -fi
-
-    - name: Autoconf
-      working-directory: .
-      run: autoconf
+      run: mkdir -p build
 
     - name: Configure
-      working-directory: .
-      run: ./configure
+      working-directory: ./build
+      run: cmake ..
 
     - name: SBG
-      working-directory: .
+      working-directory: ./build
       run: make update-sbg repo_checkout=https 
 
     - name: Build
-      working-directory: .
+      working-directory: ./build
       run: make
 
     - name: Doc
@@ -50,5 +46,4 @@ jobs:
 
     - name: Tests
       working-directory: .
-      run: make test
-
+      run: make main_test
