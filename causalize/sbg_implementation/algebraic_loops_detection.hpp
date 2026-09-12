@@ -26,6 +26,7 @@
 #include "causalize/sbg_implementation/set_edge.hpp"
 
 #include <algorithms/scc/scc_data.hpp>
+#include <sbg/set.hpp>
 
 #include <iosfwd>
 #include <vector>
@@ -62,7 +63,7 @@ private:
    * loops.
    */
   EquationList loopToModelicaFormat(
-    const CompactSet& reps, const CompactSet& represented
+    const SBG::LIB::Set& reps, const SBG::LIB::Set& represented
     , const AST::Indexes& indexes
   ) const;
 
@@ -71,7 +72,7 @@ private:
    * by a single set-edge, i.e. equations that share a repetitive definition. 
    */
   AlgebraicLoops loopsToModelicaFormat(
-    const SetEdge& se, const CompactSet& s
+    const SetEdge& se, const SBG::LIB::Set& s
   ) const;
 
   ModelicaSBG _modelica_bsbg; ///< Output SBG after matching.

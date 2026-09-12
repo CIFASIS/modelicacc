@@ -17,32 +17,32 @@
 
 ******************************************************************************/
 
-#include "util/ast_visitors/equation_compact_set.hpp"
+#include "util/ast_visitors/equation_sbg_set.hpp"
 #include "util/debug.hpp"
-#include "util/ast_visitors/compact_set_visitor.hpp"
+#include "util/ast_visitors/sbg_set_visitor.hpp"
 
 namespace Modelica {
 
-EquationCompactSet::EquationCompactSet(VarSymbolTable vtable
+EquationToSBGSet::EquationToSBGSet(VarSymbolTable vtable
   , unsigned int max_dim) : _vtable(vtable), _max_dim(max_dim), _counters() {}
 
-CompactSet EquationCompactSet::operator()(Connect eq)
+SBG::LIB::Set EquationToSBGSet::operator()(Connect eq)
 {
-  ERROR("EquationCompactSet: Connect not yet supported");
-  return CompactSet{};
+  ERROR("EquationToSBGSet: Connect not yet supported");
+  return SBG::LIB::Set{};
 }
 
-CompactSet EquationCompactSet::operator()(Equality eq)
+SBG::LIB::Set EquationToSBGSet::operator()(Equality eq)
 {
-  CompactSet result;
+  SBG::LIB::Set result;
 
   // Scalar equations
   if (_counters.empty()) {
     for (std::size_t k = 0; k < _max_dim; ++k) {
       if (k == 0) {
-        result = CompactSet{1, 1, 1};
+        result = SBG::LIB::Set{1, 1, 1};
       } else {
-        result.cartesianProduct(CompactSet{1, 1, 1});
+        result.cartesianProduct(SBG::LIB::Set{1, 1, 1});
       }
     }
     return result;
@@ -51,7 +51,7 @@ CompactSet EquationCompactSet::operator()(Equality eq)
   // Equation arrays; start inserting counters to environment
   for (const Index& counter : _counters) {
     OptExp counter_exp = counter.exp();
-    ERROR_UNLESS(counter_exp.has_value(), "EquationCompactSet: for index "
+    ERROR_UNLESS(counter_exp.has_value(), "EquationToSBGSet: for index "
       , "without definition in ", eq);
 
     ExpList counter_indices{1, counter.exp().value()};
@@ -62,20 +62,22 @@ CompactSet EquationCompactSet::operator()(Equality eq)
   }
 
   // Calculate set for counters with new environment
-  CompactSetVisitor set_visitor{_vtable};
+  SBGSetVisitor set_visitor{_vtable};
   std::size_t k = 0;
   for (const Index& counter : _counters) {
     if (k == 0) {
       result = Apply(set_visitor, counter.exp().value());
     } else {
-      result.cartesianProduct(Apply(set_visitor, counter.exp().value()));
+      result = result.cartesianProduct(Apply(
+        set_visitor, counter.exp().value()
+      ));
     }
     ++k;
   }
 
   // Fill remaining dimensions
   for (std::size_t k = _counters.size(); k < _max_dim; ++k) {
-    result.cartesianProduct(CompactSet{1, 1, 1});
+    result.cartesianProduct(SBG::LIB::Set{1, 1, 1});
   }
 
   // TODO: check that expressions in equations are compatible with the result
@@ -92,33 +94,33 @@ CompactSet EquationCompactSet::operator()(Equality eq)
   return result;
 }
 
-CompactSet EquationCompactSet::operator()(CallEq eq)
+SBG::LIB::Set EquationToSBGSet::operator()(CallEq eq)
 {
-  ERROR("EquationCompactSet: trying to convert a CallEq");
-  return CompactSet{};
+  ERROR("EquationToSBGSet: trying to convert a CallEq");
+  return SBG::LIB::Set{};
 }
 
-CompactSet EquationCompactSet::operator()(ForEq eq)
+SBG::LIB::Set EquationToSBGSet::operator()(ForEq eq)
 {
   IndexList for_indices = eq.range().indexes();
   _counters.insert(_counters.end(), for_indices.begin(), for_indices.end());
   EquationList eq_elems = eq.elements();
-  ERROR_UNLESS(eq_elems.size() == 1, "EquationCompactSet: ForEq should be "
+  ERROR_UNLESS(eq_elems.size() == 1, "EquationToSBGSet: ForEq should be "
     , "composed by a singleton list");
 
   return ApplyThis(eq_elems.front());
 }
 
-CompactSet EquationCompactSet::operator()(IfEq eq)
+SBG::LIB::Set EquationToSBGSet::operator()(IfEq eq)
 {
-  ERROR("EquationCompactSet: trying to convert an IfEq");
-  return CompactSet{};
+  ERROR("EquationToSBGSet: trying to convert an IfEq");
+  return SBG::LIB::Set{};
 }
 
-CompactSet EquationCompactSet::operator()(WhenEq eq)
+SBG::LIB::Set EquationToSBGSet::operator()(WhenEq eq)
 {
-  ERROR("EquationCompactSet: trying to convert a WhenEq");
-  return CompactSet{};
+  ERROR("EquationToSBGSet: trying to convert a WhenEq");
+  return SBG::LIB::Set{};
 }
 
 } // namespace Modelica

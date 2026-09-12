@@ -21,6 +21,7 @@
 #include "ast/modification.hpp"
 
 #include <iostream>
+#include <sstream>
 
 namespace Modelica {
 
@@ -30,7 +31,7 @@ namespace Causalize {
 
 SetVertex::SetVertex(int node_id) : _node_id(node_id) {}
 
-SetVertex::SetVertex(int node_id, CompactSet s)
+SetVertex::SetVertex(int node_id, SBG::LIB::Set s)
   : _node_id(node_id), _set(s), _translation(s.arity()) {}
 
 // Getters ---------------------------------------------------------------------
@@ -41,9 +42,12 @@ std::size_t SetVertex::arity() const { return _set.arity(); }
 
 std::string SetVertex::name() const { return _name; }
 
-const CompactSet& SetVertex::set() const { return _set; }
+const SBG::LIB::Set& SetVertex::set() const { return _set; }
 
-const Translation& SetVertex::translation() const { return _translation; }
+const SBG::LIB::IntTuple& SetVertex::translation() const
+{
+  return _translation;
+}
 
 const VertexInfo& SetVertex::info() const { return _info; }
 
@@ -53,7 +57,7 @@ void SetVertex::set_node_id(int node_id) { _node_id = node_id; }
 
 void SetVertex::set_name(std::string name) { _name = name; }
 
-void SetVertex::set_translation(Translation translation)
+void SetVertex::set_translation(SBG::LIB::IntTuple translation)
 {
   _translation = translation;
 }
@@ -77,32 +81,37 @@ bool SetVertex::isEquation() const { return _name.substr(0, 3) == "eq_"; }
 
 std::ostream& SetVertex::print(std::ostream& out) const
 {
-  CompactSet copy = _set;
-  copy.translate(_translation);
-  out << _name << ": " << copy.toSBGFormat();
+  out << _name << ": " << _set.translate(_translation);
   return out;
 }
 
 std::string SetVertex::toSBGFormat() const
 {
-  CompactSet copy = _set;
-  copy.translate(_translation);
-  return copy.toSBGFormat();
+  std::ostringstream oss;
+  oss << _set.translate(_translation);
+  return oss.str();
 }
 
-void SetVertex::cartesianProduct(const CompactSet& s)
+void SetVertex::cartesianProduct(const SBG::LIB::Set& s)
 {
-  _set.cartesianProduct(s);
+  _set = _set.cartesianProduct(s);
 }
 
-void SetVertex::cartesianProduct(const SetVertex& other)
+SBG::LIB::Int SetVertex::maxDimPerimetral() const
 {
-  _set.cartesianProduct(other._set);
+  return Modelica::Causalize::maxDimPerimetral(_set);
 }
 
-AST::Integer SetVertex::maxDimPerimetral() const
+SBG::LIB::Int maxDimPerimetral(SBG::LIB::Set s)
 {
-  return _set.maxDimPerimetral();
+  SBG::LIB::Int maximum = 0;
+
+  SBG::LIB::IntTuple perimetral_max = s.perimeter().max();
+  for (std::size_t k = 0; k < s.arity(); ++k) {
+    maximum = std::max(maximum, perimetral_max[k]);
+  }
+
+  return maximum;
 }
 
 }  // namespace Causalize

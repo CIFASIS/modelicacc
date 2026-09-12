@@ -10,10 +10,10 @@ CAUSALIZE_COMMON_SRC := \
     $(UTIL_DIR)/debug.cpp \
     $(UTIL_DIR)/table.cpp \
     $(UTIL_DIR)/type.cpp \
-    $(UTIL_DIR)/solve/solve.cpp \
+    $(UTIL_DIR)/sbg_interface.cpp \
     $(UTIL_DIR)/ast_visitors/all_expressions.cpp \
     $(UTIL_DIR)/ast_visitors/replace_expression.cpp \
-    $(UTIL_DIR)/ast_visitors/equation_compact_set.cpp \
+    $(UTIL_DIR)/ast_visitors/equation_sbg_set.cpp \
     $(UTIL_DIR)/ast_visitors/eval_expression.cpp \
     $(UTIL_DIR)/ast_visitors/eval_integer.cpp \
     $(UTIL_DIR)/ast_visitors/is_integer.cpp \
@@ -22,6 +22,7 @@ CAUSALIZE_COMMON_SRC := \
     $(UTIL_DIR)/ast_visitors/contains_expression.cpp \
     $(UTIL_DIR)/ast_visitors/splitfor_visitor.cpp \
     $(UTIL_DIR)/ast_visitors/state_variables_finder.cpp \
+    $(UTIL_DIR)/solve/solve.cpp \
     $(MMO_DIR)/mmo_class.cpp
 
 # Objects

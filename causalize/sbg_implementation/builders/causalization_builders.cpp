@@ -18,8 +18,6 @@
 ******************************************************************************/
 
 #include "causalize/sbg_implementation/builders/causalization_builders.hpp"
-#include "util/compact_set.hpp"
-#include "util/translation.hpp"
 
 #include <boost/variant/get.hpp>
 #include <sbg/bipartite_sbg.hpp>
@@ -102,9 +100,9 @@ void partitionEmap(SBG::LIB::DirectedSBG& dsbg)
   SBG::LIB::PWMap Emap = dsbg.Emap();
 
   std::size_t arity = V.arity();
-  SBG::LIB::NAT j = 1;
+  SBG::LIB::Int j = 1;
   SBG::LIB::PWMap partitioned_Emap;
-  dsbg.foreachSetEdge([&](const SBG::LIB::MD_NAT& SE)
+  dsbg.foreachSetEdge([&](const SBG::LIB::IntTuple& SE)
   {
     SBG::LIB::Set E = Emap.preImage(SBG::LIB::Set{SE});
     SBG::LIB::Set SV_starts = Vmap.image(mapB.image(E));
@@ -123,7 +121,7 @@ void partitionEmap(SBG::LIB::DirectedSBG& dsbg)
           SBG::LIB::Set edges_V1_V2 = mapB.preImage(V1)
             .intersection(mapD.preImage(V2));
           partitioned_Emap.emplace(E.intersection(edges_V1_V2)
-            , SBG::LIB::Expression{SBG::LIB::MD_NAT{arity, j}});
+            , SBG::LIB::Expression{SBG::LIB::IntTuple{arity, j}});
           ++j;
 
           remaining2 = remaining2.difference(SV2);
@@ -132,7 +130,7 @@ void partitionEmap(SBG::LIB::DirectedSBG& dsbg)
       }
     } else {
       partitioned_Emap.emplace(E
-        , SBG::LIB::Expression{SBG::LIB::MD_NAT{arity, j}});
+        , SBG::LIB::Expression{SBG::LIB::IntTuple{arity, j}});
       ++j;
     }
   });
@@ -173,7 +171,7 @@ SBG::LIB::DirectedSBG buildTearingSBG(const SBG::LIB::SCCData& data)
 
   // Erase vertices that belong to a singleton SCC
   SBG::LIB::PWMap mmap = data.rmap().imageMultiplicity();
-  SBG::LIB::Set one{SBG::LIB::MD_NAT{dsbg.V().arity(), 1}};
+  SBG::LIB::Set one{SBG::LIB::IntTuple{dsbg.V().arity(), 1}};
   dsbg.eraseVertices(mmap.preImage(one));
 
   return dsbg;
@@ -229,10 +227,10 @@ void VerticalSortingBuilder::addGuessVertices()
   SBG::LIB::PWMap Emap = _input_dsbg.Emap();
 
   // Add guess vertices.
-  SBG::LIB::MD_NAT maxv = V.maxElem();
+  SBG::LIB::IntTuple maxv = V.maxElem();
   for (const SBG::LIB::Map& sv : Vmap) { 
     _output_dsbg.addSetVertex(
-      _residual_vertices.intersection(sv.domain()).offset(maxv)
+      _residual_vertices.intersection(sv.domain()).translate(maxv)
     );
   }
 
@@ -269,7 +267,7 @@ void VerticalSortingBuilder::addDependencies(
   const SBG::LIB::PWMap& residual_to_endpoint)
 {
   SBG::LIB::PWMap residual_id{_residual_vertices};
-  SBG::LIB::MD_NAT maxe = _input_dsbg.E().maxElem();
+  SBG::LIB::IntTuple maxe = _input_dsbg.E().maxElem();
   SBG::LIB::Expression maxe_expr{maxe};
   SBG::LIB::PWMap edges_offset = residual_id
     + SBG::LIB::PWMap{SBG::LIB::Map{_residual_vertices, maxe_expr}};

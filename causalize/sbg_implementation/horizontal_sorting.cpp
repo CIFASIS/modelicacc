@@ -57,7 +57,7 @@ const SBG::LIB::MatchData& HorizontalSortingResult::matching_result() const
 // Extra functions -------------------------------------------------------------
 
 ModelMatch HorizontalSortingResult::equationToModelicaFormat(
-  SetEdge se, CompactSet se_match
+  SetEdge se, SBG::LIB::Set se_match
 ) const
 {
   auto [eq_info, accesses] = getAccess(_modelica_bsbg, se, se_match);
@@ -77,10 +77,9 @@ ModelMatch HorizontalSortingResult::toModelicaFormat() const
   ModelMatch result;
 
   // Traverse set-edges to get equation-variable matching.
-  CompactSet sbg_match{_matching_result.M()};
   for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-    CompactSet jth_eq_var_match = se.translatedDomain();
-    jth_eq_var_match.intersection(sbg_match);
+    SBG::LIB::Set jth_eq_var_match = se.translatedDomain()
+      .intersection(_matching_result.M());
     if (jth_eq_var_match.cardinal() > 0) {
       result.concatenation(equationToModelicaFormat(se, jth_eq_var_match));
     }
@@ -118,7 +117,7 @@ ModelicaSBG constructNewModelicaSBG(
 
   // Leave only matched edges in the SBG.
   const SetEdges& old_ses = old.set_edges();
-  CompactSet M{matching_result.M()};
+  SBG::LIB::Set M{matching_result.M()};
   for (const SetEdge& se : old_ses) {
     result.addSetEdge(se.restrict(M));
   }

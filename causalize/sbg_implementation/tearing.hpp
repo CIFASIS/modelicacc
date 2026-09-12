@@ -59,7 +59,7 @@ public:
 
 private:
   TearingVariables variableToModelicaFormat(const SetEdge& se
-    , CompactSet jth_tear) const;
+    , SBG::LIB::Set jth_tear) const;
 
   ModelicaSBG _modelica_bsbg;
   SBG::LIB::Set _mfvs_result;

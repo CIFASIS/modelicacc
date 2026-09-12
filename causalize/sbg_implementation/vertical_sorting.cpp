@@ -24,14 +24,12 @@
 #include "causalize/sbg_implementation/set_vertex.hpp"
 #include "causalize/sbg_implementation/ast_visitors/residual_equation.hpp"
 #include "causalize/sbg_implementation/ast_visitors/variable_renamer.hpp"
-#include "util/compact_set.hpp"
 #include "util/debug.hpp"
-#include "util/translation.hpp"
 
 #include <algorithms/sorting/topological/topological_sorting.hpp>
 #include <sbg/directed_sbg.hpp>
 #include <sbg/expression.hpp>
-#include <sbg/natural.hpp>
+#include <sbg/integer.hpp>
 #include <sbg/pw_map.hpp>
 #include <sbg/set.hpp>
 #include <util/time_profiler.hpp>
@@ -66,7 +64,7 @@ const std::vector<std::pair<AST::Name, VarInfo>>&
 void ModelicaSBGModifier::addVarsDeclarations()
 {
   for (SetEdge& se : _input_modelica_bsbg.set_edges()) {
-    SBG::LIB::Set se_res = se.translatedDomain().set()
+    SBG::LIB::Set se_res = se.translatedDomain()
       .intersection(_residual_vertices);
     if (!se_res.isEmpty()) {
       AST::Name start_mod = "start";
@@ -97,14 +95,15 @@ void ModelicaSBGModifier::partition(const SBG::LIB::Set& not_residual)
   SetEdges ses = _input_modelica_bsbg.set_edges();
   for (const SetEdge& se : ses) {
     _output_modelica_bsbg.addSetEdge(se.restrict(
-      CompactSet{_residual_vertices}
+      SBG::LIB::Set{_residual_vertices}
     ));
-    _output_modelica_bsbg.addSetEdge(se.restrict(CompactSet{not_residual}));
+    _output_modelica_bsbg.addSetEdge(se.restrict(not_residual));
   }
 }
 
 void ModelicaSBGModifier::addGuess(
-  const SetEdge& se, const CompactSet& se_res, const SBG::LIB::MD_NAT& max_elem
+  const SetEdge& se, const SBG::LIB::Set& se_res
+  , const SBG::LIB::IntTuple& max_elem
 )
 {
   // Add guess equation vertices.
@@ -118,19 +117,23 @@ void ModelicaSBGModifier::addGuess(
   EquationInfo guess_info{
     original_info.indices(), guess_eq, original_info.scalar()
   };
-  CompactSet guess_vertices{se_res};
-  guess_vertices.translate(-se.translation());
+  SBG::LIB::IntTuple neg_translation;
+  for (const SBG::LIB::Int x : se.translation()) {
+    neg_translation.pushBack(-x);
+  }
+  SBG::LIB::Set guess_vertices = se_res;
+  guess_vertices = guess_vertices.translate(neg_translation);
   int guess_eq_id = _output_modelica_bsbg.addSetVertex(
     guess_vertices, name, guess_info
   );
 
   // Add guess/equation matching edges.
-  CompactSet edges = se.domain();
-  Translation se_translation = se.translation();
+  SBG::LIB::Set edges = se.domain();
+  SBG::LIB::IntTuple se_translation = se.translation();
   std::size_t arity = se_res.arity();
-  Translation t{arity};
+  SBG::LIB::IntTuple t;
   for (std::size_t k = 0; k < arity; ++k) {
-    t[k] = max_elem[k] + se_translation[k];
+    t.pushBack(max_elem[k] + se_translation[k]);
   }
   name = "guess equation of " + se.name();
   _output_modelica_bsbg.addSetEdge(
@@ -138,11 +141,11 @@ void ModelicaSBGModifier::addGuess(
   );
 }
 
-void ModelicaSBGModifier::addGuessMatchs(const SBG::LIB::MD_NAT& max_elem)
+void ModelicaSBGModifier::addGuessMatchs(const SBG::LIB::IntTuple& max_elem)
 {
   SetEdges ses = _input_modelica_bsbg.set_edges(); 
   for (const SetEdge& se : ses) {
-    SBG::LIB::Set se_res = se.translatedDomain().set()
+    SBG::LIB::Set se_res = se.translatedDomain()
       .intersection(_residual_vertices);
     if (!se_res.isEmpty()) {
       addGuess(se, se_res, max_elem);
@@ -151,7 +154,7 @@ void ModelicaSBGModifier::addGuessMatchs(const SBG::LIB::MD_NAT& max_elem)
 }
 
 void ModelicaSBGModifier::modifyResidual(
-  SetEdge& se, const CompactSet& se_res
+  SetEdge& se, const SBG::LIB::Set& se_res
 )
 {
   // Modify equation expression.
@@ -167,8 +170,12 @@ void ModelicaSBGModifier::modifyResidual(
   // Add residual variable vertices.
   std::string name = "res_" + _output_modelica_bsbg
     .setVertex(se.var_id()).name();
-  CompactSet res_vertices{se_res};
-  res_vertices.translate(-se.translation());
+  SBG::LIB::IntTuple neg_translation;
+  for (const SBG::LIB::Int x : se.translation()) {
+    neg_translation.pushBack(-x);
+  }
+  SBG::LIB::Set res_vertices = se_res;
+  res_vertices = res_vertices.translate(neg_translation);
   int res_var_id = _output_modelica_bsbg.addSetVertex(res_vertices, name);
 
   // Modify matched variable.
@@ -181,7 +188,7 @@ void ModelicaSBGModifier::modifyResidualMatchs()
 {
   SetEdges ses = _output_modelica_bsbg.set_edges(); 
   for (SetEdge& se : ses) {
-    SBG::LIB::Set se_res = se.translatedDomain().set()
+    SBG::LIB::Set se_res = se.translatedDomain()
       .intersection(_residual_vertices);
     if (!se_res.isEmpty()) {
       modifyResidual(se, se_res);
@@ -204,7 +211,7 @@ ModelicaSBG ModelicaSBGModifier::modify(
   partition(not_residual);
   SBG::LIB::Set guess_vertices = builder.guess_offset()
     .image(_residual_vertices);
-  SBG::LIB::MD_NAT max_elem = builder.dsbg().V().difference(guess_vertices)
+  SBG::LIB::IntTuple max_elem = builder.dsbg().V().difference(guess_vertices)
     .maxElem();
   addGuessMatchs(max_elem);
   modifyResidualMatchs();
@@ -223,12 +230,13 @@ MatchToModelicaFormat::MatchToModelicaFormat(
     , _jth_scc_smap(jth_scc_smap) {}
 
 detail::SortedMatchs MatchToModelicaFormat::equationToModelicaFormat(
-  const SetEdge& se, const CompactSet& se_match
+  const SetEdge& se, const SBG::LIB::Set& se_match
   , const SBG::LIB::Expression& expr
 )
 {
-  bool is_residual = !se_match.set()
-    .intersection(_builder.residual_vertices()).isEmpty();
+  bool is_residual = !se_match.intersection(
+    _builder.residual_vertices()
+  ).isEmpty();
   auto [eq_info, accesses] = getAccess(_modelica_bsbg, se, se_match, expr);
 
   // Create new equation and save it to current matching.
@@ -258,8 +266,8 @@ detail::SortedMatchs MatchToModelicaFormat::format(
   SBG::LIB::Set match_domain = match.domain();
   match_domain.compact();
   for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-    CompactSet jth_eq_var_match = se.translatedDomain();
-    jth_eq_var_match.intersection(match_domain);
+    SBG::LIB::Set jth_eq_var_match = se.translatedDomain()
+      .intersection(match_domain);
     if (jth_eq_var_match.cardinal() > 0) {
       detail::SortedMatchs jth_result = equationToModelicaFormat(
         se, jth_eq_var_match, expr
@@ -415,11 +423,10 @@ SortedAlgebraicLoop VerticalSortingResult::sortLoop(
 
     // Get next map in the sort.
     unsorted_vertices = unsorted_vertices.difference(sorted_vertices);
-    vertices_smap = vertices_smap.restrict(
-      vertices_smap.domain().difference(sorted_vertices)
-    );
+    vertices_smap = vertices_smap.restrict(unsorted_vertices);
     for (const SBG::LIB::Map& m : vertices_smap) {
-      if (!m.image().intersection(sorted_vertices).isEmpty()) {
+      if (!m.image().intersection(sorted_vertices).isEmpty()
+         && m.domain().intersection(sorted_vertices).isEmpty()) {
         jth_vertices = m.domain();
         break;
       }
@@ -437,8 +444,6 @@ CausalModel VerticalSortingResult::sortLoops() const
   const SBG::LIB::Set reps = rmap.fixedPoints();
   SBG::LIB::PWMap sccs_smap = _builder.guess_offset()
     .composition(_sort.restrict(_builder.end_points()));
-  std::cout << "sort: " << _sort << "\n";
-  std::cout << "sccs_map: " << sccs_smap << "\n";
   SBG::LIB::Set unsorted_sccs = reps;
   SBG::LIB::Set jth_scc = sccs_smap.fixedPoints();
   while (!unsorted_sccs.isEmpty()) {
@@ -465,7 +470,7 @@ void VerticalSortingResult::partitionSort()
   SBG::LIB::PWMap partitioned_sort;
   for (const SBG::LIB::Map& m : _sort) {
     for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-      partitioned_sort.insert(m.restrict(se.translatedDomain().set()));
+      partitioned_sort.insert(m.restrict(se.translatedDomain()));
     }
   }
   _sort = partitioned_sort;

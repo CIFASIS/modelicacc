@@ -27,16 +27,11 @@ CAUSALIZE_SBG_SRC := \
 	$(CAUSALIZE_SBG_DIR)/ast_visitors/variable_renamer.cpp \
 	$(CAUSALIZE_SBG_DIR)/builders/causalization_builders.cpp \
 	$(CAUSALIZE_SBG_DIR)/builders/causalization_json.cpp \
-	$(UTIL_DIR)/affine_transformation.cpp \
-	$(UTIL_DIR)/affine_diag_transformation.cpp \
-	$(UTIL_DIR)/compact_set.cpp \
-	$(UTIL_DIR)/translation.cpp \
-	$(UTIL_DIR)/ast_visitors/affine_expr_visitor.cpp \
-	$(UTIL_DIR)/ast_visitors/compact_set_visitor.cpp \
+	$(UTIL_DIR)/ast_visitors/sbg_set_visitor.cpp \
 	$(UTIL_DIR)/ast_visitors/constant_expression.cpp \
+	$(UTIL_DIR)/ast_visitors/sbg_expr_visitor.cpp \
 	$(UTIL_DIR)/ast_visitors/replace_equation.cpp \
 	$(UTIL_DIR)/ast_visitors/matching_exps.cpp \
-	$(UTIL_DIR)/affine_expr.cpp \
 	$(UTIL_DIR)/logger.cpp
 
 # Objects

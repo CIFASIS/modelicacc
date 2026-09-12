@@ -31,7 +31,7 @@ SBG_LIB_1_0_0_INCLUDE := -I$(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0)/usr/include
 INCLUDES := -I.
 CXXFLAGS := -std=c++17 -Wall  -Wno-reorder -O3
 ifeq ($(MODE),Debug)
-CXXFLAGS 	+= -ggdb  
+CXXFLAGS 	+= -ggdb -fsanitize=address
 endif
 LIBMODELICA = lib/libmodelica.a
 LIBS     := -L./lib -lginac -lmodelica
@@ -84,23 +84,19 @@ $(BUILD_DIR)/util/ast_visitors/eval_expression_flatter.o : util/ast_visitors/eva
 	$(CC) $(INCLUDES) $(SBG_LIB_1_0_0_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
 	$(CC) $(INCLUDES) $(SBG_LIB_1_0_0_INCLUDE) -c $< -o $@ $(CXXFLAGS)
 
-$(BUILD_DIR)/util/compact_set.o : util/compact_set.cpp
+$(BUILD_DIR)/util/sbg_interface.o : util/sbg_interface.cpp
 	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
 	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
 
-$(BUILD_DIR)/util/ast_visitors/compact_set_visitor.o : util/ast_visitors/compact_set_visitor.cpp
+$(BUILD_DIR)/util/ast_visitors/sbg_set_visitor.o : util/ast_visitors/sbg_set_visitor.cpp
 	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
 	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
 
-$(BUILD_DIR)/util/ast_visitors/equation_compact_set.o : util/ast_visitors/equation_compact_set.cpp
+$(BUILD_DIR)/util/ast_visitors/sbg_expr_visitor.o : util/ast_visitors/sbg_expr_visitor.cpp
 	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
 	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
 
-$(BUILD_DIR)/util/affine_transformation.o : util/affine_transformation.cpp
-	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
-	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
-
-$(BUILD_DIR)/util/affine_diag_transformation.o : util/affine_diag_transformation.cpp
+$(BUILD_DIR)/util/ast_visitors/equation_sbg_set.o : util/ast_visitors/equation_sbg_set.cpp
 	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) $(CXXFLAGS) -MM -MT $@ -MF $(patsubst %.o,%.d,$@) $<
 	$(CC) $(INCLUDES) $(SBG_LIB_DEV_INCLUDE) -c $< -o $@ $(CXXFLAGS)
 

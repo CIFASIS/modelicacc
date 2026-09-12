@@ -19,18 +19,17 @@
 
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
 #include "ast/queries.hpp"
-#include "util/affine_transformation.hpp"
-#include "util/affine_expr.hpp"
 #include "util/logger.hpp"
-#include "util/ast_visitors/affine_expr_visitor.hpp"
-#include "util/ast_visitors/compact_set_visitor.hpp"
-#include "util/ast_visitors/equation_compact_set.hpp"
+#include "util/ast_visitors/equation_sbg_set.hpp"
 #include "util/ast_visitors/eval_expression.hpp"
 #include "util/ast_visitors/eval_integer.hpp"
 #include "util/ast_visitors/matching_exps.hpp"
+#include "util/ast_visitors/sbg_expr_visitor.hpp"
+#include "util/ast_visitors/sbg_set_visitor.hpp"
 
 #include <eval/file_evaluator.hpp>
 #include <eval/pretty_print.hpp>
+#include <sbg/set.hpp>
 #include <util/time_profiler.hpp>
 
 #include <algorithm>
@@ -86,7 +85,7 @@ std::string GenerateSBGInput::fileName() { return _mmo_class.name() + "_sbg_inpu
 
 void GenerateSBGInput::addVariableSet(const VarInfo& variable, const Name& name)
 {
-  CompactSet var_set;
+  SBG::LIB::Set var_set;
   std::size_t var_dimensions = 0;
   Option<ExpList> dimensions = variable.indices();
   VarSymbolTable symbols = _mmo_class.syms();
@@ -96,21 +95,21 @@ void GenerateSBGInput::addVariableSet(const VarInfo& variable, const Name& name)
     for (const Expression& dimension : dimensions.value()) {
       Integer value = Apply(eval_int, dimension);
       if (k == 0) {
-        var_set = CompactSet{1, 1, value};
+        var_set = SBG::LIB::Set{1, 1, value};
       } else {
-        var_set.cartesianProduct(CompactSet{1, 1, value});
+        var_set = var_set.cartesianProduct(SBG::LIB::Set{1, 1, value});
       }
       ++k;
     }
     var_dimensions = dimensions.value().size();
   } else {
-    var_set = CompactSet{1, 1, 1};
+    var_set = SBG::LIB::Set{1, 1, 1};
     var_dimensions = 1;
   }
 
   // Fill remaining dimensions
   for (std::size_t k = var_dimensions; k < _max_dim; ++k) {
-    var_set.cartesianProduct(CompactSet{1, 1, 1});
+    var_set = var_set.cartesianProduct(SBG::LIB::Set{1, 1, 1});
   }
 
   // Save variable set-vertex
@@ -215,8 +214,8 @@ void GenerateSBGInput::addEquationNodes()
 {
   EquationList eqs = flatterForEqs();
   for (const Equation& eq : eqs) {
-    EquationCompactSet eq_to_compact_set{_mmo_class.syms(), _max_dim};
-    CompactSet eq_vertices = Apply(eq_to_compact_set, eq);
+    EquationToSBGSet eq_to_sbg_set{_mmo_class.syms(), _max_dim};
+    SBG::LIB::Set eq_vertices = Apply(eq_to_sbg_set, eq);
     std::string name = "eq_"
       + std::to_string(_modelica_bsbg.set_vertices().size() + 1);
     EquationInfo eq_info{
@@ -228,16 +227,18 @@ void GenerateSBGInput::addEquationNodes()
 
 // Add edges -------------------------------------------------------------------
 
-CompactTransformation GenerateSBGInput::createMap1(
+SBG::LIB::Expression GenerateSBGInput::createMap1(
   const SetEdge& eq_se, const SetVertex& eq_sv
 ) const
 {
-  Translation domain_trans = eq_se.translation();
-  Translation eq_nodes_trans = eq_sv.translation();
-  CompactTransformation map1{_max_dim};
+  SBG::LIB::IntTuple domain_trans = eq_se.translation();
+  SBG::LIB::IntTuple eq_nodes_trans = eq_sv.translation();
+  SBG::LIB::Expression map1;
   for (std::size_t k = 0; k < _max_dim; ++k) {
-    map1.matrix(k, k) = 1;
-    map1.translation(k) = eq_nodes_trans[k] - domain_trans[k];
+    SBG::LIB::Int h = eq_nodes_trans[k] - domain_trans[k];
+    map1 = map1.cartesianProduct(SBG::LIB::Expression{
+      SBG::LIB::Rational{1}, SBG::LIB::Rational{h}
+    });
   }
   return map1;
 }
@@ -267,11 +268,11 @@ Reference getReference(Expression expr)
 
 }  // namespace
 
-CompactTransformation GenerateSBGInput::createMap2(
+SBG::LIB::Expression GenerateSBGInput::createMap2(
   const SetEdge& eq_se, const SetVertex& var_sv
 ) const
 {
-  const Translation& var_trans = var_sv.translation();
+  const SBG::LIB::IntTuple& var_trans = var_sv.translation();
 
   // Get expression of subscripts.
   Ref ref = getReference(eq_se.access()).ref();
@@ -290,22 +291,27 @@ CompactTransformation GenerateSBGInput::createMap2(
     order.push_back(counter.name());
   }
 
-  CompactTransformation t{_max_dim};
+  SBG::LIB::Rational zero{0};
+  SBG::LIB::Expression t;
   if (indexes.empty()) {  // Access to scalar variable.
     for (std::size_t k = 0; k < _max_dim; ++k) {
-      Util::AffineExpr kth_expr{order};
-      t.setRow(k, kth_expr + (var_trans[k] + 1));
+      SBG::LIB::Expression var_expr{zero, SBG::LIB::Rational{var_trans[k] + 1}};
+      t = t.cartesianProduct(var_expr);
     }
   } else {  // Access to array variable.
     std::size_t k = 0;
-    Translation domain_trans = eq_se.translation();
-    AffineExprVisitor affine_expr_visitor(_mmo_class.syms(), order);
+    SBG::LIB::IntTuple domain_trans = eq_se.translation();
+    ExprVisitor affine_expr_visitor(_mmo_class.syms(), order);
     for (Expression index : indexes) {
-      Util::AffineExpr kth_expr = Apply(affine_expr_visitor, index);
+      SBG::LIB::Expression kth_expr = Apply(affine_expr_visitor, index);
       if (kth_expr.isConstant()) {
-        t.setRow(k, kth_expr + var_trans[k]);
+        SBG::LIB::Expression var_expr{zero, SBG::LIB::Rational{var_trans[k]}};
+        t = t.cartesianProduct(kth_expr + var_expr);
       } else {
-        t.setRow(k, kth_expr + (var_trans[k] - domain_trans[k]));
+        SBG::LIB::Expression var_expr{
+          zero, SBG::LIB::Rational{var_trans[k] - domain_trans[k]}
+        };
+        t = t.cartesianProduct(kth_expr + var_expr);
       }
       ++k;
     }
@@ -328,7 +334,7 @@ void GenerateSBGInput::addEdge(
     std::set<Expression> matched_exprs = matching_exprs.matchedExps();
     LOG << "Matched exprs for: " << var_name << " in " << eq << std::endl;
 
-    CompactSet eq_nodes = eq_sv.set();
+    SBG::LIB::Set eq_nodes = eq_sv.set();
     for (const Expression& expr : matched_exprs) {
       LOG << "Expression: " << expr << std::endl;
       std::stringstream ss;
@@ -413,13 +419,13 @@ SBGGenerationResult GenerateSBGInput::buildFromModel()
 void GenerateSBGInput::generateVSet()
 {
   _sbg_input << "V: ";
-  CompactSet V;
+  SBG::LIB::Set V;
   for (const SetVertex& sv : _modelica_bsbg.set_vertices()) {
-    CompactSet jth_set = sv.set();
-    jth_set.translate(sv.translation());
-    V.setUnion(jth_set);
+    SBG::LIB::Set jth_set = sv.set();
+    jth_set = jth_set.translate(sv.translation());
+    V = V.disjointCup(jth_set);
   }
-  _sbg_input << V.toSBGFormat() << std::endl;
+  _sbg_input << V << std::endl;
 }
 
 void GenerateSBGInput::generateVMap()
@@ -492,26 +498,26 @@ void GenerateSBGInput::generatePartition()
 {
   _sbg_input << "X: ";
   SetVertices svs = _modelica_bsbg.set_vertices();
-  CompactSet X;
+  SBG::LIB::Set X;
   for (const SetVertex& sv : svs) {
     if (sv.isEquation()) {
-      CompactSet jth_set = sv.set();
-      jth_set.translate(sv.translation());
-      X.setUnion(jth_set);
+      SBG::LIB::Set jth_set = sv.set();
+      jth_set = jth_set.translate(sv.translation());
+      X = X.disjointCup(jth_set);
     }
   }
-  _sbg_input << X.toSBGFormat() << std::endl;
+  _sbg_input << X << std::endl;
 
   _sbg_input << "Y: ";
-  CompactSet Y;
+  SBG::LIB::Set Y;
   for (const SetVertex& sv : svs) {
     if (sv.isVariable()) {
-      CompactSet jth_set = sv.set();
-      jth_set.translate(sv.translation());
-      Y.setUnion(jth_set);
+      SBG::LIB::Set jth_set = sv.set();
+      jth_set = jth_set.translate(sv.translation());
+      Y = Y.disjointCup(jth_set);
     }
   }
-  _sbg_input << Y.toSBGFormat();
+  _sbg_input << Y;
 }
 
 void GenerateSBGInput::generateSBGInput()

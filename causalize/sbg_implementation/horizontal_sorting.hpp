@@ -24,9 +24,9 @@
 #include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "causalize/sbg_implementation/model_match.hpp"
 #include "causalize/sbg_implementation/set_edge.hpp"
-#include "util/compact_set.hpp"
 
 #include <algorithms/matching/match_data.hpp>
+#include <sbg/set.hpp>
 
 #include <iosfwd>
 #include <vector>
@@ -71,7 +71,7 @@ public:
   ModelMatch toModelicaFormat() const;
 
 private:
-  ModelMatch equationToModelicaFormat(SetEdge se, CompactSet se_match) const;
+  ModelMatch equationToModelicaFormat(SetEdge se, SBG::LIB::Set se_match) const;
 
   ModelicaSBG _modelica_bsbg; ///< Resulting bipartite Modelica SBG
     ///< after horizontal sorting

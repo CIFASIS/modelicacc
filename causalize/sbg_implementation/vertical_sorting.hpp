@@ -63,12 +63,12 @@ private:
   void partition(const SBG::LIB::Set& not_residual);
 
   void addGuess(
-    const SetEdge& se, const CompactSet& se_res
-    , const SBG::LIB::MD_NAT& max_elem
+    const SetEdge& se, const SBG::LIB::Set& se_res
+    , const SBG::LIB::IntTuple& max_elem
   );
-  void addGuessMatchs(const SBG::LIB::MD_NAT& max_elem);
+  void addGuessMatchs(const SBG::LIB::IntTuple& max_elem);
 
-  void modifyResidual(SetEdge& se, const CompactSet& se_res);
+  void modifyResidual(SetEdge& se, const SBG::LIB::Set& se_res);
   void modifyResidualMatchs();
 
   void addVarsDeclarations();
@@ -103,7 +103,7 @@ public:
 
 private:
   detail::SortedMatchs equationToModelicaFormat(
-    const SetEdge& se, const CompactSet& se_match
+    const SetEdge& se, const SBG::LIB::Set& se_match
     , const SBG::LIB::Expression& expr
   );
 
