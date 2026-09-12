@@ -24,9 +24,9 @@
 #include "causalize/sbg_implementation/set_edge.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
 #include "mmo/mmo_class.hpp"
-#include "util/compact_set.hpp"
 
-#include "sbg/bipartite_sbg.hpp"
+#include <sbg/bipartite_sbg.hpp>
+#include <sbg/expression.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -92,14 +92,14 @@ protected:
   /**
    * @brief Creates maps from edges to equations nodes.
    */
-  CompactTransformation createMap1(
+  SBG::LIB::Expression createMap1(
     const SetEdge& eq_se, const SetVertex& eq_sv
   ) const;
 
   /**
    * @brief Creates maps from edges to variables nodes.
    */
-  CompactTransformation createMap2(
+  SBG::LIB::Expression createMap2(
     const SetEdge& eq_se, const SetVertex& var_sv
    ) const;
 

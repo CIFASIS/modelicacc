@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include "util/compact_set.hpp"
+#include "util/sbg_interface.hpp"
 #include "util/ast_visitors/eval_expression.hpp"
 #include "util/debug.hpp"
 
@@ -31,74 +31,7 @@
 
 namespace Modelica {
 
-// Constructors/destructors ----------------------------------------------------
-
-CompactSet::CompactSet() {}
-
-CompactSet::CompactSet(AST::Integer start, AST::Integer step, AST::Integer end)
-{
-  ERROR_UNLESS(start >= 0 && step >= 0 && end >= 0, "CompactSet: negative ", "values not supported");
-
-  _set = SBG::LIB::Set(static_cast<SBG::LIB::NAT>(start), static_cast<SBG::LIB::NAT>(step), static_cast<SBG::LIB::NAT>(end));
-}
-
-CompactSet::CompactSet(SBG::LIB::Set s) { _set = s; }
-
-// Getters ---------------------------------------------------------------------
-
-const SBG::LIB::Set& CompactSet::set() const { return _set; }
-
-std::size_t CompactSet::arity() const { return _set.arity(); }
-
-// Set operations --------------------------------------------------------------
-
-std::size_t CompactSet::cardinal() const { return _set.cardinal(); }
-
-bool CompactSet::operator==(const CompactSet& other) const { return _set == other._set; }
-
-void CompactSet::setUnion(const CompactSet& other) { _set = _set.cup(other._set); }
-
-void CompactSet::intersection(const CompactSet& other) { _set = _set.intersection(other._set); }
-
-void CompactSet::cartesianProduct(const CompactSet& other) { _set = _set.cartesianProduct(other._set); }
-
-// Additional methods ----------------------------------------------------------
-
-void CompactSet::reflection() { ERROR("CompactSet::reflection: not supported yet"); }
-
-void CompactSet::translate(const Translation& t)
-{
-  ERROR_UNLESS(t.arity() == _set.arity(), "CompactSet::translate: dimensions ", "of compact set ", "and translation are different");
-
-  SBG::LIB::MD_NAT t_val;
-  for (std::size_t k = 0; k < t.arity(); ++k) {
-    t_val.pushBack(static_cast<SBG::LIB::NAT>(t[k]));
-  }
-  _set = _set.offset(t_val);
-}
-
-void CompactSet::scale(AST::Integer factor) { ERROR("CompactSet::scale: not supported yet"); }
-
-AST::Integer CompactSet::maxDimPerimetral() const
-{
-  SBG::LIB::NAT maximum = 0;
-
-  SBG::LIB::MD_NAT perimetral_max = _set.perimeter().max();
-  for (std::size_t k = 0; k < arity(); ++k) {
-    maximum = std::max(maximum, perimetral_max[k]);
-  }
-
-  return static_cast<AST::Integer>(maximum);
-}
-
-std::string CompactSet::toSBGFormat() const
-{
-  std::ostringstream out;
-  out << _set;
-  return out.str();
-}
-
-// Non-member functions -------------------------------------------------------
+namespace {
 
 // TODO: generalize this to return an expression.
 int toNumber(const rapidjson::Value& value)
@@ -134,9 +67,9 @@ std::pair<SBG::LIB::Set, Index> dimensionToModelicaIndices(
     step = -step;
     std::swap(begin, end);
   }
-  SBG::LIB::NAT set_begin = std::min(begin, end);
-  SBG::LIB::NAT set_step = std::abs(step);
-  SBG::LIB::NAT set_end = std::max(begin, end);
+  SBG::LIB::Int set_begin = std::min(begin, end);
+  SBG::LIB::Int set_step = std::abs(step);
+  SBG::LIB::Int set_end = std::max(begin, end);
 
   return {SBG::LIB::Set{set_begin, set_step, set_end}
     , Index{counter, OptExp{Range{begin, step, end}}}};
@@ -144,12 +77,12 @@ std::pair<SBG::LIB::Set, Index> dimensionToModelicaIndices(
 
 Access pieceToModelicaIndices(
   const rapidjson::Value& piece, const rapidjson::Value& expr_json
-  , const Translation& t, const std::vector<Name>& counters
+  , const SBG::LIB::IntTuple& t, const std::vector<Name>& counters
 )
 {
   IndexList result;
 
-  CompactSet s;
+  SBG::LIB::Set s;
   std::size_t k = 0;
   const rapidjson::Value& bounds = piece["bounds"];
   for (const rapidjson::Value& kth_bounds : bounds.GetArray()) {
@@ -164,28 +97,31 @@ Access pieceToModelicaIndices(
     }
     ++k;
   }
-  s.translate(t);
+  s = s.translate(t);
 
   return {s, Indexes{result}};
 }
 
+} // namespace
+
 Accesses toModelicaIndices(
-  const CompactSet& s, const Translation& t, const std::vector<Name>& counters,
-  const SBG::LIB::Expression& expr
+  const SBG::LIB::Set& s, const SBG::LIB::IntTuple& t
+  , const std::vector<Name>& counters
+  , const SBG::LIB::Expression& expr
 )
 {
   rapidjson::Document set_doc;
-  rapidjson::Value set_json = s.set().toJSON(set_doc.GetAllocator());
+  rapidjson::Value set_json = s.toJSON(set_doc.GetAllocator());
   ERROR_UNLESS(set_json.IsObject(),
                "toModelicaIndices: value "
                "is not an object");
-  ERROR_UNLESS(set_json.HasMember("pieces"), "toModelicaIndices: ", "incorrect SBG::LIB::Set format");
+  ERROR_UNLESS(set_json.HasMember("pieces"), "toModelicaIndices: "
+    , "incorrect SBG::LIB::Set format");
 
   rapidjson::Document expr_doc;
   rapidjson::Value expr_json = expr.toJSON(expr_doc.GetAllocator());
-  ERROR_UNLESS(expr_json.IsArray(),
-               "toModelicaIndices: value "
-               "is not an expression");
+  ERROR_UNLESS(expr_json.IsArray(), "toModelicaIndices: value is not an "
+    , "expression");
 
   Accesses result;
   const rapidjson::Value& pieces = set_json["pieces"];
@@ -196,9 +132,15 @@ Accesses toModelicaIndices(
   return result;
 }
 
-Accesses toModelicaIndices(const CompactSet& s, const Translation& t, const std::vector<Name>& counters)
+Accesses toModelicaIndices(
+  const SBG::LIB::Set& s
+  , const SBG::LIB::IntTuple& t
+  , const std::vector<Name>& counters
+)
 {
-  return toModelicaIndices(s, t, counters, SBG::LIB::Expression{counters.size()});
+  return toModelicaIndices(
+    s, t, counters, SBG::LIB::Expression{counters.size()}
+  );
 }
 
 }  // namespace Modelica

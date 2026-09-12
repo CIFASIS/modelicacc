@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
+#include "util/ast_visitors/sbg_set_visitor.hpp"
 #include "ast/queries.hpp"
-#include "util/ast_visitors/compact_set_visitor.hpp"
 #include "util/ast_visitors/contains_expression.hpp"
 #include "util/ast_visitors/eval_expression.hpp"
 #include "util/ast_visitors/eval_integer.hpp"
@@ -27,59 +27,59 @@
 
 namespace Modelica {
 
-CompactSetVisitor::CompactSetVisitor(const VarSymbolTable& symbols)
+SBGSetVisitor::SBGSetVisitor(const VarSymbolTable& symbols)
   : _symbols(symbols) {}
 
-CompactSet CompactSetVisitor::operator()(Integer v)
+SBG::LIB::Set SBGSetVisitor::operator()(Integer v)
 {
-  return CompactSet{v, 1, v};
+  return SBG::LIB::Set{v, 1, v};
 }
 
-CompactSet CompactSetVisitor::operator()(Boolean v)
+SBG::LIB::Set SBGSetVisitor::operator()(Boolean v)
 {
   if (v.val()) {
-    return CompactSet{1, 1, 1};
+    return SBG::LIB::Set{1, 1, 1};
   }
-  return CompactSet{0, 1, 0};
+  return SBG::LIB::Set{0, 1, 0};
 }
 
-CompactSet CompactSetVisitor::operator()(AddAll v) 
+SBG::LIB::Set SBGSetVisitor::operator()(AddAll v) 
 {
-  ERROR("CompactSetVisitor: trying to visit an AddAll ", v);
-  return CompactSet{};
+  ERROR("SBGSetVisitor: trying to visit an AddAll ", v);
+  return SBG::LIB::Set{};
 }
 
-CompactSet CompactSetVisitor::operator()(String v) 
+SBG::LIB::Set SBGSetVisitor::operator()(String v) 
 {
-  ERROR("CompactSetVisitor: trying to visit a String ", v);
-  return CompactSet{};
+  ERROR("SBGSetVisitor: trying to visit a String ", v);
+  return SBG::LIB::Set{};
 }
 
-CompactSet CompactSetVisitor::operator()(Name v) 
+SBG::LIB::Set SBGSetVisitor::operator()(Name v) 
 {
-  ERROR("CompactSetVisitor: trying to visit a Name ", v);
-  return CompactSet{};
+  ERROR("SBGSetVisitor: trying to visit a Name ", v);
+  return SBG::LIB::Set{};
 }
 
-CompactSet CompactSetVisitor::operator()(Real v) 
+SBG::LIB::Set SBGSetVisitor::operator()(Real v) 
 {
   EvalInteger eval_int{_symbols};
   Integer value = Apply(eval_int, Expression{v});
-  return CompactSet{value, 1, value};
+  return SBG::LIB::Set{value, 1, value};
 }
 
-CompactSet CompactSetVisitor::operator()(SubEnd v)
+SBG::LIB::Set SBGSetVisitor::operator()(SubEnd v)
 {
-  ERROR("CompactSetVisitor: SubEnd not supported");
-  return CompactSet{};
+  ERROR("SBGSetVisitor: SubEnd not supported");
+  return SBG::LIB::Set{};
 }
 
-CompactSet CompactSetVisitor::operator()(SubAll v)
+SBG::LIB::Set SBGSetVisitor::operator()(SubAll v)
 {
-  return CompactSet{1, 1, _dimension_size};
+  return SBG::LIB::Set{1, 1, _dimension_size};
 }
 
-CompactSet CompactSetVisitor::operator()(IfExp v)
+SBG::LIB::Set SBGSetVisitor::operator()(IfExp v)
 {
   EvalExpression eval_expr{_symbols};
   Real cond = Apply(eval_expr, v.cond());
@@ -97,7 +97,7 @@ CompactSet CompactSetVisitor::operator()(IfExp v)
   return ApplyThis(v.elseexp());
 }
 
-CompactSet CompactSetVisitor::operator()(Range v)
+SBG::LIB::Set SBGSetVisitor::operator()(Range v)
 {
   EvalInteger eval_int(_symbols);
   Integer start = Integer(Apply(eval_int, v.start()));
@@ -108,31 +108,31 @@ CompactSet CompactSetVisitor::operator()(Range v)
   }
 
   if (start > end) { // Decreasing range
-    ERROR("CompactSetVisitor: only increasing Range expressions supported");
+    ERROR("SBGSetVisitor: only increasing Range expressions supported");
   }
 
-  return CompactSet{start, step, end};
+  return SBG::LIB::Set{start, step, end};
 }
 
-CompactSet CompactSetVisitor::operator()(Brace v)
+SBG::LIB::Set SBGSetVisitor::operator()(Brace v)
 {
-  CompactSet result;
+  SBG::LIB::Set result;
 
   for (const Expression& expr : v.args()) {
-    result.setUnion(ApplyThis(expr));
+    result = result.disjointCup(ApplyThis(expr));
   }
 
   return result;
 }
 
-CompactSet CompactSetVisitor::operator()(Bracket v)
+SBG::LIB::Set SBGSetVisitor::operator()(Bracket v)
 {
-  CompactSet result;
+  SBG::LIB::Set result;
 
   for (const ExpList& expr_list : v.args()) {
-    CompactSet jth_set;
+    SBG::LIB::Set jth_set;
     for (const Expression& expr : expr_list) {
-      jth_set.setUnion(ApplyThis(expr));
+      jth_set = jth_set.disjointCup(ApplyThis(expr));
     }
     result.cartesianProduct(jth_set);
   }
@@ -140,59 +140,59 @@ CompactSet CompactSetVisitor::operator()(Bracket v)
   return result;
 }
 
-CompactSet CompactSetVisitor::operator()(Call v)
+SBG::LIB::Set SBGSetVisitor::operator()(Call v)
 {
   EvalInteger eval_int{_symbols};
   Integer value = Apply(eval_int, Expression{v});
-  return CompactSet{value, 1, value};
+  return SBG::LIB::Set{value, 1, value};
 }
 
-CompactSet CompactSetVisitor::operator()(FunctionExp v)
+SBG::LIB::Set SBGSetVisitor::operator()(FunctionExp v)
 {
-  ERROR("CompactSetVisitor: FunctionExp ", v, " inside loop indices");
-  return CompactSet{};
+  ERROR("SBGSetVisitor: FunctionExp ", v, " inside loop indices");
+  return SBG::LIB::Set{};
 }
 
-CompactSet CompactSetVisitor::operator()(ForExp v)
+SBG::LIB::Set SBGSetVisitor::operator()(ForExp v)
 {
-  ERROR("CompactSetVisitor: ForExp not supported yet");
-  return CompactSet{};
+  ERROR("SBGSetVisitor: ForExp not supported yet");
+  return SBG::LIB::Set{};
 }
 
-CompactSet CompactSetVisitor::operator()(Named v)
+SBG::LIB::Set SBGSetVisitor::operator()(Named v)
 {
-  ERROR("CompactSetVisitor: Named not supported");
-  return CompactSet{};
+  ERROR("SBGSetVisitor: Named not supported");
+  return SBG::LIB::Set{};
 }
 
-CompactSet CompactSetVisitor::operator()(Output v)
+SBG::LIB::Set SBGSetVisitor::operator()(Output v)
 {
   ERROR_UNLESS(v.args().size() == 1
-    , "CompactSetVisitor: Output expressions with more than one element not "
+    , "SBGSetVisitor: Output expressions with more than one element not "
     , "supported");
 
   if (v.args().front()) {
     return ApplyThis(v.args().front().value());
   }
 
-  ERROR("CompactSetVisitor: Output with no expression");
-  return CompactSet{};
+  ERROR("SBGSetVisitor: Output with no expression");
+  return SBG::LIB::Set{};
 }
 
-CompactSet CompactSetVisitor::operator()(Reference v)
+SBG::LIB::Set SBGSetVisitor::operator()(Reference v)
 {
-  CompactSet result;
+  SBG::LIB::Set result;
 
   Ref ref = v.ref();
-  ERROR_UNLESS(ref.size() == 1, "CompactSetVisitor: conversion of dotted "
+  ERROR_UNLESS(ref.size() == 1, "SBGSetVisitor: conversion of dotted "
     , "references not implemented");
   Option<ExpList> opt_subs = get<1>(ref[0]);
   ERROR_UNLESS(opt_subs.has_value() ? opt_subs.value().empty() : true
-    , "CompactSetVisitor: conversion of subscripted references not implemented");
+    , "SBGSetVisitor: conversion of subscripted references not implemented");
 
   if (!opt_subs) { // Non-subscripted access
     Name v_name = get<0>(ref[0]);
-    ERROR_UNLESS(_symbols[v_name].has_value(), "CompactSetVisitor: variable "
+    ERROR_UNLESS(_symbols[v_name].has_value(), "SBGSetVisitor: variable "
       , v, " not found");
     Option<ExpList> v_indices = _symbols[v_name].value().indices();
     if (v_indices) { // Access to array variable
@@ -208,17 +208,17 @@ CompactSet CompactSetVisitor::operator()(Reference v)
     } else { // Access to scalar variable
       EvalInteger eval_int{_symbols};
       Integer value = Apply(eval_int, Expression{v});
-      result = CompactSet{value, 1, value};
+      result = SBG::LIB::Set{value, 1, value};
     }
   }
 
   return result;
 }
 
-CompactSet CompactSetVisitor::operator()(BinOp v)
+SBG::LIB::Set SBGSetVisitor::operator()(BinOp v)
 {
   Integer value = 0;
-  CompactSet result;
+  SBG::LIB::Set result;
   IsInteger is_int{_symbols};
   if (Apply(is_int, v.left())) {
     value = Apply(EvalInteger{_symbols}, v.left());
@@ -227,7 +227,7 @@ CompactSet CompactSetVisitor::operator()(BinOp v)
     value = Apply(EvalInteger{_symbols}, v.right());
     result = ApplyThis(v.left());
   } else {
-   ERROR("CompactSetVisitor: result of BinOp ", v, " is not a compact set");
+   ERROR("SBGSetVisitor: result of BinOp ", v, " is not a compact set");
   }
 
   switch (v.op()) {
@@ -237,22 +237,22 @@ CompactSet CompactSetVisitor::operator()(BinOp v)
     }
 
     case Sub: {
-      ERROR("CompactSetVisitor: Sub not supported yet");
+      ERROR("SBGSetVisitor: Sub not supported yet");
       break;
     }
 
     case Div: {
-      ERROR("CompactSetVisitor: Div not supported yet");
+      ERROR("SBGSetVisitor: Div not supported yet");
       break;
     }
 
     case Mult: {
-      result.scale(value);
+      ERROR("SBGSetVisitor: Mult not supported yet");
       break;
     }
 
     default: {
-      ERROR("CompactSetVisitor: BinOp ", v.op(), " not supported");
+      ERROR("SBGSetVisitor: BinOp ", v.op(), " not supported");
       break;
     }
   }
@@ -260,13 +260,12 @@ CompactSet CompactSetVisitor::operator()(BinOp v)
   return result;
 }
 
-CompactSet CompactSetVisitor::operator()(UnaryOp v)
+SBG::LIB::Set SBGSetVisitor::operator()(UnaryOp v)
 {
-  CompactSet result = ApplyThis(v.exp());
+  SBG::LIB::Set result = ApplyThis(v.exp());
 
   switch (v.op()) {
     case Minus: {
-      result.reflection();
       break;
     }
 

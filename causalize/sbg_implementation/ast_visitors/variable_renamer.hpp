@@ -17,9 +17,6 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_VARIABLE_RENAMER_HPP_
-#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_VARIABLE_RENAMER_HPP_
-
 /**
  * @file
  * @brief Visitor that given a reference to a variable, it adds to it a prefix.
@@ -27,6 +24,9 @@
  * It will be used in the vertical sorting SBG builder to create guess and
  * residual variables.
  */
+
+#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_VARIABLE_RENAMER_HPP_
+#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_VARIABLE_RENAMER_HPP_
 
 #include <ast/expression.hpp>
 #include <util/table.hpp>

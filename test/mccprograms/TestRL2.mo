@@ -3,7 +3,7 @@
 ==============================================================================*/
 
 model TestRL2
-  constant Integer N=1000000;
+  constant Integer N=100;
   Real iL[N],iR[N],uL[N];
   parameter Real L=1,R=1,L1=1,I=1,R0=1;
 equation

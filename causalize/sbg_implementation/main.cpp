@@ -17,23 +17,24 @@
 
 ******************************************************************************/
 
-#include <fstream>
-#include <iostream>
-#include "boost/variant/get.hpp"
-#include <getopt.h>
-
+#include "ast/equation.hpp"
 #include "causalize/sbg_implementation/causalize.hpp"
 #include "mmo/mmo_class.hpp"
 #include "parser/parser.hpp"
-#include "util/ast_visitors/state_variables_finder.hpp"
 #include "util/debug.hpp"
 #include "util/logger.hpp"
-#include <util/solve/solve.hpp>
-#include <ast/equation.hpp>
-#include <util/table.hpp>
+#include "util/table.hpp"
+#include "util/ast_visitors/state_variables_finder.hpp"
+#include "util/solve/solve.hpp"
+
+#include <boost/variant/get.hpp>
 #include <sbg/pwmap_impl.hpp>
 #include <sbg/set_impl.hpp>
 #include <util/time_profiler.hpp>
+
+#include <fstream>
+#include <iostream>
+#include <getopt.h>
 
 using namespace std;
 using namespace Modelica;

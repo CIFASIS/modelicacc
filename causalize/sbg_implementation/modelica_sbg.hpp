@@ -22,6 +22,11 @@
 
 #include "causalize/sbg_implementation/set_edge.hpp"
 #include "causalize/sbg_implementation/set_vertex.hpp"
+#include "util/sbg_interface.hpp"
+
+#include <sbg/integer.hpp>
+#include <sbg/expression.hpp>
+#include <sbg/set.hpp>
 
 #include <string>
 #include <tuple>
@@ -53,10 +58,10 @@ public:
    * @brief TODO
    * @result Identifier of the newly created set-vertex.
    */
-  int addSetVertex(CompactSet elems, std::string name);
+  int addSetVertex(SBG::LIB::Set elems, std::string name);
 
   int addSetVertex(
-    CompactSet elems, std::string name, VertexInfo info
+    SBG::LIB::Set elems, std::string name, VertexInfo info
   );
 
   void addSetEdge(SetEdge se);
@@ -66,18 +71,18 @@ public:
    * @result Identifier of the newly created set-edge.
    */
   int addSetEdge(
-    int var_id, int eq_id, CompactSet domain, AST::Expression access
+    int var_id, int eq_id, SBG::LIB::Set domain, AST::Expression access
     , std::string name
   );
 
   int addSetEdge(
-    int var_id, int eq_id, CompactSet domain, Translation t
+    int var_id, int eq_id, SBG::LIB::Set domain, SBG::LIB::IntTuple t
     , AST::Expression access, std::string name
   );
 
   int addSetEdge(
-    int var_id, int eq_id, CompactSet domain, CompactTransformation map1
-    , CompactTransformation map2, AST::Expression access, std::string name
+    int var_id, int eq_id, SBG::LIB::Set domain, SBG::LIB::Expression map1
+    , SBG::LIB::Expression map2, AST::Expression access, std::string name
   );
 
   /**
@@ -111,7 +116,7 @@ using EquationAccess = std::pair<EquationInfo, Accesses>;
  * the corresponding equation expression, and Modelica indices to access them.
  */
 EquationAccess getAccess(
-  const ModelicaSBG& modelica_sbg, const SetEdge& se, const CompactSet& s
+  const ModelicaSBG& modelica_sbg, const SetEdge& se, const SBG::LIB::Set& s
 );
 
 /**
@@ -120,7 +125,7 @@ EquationAccess getAccess(
  * to \p expr.
  */
 EquationAccess getAccess(
-  const ModelicaSBG& modelica_sbg, const SetEdge& se, const CompactSet& s
+  const ModelicaSBG& modelica_sbg, const SetEdge& se, const SBG::LIB::Set& s
   , const SBG::LIB::Expression& expr
 );
 

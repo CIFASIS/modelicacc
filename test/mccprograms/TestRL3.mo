@@ -5,7 +5,7 @@
 ==============================================================================*/
 
 model TestRL3
-  constant Integer N=1000000;
+  constant Integer N=100;
   Real iL[N],iR[N],uL[N];
   parameter Real L=1,R=1,L1=1,U=1,R0=1;
 equation

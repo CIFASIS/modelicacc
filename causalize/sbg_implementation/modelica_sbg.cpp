@@ -19,6 +19,7 @@
 
 #include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "util/debug.hpp"
+#include "util/sbg_interface.hpp"
 
 #include <algorithm>
 #include <variant>
@@ -93,31 +94,31 @@ void ModelicaSBG::addSetVertex(SetVertex sv)
     int max_node_id = _set_vertices.size() + 1;
     sv.set_node_id(max_node_id);
     _set_vertices.push_back(sv);
-    CompactSet translated = sv.set();
-    translated.translate(sv.translation());
-    _vertex_offset = translated.maxDimPerimetral();
+    SBG::LIB::Set translated = sv.set();
+    translated = translated.translate(sv.translation());
+    _vertex_offset = maxDimPerimetral(translated);
   }
 }
 
 int ModelicaSBG::addSetVertex(
-  CompactSet elems, std::string name
+  SBG::LIB::Set elems, std::string name
 )
 {
   int max_node_id = _set_vertices.size() + 1;
   SetVertex sv{max_node_id, elems};
   sv.set_name(name);
-  sv.set_translation(Translation{elems.arity(), _vertex_offset});
+  sv.set_translation(SBG::LIB::IntTuple{elems.arity(), _vertex_offset});
 
-  CompactSet translated = sv.set();
-  translated.translate(sv.translation());
-  _vertex_offset = translated.maxDimPerimetral();
+  SBG::LIB::Set translated = sv.set();
+  translated = translated.translate(sv.translation());
+  _vertex_offset = maxDimPerimetral(translated);
   _set_vertices.push_back(sv);
 
   return max_node_id;
 }
 
 int ModelicaSBG::addSetVertex(
-  CompactSet elems, std::string name, VertexInfo info
+  SBG::LIB::Set elems, std::string name, VertexInfo info
 )
 {
   int node_id = addSetVertex(elems, name);
@@ -133,28 +134,28 @@ void ModelicaSBG::addSetEdge(SetEdge se)
     int max_edge_id = _set_edges.size() + 1;
     se.set_edge_id(max_edge_id);
 
-    CompactSet translated = se.domain();
-    translated.translate(se.translation());
-    _edge_offset = translated.maxDimPerimetral();
+    SBG::LIB::Set translated = se.domain();
+    translated = translated.translate(se.translation());
+    _edge_offset = maxDimPerimetral(translated);
     _set_edges.push_back(se);
   }
 }
 
 int ModelicaSBG::addSetEdge(
-  int var_id, int eq_id, CompactSet domain, AST::Expression access
+  int var_id, int eq_id, SBG::LIB::Set domain, AST::Expression access
   , std::string name
 )
 {
   std::size_t arity = domain.arity();
   return addSetEdge(
     var_id, eq_id
-    , domain, CompactTransformation{arity}, CompactTransformation{arity}
+    , domain, SBG::LIB::Expression{arity}, SBG::LIB::Expression{arity}
     , access, name
   );
 }
 
 int ModelicaSBG::addSetEdge(
-  int var_id, int eq_id, CompactSet domain, Translation t
+  int var_id, int eq_id, SBG::LIB::Set domain, SBG::LIB::IntTuple t
   , AST::Expression access, std::string name
 )
 {
@@ -164,22 +165,22 @@ int ModelicaSBG::addSetEdge(
   se.set_translation(t);
   se.set_var_id(var_id);
   se.set_eq_id(eq_id);
-  se.set_map1(CompactTransformation{arity});
-  se.set_map2(CompactTransformation{arity});
+  se.set_map1(SBG::LIB::Expression{arity});
+  se.set_map2(SBG::LIB::Expression{arity});
   se.set_name(name);
   se.set_access(access);
 
-  CompactSet translated = se.domain();
-  translated.translate(se.translation());
-  _edge_offset = translated.maxDimPerimetral();
+  SBG::LIB::Set translated = se.domain();
+  translated = translated.translate(se.translation());
+  _edge_offset = maxDimPerimetral(translated);
   _set_edges.push_back(se);
 
   return max_edge_id;
 }
 
 int ModelicaSBG::addSetEdge(
-  int var_id, int eq_id, CompactSet domain
-  , CompactTransformation map1, CompactTransformation map2
+  int var_id, int eq_id, SBG::LIB::Set domain
+  , SBG::LIB::Expression map1, SBG::LIB::Expression map2
   , AST::Expression access, std::string name
 )
 {
@@ -189,13 +190,13 @@ int ModelicaSBG::addSetEdge(
   se.set_eq_id(eq_id);
   se.set_map1(map1);
   se.set_map2(map2);
-  se.set_translation(Translation{domain.arity(), _edge_offset});
+  se.set_translation(SBG::LIB::IntTuple{domain.arity(), _edge_offset});
   se.set_name(name);
   se.set_access(access);
 
-  CompactSet translated = se.domain();
-  translated.translate(se.translation());
-  _edge_offset = translated.maxDimPerimetral();
+  SBG::LIB::Set translated = se.domain();
+  translated = translated.translate(se.translation());
+  _edge_offset = maxDimPerimetral(translated);
   _set_edges.push_back(se);
 
   return max_edge_id;
@@ -204,7 +205,7 @@ int ModelicaSBG::addSetEdge(
 // Non-member functions --------------------------------------------------------
 
 EquationAccess getAccess(
-  const ModelicaSBG& modelica_sbg, const SetEdge& se, const CompactSet& s
+  const ModelicaSBG& modelica_sbg, const SetEdge& se, const SBG::LIB::Set& s
 )
 {
   // Get equation set-vertex referenced by the set-edge.
@@ -221,7 +222,7 @@ EquationAccess getAccess(
 }
 
 EquationAccess getAccess(
-  const ModelicaSBG& modelica_sbg, const SetEdge& se, const CompactSet& s
+  const ModelicaSBG& modelica_sbg, const SetEdge& se, const SBG::LIB::Set& s
   , const SBG::LIB::Expression& expr
 )
 {

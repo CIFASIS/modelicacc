@@ -17,13 +17,21 @@
 
 ******************************************************************************/
 
+/**
+ * @file
+ * @brief Interface between SBG library and Modelica arrays of variables and
+ * equations.
+ */
+
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_VERTEX_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_VERTEX_HPP_
 
 #include "ast/expression.hpp"
 #include "causalize/sbg_implementation/equation_info.hpp"
-#include "util/compact_set.hpp"
 #include "util/table.hpp"
+
+#include <sbg/set.hpp>
+#include <sbg/integer.hpp>
 
 #include <iosfwd>
 #include <sstream>
@@ -48,18 +56,18 @@ using VertexInfo = std::variant<VarInfo, EquationInfo>;
 class SetVertex {
 public:
   SetVertex(int node_id);
-  SetVertex(int node_id, CompactSet s);
+  SetVertex(int node_id, SBG::LIB::Set s);
 
   int node_id() const;
   std::size_t arity() const;
   std::string name() const;
-  const CompactSet& set() const;
-  const Translation& translation() const;
+  const SBG::LIB::Set& set() const;
+  const SBG::LIB::IntTuple& translation() const;
   const VertexInfo& info() const;
 
   void set_node_id(int node_id);
   void set_name(std::string name);
-  void set_translation(Translation translation);
+  void set_translation(SBG::LIB::IntTuple translation);
   void set_info(VertexInfo info);
 
   bool isVariable() const;
@@ -71,25 +79,26 @@ public:
   std::ostream& print(std::ostream& out) const;
   std::string toSBGFormat() const;
 
-  void cartesianProduct(const CompactSet& s);
-  void cartesianProduct(const SetVertex& other);
+  void cartesianProduct(const SBG::LIB::Set& s);
 
   /**
    * @brief Returns the maximum coordinate of the perimeter of _set.
    */
-  AST::Integer maxDimPerimetral() const;
+  SBG::LIB::Int maxDimPerimetral() const;
 
 private:
   int _node_id;
   std::string _name;
-  CompactSet _set;
-  Translation _translation;
+  SBG::LIB::Set _set;
+  SBG::LIB::IntTuple _translation;
   VertexInfo _info;
 };
 
 std::ostream& operator<<(std::ostream& out, const SetVertex& sv);
 
 using SetVertices = std::vector<SetVertex>;
+
+SBG::LIB::Int maxDimPerimetral(SBG::LIB::Set s);
 
 } // namespace Causalize
 

@@ -17,45 +17,45 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_UTIL_AST_VISITORS_COMPACT_SET_VISITOR_HPP_
-#define MODELICACC_UTIL_AST_VISITORS_COMPACT_SET_VISITOR_HPP_
+#ifndef MODELICACC_UTIL_AST_VISITORS_SBG_SET_VISITOR_HPP_
+#define MODELICACC_UTIL_AST_VISITORS_SBG_SET_VISITOR_HPP_
 
 #include "ast/expression.hpp"
-#include "util/compact_set.hpp"
 #include "util/table.hpp"
 
 #include <boost/variant/static_visitor.hpp>
+#include <sbg/set.hpp>
 
 #include <vector>
 
 namespace Modelica {
 
 /**
- * @brief Returns (if possible) an associated compact set of an index.
+ * @brief Returns (if possible) an associated SBG set of an index.
  */
-class CompactSetVisitor : public boost::static_visitor<CompactSet> {
+class SBGSetVisitor : public boost::static_visitor<SBG::LIB::Set> {
 public:
-  explicit CompactSetVisitor(const VarSymbolTable& symbols);
-  CompactSet operator()(Integer v);
-  CompactSet operator()(Boolean v);
-  CompactSet operator()(AddAll v);
-  CompactSet operator()(String v);
-  CompactSet operator()(Name v);
-  CompactSet operator()(Real v);
-  CompactSet operator()(SubEnd v);
-  CompactSet operator()(SubAll v);
-  CompactSet operator()(BinOp);
-  CompactSet operator()(UnaryOp);
-  CompactSet operator()(Brace);
-  CompactSet operator()(Bracket);
-  CompactSet operator()(Call);
-  CompactSet operator()(FunctionExp);
-  CompactSet operator()(ForExp);
-  CompactSet operator()(IfExp);
-  CompactSet operator()(Named);
-  CompactSet operator()(Output);
-  CompactSet operator()(Reference);
-  CompactSet operator()(Range);
+  explicit SBGSetVisitor(const VarSymbolTable& symbols);
+  SBG::LIB::Set operator()(Integer v);
+  SBG::LIB::Set operator()(Boolean v);
+  SBG::LIB::Set operator()(AddAll v);
+  SBG::LIB::Set operator()(String v);
+  SBG::LIB::Set operator()(Name v);
+  SBG::LIB::Set operator()(Real v);
+  SBG::LIB::Set operator()(SubEnd v);
+  SBG::LIB::Set operator()(SubAll v);
+  SBG::LIB::Set operator()(BinOp);
+  SBG::LIB::Set operator()(UnaryOp);
+  SBG::LIB::Set operator()(Brace);
+  SBG::LIB::Set operator()(Bracket);
+  SBG::LIB::Set operator()(Call);
+  SBG::LIB::Set operator()(FunctionExp);
+  SBG::LIB::Set operator()(ForExp);
+  SBG::LIB::Set operator()(IfExp);
+  SBG::LIB::Set operator()(Named);
+  SBG::LIB::Set operator()(Output);
+  SBG::LIB::Set operator()(Reference);
+  SBG::LIB::Set operator()(Range);
 
 protected:
   VarSymbolTable _symbols;
@@ -66,4 +66,4 @@ protected:
 
 }  // namespace Modelica
 
-#endif // MODELICACC_UTIL_AST_VISITORS_COMPACT_SET_VISITOR_HPP_
+#endif // MODELICACC_UTIL_AST_VISITORS_SBG_SET_VISITOR_HPP_

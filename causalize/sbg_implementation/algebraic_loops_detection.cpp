@@ -23,12 +23,10 @@
 #include "causalize/sbg_implementation/set_vertex.hpp"
 #include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 #include "util/debug.hpp"
-#include "util/compact_set.hpp"
 
 #include <algorithms/scc/scc.hpp>
 #include <sbg/directed_sbg.hpp>
 #include <sbg/pw_map.hpp>
-#include <sbg/set.hpp>
 #include <util/time_profiler.hpp>
 
 #include <algorithm>
@@ -64,7 +62,7 @@ const SBG::LIB::SCCData& AlgebraicLoopsResult::scc_result() const
 namespace {
 
 AST::Equation innerBounds(
-  const EquationInfo& eq_info, const CompactSet& reps
+  const EquationInfo& eq_info, const SBG::LIB::Set& reps
   , const AST::Indexes& indexes, const AST::Indexes& other_indexes
 )
 {
@@ -79,15 +77,14 @@ AST::Equation innerBounds(
 } // namespace
 
 EquationList AlgebraicLoopsResult::loopToModelicaFormat(
-  const CompactSet& reps, const CompactSet& represented
+  const SBG::LIB::Set& reps, const SBG::LIB::Set& represented
   , const AST::Indexes& indexes
 ) const
 {
   EquationList result;
 
   for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-    CompactSet se_scc = se.translatedDomain();
-    se_scc.intersection(represented);
+    SBG::LIB::Set se_scc = se.translatedDomain().intersection(represented);
     if (se_scc.cardinal() > 0) {
       // Bounds for arrays of equations inside an algebraic loop.
       auto [eq_info, accesses] = getAccess(_modelica_bsbg, se, se_scc);
@@ -103,7 +100,7 @@ EquationList AlgebraicLoopsResult::loopToModelicaFormat(
 namespace {
 
 AlgebraicLoop outerBounds(
-  const CompactSet& reps, const AST::EquationList& eq_list, const AST::Indexes indexes
+  const SBG::LIB::Set& reps, const AST::EquationList& eq_list, const AST::Indexes indexes
 )
 {
   // Bounds for arrays of algebraic loops.
@@ -119,7 +116,7 @@ AlgebraicLoop outerBounds(
 } // namespace
 
 AlgebraicLoops AlgebraicLoopsResult::loopsToModelicaFormat(
-  const SetEdge& se, const CompactSet& se_scc
+  const SetEdge& se, const SBG::LIB::Set& se_scc
 ) const
 {
   // Create the indices for an array of algebraic loops (possibly empty if there
@@ -129,9 +126,8 @@ AlgebraicLoops AlgebraicLoopsResult::loopsToModelicaFormat(
   // Get other equations that belong to the current SCCs determined by
   // \p se_scc.
   AlgebraicLoops result;
-  const SBG::LIB::PWMap& rmap = _scc_result.rmap();
   for (const auto& [reps, indexes] : accesses) {
-    CompactSet represented{rmap.preImage(reps.set())};
+    SBG::LIB::Set represented = _scc_result.rmap().preImage(reps);
     EquationList eq_list = loopToModelicaFormat(reps, represented, indexes);
     result.pushBack(outerBounds(reps, eq_list, indexes));
   }
@@ -142,10 +138,9 @@ AlgebraicLoops AlgebraicLoopsResult::toModelicaFormat() const
 {
   AlgebraicLoops result;
 
-  CompactSet representatives{_scc_result.rmap().fixedPoints()};
+  SBG::LIB::Set representatives = _scc_result.rmap().fixedPoints();
   for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-    CompactSet se_scc = se.translatedDomain();
-    se_scc.intersection(representatives);
+    SBG::LIB::Set se_scc = se.translatedDomain().intersection(representatives);
     if (se_scc.cardinal() > 0) {
       result.concatenation(loopsToModelicaFormat(se, se_scc));
     }

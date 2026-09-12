@@ -28,11 +28,11 @@ namespace Causalize {
 // Constructors/Destructors ----------------------------------------------------
 
 SetEdge::SetEdge(int edge_id, std::size_t arity)
-  : _edge_id(edge_id), _map1(arity), _map2(arity) {}
+  : _edge_id(edge_id), _map1(arity, 0, 0), _map2(arity, 0, 0) {}
 
-SetEdge::SetEdge(int edge_id, CompactSet domain)
-  : _edge_id(edge_id), _domain(domain), _map1(domain.arity())
-    , _map2(domain.arity()) {}
+SetEdge::SetEdge(int edge_id, SBG::LIB::Set domain)
+  : _edge_id(edge_id), _domain(domain), _map1(domain.arity(), 0, 0)
+    , _map2(domain.arity(), 0, 0) {}
 
 // Getters ---------------------------------------------------------------------
 
@@ -44,15 +44,15 @@ int SetEdge::var_id() const { return _var_id; }
 
 int SetEdge::eq_id() const { return _eq_id; }
 
-const Translation& SetEdge::translation() const { return _translation; }
+const SBG::LIB::IntTuple& SetEdge::translation() const { return _translation; }
 
-const CompactSet& SetEdge::domain() const { return _domain; }
+const SBG::LIB::Set& SetEdge::domain() const { return _domain; }
 
-const CompactTransformation& SetEdge::map1() const { return _map1; }
+const SBG::LIB::Expression& SetEdge::map1() const { return _map1; }
 
-const CompactTransformation& SetEdge::map2() const { return _map2; }
+const SBG::LIB::Expression& SetEdge::map2() const { return _map2; }
 
-const Expression& SetEdge::access() const { return _access; }
+const AST::Expression& SetEdge::access() const { return _access; }
 
 std::size_t SetEdge::arity() const { return _domain.arity(); }
 
@@ -66,15 +66,18 @@ void SetEdge::set_var_id(int var_id) { _var_id = var_id; }
 
 void SetEdge::set_eq_id(int eq_id) { _eq_id = eq_id; }
 
-void SetEdge::set_translation(Translation translation) { _translation = translation; }
+void SetEdge::set_translation(SBG::LIB::IntTuple translation)
+{
+  _translation = translation;
+}
 
-void SetEdge::set_domain(CompactSet domain) { _domain = domain; }
+void SetEdge::set_domain(SBG::LIB::Set domain) { _domain = domain; }
 
-void SetEdge::set_map1(CompactTransformation map1) { _map1 = map1; }
+void SetEdge::set_map1(SBG::LIB::Expression map1) { _map1 = map1; }
 
-void SetEdge::set_map2(CompactTransformation map2) { _map2 = map2; }
+void SetEdge::set_map2(SBG::LIB::Expression map2) { _map2 = map2; }
 
-void SetEdge::set_access(Expression access) { _access = access; }
+void SetEdge::set_access(AST::Expression access) { _access = access; }
 
 // Operators -------------------------------------------------------------------
 
@@ -89,14 +92,24 @@ std::ostream& operator<<(std::ostream& out, const SetEdge& se)
 
 std::string SetEdge::domainToSBGFormat() const
 {
-  CompactSet copy = _domain;
-  copy.translate(_translation);
-  return copy.toSBGFormat();
+  std::ostringstream oss;
+  oss << _domain.translate(_translation);
+  return oss.str();
 }
 
-std::string SetEdge::map1ToSBGFormat() const { return _map1.toSBGFormat(); }
+std::string SetEdge::map1ToSBGFormat() const
+{
+  std::ostringstream oss;
+  oss << _map1;
+  return oss.str();
+}
 
-std::string SetEdge::map2ToSBGFormat() const { return _map2.toSBGFormat(); }
+std::string SetEdge::map2ToSBGFormat() const
+{
+  std::ostringstream oss;
+  oss << _map2;
+  return oss.str();
+}
 
 std::string SetEdge::toSBGFormat() const
 {
@@ -104,22 +117,34 @@ std::string SetEdge::toSBGFormat() const
     + map2ToSBGFormat();
 }
 
-CompactSet SetEdge::translatedDomain() const
+SBG::LIB::Set SetEdge::translatedDomain() const
 {
-  CompactSet copy = _domain;
-  copy.translate(_translation);
-  return copy;
+  return _domain.translate(_translation);
 }
 
-AST::Integer SetEdge::maxDimPerimetral() { return _domain.maxDimPerimetral(); }
+AST::Integer SetEdge::maxDimPerimetral()
+{
+  SBG::LIB::Int maximum = 0;
 
-SetEdge SetEdge::restrict(CompactSet restriction) const
+  SBG::LIB::IntTuple perimetral_max = _domain.perimeter().max();
+  for (std::size_t k = 0; k < arity(); ++k) {
+    maximum = std::max(maximum, perimetral_max[k]);
+  }
+
+  return maximum;
+}
+
+SetEdge SetEdge::restrict(SBG::LIB::Set restriction) const
 {
   if (restriction.cardinal() == 0) {
     return SetEdge{_edge_id, 0};
   }
-  restriction.translate(-_translation);
-  restriction.intersection(_domain);
+  SBG::LIB::IntTuple neg_translation;
+  for (const SBG::LIB::Int x : _translation) {
+    neg_translation.pushBack(-x);
+  }
+  restriction = restriction.translate(neg_translation);
+  restriction = restriction.intersection(_domain);
 
   SetEdge result{_edge_id, restriction};
 

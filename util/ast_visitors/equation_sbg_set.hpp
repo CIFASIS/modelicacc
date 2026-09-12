@@ -17,31 +17,36 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_UTIL_AST_VISITORS_EQUATION_COMPACT_SET_HPP_
-#define MODELICACC_UTIL_AST_VISITORS_EQUATION_COMPACT_SET_HPP_
+/**
+ * @file
+ * @brief Module used to convert the values of for indices to a SBG set. 
+ */
+
+#ifndef MODELICACC_UTIL_AST_VISITORS_EQUATION_SBG_SET_HPP_
+#define MODELICACC_UTIL_AST_VISITORS_EQUATION_SBG_SET_HPP_
 
 #include "ast/equation.hpp"
-#include "util/compact_set.hpp"
 #include "util/table.hpp"
 
 #include <boost/variant/static_visitor.hpp>
+#include <sbg/set.hpp>
 
 namespace Modelica {
 
 /**
- * @brief Given an equation, it returns (if possible) an associated compact set
+ * @brief Given an equation, it returns (if possible) an associated SBG set
  * with a bijection from each accessed variable to an element of the set.
  * Precondition: each ForEq should contain only one element in its list.
  */
-class EquationCompactSet : public boost::static_visitor<CompactSet> {
+class EquationToSBGSet : public boost::static_visitor<SBG::LIB::Set> {
 public:
-  EquationCompactSet(VarSymbolTable vtable, unsigned int max_dim);
-  CompactSet operator()(Connect eq);
-  CompactSet operator()(Equality eq);
-  CompactSet operator()(CallEq eq);
-  CompactSet operator()(ForEq eq);
-  CompactSet operator()(IfEq eq);
-  CompactSet operator()(WhenEq eq);
+  EquationToSBGSet(VarSymbolTable vtable, unsigned int max_dim);
+  SBG::LIB::Set operator()(Connect eq);
+  SBG::LIB::Set operator()(Equality eq);
+  SBG::LIB::Set operator()(CallEq eq);
+  SBG::LIB::Set operator()(ForEq eq);
+  SBG::LIB::Set operator()(IfEq eq);
+  SBG::LIB::Set operator()(WhenEq eq);
 
 private:
   unsigned int _max_dim;
@@ -51,4 +56,4 @@ private:
 
 }  // namespace Modelica
 
-#endif // MODELICACC_UTIL_AST_VISITORS_EQUATION_COMPACT_SET_HPP_
+#endif // MODELICACC_UTIL_AST_VISITORS_EQUATION_SBG_SET_HPP_

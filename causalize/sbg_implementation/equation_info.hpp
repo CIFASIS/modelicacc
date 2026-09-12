@@ -17,6 +17,12 @@
 
 ******************************************************************************/
 
+/**
+ * @file
+ * @brief Structure to save equation information from the SBG generation, up to
+ * the vertical sorting of the model.
+ */
+
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_EQUATION_INFO_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_EQUATION_INFO_HPP_
 
@@ -30,7 +36,7 @@ namespace Causalize {
 /**
  * @brief Helper that saves all Modelica information about an array of equations
  * (the array can be of size 1). It saves the indices of the array and the
- * contained equation separately.
+ * equation expression separately.
  */
 class EquationInfo {
 public:
