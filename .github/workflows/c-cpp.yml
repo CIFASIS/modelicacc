@@ -34,16 +34,16 @@ jobs:
 
     - name: SBG
       working-directory: ./build
-      run: make update-sbg repo_checkout=https 
+      run: make update-sbg
 
     - name: Build
       working-directory: ./build
       run: make
 
     - name: Doc
-      working-directory: .
+      working-directory: ./build
       run: make doc
 
     - name: Tests
-      working-directory: .
-      run: make main_test
+      working-directory: ./build
+      run: make modelicacc_test

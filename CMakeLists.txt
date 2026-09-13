@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(modelicacc)
 include(ExternalProject)
+include(FetchContent)
 
 # ------------------------------------------------------------------------------
 # Build type: Debug, Release
@@ -70,10 +71,24 @@ ExternalProject_Add(lib-boost
   SOURCE_DIR        ${BOOST_LIB_PATH}
   CONFIGURE_COMMAND ""
   BUILD_COMMAND     ""
-  INSTALL_COMMAND   ${CMAKE_COMMAND} -E env sh -c
-    "[ -d ${BOOST_1_81_DIR} ] \
-|| tar -xf ${BOOST_LIB_PATH}/boost-1.81.0.tar.xz -C ${BOOST_LIB_PATH}"
+  INSTALL_COMMAND ${CMAKE_COMMAND} -E chdir ${BOOST_LIB_PATH} ${CMAKE_COMMAND} -E tar xf ${BOOST_LIB_PATH}/boost-1.81.0.tar.xz
   BUILD_ALWAYS      0
+)
+
+# ------------------------------------------------------------------------------
+# GTest 1.12.1
+# ------------------------------------------------------------------------------
+
+ExternalProject_Add(lib-gtest
+  PREFIX              ${GTEST_DIR}
+  DOWNLOAD_COMMAND    ${CMAKE_COMMAND} -E chdir ${GTEST_DIR} ${CMAKE_COMMAND} -E tar xzf ${GTEST_DIR}/googletest-release-1.12.1.tar.gz
+  SOURCE_DIR          ${GTEST_DIR}/googletest-release-1.12.1
+  BINARY_DIR          ${GTEST_DIR}/build
+  CMAKE_ARGS          -DCMAKE_INSTALL_PREFIX=${GTEST_DIR}/usr
+  INSTALL_COMMAND     ${CMAKE_COMMAND} --build <BINARY_DIR> --target install
+  BUILD_ALWAYS        0
+  UPDATE_COMMAND      ""
+  PATCH_COMMAND       ""
 )
 
 # ------------------------------------------------------------------------------
@@ -82,17 +97,17 @@ ExternalProject_Add(lib-boost
 
 ExternalProject_Add(lib-sbg-legacy
   PREFIX              ${SBG_LIB_DIR}
-  DOWNLOAD_COMMAND    ${CMAKE_COMMAND} -E env sh -c
-    "[ -d ${SBG_1_0_0_DIR} ] \
-|| tar -zxf ${SBG_LIB_DIR}/sb-graph-1.0.0.tar.gz -C ${SBG_LIB_DIR}"
+  DOWNLOAD_COMMAND    ${CMAKE_COMMAND} -E chdir ${SBG_LIB_DIR} ${CMAKE_COMMAND} -E tar zxf sb-graph-1.0.0.tar.gz
   SOURCE_DIR          ${SBG_1_0_0_DIR}
-  CONFIGURE_COMMAND   sh -c "cd ${SBG_1_0_0_DIR} \
-&& autoreconf -fi && autoconf && ./configure"
+  CONFIGURE_COMMAND   ${CMAKE_COMMAND} -E chdir "${SBG_1_0_0_DIR}" autoreconf -fi
+  COMMAND             ${CMAKE_COMMAND} -E chdir "${SBG_1_0_0_DIR}" ./configure
   BUILD_COMMAND       make -C ${SBG_1_0_0_DIR}
-  INSTALL_COMMAND     sh -c "mkdir -p ${SBG_1_0_0_DIR}/usr \
-&& make -C ${SBG_1_0_0_DIR} install prefix=${SBG_1_0_0_DIR}/usr"
+  INSTALL_COMMAND     ${CMAKE_COMMAND} -E make_directory ${SBG_1_0_0_DIR}/usr
+  COMMAND             make -C ${SBG_1_0_0_DIR} install prefix=${SBG_1_0_0_DIR}/usr
   BUILD_IN_SOURCE     1
-  DEPENDS             lib-boost
+  DEPENDS             lib-sbg-legacy
+  UPDATE_COMMAND      ""
+  PATCH_COMMAND       ""
 )
 
 # ------------------------------------------------------------------------------
@@ -102,6 +117,7 @@ ExternalProject_Add(lib-sbg-legacy
 set(SBG_BRANCH "sb-graph-dev" CACHE STRING "Branch of sb-graph-dev to checkout")
 option(BUILD_SBG "Build the sb-graph-dev submodule" ON)
 set(REPO_CHECKOUT "ssh" CACHE STRING "Checkout method for sb-graph-dev (ssh|https)")
+set(CMAKE_DISABLE_TESTING ON CACHE BOOL "Disable testing" FORCE)
 
 # ------------------------------------------------------------------------------
 # Bring sb-graph-dev into ModelicaCC
@@ -109,14 +125,13 @@ set(REPO_CHECKOUT "ssh" CACHE STRING "Checkout method for sb-graph-dev (ssh|http
 
 ExternalProject_Add(update-sbg
   PREFIX              ${SBG_LIB_DIR}
-  DOWNLOAD_COMMAND    ${CMAKE_COMMAND} -E env sh -c
-    "[ -d ${SBG_DEV_DIR} ] || (cd ${SBG_LIB_DIR} \
-&& python3 ./update.py --branch_name ${SBG_BRANCH} --repo_checkout ${REPO_CHECKOUT} \
-&& tar -zxf sb-graph-dev.tar.gz)"
+  GIT_REPOSITORY      https://github.com/CIFASIS/sb-graph.git
+  GIT_TAG             ${SBG_BRANCH}
   SOURCE_DIR          ${SBG_DEV_DIR}
   CONFIGURE_COMMAND   ""
   BUILD_COMMAND       ""
   INSTALL_COMMAND     ""
+  UPDATE_DISCONNECTED 1
 )
 
 # ------------------------------------------------------------------------------
@@ -129,32 +144,15 @@ if(BUILD_SBG)
     DOWNLOAD_COMMAND  ""
     SOURCE_DIR        ${SBG_DEV_DIR}
     BINARY_DIR        ${SBG_DEV_DIR}/build
-    CMAKE_ARGS        ""
     INSTALL_COMMAND   ""
-    DEPENDS           update-sbg lib-sbg-legacy
+    DEPENDS           update-sbg lib-boost
     BUILD_ALWAYS      0
   )
 else()
-  add_custom_target(lib-sbg-dev DEPENDS update-sbg lib-sbg-legacy)
+  add_custom_target(lib-sbg-dev DEPENDS lib-boost)
 endif()
 
-add_custom_target(lib-sbg DEPENDS lib-sbg-dev)
-
-# ------------------------------------------------------------------------------
-# GTest 1.12.1
-# ------------------------------------------------------------------------------
-
-ExternalProject_Add(lib-gtest
-  PREFIX              ${GTEST_DIR}
-  DOWNLOAD_COMMAND    ${CMAKE_COMMAND} -E env sh -c
-    "[ -d ${GTEST_DIR}/usr/lib ] \
-|| tar -xzf ${GTEST_DIR}/googletest-release-1.12.1.tar.gz -C ${GTEST_DIR}"
-  SOURCE_DIR          ${GTEST_DIR}/googletest-release-1.12.1
-  BINARY_DIR          ${GTEST_DIR}/build
-  CMAKE_ARGS          -DCMAKE_INSTALL_PREFIX=${GTEST_DIR}/usr
-  INSTALL_COMMAND     ${CMAKE_COMMAND} --build <BINARY_DIR> --target install
-  BUILD_ALWAYS        0
-)
+add_custom_target(lib-sbg DEPENDS lib-sbg-dev lib-sbg-legacy)
 
 # ------------------------------------------------------------------------------
 # Includes and links for sb-graph-legacy, sb-graph-dev and Boost 
@@ -236,7 +234,7 @@ add_subdirectory(causalize)
 
 find_package(Doxygen QUIET)
 if(DOXYGEN_FOUND)
-  add_custom_target(doc
+  add_custom_target(modelicacc_doc
     COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Generating documentation with Doxygen"
@@ -247,8 +245,7 @@ endif()
 # ModelicaCC testing
 # ------------------------------------------------------------------------------
 
-enable_testing()
-add_custom_target(main_test
+add_custom_target(modelicacc_test
   COMMAND ${CMAKE_COMMAND} --build . --target flatter_test
   COMMAND ${CMAKE_COMMAND} --build . --target causalize_test
   DEPENDS lib-gtest
