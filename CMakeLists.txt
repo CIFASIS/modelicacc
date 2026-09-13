@@ -105,7 +105,6 @@ ExternalProject_Add(lib-sbg-legacy
   INSTALL_COMMAND     ${CMAKE_COMMAND} -E make_directory ${SBG_1_0_0_DIR}/usr
   COMMAND             make -C ${SBG_1_0_0_DIR} install prefix=${SBG_1_0_0_DIR}/usr
   BUILD_IN_SOURCE     1
-  DEPENDS             lib-sbg-legacy
   UPDATE_COMMAND      ""
   PATCH_COMMAND       ""
 )
