@@ -43,7 +43,7 @@ jobs:
 
     - name: Doc
       working-directory: ./build
-      run: make doc
+      run: make modelicacc_doc
 
     - name: Tests
       working-directory: ./build
