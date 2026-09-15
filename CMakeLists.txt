@@ -113,43 +113,50 @@ ExternalProject_Add(lib-sbg-legacy
 # Configure options for the sb-graph-dev repo
 # ------------------------------------------------------------------------------
 
-set(SBG_BRANCH "sb-graph-dev" CACHE STRING "Branch of sb-graph-dev to checkout")
-option(BUILD_SBG "Build the sb-graph-dev submodule" ON)
+set(SBG_REF "sb-graph-dev" CACHE STRING "Reference of branch or commit of sb-graph-dev to checkout")
 set(REPO_CHECKOUT "ssh" CACHE STRING "Checkout method for sb-graph-dev (ssh|https)")
-set(CMAKE_DISABLE_TESTING ON CACHE BOOL "Disable testing" FORCE)
 
 # ------------------------------------------------------------------------------
 # Bring sb-graph-dev into ModelicaCC
 # ------------------------------------------------------------------------------
 
-ExternalProject_Add(update-sbg
-  PREFIX              ${SBG_LIB_DIR}
-  GIT_REPOSITORY      https://github.com/CIFASIS/sb-graph.git
-  GIT_TAG             ${SBG_BRANCH}
-  SOURCE_DIR          ${SBG_DEV_DIR}
-  CONFIGURE_COMMAND   ""
-  BUILD_COMMAND       ""
-  INSTALL_COMMAND     ""
-  UPDATE_DISCONNECTED 1
+if(NOT EXISTS "${SBG_DEV_DIR}/.git")
+  ExternalProject_Add(clone-sbg
+    PREFIX              ${SBG_LIB_DIR}
+    GIT_REPOSITORY      https://github.com/CIFASIS/sb-graph.git
+    GIT_TAG             sb-graph-dev
+    SOURCE_DIR          ${SBG_DEV_DIR}
+    CONFIGURE_COMMAND   ""
+    BUILD_COMMAND       ""
+    INSTALL_COMMAND     ""
+    UPDATE_COMMAND      ""
+    PATCH_COMMAND       ""
+  )
+else()
+  add_custom_target(clone-sbg)
+endif()
+
+add_custom_target(update-sbg
+  COMMAND ${CMAKE_COMMAND} -E echo "Updating sb-graph-dev to ${SBG_REF}"
+  COMMAND git -C ${SBG_DEV_DIR} fetch --all --tags --prune
+  COMMAND git -C ${SBG_DEV_DIR} checkout ${SBG_REF}
+  DEPENDS clone-sbg
+  COMMENT "Force sb-graph-dev to requested ref"
 )
 
 # ------------------------------------------------------------------------------
 # Build sb-graph-dev 
 # ------------------------------------------------------------------------------
 
-if(BUILD_SBG)
-  ExternalProject_Add(lib-sbg-dev
-    PREFIX            ${SBG_LIB_DIR}
-    DOWNLOAD_COMMAND  ""
-    SOURCE_DIR        ${SBG_DEV_DIR}
-    BINARY_DIR        ${SBG_DEV_DIR}/build
-    INSTALL_COMMAND   ""
-    DEPENDS           update-sbg lib-boost
-    BUILD_ALWAYS      0
-  )
-else()
-  add_custom_target(lib-sbg-dev DEPENDS lib-boost)
-endif()
+ExternalProject_Add(lib-sbg-dev
+  PREFIX            ${SBG_LIB_DIR}
+  DOWNLOAD_COMMAND  ""
+  SOURCE_DIR        ${SBG_DEV_DIR}
+  BINARY_DIR        ${SBG_DEV_DIR}/build
+  INSTALL_COMMAND   ""
+  DEPENDS           update-sbg lib-boost
+  BUILD_ALWAYS      1
+)
 
 add_custom_target(lib-sbg DEPENDS lib-sbg-dev lib-sbg-legacy)
 
@@ -216,7 +223,6 @@ set(COMMON_SRC
 
 add_library(modelica STATIC ${COMMON_SRC})
 set_target_properties(modelica PROPERTIES OUTPUT_NAME "modelica")
-add_dependencies(modelica lib-sbg)
 
 # ------------------------------------------------------------------------------
 # Submodules of ModelicaCC
@@ -257,11 +263,11 @@ add_custom_target(modelicacc_test
 
 add_custom_target(help_modelicacc
   COMMAND ${CMAKE_COMMAND} -E echo "cmake -DCMAKE_BUILD_TYPE=<Debug|Release> \
-    -DSBG_BRANCH=<branch> -DBUILD_SBG=<ON|OFF> -DREPO_CHECKOUT=<ssh|https> .."
+    -DSBG_REF=<branch> -DREPO_CHECKOUT=<ssh|https> .."
   COMMAND ${CMAKE_COMMAND} -E echo "Default values:"
   COMMAND ${CMAKE_COMMAND} -E echo "CMAKE_BUILD_TYPE=Release"
-  COMMAND ${CMAKE_COMMAND} -E echo "SBG_BRANCH=sb-graph-dev"
-  COMMAND ${CMAKE_COMMAND} -E echo "BUILD_SBG=ON"
+  COMMAND ${CMAKE_COMMAND} -E echo "SBG_REF=sb-graph-dev"
+  #COMMAND ${CMAKE_COMMAND} -E echo "BUILD_SBG=ON"
   COMMAND ${CMAKE_COMMAND} -E echo "REPO_CHECKOUT=ssh"
 )
 
