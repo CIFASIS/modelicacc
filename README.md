@@ -54,27 +54,32 @@ the following  dependencies must be installed:
 
 ## Basic Installation
 
-The simplest way to compile this package is:
+The simplest way to compile this package is to run the following commands from the library root directory (`${MODELICACC_ROOT_DIR}`):
 
-  1. `cd` to the directory containing the package's source code and type
-     `autoconf` to generate the configuration scripts.
+  1. `mkdir build`
   
-  2. Type `./configure` to run the configuration script.
+  2. `cd build` 
+      
+  3. `cmake ..`
+
+      Note that by default the biuld type is set to `Release`, to make a debug build, add `-DCMAKE_BUILD_TYPE=Debug`
+
+  4. `make` 
   
-  3. Type `make` to compile all the binaries. The different tools are located 
-     in the bin folder. 
+  6. You can remove the generated library and object files from the
+     source code directory by typing `make clean-all`.
 
-  4. You can remove the program binaries and object files from the
-     source code directory by typing `make clean`.  
+## Makefile targets
 
-## SBG library instructions
+The makefile script accepts the following targets:
 
-To use the newest versions of SBG algorithms type `make update-sbg`, and
-then re-compile binaries by typing `make`. This is done automatically the
-first time the whole project is built.
+  * update\_sbg: updates the SBG library.
 
-If Python3 is not installed, replace the occurrences of `python3` with
-`python`.
+  * main\_test: builds and run integration and unit tests.
+
+  * doc: builds the documentation.
+
+To list all the available targets run `make help`.
 
 ## Changelog
 
