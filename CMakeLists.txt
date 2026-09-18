@@ -50,12 +50,11 @@ set(TEST_DIR "${CMAKE_CURRENT_LIST_DIR}/test")
 set(UTIL_DIR "${CMAKE_CURRENT_LIST_DIR}/util")
 
 # ------------------------------------------------------------------------------
-# 3rd party dependencies: Boost 1.81, sb-graph-legacy, sb-graph-dev, GTest
+# 3rd party dependencies: Boost 1.81, GTest, sb-graph-dev
 # ------------------------------------------------------------------------------
 
 set(3RD_PARTY_DIR   ${CMAKE_SOURCE_DIR}/3rd-party)
 set(SBG_LIB_DIR     ${3RD_PARTY_DIR}/sbg)
-set(SBG_1_0_0_DIR   ${SBG_LIB_DIR}/sb-graph-1.0.0)
 set(SBG_DEV_DIR     ${SBG_LIB_DIR}/sb-graph-dev)
 set(BOOST_LIB_PATH  ${3RD_PARTY_DIR}/boost)
 set(BOOST_1_81_DIR  ${BOOST_LIB_PATH}/boost-1.81.0)
@@ -87,24 +86,6 @@ ExternalProject_Add(lib-gtest
   CMAKE_ARGS          -DCMAKE_INSTALL_PREFIX=${GTEST_DIR}/usr
   INSTALL_COMMAND     ${CMAKE_COMMAND} --build <BINARY_DIR> --target install
   BUILD_ALWAYS        0
-  UPDATE_COMMAND      ""
-  PATCH_COMMAND       ""
-)
-
-# ------------------------------------------------------------------------------
-# sb-graph-legacy (sb-graph-1.0.0)
-# ------------------------------------------------------------------------------
-
-ExternalProject_Add(lib-sbg-legacy
-  PREFIX              ${SBG_LIB_DIR}
-  DOWNLOAD_COMMAND    ${CMAKE_COMMAND} -E chdir ${SBG_LIB_DIR} ${CMAKE_COMMAND} -E tar zxf sb-graph-1.0.0.tar.gz
-  SOURCE_DIR          ${SBG_1_0_0_DIR}
-  CONFIGURE_COMMAND   ${CMAKE_COMMAND} -E chdir "${SBG_1_0_0_DIR}" autoreconf -fi
-  COMMAND             ${CMAKE_COMMAND} -E chdir "${SBG_1_0_0_DIR}" ./configure
-  BUILD_COMMAND       make -C ${SBG_1_0_0_DIR}
-  INSTALL_COMMAND     ${CMAKE_COMMAND} -E make_directory ${SBG_1_0_0_DIR}/usr
-  COMMAND             make -C ${SBG_1_0_0_DIR} install prefix=${SBG_1_0_0_DIR}/usr
-  BUILD_IN_SOURCE     1
   UPDATE_COMMAND      ""
   PATCH_COMMAND       ""
 )
@@ -158,18 +139,11 @@ ExternalProject_Add(lib-sbg-dev
   BUILD_ALWAYS      1
 )
 
-add_custom_target(lib-sbg DEPENDS lib-sbg-dev lib-sbg-legacy)
+add_custom_target(lib-sbg DEPENDS lib-sbg-dev)
 
 # ------------------------------------------------------------------------------
-# Includes and links for sb-graph-legacy, sb-graph-dev and Boost 
+# Includes and links for sb-graph-dev and Boost 
 # ------------------------------------------------------------------------------
-
-add_library(sbg_legacy INTERFACE)
-target_include_directories(sbg_legacy INTERFACE ${SBG_1_0_0_DIR}/usr/include)
-target_link_directories(sbg_legacy INTERFACE ${SBG_1_0_0_DIR}/usr/lib)
-target_link_libraries(sbg_legacy INTERFACE sbgraph)
-add_dependencies(sbg_legacy lib-sbg-legacy)
-add_library(SBG::legacy ALIAS sbg_legacy)
 
 add_library(sbg_dev INTERFACE)
 target_include_directories(sbg_dev INTERFACE ${SBG_DEV_DIR})
@@ -223,6 +197,8 @@ set(COMMON_SRC
 
 add_library(modelica STATIC ${COMMON_SRC})
 set_target_properties(modelica PROPERTIES OUTPUT_NAME "modelica")
+add_dependencies(modelica lib-sbg-dev)
+target_link_libraries(modelica PUBLIC SBG::dev)
 
 # ------------------------------------------------------------------------------
 # Submodules of ModelicaCC
@@ -251,7 +227,7 @@ endif()
 # ------------------------------------------------------------------------------
 
 add_custom_target(modelicacc_test
-  COMMAND ${CMAKE_COMMAND} --build . --target flatter_test
+  #COMMAND ${CMAKE_COMMAND} --build . --target flatter_test
   COMMAND ${CMAKE_COMMAND} --build . --target causalize_test
   DEPENDS lib-gtest
   COMMENT "Running test suite"

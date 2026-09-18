@@ -121,7 +121,7 @@ int main(int argc, char** argv)
     MMO_Tree mt;
     MMO_Class mmo = mt.create(sd);
 
-    Flatter f = Flatter();
+    ::Flatter f;
     if (className == NULL) className = (char*)::className(sd.classes().back()).c_str();
 
     if (className != NULL) {
@@ -154,7 +154,7 @@ int main(int argc, char** argv)
       LOG << " - - - - - - - - - - - - - - - - - - - - - - - - " << std::endl << std::endl;
     }
 
-    Connectors co(mmo);
+    Modelica::Flatter::Connectors co(mmo);
 
     clock_t start, end;
     start = clock();
