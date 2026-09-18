@@ -17,12 +17,12 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_MODELICA_SBG_HPP_
-#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_MODELICA_SBG_HPP_
+#ifndef MODELICACC_UTIL_SBG_MODELICA_SBG_HPP_
+#define MODELICACC_UTIL_SBG_MODELICA_SBG_HPP_
 
-#include "causalize/sbg_implementation/set_edge.hpp"
-#include "causalize/sbg_implementation/set_vertex.hpp"
-#include "util/sbg_interface.hpp"
+#include "util/sbg/set_edge.hpp"
+#include "util/sbg/set_vertex.hpp"
+#include "util/sbg/conversions.hpp"
 
 #include <sbg/integer.hpp>
 #include <sbg/expression.hpp>
@@ -32,8 +32,6 @@
 #include <tuple>
 
 namespace Modelica {
-
-namespace Causalize {
 
 /**
  * @class ModelicaSBG
@@ -129,8 +127,6 @@ EquationAccess getAccess(
   , const SBG::LIB::Expression& expr
 );
 
-} // namespace Causalize
-
 } // namespace Modelica
 
-#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_MODELICA_SBG_HPP_
+#endif // MODELICACC_UTIL_SBG_MODELICA_SBG_HPP_

@@ -20,12 +20,13 @@
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
 #include "ast/queries.hpp"
 #include "util/logger.hpp"
-#include "util/ast_visitors/equation_sbg_set.hpp"
 #include "util/ast_visitors/eval_expression.hpp"
 #include "util/ast_visitors/eval_integer.hpp"
 #include "util/ast_visitors/matching_exps.hpp"
-#include "util/ast_visitors/sbg_expr_visitor.hpp"
-#include "util/ast_visitors/sbg_set_visitor.hpp"
+#include "util/sbg/conversions.hpp"
+#include "util/sbg/ast_visitors/equation_sbg_set.hpp"
+#include "util/sbg/ast_visitors/sbg_expr_visitor.hpp"
+#include "util/sbg/ast_visitors/sbg_set_visitor.hpp"
 
 #include <eval/file_evaluator.hpp>
 #include <eval/pretty_print.hpp>
@@ -79,36 +80,20 @@ GenerateSBGInput::GenerateSBGInput(MMO_Class& mmo_class)
 
 // Getters ---------------------------------------------------------------------
 
-std::string GenerateSBGInput::fileName() { return _mmo_class.name() + "_sbg_input.sbg"; }
+std::string GenerateSBGInput::fileName()
+{
+  return _mmo_class.name() + "_sbg_input.sbg";
+}
 
 // Add variable vertices -------------------------------------------------------
 
 void GenerateSBGInput::addVariableSet(const VarInfo& variable, const Name& name)
 {
-  SBG::LIB::Set var_set;
-  std::size_t var_dimensions = 0;
-  Option<ExpList> dimensions = variable.indices();
-  VarSymbolTable symbols = _mmo_class.syms();
-  EvalInteger eval_int{symbols};
-  if (dimensions) {
-    std::size_t k = 0;
-    for (const Expression& dimension : dimensions.value()) {
-      Integer value = Apply(eval_int, dimension);
-      if (k == 0) {
-        var_set = SBG::LIB::Set{1, 1, value};
-      } else {
-        var_set = var_set.cartesianProduct(SBG::LIB::Set{1, 1, value});
-      }
-      ++k;
-    }
-    var_dimensions = dimensions.value().size();
-  } else {
-    var_set = SBG::LIB::Set{1, 1, 1};
-    var_dimensions = 1;
-  }
+  // Use variable definition information.
+  SBG::LIB::Set var_set = varInfoToSBGSet(variable, _mmo_class.syms());
 
   // Fill remaining dimensions
-  for (std::size_t k = var_dimensions; k < _max_dim; ++k) {
+  for (std::size_t k = var_set.arity(); k < _max_dim; ++k) {
     var_set = var_set.cartesianProduct(SBG::LIB::Set{1, 1, 1});
   }
 

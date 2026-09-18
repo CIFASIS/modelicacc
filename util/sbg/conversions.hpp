@@ -23,10 +23,12 @@
  * Modelica code. 
  */
 
-#ifndef MODELICACC_UTIL_SBG_INTERFACE_HPP_
-#define MODELICACC_UTIL_SBG_INTERFACE_HPP_
+#ifndef MODELICACC_UTIL_SBG_CONVERSIONS_HPP_
+#define MODELICACC_UTIL_SBG_CONVERSIONS_HPP_
 
 #include "ast/expression.hpp"
+#include "util/table.hpp"
+#include "util/ast_visitors/eval_integer.hpp"
 
 #include <sbg/expression.hpp>
 #include <sbg/set.hpp>
@@ -35,6 +37,21 @@
 #include <vector>
 
 namespace Modelica {
+
+////////////////////////////////////////////////////////////////////////////////
+// Conversion from Modelica to SBG ---------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Given a variable information, creates a set with the specified size.
+ */
+SBG::LIB::Set varInfoToSBGSet(
+  const VarInfo& var_info, const VarSymbolTable& symbols
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Conversion from SBG to Modelica ---------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 
 /*
  * @brief A collection of elements, and the corresponding indices to access
@@ -58,4 +75,4 @@ Accesses toModelicaIndices(const SBG::LIB::Set& s, const SBG::LIB::IntTuple& t
 
 } // namespace Modelica
 
-#endif // MODELICACC_UTIL_SBG_INTERFACE_HPP_
+#endif // MODELICACC_UTIL_SBG_CONVERSIONS_HPP_

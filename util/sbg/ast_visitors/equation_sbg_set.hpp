@@ -22,8 +22,8 @@
  * @brief Module used to convert the values of for indices to a SBG set. 
  */
 
-#ifndef MODELICACC_UTIL_AST_VISITORS_EQUATION_SBG_SET_HPP_
-#define MODELICACC_UTIL_AST_VISITORS_EQUATION_SBG_SET_HPP_
+#ifndef MODELICACC_UTIL_SBG_AST_VISITORS_EQUATION_SBG_SET_HPP_
+#define MODELICACC_UTIL_SBG_AST_VISITORS_EQUATION_SBG_SET_HPP_
 
 #include "ast/equation.hpp"
 #include "util/table.hpp"
@@ -56,4 +56,4 @@ private:
 
 }  // namespace Modelica
 
-#endif // MODELICACC_UTIL_AST_VISITORS_EQUATION_SBG_SET_HPP_
+#endif // MODELICACC_UTIL_SBG_AST_VISITORS_EQUATION_SBG_SET_HPP_

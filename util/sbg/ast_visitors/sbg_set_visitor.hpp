@@ -17,8 +17,8 @@
 
 ******************************************************************************/
 
-#ifndef MODELICACC_UTIL_AST_VISITORS_SBG_SET_VISITOR_HPP_
-#define MODELICACC_UTIL_AST_VISITORS_SBG_SET_VISITOR_HPP_
+#ifndef MODELICACC_UTIL_SBG_AST_VISITORS_SBG_SET_VISITOR_HPP_
+#define MODELICACC_UTIL_SBG_AST_VISITORS_SBG_SET_VISITOR_HPP_
 
 #include "ast/expression.hpp"
 #include "util/table.hpp"
@@ -66,4 +66,4 @@ protected:
 
 }  // namespace Modelica
 
-#endif // MODELICACC_UTIL_AST_VISITORS_SBG_SET_VISITOR_HPP_
+#endif // MODELICACC_UTIL_SBG_AST_VISITORS_SBG_SET_VISITOR_HPP_

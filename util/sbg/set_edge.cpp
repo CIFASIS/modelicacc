@@ -17,13 +17,11 @@
 
 ******************************************************************************/
 
-#include "causalize/sbg_implementation/set_edge.hpp"
+#include "util/sbg/set_edge.hpp"
 
 #include <iostream>
 
 namespace Modelica {
-
-namespace Causalize {
 
 // Constructors/Destructors ----------------------------------------------------
 
@@ -158,7 +156,5 @@ SetEdge SetEdge::restrict(SBG::LIB::Set restriction) const
 
   return result;
 }
-
-}  // namespace Causalize
 
 }  // namespace Modelica

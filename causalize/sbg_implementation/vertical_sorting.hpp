@@ -23,11 +23,11 @@
 #include "ast/expression.hpp"
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
 #include "causalize/sbg_implementation/causal_model.hpp"
-#include "causalize/sbg_implementation/equation_info.hpp"
-#include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "causalize/sbg_implementation/tearing.hpp"
 #include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 #include "util/table.hpp"
+#include "util/sbg/equation_info.hpp"
+#include "util/sbg/modelica_sbg.hpp"
 
 #include <sbg/set.hpp>
 

@@ -23,11 +23,11 @@
  * to variables.
  */
 
-#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_EDGE_HPP_
-#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_EDGE_HPP_
+#ifndef MODELICACC_UTIL_SBG_SET_EDGE_HPP_
+#define MODELICACC_UTIL_SBG_SET_EDGE_HPP_
 
 #include "ast/expression.hpp"
-#include "causalize/sbg_implementation/equation_info.hpp"
+#include "util/sbg/equation_info.hpp"
 
 #include <sbg/expression.hpp>
 #include <sbg/integer.hpp>
@@ -39,8 +39,6 @@
 #include <vector>
 
 namespace Modelica {
-
-namespace Causalize {
 
 /**
  * @class SetEdge
@@ -108,8 +106,6 @@ std::ostream& operator<<(std::ostream& out, const SetEdge& sv);
 
 using SetEdges = std::vector<SetEdge>;
 
-} // namespace Causalize
-
 } // namespace Modelica
 
-#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_EDGE_HPP_
+#endif // MODELICACC_UTIL_SBG_SET_EDGE_HPP_

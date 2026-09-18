@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include "util/ast_visitors/sbg_expr_visitor.hpp"
+#include "util/sbg/ast_visitors/sbg_expr_visitor.hpp"
 #include "util/ast_visitors/eval_expression.hpp"
 #include "util/debug.hpp"
 

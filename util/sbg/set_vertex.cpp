@@ -17,15 +17,13 @@
 
 ******************************************************************************/
 
-#include "causalize/sbg_implementation/set_vertex.hpp"
+#include "util/sbg/set_vertex.hpp"
 #include "ast/modification.hpp"
 
 #include <iostream>
 #include <sstream>
 
 namespace Modelica {
-
-namespace Causalize {
 
 // Constructors/Destructors ----------------------------------------------------
 
@@ -99,7 +97,7 @@ void SetVertex::cartesianProduct(const SBG::LIB::Set& s)
 
 SBG::LIB::Int SetVertex::maxDimPerimetral() const
 {
-  return Modelica::Causalize::maxDimPerimetral(_set);
+  return Modelica::maxDimPerimetral(_set);
 }
 
 SBG::LIB::Int maxDimPerimetral(SBG::LIB::Set s)
@@ -113,7 +111,5 @@ SBG::LIB::Int maxDimPerimetral(SBG::LIB::Set s)
 
   return maximum;
 }
-
-}  // namespace Causalize
 
 }  // namespace Modelica

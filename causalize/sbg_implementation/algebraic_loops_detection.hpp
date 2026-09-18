@@ -22,8 +22,8 @@
 
 #include "causalize/sbg_implementation/algebraic_loops.hpp"
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
-#include "causalize/sbg_implementation/modelica_sbg.hpp"
-#include "causalize/sbg_implementation/set_edge.hpp"
+#include "util/sbg/modelica_sbg.hpp"
+#include "util/sbg/set_edge.hpp"
 
 #include <algorithms/scc/scc_data.hpp>
 #include <sbg/set.hpp>

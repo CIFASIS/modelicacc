@@ -23,11 +23,11 @@
  * equations.
  */
 
-#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_VERTEX_HPP_
-#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_VERTEX_HPP_
+#ifndef MODELICACC_UTIL_SBG_SET_VERTEX_HPP_
+#define MODELICACC_UTIL_SBG_SET_VERTEX_HPP_
 
 #include "ast/expression.hpp"
-#include "causalize/sbg_implementation/equation_info.hpp"
+#include "util/sbg/equation_info.hpp"
 #include "util/table.hpp"
 
 #include <sbg/set.hpp>
@@ -40,8 +40,6 @@
 #include <variant>
 
 namespace Modelica {
-
-namespace Causalize {
 
 /**
  * @brief Additional information attached to a set-vertex. Used to save
@@ -100,8 +98,6 @@ using SetVertices = std::vector<SetVertex>;
 
 SBG::LIB::Int maxDimPerimetral(SBG::LIB::Set s);
 
-} // namespace Causalize
-
 } // namespace Modelica
 
-#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_SET_VERTEX_HPP_
+#endif // MODELICACC_UTIL_SBG_SET_VERTEX_HPP_

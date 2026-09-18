@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include "util/ast_visitors/sbg_set_visitor.hpp"
+#include "util/sbg/ast_visitors/sbg_set_visitor.hpp"
 #include "ast/queries.hpp"
 #include "util/ast_visitors/contains_expression.hpp"
 #include "util/ast_visitors/eval_expression.hpp"

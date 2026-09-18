@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include "util/sbg_interface.hpp"
+#include "util/sbg/conversions.hpp"
 #include "util/ast_visitors/eval_expression.hpp"
 #include "util/debug.hpp"
 
@@ -30,6 +30,39 @@
 #include <utility>
 
 namespace Modelica {
+
+////////////////////////////////////////////////////////////////////////////////
+// Conversion from Modelica to SBG ---------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+SBG::LIB::Set varInfoToSBGSet(
+  const VarInfo& var_info, const VarSymbolTable& symbols
+)
+{
+  SBG::LIB::Set var_set;
+  Option<AST::ExpList> dimensions = var_info.indices();
+  EvalInteger eval_int{symbols};
+  if (dimensions) {
+    std::size_t k = 0;
+    for (const AST::Expression& dimension : dimensions.value()) {
+      Integer value = Apply(eval_int, dimension);
+      if (k == 0) {
+        var_set = SBG::LIB::Set{1, 1, value};
+      } else {
+        var_set = var_set.cartesianProduct(SBG::LIB::Set{1, 1, value});
+      }
+      ++k;
+    }
+  } else {
+    var_set = SBG::LIB::Set{1, 1, 1};
+  }
+
+  return var_set;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Conversion from SBG to Modelica ---------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 
 namespace {
 

@@ -17,14 +17,12 @@
 
 ******************************************************************************/
 
-#include "causalize/sbg_implementation/equation_info.hpp"
+#include "util/sbg/equation_info.hpp"
 #include "util/debug.hpp"
 
 #include <string>
 
 namespace Modelica {
-
-namespace Causalize {
 
 EquationInfo::EquationInfo(AST::Indexes indices, AST::Equation equation, bool scalar)
   : _indices(indices), _equation(equation), _scalar(scalar) {}
@@ -56,7 +54,5 @@ AST::Equation EquationInfo::adjustSubscripts(
     , " conversion not yet supported");
   return _equation;
 }
-
-} // namespace Causalize
 
 } // namespace Modelica

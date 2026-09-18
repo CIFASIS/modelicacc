@@ -20,11 +20,11 @@
 #include "causalize/sbg_implementation/vertical_sorting.hpp"
 #include "ast/equation.hpp"
 #include "ast/modification.hpp"
-#include "causalize/sbg_implementation/set_edge.hpp"
-#include "causalize/sbg_implementation/set_vertex.hpp"
 #include "causalize/sbg_implementation/ast_visitors/residual_equation.hpp"
 #include "causalize/sbg_implementation/ast_visitors/variable_renamer.hpp"
 #include "util/debug.hpp"
+#include "util/sbg/set_edge.hpp"
+#include "util/sbg/set_vertex.hpp"
 
 #include <algorithms/sorting/topological/topological_sorting.hpp>
 #include <sbg/directed_sbg.hpp>

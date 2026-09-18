@@ -21,9 +21,9 @@
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_HORIZONTAL_SORTING_HPP_
 
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
-#include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "causalize/sbg_implementation/model_match.hpp"
-#include "causalize/sbg_implementation/set_edge.hpp"
+#include "util/sbg/modelica_sbg.hpp"
+#include "util/sbg/set_edge.hpp"
 
 #include <algorithms/matching/match_data.hpp>
 #include <sbg/set.hpp>

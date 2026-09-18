@@ -18,10 +18,10 @@
 ******************************************************************************/
 
 #include "causalize/sbg_implementation/tearing.hpp"
-#include "causalize/sbg_implementation/set_edge.hpp"
-#include "causalize/sbg_implementation/set_vertex.hpp"
 #include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 #include "util/debug.hpp"
+#include "util/sbg/set_edge.hpp"
+#include "util/sbg/set_vertex.hpp"
 
 #include <algorithms/mfvs/min_feedback_vertex_set.hpp>
 #include <sbg/directed_sbg.hpp>

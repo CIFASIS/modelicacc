@@ -23,15 +23,13 @@
  * the vertical sorting of the model.
  */
 
-#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_EQUATION_INFO_HPP_
-#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_EQUATION_INFO_HPP_
+#ifndef MODELICACC_UTIL_SBG_EQUATION_INFO_HPP_
+#define MODELICACC_UTIL_SBG_EQUATION_INFO_HPP_
 
 #include "ast/expression.hpp"
 #include "ast/equation.hpp"
 
 namespace Modelica {
-
-namespace Causalize {
 
 /**
  * @brief Helper that saves all Modelica information about an array of equations
@@ -69,8 +67,6 @@ private:
   bool _scalar;
 };
 
-} // namespace Causalize
-
 } // namespace Modelica
 
-#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_EQUATION_INFO_HPP_
+#endif // MODELICACC_UTIL_SBG_EQUATION_INFO_HPP_

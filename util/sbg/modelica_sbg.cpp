@@ -17,16 +17,13 @@
 
 ******************************************************************************/
 
-#include "causalize/sbg_implementation/modelica_sbg.hpp"
+#include "util/sbg/modelica_sbg.hpp"
 #include "util/debug.hpp"
-#include "util/sbg_interface.hpp"
 
 #include <algorithm>
 #include <variant>
 
 namespace Modelica {
-
-namespace Causalize {
 
 // Constructors/Destructors ----------------------------------------------------
 
@@ -238,7 +235,5 @@ EquationAccess getAccess(
 
   return {eq_info, toModelicaIndices(s, se.translation(), counters, expr)};
 }
-
-}  // namespace Causalize
 
 }  // namespace Modelica

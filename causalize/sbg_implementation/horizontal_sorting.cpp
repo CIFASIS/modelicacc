@@ -18,9 +18,9 @@
 ******************************************************************************/
 
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
-#include "causalize/sbg_implementation/equation_info.hpp"
-#include "causalize/sbg_implementation/set_vertex.hpp"
 #include "util/debug.hpp"
+#include "util/sbg/equation_info.hpp"
+#include "util/sbg/set_vertex.hpp"
 
 #include <algorithms/matching/match_data.hpp>
 #include <algorithms/matching/matching.hpp>

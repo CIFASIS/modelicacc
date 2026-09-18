@@ -17,9 +17,9 @@
 
 ******************************************************************************/
 
-#include "util/ast_visitors/equation_sbg_set.hpp"
+#include "util/sbg/ast_visitors/equation_sbg_set.hpp"
 #include "util/debug.hpp"
-#include "util/ast_visitors/sbg_set_visitor.hpp"
+#include "util/sbg/ast_visitors/sbg_set_visitor.hpp"
 
 namespace Modelica {
 
