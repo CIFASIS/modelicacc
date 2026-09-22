@@ -14,4 +14,4 @@ set(ANTIALIAS_SRC
 )
 
 add_executable(antialias ${ANTIALIAS_SRC})
-target_link_libraries(antialias PRIVATE modelica ginac)
+target_link_libraries(antialias PRIVATE modelica PkgConfig::GiNaC)

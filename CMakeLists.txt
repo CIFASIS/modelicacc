@@ -49,127 +49,6 @@ set(PARSER_DIR "${CMAKE_CURRENT_LIST_DIR}/parser")
 set(TEST_DIR "${CMAKE_CURRENT_LIST_DIR}/test")
 set(UTIL_DIR "${CMAKE_CURRENT_LIST_DIR}/util")
 
-# ------------------------------------------------------------------------------
-# 3rd party dependencies: Boost 1.81, GTest, sb-graph-dev
-# ------------------------------------------------------------------------------
-
-set(3RD_PARTY_DIR   ${CMAKE_SOURCE_DIR}/3rd-party)
-set(SBG_LIB_DIR     ${3RD_PARTY_DIR}/sbg)
-set(SBG_DEV_DIR     ${SBG_LIB_DIR}/sb-graph-dev)
-set(BOOST_LIB_PATH  ${3RD_PARTY_DIR}/boost)
-set(BOOST_1_81_DIR  ${BOOST_LIB_PATH}/boost-1.81.0)
-set(GTEST_DIR       ${3RD_PARTY_DIR}/gtest)
-
-# ------------------------------------------------------------------------------
-# Boost 1.81: header library, it only extract the required contents
-# ------------------------------------------------------------------------------
-
-ExternalProject_Add(lib-boost
-  PREFIX            ${BOOST_LIB_PATH}
-  DOWNLOAD_COMMAND  ""
-  SOURCE_DIR        ${BOOST_LIB_PATH}
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND     ""
-  INSTALL_COMMAND ${CMAKE_COMMAND} -E chdir ${BOOST_LIB_PATH} ${CMAKE_COMMAND} -E tar xf ${BOOST_LIB_PATH}/boost-1.81.0.tar.xz
-  BUILD_ALWAYS      0
-)
-
-# ------------------------------------------------------------------------------
-# GTest 1.12.1
-# ------------------------------------------------------------------------------
-
-ExternalProject_Add(lib-gtest
-  PREFIX              ${GTEST_DIR}
-  DOWNLOAD_COMMAND    ${CMAKE_COMMAND} -E chdir ${GTEST_DIR} ${CMAKE_COMMAND} -E tar xzf ${GTEST_DIR}/googletest-release-1.12.1.tar.gz
-  SOURCE_DIR          ${GTEST_DIR}/googletest-release-1.12.1
-  BINARY_DIR          ${GTEST_DIR}/build
-  CMAKE_ARGS          -DCMAKE_INSTALL_PREFIX=${GTEST_DIR}/usr
-  INSTALL_COMMAND     ${CMAKE_COMMAND} --build <BINARY_DIR> --target install
-  BUILD_ALWAYS        0
-  UPDATE_COMMAND      ""
-  PATCH_COMMAND       ""
-)
-
-# ------------------------------------------------------------------------------
-# Configure options for the sb-graph-dev repo
-# ------------------------------------------------------------------------------
-
-set(SBG_REF "sb-graph-dev" CACHE STRING "Reference of branch or commit of sb-graph-dev to checkout")
-set(REPO_CHECKOUT "ssh" CACHE STRING "Checkout method for sb-graph-dev (ssh|https)")
-
-# ------------------------------------------------------------------------------
-# Bring sb-graph-dev into ModelicaCC
-# ------------------------------------------------------------------------------
-
-if(NOT EXISTS "${SBG_DEV_DIR}/.git")
-  ExternalProject_Add(clone-sbg
-    PREFIX              ${SBG_LIB_DIR}
-    GIT_REPOSITORY      https://github.com/CIFASIS/sb-graph.git
-    GIT_TAG             sb-graph-dev
-    SOURCE_DIR          ${SBG_DEV_DIR}
-    CONFIGURE_COMMAND   ""
-    BUILD_COMMAND       ""
-    INSTALL_COMMAND     ""
-    UPDATE_COMMAND      ""
-    PATCH_COMMAND       ""
-  )
-else()
-  add_custom_target(clone-sbg)
-endif()
-
-add_custom_target(update-sbg
-  COMMAND ${CMAKE_COMMAND} -E echo "Updating sb-graph-dev to ${SBG_REF}"
-  COMMAND git -C ${SBG_DEV_DIR} fetch --all --tags --prune
-  COMMAND git -C ${SBG_DEV_DIR} checkout ${SBG_REF}
-  DEPENDS clone-sbg
-  COMMENT "Force sb-graph-dev to requested ref"
-)
-
-# ------------------------------------------------------------------------------
-# Build sb-graph-dev 
-# ------------------------------------------------------------------------------
-
-ExternalProject_Add(lib-sbg-dev
-  PREFIX            ${SBG_LIB_DIR}
-  DOWNLOAD_COMMAND  ""
-  SOURCE_DIR        ${SBG_DEV_DIR}
-  BINARY_DIR        ${SBG_DEV_DIR}/build
-  INSTALL_COMMAND   ""
-  DEPENDS           update-sbg lib-boost
-  BUILD_ALWAYS      1
-)
-
-add_custom_target(lib-sbg DEPENDS lib-sbg-dev)
-
-# ------------------------------------------------------------------------------
-# Includes and links for sb-graph-dev and Boost 
-# ------------------------------------------------------------------------------
-
-add_library(sbg_dev INTERFACE)
-target_include_directories(sbg_dev INTERFACE ${SBG_DEV_DIR})
-target_link_directories(sbg_dev INTERFACE
-  ${SBG_DEV_DIR}/build
-  ${SBG_DEV_DIR}/build/sbg
-  ${SBG_DEV_DIR}/build/eval
-  ${SBG_DEV_DIR}/build/parser
-  ${SBG_DEV_DIR}/build/util
-)
-target_link_libraries(sbg_dev INTERFACE
-  -Wl,--start-group
-  sbgraph
-  sbg-dev
-  sbg-eval-lib
-  sbg-parser-lib
-  sbg-util-lib
-  -Wl,--end-group
-)
-add_dependencies(sbg_dev lib-sbg-dev)
-add_library(SBG::dev ALIAS sbg_dev)
-
-add_library(boost_1_81 INTERFACE)
-target_include_directories(boost_1_81 INTERFACE ${BOOST_1_81_DIR}/include)
-add_dependencies(boost_1_81 lib-boost)
-add_library(Boost::boost_1_81 ALIAS boost_1_81)
 
 # ------------------------------------------------------------------------------
 # Common files: ast/, parser/
@@ -192,13 +71,45 @@ set(COMMON_SRC
 )
 
 # ------------------------------------------------------------------------------
+# ModelicaCC dependencies: sbgraph, ginac
+# ------------------------------------------------------------------------------
+
+set(CMAKE_PREFIX_PATH
+  "$ENV{HOME}/.local/sbgraph"
+  CACHE PATH
+  "Paths where CMake looks for installed packages (e.g. sb-graph)"
+)
+find_package(SBGraph CONFIG REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GiNaC REQUIRED IMPORTED_TARGET ginac)
+
+# ------------------------------------------------------------------------------
 # libmodelica.a
 # ------------------------------------------------------------------------------
 
 add_library(modelica STATIC ${COMMON_SRC})
 set_target_properties(modelica PROPERTIES OUTPUT_NAME "modelica")
-add_dependencies(modelica lib-sbg-dev)
-target_link_libraries(modelica PUBLIC SBG::dev)
+target_link_libraries(modelica PUBLIC SBG::sbgraph)
+
+# ------------------------------------------------------------------------------
+# ModelicaCC profiler
+# ------------------------------------------------------------------------------
+
+add_library(modelicacc-profiler STATIC
+  ${UTIL_DIR}/profiler.cpp
+)
+
+target_include_directories(modelicacc-profiler
+  PUBLIC
+    ${CMAKE_SOURCE_DIR}
+)
+
+target_compile_features(modelicacc-profiler
+  PUBLIC
+    cxx_std_17
+)
+
+add_library(ModelicaCC::profiler ALIAS modelicacc-profiler)
 
 # ------------------------------------------------------------------------------
 # Submodules of ModelicaCC
@@ -208,6 +119,25 @@ add_subdirectory(mmo)
 add_subdirectory(antialias)
 add_subdirectory(flatter)
 add_subdirectory(causalize)
+
+# ------------------------------------------------------------------------------
+# ModelicaCC testing
+# ------------------------------------------------------------------------------
+
+option(MODELICACC_BUILD_TESTS "Build ModelicaCC tests" ON)
+option(MODELICACC_BUILD_BENCHMARKS "Build ModelicaCC benchmarks" ON)
+
+if(MODELICACC_BUILD_TESTS OR MODELICACC_BUILD_BENCHMARKS)
+  add_subdirectory(3rd-party)
+  enable_testing()
+endif()
+
+add_custom_target(modelicacc_test
+  #COMMAND ${CMAKE_COMMAND} --build . --target flatter_test
+  COMMAND ${CMAKE_COMMAND} --build . --target causalize_test
+  DEPENDS GTest::gtest  GTest::gmock GTest::gtest_main
+  COMMENT "Running test suite"
+)
 
 # ------------------------------------------------------------------------------
 # Generate documentation 
@@ -223,28 +153,13 @@ if(DOXYGEN_FOUND)
 endif()
 
 # ------------------------------------------------------------------------------
-# ModelicaCC testing
-# ------------------------------------------------------------------------------
-
-add_custom_target(modelicacc_test
-  #COMMAND ${CMAKE_COMMAND} --build . --target flatter_test
-  COMMAND ${CMAKE_COMMAND} --build . --target causalize_test
-  DEPENDS lib-gtest
-  COMMENT "Running test suite"
-)
-
-# ------------------------------------------------------------------------------
 # Help for the user
 # ------------------------------------------------------------------------------
 
 add_custom_target(help_modelicacc
-  COMMAND ${CMAKE_COMMAND} -E echo "cmake -DCMAKE_BUILD_TYPE=<Debug|Release> \
-    -DSBG_REF=<branch> -DREPO_CHECKOUT=<ssh|https> .."
   COMMAND ${CMAKE_COMMAND} -E echo "Default values:"
   COMMAND ${CMAKE_COMMAND} -E echo "CMAKE_BUILD_TYPE=Release"
-  COMMAND ${CMAKE_COMMAND} -E echo "SBG_REF=sb-graph-dev"
-  #COMMAND ${CMAKE_COMMAND} -E echo "BUILD_SBG=ON"
-  COMMAND ${CMAKE_COMMAND} -E echo "REPO_CHECKOUT=ssh"
+  COMMAND ${CMAKE_COMMAND} -E echo "CMAKE_PREFIX_PATH=$HOME/.local/sbgraph"
 )
 
 # ------------------------------------------------------------------------------

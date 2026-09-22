@@ -12,6 +12,7 @@ set(CAUSALIZE_SBG_SRC
   ${CAUSALIZE_SBG_DIR}/tearing.cpp
   ${CAUSALIZE_SBG_DIR}/vertical_sorting.cpp
   ${CAUSALIZE_SBG_DIR}/tearing_variables.cpp
+  ${CAUSALIZE_SBG_DIR}/ast_visitors/equation_info_visitor.cpp
   ${CAUSALIZE_SBG_DIR}/ast_visitors/eq_var_match_annotator.cpp
   ${CAUSALIZE_SBG_DIR}/ast_visitors/residual_equation.cpp
   ${CAUSALIZE_SBG_DIR}/ast_visitors/variable_renamer.cpp
@@ -20,6 +21,7 @@ set(CAUSALIZE_SBG_SRC
   ${UTIL_DIR}/logger.cpp
   ${UTIL_DIR}/ast_visitors/constant_expression.cpp
   ${UTIL_DIR}/ast_visitors/eval_integer.cpp
+  ${UTIL_DIR}/ast_visitors/flatter_for.cpp
   ${UTIL_DIR}/ast_visitors/is_integer.cpp
   ${UTIL_DIR}/ast_visitors/matching_exps.cpp
   ${UTIL_DIR}/ast_visitors/replace_equation.cpp
@@ -28,6 +30,7 @@ set(CAUSALIZE_SBG_SRC
   ${UTIL_DIR}/sbg/modelica_sbg.cpp
   ${UTIL_DIR}/sbg/set_vertex.cpp
   ${UTIL_DIR}/sbg/set_edge.cpp
+  ${UTIL_DIR}/sbg/ast_visitors/access_to_sbg_expr.cpp
   ${UTIL_DIR}/sbg/ast_visitors/equation_sbg_set.cpp
   ${UTIL_DIR}/sbg/ast_visitors/sbg_expr_visitor.cpp
   ${UTIL_DIR}/sbg/ast_visitors/sbg_set_visitor.cpp
@@ -39,8 +42,7 @@ add_executable(causalize
 )
 
 target_include_directories(causalize PRIVATE ${BOOST_1_81_DIR}/include)
-add_dependencies(causalize lib-boost)
-target_link_libraries(causalize PRIVATE modelica ginac SBG::dev)
+target_link_libraries(causalize PRIVATE modelica ginac sbgraph ModelicaCC::profiler)
 
 add_custom_target(causalize_test
   COMMAND ${CMAKE_COMMAND} -E echo "BUILDING CAUSALIZE TESTS: not implemented"
