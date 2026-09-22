@@ -29,9 +29,9 @@
 #include "ast/expression.hpp"
 #include "util/sbg/equation_info.hpp"
 
-#include <sbg/expression.hpp>
-#include <sbg/integer.hpp>
-#include <sbg/set.hpp>
+#include <sbgraph/sbg/expression.hpp>
+#include <sbgraph/sbg/integer.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 #include <iosfwd>
 #include <sstream>

@@ -21,8 +21,8 @@
 #include "util/ast_visitors/eval_expression.hpp"
 #include "util/debug.hpp"
 
-#include <sbg/integer.hpp>
-#include <sbg/rational.hpp>
+#include <sbgraph/sbg/integer.hpp>
+#include <sbgraph/sbg/rational.hpp>
 
 namespace Modelica {
 

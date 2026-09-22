@@ -19,41 +19,38 @@
 
 /**
  * @file
- * @brief Module used to convert the values of for indices to a SBG set. 
+ * @brief Flattens arrays of equations. That is, it returns a list of equations
+ * that doesn't nest loops, and where each loop only contains a single scalar
+ * equation inside.
  */
 
-#ifndef MODELICACC_UTIL_SBG_AST_VISITORS_EQUATION_SBG_SET_HPP_
-#define MODELICACC_UTIL_SBG_AST_VISITORS_EQUATION_SBG_SET_HPP_
+#ifndef MODELICACC_UTIL_AST_VISITORS_FLATTER_FOR_HPP_ 
+#define MODELICACC_UTIL_AST_VISITORS_FLATTER_FOR_HPP_ 
 
 #include "ast/equation.hpp"
-#include "util/table.hpp"
+#include "ast/expression.hpp"
 
 #include <boost/variant/static_visitor.hpp>
-#include <sbgraph/sbg/set.hpp>
 
 namespace Modelica {
 
-/**
- * @brief Given an equation, it returns (if possible) an associated SBG set
- * with a bijection from each accessed variable to an element of the set.
- * Precondition: each ForEq should contain only one element in its list.
- */
-class EquationToSBGSet : public boost::static_visitor<SBG::LIB::Set> {
+class FlatterForVisitor : public boost::static_visitor<AST::EquationList> {
 public:
-  EquationToSBGSet(VarSymbolTable vtable, unsigned int max_dim);
-  SBG::LIB::Set operator()(Connect eq);
-  SBG::LIB::Set operator()(Equality eq);
-  SBG::LIB::Set operator()(CallEq eq);
-  SBG::LIB::Set operator()(ForEq eq);
-  SBG::LIB::Set operator()(IfEq eq);
-  SBG::LIB::Set operator()(WhenEq eq);
+  FlatterForVisitor() = default;
+
+  AST::EquationList operator()(AST::Connect eq);
+  AST::EquationList operator()(AST::Equality eq);
+  AST::EquationList operator()(AST::CallEq eq);
+  AST::EquationList operator()(AST::IfEq eq);
+  AST::EquationList operator()(AST::WhenEq eq);
+  AST::EquationList operator()(AST::ForEq eq);
 
 private:
-  unsigned int _max_dim;
-  VarSymbolTable _vtable;
-  IndexList _counters;
+  AST::EquationList bounds(AST::Equation eq);
+
+  AST::IndexList _bounds;
 };
 
 }  // namespace Modelica
 
-#endif // MODELICACC_UTIL_SBG_AST_VISITORS_EQUATION_SBG_SET_HPP_
+#endif // MODELICACC_UTIL_AST_VISITORS_FLATTER_FOR_HPP_

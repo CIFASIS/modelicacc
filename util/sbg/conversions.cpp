@@ -18,8 +18,10 @@
 ******************************************************************************/
 
 #include "util/sbg/conversions.hpp"
-#include "util/ast_visitors/eval_expression.hpp"
+#include "ast/queries.hpp"
 #include "util/debug.hpp"
+#include "util/ast_visitors/eval_expression.hpp"
+#include "util/sbg/ast_visitors/sbg_expr_visitor.hpp"
 
 #include <boost/variant/get.hpp>
 
@@ -58,6 +60,14 @@ SBG::LIB::Set varInfoToSBGSet(
   }
 
   return var_set;
+}
+
+SBG::LIB::Expression referenceToExpression(
+  AST::Expression access, const VarSymbolTable& symbols
+  , const Counters& counters
+)
+{
+  return Apply((AccessToSBGExpr{symbols, counters}), access);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

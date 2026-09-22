@@ -29,10 +29,12 @@
 #include "ast/expression.hpp"
 #include "util/table.hpp"
 #include "util/ast_visitors/eval_integer.hpp"
+#include "util/sbg/ast_visitors/access_to_sbg_expr.hpp"
 
-#include <sbg/expression.hpp>
-#include <sbg/set.hpp>
+#include <sbgraph/sbg/expression.hpp>
+#include <sbgraph/sbg/set.hpp>
 
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -47,6 +49,11 @@ namespace Modelica {
  */
 SBG::LIB::Set varInfoToSBGSet(
   const VarInfo& var_info, const VarSymbolTable& symbols
+);
+
+SBG::LIB::Expression referenceToExpression(
+  AST::Expression access, const VarSymbolTable& symbols
+  , const Counters& counters
 );
 
 ////////////////////////////////////////////////////////////////////////////////

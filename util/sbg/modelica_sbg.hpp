@@ -24,9 +24,9 @@
 #include "util/sbg/set_vertex.hpp"
 #include "util/sbg/conversions.hpp"
 
-#include <sbg/integer.hpp>
-#include <sbg/expression.hpp>
-#include <sbg/set.hpp>
+#include <sbgraph/sbg/integer.hpp>
+#include <sbgraph/sbg/expression.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 #include <string>
 #include <tuple>

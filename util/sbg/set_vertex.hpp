@@ -30,8 +30,8 @@
 #include "util/sbg/equation_info.hpp"
 #include "util/table.hpp"
 
-#include <sbg/set.hpp>
-#include <sbg/integer.hpp>
+#include <sbgraph/sbg/set.hpp>
+#include <sbgraph/sbg/integer.hpp>
 
 #include <iosfwd>
 #include <sstream>

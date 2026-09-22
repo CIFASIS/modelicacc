@@ -24,7 +24,7 @@
 #include "util/table.hpp"
 
 #include <boost/variant/static_visitor.hpp>
-#include <sbg/set.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 #include <vector>
 

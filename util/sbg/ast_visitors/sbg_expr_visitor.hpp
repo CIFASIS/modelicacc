@@ -29,7 +29,7 @@
 #include "util/table.hpp"
 
 #include <boost/variant/static_visitor.hpp>
-#include <sbg/expression.hpp>
+#include <sbgraph/sbg/expression.hpp>
 
 namespace Modelica {
 

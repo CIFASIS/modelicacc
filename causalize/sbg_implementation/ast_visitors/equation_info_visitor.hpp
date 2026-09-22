@@ -19,41 +19,42 @@
 
 /**
  * @file
- * @brief Module used to convert the values of for indices to a SBG set. 
+ * @brief Visitor to get an EquationInfo structure from a flattened Modelica
+ * equation.
  */
 
-#ifndef MODELICACC_UTIL_SBG_AST_VISITORS_EQUATION_SBG_SET_HPP_
-#define MODELICACC_UTIL_SBG_AST_VISITORS_EQUATION_SBG_SET_HPP_
+#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_EQUATION_INFO_VISITOR_HPP_
+#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_EQUATION_INFO_VISITOR_HPP_
 
 #include "ast/equation.hpp"
-#include "util/table.hpp"
+#include "util/sbg/equation_info.hpp"
 
 #include <boost/variant/static_visitor.hpp>
-#include <sbgraph/sbg/set.hpp>
 
 namespace Modelica {
 
+namespace Causalize {
+
 /**
- * @brief Given an equation, it returns (if possible) an associated SBG set
- * with a bijection from each accessed variable to an element of the set.
- * Precondition: each ForEq should contain only one element in its list.
+ * @brief Creates the EquationInfo associated to a flattened Modelica equation.
  */
-class EquationToSBGSet : public boost::static_visitor<SBG::LIB::Set> {
+class EqInfoVisitor : public boost::static_visitor<EquationInfo> {
 public:
-  EquationToSBGSet(VarSymbolTable vtable, unsigned int max_dim);
-  SBG::LIB::Set operator()(Connect eq);
-  SBG::LIB::Set operator()(Equality eq);
-  SBG::LIB::Set operator()(CallEq eq);
-  SBG::LIB::Set operator()(ForEq eq);
-  SBG::LIB::Set operator()(IfEq eq);
-  SBG::LIB::Set operator()(WhenEq eq);
+  EqInfoVisitor(unsigned int max_dim);
+
+  EquationInfo operator()(const AST::Connect& eq) const;
+  EquationInfo operator()(const AST::Equality& eq) const;
+  EquationInfo operator()(const AST::CallEq& eq) const;
+  EquationInfo operator()(const AST::ForEq& eq) const;
+  EquationInfo operator()(const AST::IfEq& eq) const;
+  EquationInfo operator()(const AST::WhenEq& eq) const;
 
 private:
   unsigned int _max_dim;
-  VarSymbolTable _vtable;
-  IndexList _counters;
 };
+
+} // namespace Causalize
 
 }  // namespace Modelica
 
-#endif // MODELICACC_UTIL_SBG_AST_VISITORS_EQUATION_SBG_SET_HPP_
+#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_EQUATION_INFO_VISITOR_HPP_
