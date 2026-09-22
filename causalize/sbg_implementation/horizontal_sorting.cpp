@@ -19,14 +19,14 @@
 
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
 #include "util/debug.hpp"
+#include "util/profiler.hpp"
 #include "util/sbg/equation_info.hpp"
 #include "util/sbg/set_vertex.hpp"
 
-#include <algorithms/matching/match_data.hpp>
-#include <algorithms/matching/matching.hpp>
 #include <boost/variant/get.hpp>
-#include <sbg/bipartite_sbg.hpp>
-#include <util/time_profiler.hpp>
+#include <sbgraph/algorithms/matching/match_data.hpp>
+#include <sbgraph/algorithms/matching/matching.hpp>
+#include <sbgraph/sbg/bipartite_sbg.hpp>
 
 namespace Modelica {
 
@@ -143,7 +143,7 @@ HorizontalSortingResult HorizontalSorting::sort()
     SBG::LIB::BipartiteSBG{}, SBG::LIB::Set{}, false
   };
   {
-    SBG::Util::Internal::TimeProfiler profiler{"Horizontal sorting"};
+    TimeScope timer{"horizontal sorting"};
     matching_result = SBG::LIB::Matching{}.calculate(bipartite_sbg);
   }
   ERROR_UNLESS(matching_result.full_match(), "HorizontalSorting::sort: "

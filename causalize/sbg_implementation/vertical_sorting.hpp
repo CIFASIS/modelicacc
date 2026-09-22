@@ -29,7 +29,7 @@
 #include "util/sbg/equation_info.hpp"
 #include "util/sbg/modelica_sbg.hpp"
 
-#include <sbg/set.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 #include <iosfwd>
 #include <tuple>

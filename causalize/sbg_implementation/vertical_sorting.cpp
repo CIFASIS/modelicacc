@@ -23,16 +23,16 @@
 #include "causalize/sbg_implementation/ast_visitors/residual_equation.hpp"
 #include "causalize/sbg_implementation/ast_visitors/variable_renamer.hpp"
 #include "util/debug.hpp"
+#include "util/profiler.hpp"
 #include "util/sbg/set_edge.hpp"
 #include "util/sbg/set_vertex.hpp"
 
-#include <algorithms/sorting/topological/topological_sorting.hpp>
-#include <sbg/directed_sbg.hpp>
-#include <sbg/expression.hpp>
-#include <sbg/integer.hpp>
-#include <sbg/pw_map.hpp>
-#include <sbg/set.hpp>
-#include <util/time_profiler.hpp>
+#include <sbgraph/algorithms/sorting/topological/topological_sorting.hpp>
+#include <sbgraph/sbg/directed_sbg.hpp>
+#include <sbgraph/sbg/expression.hpp>
+#include <sbgraph/sbg/integer.hpp>
+#include <sbgraph/sbg/pw_map.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 #include <algorithm>
 #include <string>
@@ -499,12 +499,12 @@ VerticalSortingResult VerticalSorting::sort()
   VerticalSortingBuilder vs_builder{_loops_result.scc_result()
     , _tearing_result.mfvs_result()};
   {
-    SBG::Util::Internal::TimeProfiler profiler{"Vertical sorting SBG builder"};
+    TimeScope timer{"vertical sorting SBG builder"};
     vs_builder.build();
   }
   SBG::LIB::PWMap vertical_sort;
   {
-    SBG::Util::Internal::TimeProfiler profiler{"Vertical sorting"};
+    TimeScope timer{"vertical sorting"};
     vertical_sort = SBG::LIB::TopologicalSorting{}
       .calculate(vs_builder.dsbg(), vs_builder.rmap());
   }

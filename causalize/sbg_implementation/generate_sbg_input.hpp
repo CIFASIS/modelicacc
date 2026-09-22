@@ -25,8 +25,8 @@
 #include "util/sbg/set_edge.hpp"
 #include "util/sbg/set_vertex.hpp"
 
-#include <sbg/bipartite_sbg.hpp>
-#include <sbg/expression.hpp>
+#include <sbgraph/sbg/bipartite_sbg.hpp>
+#include <sbgraph/sbg/expression.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -81,13 +81,6 @@ public:
 
 protected:
   void addVariableSet(const VarInfo& variable, const Name& name);
-
-  /**
-   * @brief Generates an equivalent list of equations to that of
-   * _mmo_class.equations().equations() where each loop has an unique
-   * inner-most equation.
-   */
-  EquationList flatterForEqs() const;
 
   /**
    * @brief Creates maps from edges to equations nodes.

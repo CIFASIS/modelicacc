@@ -25,8 +25,8 @@
 #include "util/sbg/modelica_sbg.hpp"
 #include "util/sbg/set_edge.hpp"
 
-#include <algorithms/scc/scc_data.hpp>
-#include <sbg/set.hpp>
+#include <sbgraph/algorithms/scc/scc_data.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 #include <iosfwd>
 #include <vector>

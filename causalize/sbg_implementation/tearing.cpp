@@ -20,14 +20,14 @@
 #include "causalize/sbg_implementation/tearing.hpp"
 #include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 #include "util/debug.hpp"
+#include "util/profiler.hpp"
 #include "util/sbg/set_edge.hpp"
 #include "util/sbg/set_vertex.hpp"
 
-#include <algorithms/mfvs/min_feedback_vertex_set.hpp>
-#include <sbg/directed_sbg.hpp>
-#include <sbg/map.hpp>
-#include <sbg/set.hpp>
-#include <util/time_profiler.hpp>
+#include <sbgraph/algorithms/mfvs/min_feedback_vertex_set.hpp>
+#include <sbgraph/sbg/directed_sbg.hpp>
+#include <sbgraph/sbg/map.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 namespace Modelica {
 
@@ -106,12 +106,12 @@ TearingResult TearingDetector::detect()
 {
   SBG::LIB::DirectedSBG dsbg;
   {
-    SBG::Util::Internal::TimeProfiler profiler{"Tearing SBG builder"};
+    TimeScope timer{"tearing SBG builder"};
     dsbg = buildTearingSBG(_loops_result.scc_result());
   }
   SBG::LIB::Set mfvs;
   {
-    SBG::Util::Internal::TimeProfiler profiler{"Tearing"};
+    TimeScope timer{"tearing"};
     mfvs = SBG::LIB::MinFeedbackVertexSet{}.calculate(dsbg);
   }
   return TearingResult{_loops_result.modelica_bsbg(), mfvs};

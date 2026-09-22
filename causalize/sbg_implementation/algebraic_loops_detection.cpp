@@ -20,14 +20,14 @@
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
 #include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 #include "util/debug.hpp"
+#include "util/profiler.hpp"
 #include "util/sbg/equation_info.hpp"
 #include "util/sbg/set_edge.hpp"
 #include "util/sbg/set_vertex.hpp"
 
-#include <algorithms/scc/scc.hpp>
-#include <sbg/directed_sbg.hpp>
-#include <sbg/pw_map.hpp>
-#include <util/time_profiler.hpp>
+#include <sbgraph/algorithms/scc/scc.hpp>
+#include <sbgraph/sbg/directed_sbg.hpp>
+#include <sbgraph/sbg/pw_map.hpp>
 
 #include <algorithm>
 
@@ -161,13 +161,13 @@ AlgebraicLoopsResult AlgebraicLoopsDetector::detect()
 {
   SBG::LIB::DirectedSBG loops_dsbg;
   {
-    SBG::Util::Internal::TimeProfiler profiler{"Algebraic loops SBG builder"};
+    TimeScope timer{"algebraic loops SBG builder"};
     loops_dsbg = buildLoopDetectionSBG(_hs_result.matching_result());
   }
   SBG::LIB::SCCData scc_result{SBG::LIB::DirectedSBG{}, SBG::LIB::PWMap{}
     , SBG::LIB::Set{}};
   {
-    SBG::Util::Internal::TimeProfiler profiler{"Algebraic loops detection"};
+    TimeScope timer{"algebraic loops detection"};
     scc_result = SBG::LIB::SCC{}.calculate(loops_dsbg);
   }
 

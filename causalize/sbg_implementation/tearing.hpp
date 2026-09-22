@@ -25,7 +25,7 @@
 #include "causalize/sbg_implementation/tearing_variables.hpp"
 #include "util/sbg/modelica_sbg.hpp"
 
-#include <sbg/set.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 #include <iosfwd>
 #include <map>

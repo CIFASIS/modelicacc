@@ -28,8 +28,8 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_BUILDERS_CAUSALIZATION_JSON_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_BUILDERS_CAUSALIZATION_JSON_HPP_
 
-#include <sbg/pw_map.hpp>
-#include <sbg/set.hpp>
+#include <sbgraph/sbg/pw_map.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 namespace Modelica {
 

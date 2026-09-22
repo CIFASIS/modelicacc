@@ -19,19 +19,18 @@
 
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
 #include "ast/queries.hpp"
+#include "causalize/sbg_implementation/ast_visitors/equation_info_visitor.hpp"
 #include "util/logger.hpp"
-#include "util/ast_visitors/eval_expression.hpp"
 #include "util/ast_visitors/eval_integer.hpp"
+#include "util/ast_visitors/flatter_for.hpp"
 #include "util/ast_visitors/matching_exps.hpp"
 #include "util/sbg/conversions.hpp"
 #include "util/sbg/ast_visitors/equation_sbg_set.hpp"
-#include "util/sbg/ast_visitors/sbg_expr_visitor.hpp"
-#include "util/sbg/ast_visitors/sbg_set_visitor.hpp"
 
-#include <eval/file_evaluator.hpp>
-#include <eval/pretty_print.hpp>
-#include <sbg/set.hpp>
-#include <util/time_profiler.hpp>
+#include <sbgraph/eval/file_evaluator.hpp>
+#include <sbgraph/eval/pretty_print.hpp>
+#include <sbgraph/sbg/set.hpp>
+#include <sbgraph/util/time_profiler.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -94,7 +93,7 @@ void GenerateSBGInput::addVariableSet(const VarInfo& variable, const Name& name)
 
   // Fill remaining dimensions
   for (std::size_t k = var_set.arity(); k < _max_dim; ++k) {
-    var_set = var_set.cartesianProduct(SBG::LIB::Set{1, 1, 1});
+    var_set = var_set.cartesianProduct(SBG::LIB::Set{0, 1, 0});
   }
 
   // Save variable set-vertex
@@ -116,97 +115,24 @@ void GenerateSBGInput::addVariableNodes()
 
 // Add equations vertices ------------------------------------------------------
 
-namespace {
-
-EquationList flatterEq(Equation eq);
-
-EquationList flatterForEq(ForEq for_eq)
-{
-  EquationList result;
-
-  for (const Equation& eq : for_eq.elements()) {
-    EquationList flattened_eq = flatterEq(eq);
-    for (const Equation& nested_eq : flattened_eq) {
-      result.push_back(ForEq{for_eq.range(), EquationList{1, nested_eq}});
-    }
-  }
-
-  return result;
-}
-
-EquationList flatterEq(Equation eq)
-{
-  EquationList result;
-
-  if (is<ForEq>(eq)) {
-    EquationList flattened_for_eq = flatterForEq(get<ForEq>(eq));
-    result.insert(result.end(), flattened_for_eq.begin(), flattened_for_eq.end());
-  } else {
-    result.push_back(eq);
-  }
-
-  return result;
-}
-
-}  // namespace
-
-EquationList GenerateSBGInput::flatterForEqs() const
-{
-  EquationList result;
-
-  EquationList eqs = _mmo_class.equations().equations();
-  for (const Equation& eq : eqs) {
-    EquationList flattened_eq = flatterEq(eq);
-    result.insert(result.end(), flattened_eq.begin(), flattened_eq.end());
-  }
-
-  return result;
-}
-
-namespace {
-
-Indexes getIndices(Equation eq, unsigned int max_dim)
-{
-  if (is<ForEq>(eq)) {
-    return get<ForEq>(eq).range();
-  } else {
-    IndexList scalar_indices;
-    for (std::size_t k = 0; k < max_dim; ++k) {
-      scalar_indices.emplace_back("*dummy_" + std::to_string(k), Expression{0});
-    }
-    return Indexes{scalar_indices};
-  }
-}
-
-/**
- * @brief Currently we only handle equalities.
- */
-Equality getEquality(Equation eq)
-{
-  if (is<Equality>(eq)) {
-    return get<Equality>(eq);
-  } else if (is<ForEq>(eq)) {
-    return getEquality(get<ForEq>(eq).elements().front());
-  }
-
-  ERROR("GenerateSBGInput::getEquality: only for eqs and equalities supported");
-  return Equality{};
-}
-
-}  // namespace
-
 void GenerateSBGInput::addEquationNodes()
 {
-  EquationList eqs = flatterForEqs();
+  // Flatter equations.
+  EquationList eqs;
+  for (const Equation& eq : _mmo_class.equations().equations()) {
+    FlatterForVisitor flatter_for;
+    EquationList jth_flatter = Apply(flatter_for, eq);
+    eqs.insert(eqs.end(), jth_flatter.begin(), jth_flatter.end());
+  }
+
+  // Add equation nodes.
+  EqInfoVisitor eq_info_visit{_max_dim};
   for (const Equation& eq : eqs) {
     EquationToSBGSet eq_to_sbg_set{_mmo_class.syms(), _max_dim};
     SBG::LIB::Set eq_vertices = Apply(eq_to_sbg_set, eq);
     std::string name = "eq_"
       + std::to_string(_modelica_bsbg.set_vertices().size() + 1);
-    EquationInfo eq_info{
-      getIndices(eq, _max_dim), getEquality(eq), !is<ForEq>(eq)
-     };
-    _modelica_bsbg.addSetVertex(eq_vertices, name, eq_info);
+    _modelica_bsbg.addSetVertex(eq_vertices, name, Apply(eq_info_visit, eq));
   }
 }
 
@@ -228,81 +154,40 @@ SBG::LIB::Expression GenerateSBGInput::createMap1(
   return map1;
 }
 
-namespace {
-
-/**
- * @brief Gets a reference to a variable or the derivative of a variable.
- */
-Reference getReference(Expression expr)
-{
-  if (is<Reference>(expr)) {
-    return get<Reference>(expr);
-  } else if (is<Call>(expr)) {
-    Call call = get<Call>(expr);
-    ERROR_UNLESS(call.name() == "der", "getReference: expression ", expr
-      , " is not a variable or a derivative");
-    ExpList args = call.args();
-    ERROR_UNLESS(args.size() == 1, "getReference: der applied to more than "
-      , "argument in ", args);
-    return getReference(args.front());
-  }
-
-  ERROR("getReference: expression ", expr, " is not a reference");
-  return Reference{};
-}
-
-}  // namespace
-
 SBG::LIB::Expression GenerateSBGInput::createMap2(
   const SetEdge& eq_se, const SetVertex& var_sv
 ) const
 {
-  const SBG::LIB::IntTuple& var_trans = var_sv.translation();
-
-  // Get expression of subscripts.
-  Ref ref = getReference(eq_se.access()).ref();
-  assert(ref.size() > 0);
-  ERROR_UNLESS(ref.size() == 1, "GenerateSBGInput::createMap2: conversion of "
-    , "dotted references not implemented");
-  ExpList indexes = get<1>(ref.front());
-
-  // Get order of counters.
+  // Get names of counters in order.
   EquationInfo eq_info = std::get<EquationInfo>(
     _modelica_bsbg.setVertex(eq_se.eq_id()).info()
   );
-  AST::Indexes counters = eq_info.indices();
-  std::vector<std::string> order;
-  for (const Index& counter : counters.indexes()) {
-    order.push_back(counter.name());
+  Counters counters;
+  for (const Index& counter : eq_info.indices().indexes()) {
+    counters.push_back(counter.name());
   }
 
+  // Transform subscripts to SBG expression.
+  SBG::LIB::Expression sbg_expr = referenceToExpression(
+    eq_se.access(), _mmo_class.syms(), counters
+  );
+
+  // Get translation of set-edge and variable set-vertex.
   SBG::LIB::Rational zero{0};
-  SBG::LIB::Expression t;
-  if (indexes.empty()) {  // Access to scalar variable.
-    for (std::size_t k = 0; k < _max_dim; ++k) {
-      SBG::LIB::Expression var_expr{zero, SBG::LIB::Rational{var_trans[k] + 1}};
-      t = t.cartesianProduct(var_expr);
+  SBG::LIB::IntTuple domain_trans = eq_se.translation();
+  SBG::LIB::IntTuple var_nodes_trans = var_sv.translation();
+  SBG::LIB::Expression translation;
+  for (std::size_t k = 0; k < _max_dim; ++k) {
+    SBG::LIB::Int offset = var_nodes_trans[k] - domain_trans[k];
+    if (eq_info.scalar()) {
+      offset = offset + domain_trans[k];
     }
-  } else {  // Access to array variable.
-    std::size_t k = 0;
-    SBG::LIB::IntTuple domain_trans = eq_se.translation();
-    ExprVisitor affine_expr_visitor(_mmo_class.syms(), order);
-    for (Expression index : indexes) {
-      SBG::LIB::Expression kth_expr = Apply(affine_expr_visitor, index);
-      if (kth_expr.isConstant()) {
-        SBG::LIB::Expression var_expr{zero, SBG::LIB::Rational{var_trans[k]}};
-        t = t.cartesianProduct(kth_expr + var_expr);
-      } else {
-        SBG::LIB::Expression var_expr{
-          zero, SBG::LIB::Rational{var_trans[k] - domain_trans[k]}
-        };
-        t = t.cartesianProduct(kth_expr + var_expr);
-      }
-      ++k;
-    }
+    translation = translation.cartesianProduct(
+      SBG::LIB::Expression{zero, offset}
+    );
   }
 
-  return t;
+  return sbg_expr + translation;
 }
 
 void GenerateSBGInput::addEdge(
