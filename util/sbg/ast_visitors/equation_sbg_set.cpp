@@ -23,16 +23,11 @@
 
 namespace Modelica {
 
-EquationToSBGSet::EquationToSBGSet(VarSymbolTable vtable
-  , unsigned int max_dim) : _vtable(vtable), _max_dim(max_dim), _counters() {}
+EquationToSBGSet::EquationToSBGSet(
+  VarSymbolTable vtable, unsigned int max_dim
+) : _vtable(vtable), _max_dim(max_dim), _counters() {}
 
-SBG::LIB::Set EquationToSBGSet::operator()(Connect eq)
-{
-  ERROR("EquationToSBGSet: Connect not yet supported");
-  return SBG::LIB::Set{};
-}
-
-SBG::LIB::Set EquationToSBGSet::operator()(Equality eq)
+SBG::LIB::Set EquationToSBGSet::createCountersSet()
 {
   SBG::LIB::Set result;
 
@@ -48,20 +43,7 @@ SBG::LIB::Set EquationToSBGSet::operator()(Equality eq)
     return result;
   }
 
-  // Equation arrays; start inserting counters to environment
-  for (const Index& counter : _counters) {
-    OptExp counter_exp = counter.exp();
-    ERROR_UNLESS(counter_exp.has_value(), "EquationToSBGSet: for index "
-      , "without definition in ", eq);
-
-    ExpList counter_indices{1, counter.exp().value()};
-    VarInfo counter_info{TypePrefixes{}, counter.name(), Option<Comment>{}
-      , Option<Modification>{}, Option<ExpList>{counter_indices}
-      , false};
-    _vtable[counter.name()] = counter_info;
-  }
-
-  // Calculate set for counters with new environment
+  // Calculate set for counters with new environment.
   SBGSetVisitor set_visitor{_vtable};
   std::size_t k = 0;
   for (const Index& counter : _counters) {
@@ -75,7 +57,7 @@ SBG::LIB::Set EquationToSBGSet::operator()(Equality eq)
     ++k;
   }
 
-  // Fill remaining dimensions
+  // Fill remaining dimensions.
   for (std::size_t k = _counters.size(); k < _max_dim; ++k) {
     result.cartesianProduct(SBG::LIB::Set{1, 1, 1});
   }
@@ -94,6 +76,16 @@ SBG::LIB::Set EquationToSBGSet::operator()(Equality eq)
   return result;
 }
 
+SBG::LIB::Set EquationToSBGSet::operator()(Connect eq)
+{
+  return createCountersSet();
+}
+
+SBG::LIB::Set EquationToSBGSet::operator()(Equality eq)
+{
+  return createCountersSet();
+}
+
 SBG::LIB::Set EquationToSBGSet::operator()(CallEq eq)
 {
   ERROR("EquationToSBGSet: trying to convert a CallEq");
@@ -107,6 +99,19 @@ SBG::LIB::Set EquationToSBGSet::operator()(ForEq eq)
   EquationList eq_elems = eq.elements();
   ERROR_UNLESS(eq_elems.size() == 1, "EquationToSBGSet: ForEq should be "
     , "composed by a singleton list");
+
+  // Insert counters to environment.
+  for (const Index& counter : _counters) {
+    OptExp counter_exp = counter.exp();
+    ERROR_UNLESS(counter_exp.has_value(), "EquationToSBGSet: for index "
+      , "without definition in ", eq);
+
+    ExpList counter_indices{1, counter.exp().value()};
+    VarInfo counter_info{TypePrefixes{}, counter.name(), Option<Comment>{}
+      , Option<Modification>{}, Option<ExpList>{counter_indices}
+      , false};
+    _vtable[counter.name()] = counter_info;
+  }
 
   return ApplyThis(eq_elems.front());
 }

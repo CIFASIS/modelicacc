@@ -41,6 +41,7 @@ namespace Modelica {
 class EquationToSBGSet : public boost::static_visitor<SBG::LIB::Set> {
 public:
   EquationToSBGSet(VarSymbolTable vtable, unsigned int max_dim);
+
   SBG::LIB::Set operator()(Connect eq);
   SBG::LIB::Set operator()(Equality eq);
   SBG::LIB::Set operator()(CallEq eq);
@@ -49,6 +50,8 @@ public:
   SBG::LIB::Set operator()(WhenEq eq);
 
 private:
+  SBG::LIB::Set createCountersSet();
+
   unsigned int _max_dim;
   VarSymbolTable _vtable;
   IndexList _counters;

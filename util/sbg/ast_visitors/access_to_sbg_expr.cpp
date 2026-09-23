@@ -28,7 +28,7 @@ namespace Modelica {
 
 AccessToSBGExpr::AccessToSBGExpr(
   const VarSymbolTable& symbols, const Counters& counters
-) : _max_dim(0), _symbols(symbols), _counters(counters)
+) : _max_dim(1), _symbols(symbols), _counters(counters)
 {
   for (const auto& [name, var_info] : symbols) {
     Option<AST::ExpList> opt_indices = var_info.indices();
@@ -40,7 +40,7 @@ AccessToSBGExpr::AccessToSBGExpr(
 
 SBG::LIB::Expression AccessToSBGExpr::operator()(AST::Integer v) const
 {
-  ERROR("AccessToSBGExpr: Integer is not an ");
+  ERROR("AccessToSBGExpr: Integer is not an access to a variable");
   return SBG::LIB::Expression{};
 }
 
@@ -154,10 +154,11 @@ SBG::LIB::Expression AccessToSBGExpr::operator()(AST::Reference v) const
   AST::ExpList indexes = get<1>(ref.front());
 
   SBG::LIB::Rational zero{0};
+  SBG::LIB::Rational one{1};
   SBG::LIB::Expression sbg_expr;
   if (indexes.empty()) { // Access to scalar variable.
     for (std::size_t k = 0; k < _max_dim; ++k) {
-      sbg_expr = sbg_expr.cartesianProduct(SBG::LIB::Expression{zero, zero});
+      sbg_expr = sbg_expr.cartesianProduct(SBG::LIB::Expression{zero, one});
     }
   } else { // Access to array variable.
     ExprVisitor expr_visitor{_symbols, _counters};
