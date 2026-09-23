@@ -3,48 +3,71 @@ name: C/C++ CI
 on:
   push:
   pull_request:
-    branches: [ modelicacc-dev ]
+    branches: [modelicacc-dev]
 
 jobs:
-  build:
-
+  build-and-test:
     runs-on: ubuntu-24.04
 
+    env:
+      SBG_INSTALL_PREFIX: ${{ runner.temp }}/sbgraph-install
+
     steps:
-    - uses: actions/checkout@v2
-    - name: Install deps.
-      run: | 
-        sudo apt-get update
-        sudo apt-get install autoconf
-        sudo apt-get install cmake
-        sudo apt-get install doxygen
-        sudo apt-get install g++
-        sudo apt-get install libboost1.83-dev
-        sudo apt-get install libboost-program-options1.83-dev
-        sudo apt-get install libginac-dev
-        sudo apt-get install make
-        sudo apt-get install rapidjson-dev
+      - name: Checkout ModelicaCC
+        uses: actions/checkout@v4
 
-    - name: Create build folder. 
-      working-directory: .
-      run: mkdir -p build
+      - name: Checkout SBGraph
+        uses: actions/checkout@v4
+        with:
+          repository: CIFASIS/sb-graph
 
-    - name: Configure
-      working-directory: ./build
-      run: cmake ..
+          ref: iss-135-define-include-directory
 
-    - name: SBG
-      working-directory: ./build
-      run: make update-sbg
+          path: _deps/sb-graph
 
-    - name: Build
-      working-directory: ./build
-      run: make
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes \
+            cmake \
+            g++ \
+            make \
+            doxygen \
+            pkg-config \
+            libboost1.83-dev \
+            libboost-program-options1.83-dev \
+            libginac-dev \
+            rapidjson-dev
 
-    - name: Doc
-      working-directory: ./build
-      run: make modelicacc_doc
+      - name: Configure SBGraph
+        run: |
+          cmake -S _deps/sb-graph -B _deps/sb-graph/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${SBG_INSTALL_PREFIX}" \
+            -DSBG_BUILD_TESTS=OFF \
+            -DSBG_BUILD_DOCS=OFF
 
-    - name: Tests
-      working-directory: ./build
-      run: make modelicacc_test
+      - name: Build and install SBGraph
+        run: |
+          cmake --build _deps/sb-graph/build --parallel
+          cmake --install _deps/sb-graph/build
+
+      - name: Configure ModelicaCC
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${SBG_INSTALL_PREFIX}" \
+            -DMODELICACC_BUILD_TESTS=ON \
+            -DMODELICACC_BUILD_BENCHMARKS=ON
+
+      - name: Build ModelicaCC
+        run: |
+          cmake --build build --parallel
+
+      - name: Run ModelicaCC tests
+        run: |
+          ctest --test-dir build --output-on-failure
+
+      - name: Generate documentation
+        run: |
+          cmake --build build --target modelicacc_doc
