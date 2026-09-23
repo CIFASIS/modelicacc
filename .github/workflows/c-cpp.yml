@@ -9,9 +9,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-24.04
 
-    env:
-      SBG_INSTALL_PREFIX: ${{ github.workspace }}/sbgraph-install
-
     steps:
       - name: Checkout ModelicaCC
         uses: actions/checkout@v4
@@ -38,12 +35,16 @@ jobs:
             libboost-program-options1.83-dev \
             libginac-dev \
             rapidjson-dev
+            
+      - name: Prepare SBGraph install prefix
+        run: |
+          mkdir -p "${HOME}/.local/sbgraph"
 
       - name: Configure SBGraph
         run: |
           cmake -S _deps/sb-graph -B _deps/sb-graph/build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX="${SBG_INSTALL_PREFIX}" \
+            -DCMAKE_INSTALL_PREFIX="${HOME}/.local/sbgraph" \
             -DSBG_BUILD_TESTS=OFF \
             -DSBG_BUILD_DOCS=OFF
 
@@ -56,7 +57,8 @@ jobs:
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="${SBG_INSTALL_PREFIX}" \
+            -DCMAKE_PREFIX_PATH="${HOME}/.local/sbgraph" \
+            -DSBGraph_DIR="${HOME}/.local/sbgraph/lib/cmake/SBGraph" \
             -DMODELICACC_BUILD_TESTS=ON \
             -DMODELICACC_BUILD_BENCHMARKS=ON
 
