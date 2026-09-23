@@ -12,7 +12,6 @@ set(CAUSALIZE_SBG_SRC
   ${CAUSALIZE_SBG_DIR}/tearing.cpp
   ${CAUSALIZE_SBG_DIR}/vertical_sorting.cpp
   ${CAUSALIZE_SBG_DIR}/tearing_variables.cpp
-  ${CAUSALIZE_SBG_DIR}/ast_visitors/equation_info_visitor.cpp
   ${CAUSALIZE_SBG_DIR}/ast_visitors/eq_var_match_annotator.cpp
   ${CAUSALIZE_SBG_DIR}/ast_visitors/residual_equation.cpp
   ${CAUSALIZE_SBG_DIR}/ast_visitors/variable_renamer.cpp
@@ -24,6 +23,7 @@ set(CAUSALIZE_SBG_SRC
   ${UTIL_DIR}/ast_visitors/flatter_for.cpp
   ${UTIL_DIR}/ast_visitors/is_integer.cpp
   ${UTIL_DIR}/ast_visitors/matching_exps.cpp
+  ${UTIL_DIR}/ast_visitors/matching_exps_equation.cpp
   ${UTIL_DIR}/ast_visitors/replace_equation.cpp
   ${UTIL_DIR}/sbg/conversions.cpp
   ${UTIL_DIR}/sbg/equation_info.cpp
@@ -31,6 +31,7 @@ set(CAUSALIZE_SBG_SRC
   ${UTIL_DIR}/sbg/set_vertex.cpp
   ${UTIL_DIR}/sbg/set_edge.cpp
   ${UTIL_DIR}/sbg/ast_visitors/access_to_sbg_expr.cpp
+  ${UTIL_DIR}/sbg/ast_visitors/equation_info_visitor.cpp
   ${UTIL_DIR}/sbg/ast_visitors/equation_sbg_set.cpp
   ${UTIL_DIR}/sbg/ast_visitors/sbg_expr_visitor.cpp
   ${UTIL_DIR}/sbg/ast_visitors/sbg_set_visitor.cpp

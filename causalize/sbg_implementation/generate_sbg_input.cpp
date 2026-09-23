@@ -19,18 +19,18 @@
 
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
 #include "ast/queries.hpp"
-#include "causalize/sbg_implementation/ast_visitors/equation_info_visitor.hpp"
 #include "util/logger.hpp"
+#include "util/profiler.hpp"
 #include "util/ast_visitors/eval_integer.hpp"
 #include "util/ast_visitors/flatter_for.hpp"
-#include "util/ast_visitors/matching_exps.hpp"
+#include "util/ast_visitors/matching_exps_equation.hpp"
 #include "util/sbg/conversions.hpp"
+#include "util/sbg/ast_visitors/equation_info_visitor.hpp"
 #include "util/sbg/ast_visitors/equation_sbg_set.hpp"
 
 #include <sbgraph/eval/file_evaluator.hpp>
 #include <sbgraph/eval/pretty_print.hpp>
 #include <sbgraph/sbg/set.hpp>
-#include <sbgraph/util/time_profiler.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -179,7 +179,7 @@ SBG::LIB::Expression GenerateSBGInput::createMap2(
   SBG::LIB::Expression translation;
   for (std::size_t k = 0; k < _max_dim; ++k) {
     SBG::LIB::Int offset = var_nodes_trans[k] - domain_trans[k];
-    if (eq_info.scalar()) {
+    if (eq_info.scalar() || var_sv.set().cardinal() == 1) {
       offset = offset + domain_trans[k];
     }
     translation = translation.cartesianProduct(
@@ -196,12 +196,11 @@ void GenerateSBGInput::addEdge(
 {
   if (sv.isVariable()) {
     Name var_name = sv.name();
-    const Equality eq = get<Equality>(eq_info.equation());
     VarSymbolTable symbols = _mmo_class.syms();
-    MatchingExps matching_exprs(var_name, isState(var_name, symbols));
-    Apply(matching_exprs, eq.left());
-    Apply(matching_exprs, eq.right());
-    std::set<Expression> matched_exprs = matching_exprs.matchedExps();
+    AST::Equation eq = eq_info.equation();
+    MatchingExpsEquation matching_exprs{var_name, isState(var_name, symbols)};
+    Apply(matching_exprs, eq);
+    std::set<Expression> matched_exprs = matching_exprs.matching_exprs().matchedExps();
     LOG << "Matched exprs for: " << var_name << " in " << eq << std::endl;
 
     SBG::LIB::Set eq_nodes = eq_sv.set();
@@ -264,7 +263,7 @@ void GenerateSBGInput::setup()
 
 SBGGenerationResult GenerateSBGInput::buildFromModel()
 {
-  SBG::Util::Internal::TimeProfiler profiler{"Horizontal sorting SBG builder"};
+  TimeScope timer{"horizontal sorting SBG builder"};
 
   // Write SBG program to _sbg_input
   setup();

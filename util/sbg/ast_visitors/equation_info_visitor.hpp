@@ -23,8 +23,8 @@
  * equation.
  */
 
-#ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_EQUATION_INFO_VISITOR_HPP_
-#define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_EQUATION_INFO_VISITOR_HPP_
+#ifndef MODELICACC_UTIL_SBG_AST_VISITORS_EQUATION_INFO_VISITOR_HPP_
+#define MODELICACC_UTIL_SBG_AST_VISITORS_EQUATION_INFO_VISITOR_HPP_
 
 #include "ast/equation.hpp"
 #include "util/sbg/equation_info.hpp"
@@ -32,8 +32,6 @@
 #include <boost/variant/static_visitor.hpp>
 
 namespace Modelica {
-
-namespace Causalize {
 
 /**
  * @brief Creates the EquationInfo associated to a flattened Modelica equation.
@@ -53,8 +51,6 @@ private:
   unsigned int _max_dim;
 };
 
-} // namespace Causalize
-
 }  // namespace Modelica
 
-#endif // MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_AST_VISITORS_EQUATION_INFO_VISITOR_HPP_
+#endif // MODELICACC_UTIL_SBG_AST_VISITORS_EQUATION_INFO_VISITOR_HPP_

@@ -17,7 +17,7 @@
 
 ******************************************************************************/
 
-#include "causalize/sbg_implementation/ast_visitors/equation_info_visitor.hpp"
+#include "util/sbg/ast_visitors/equation_info_visitor.hpp"
 #include "ast/expression.hpp"
 
 namespace {
@@ -41,8 +41,6 @@ Modelica::AST::IndexList fill(
 } // namespace
 
 namespace Modelica {
-
-namespace Causalize {
 
 EqInfoVisitor::EqInfoVisitor(unsigned int max_dim) : _max_dim(max_dim) {}
 
@@ -77,7 +75,5 @@ EquationInfo EqInfoVisitor::operator()(const AST::WhenEq& eq) const
 {
   return EquationInfo{AST::Indexes{fill(_max_dim, AST::IndexList{})}, eq, true};
 }
-
-} // namespace Causalize
 
 } // namespace Modelica
