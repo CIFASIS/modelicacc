@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     env:
-      SBG_INSTALL_PREFIX: ${{ runner.temp_dir }}/sbgraph-install
+      SBG_INSTALL_PREFIX: ${{ github.workspace }}/sbgraph-install
 
     steps:
       - name: Checkout ModelicaCC
