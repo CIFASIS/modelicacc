@@ -17,6 +17,16 @@
 
 ******************************************************************************/
 
+#include "flatter/class_finder.hpp"
+#include "flatter/connectors.hpp"
+#include "flatter/flatter.hpp"
+#include "flatter/generate_sbg_file.hpp"
+#include "mmo/mmo_class.hpp"
+#include "mmo/mmo_tree.hpp"
+#include "parser/parser.hpp"
+#include "util/logger.hpp"
+#include "util/table.hpp"
+
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/variant/get.hpp>
 #include <fstream>
@@ -25,15 +35,6 @@
 #include <string>
 #include <time.h>
 #include <unistd.h>
-
-#include <flatter/class_finder.hpp>
-#include <flatter/connectors.hpp>
-#include <flatter/flatter.hpp>
-#include <mmo/mmo_class.hpp>
-#include <mmo/mmo_tree.hpp>
-#include <parser/parser.hpp>
-#include <util/logger.hpp>
-#include <util/table.hpp>
 
 void usage()
 {
@@ -148,6 +149,8 @@ int main(int argc, char** argv)
 
     f.Flat(mmo, false, true);
     f.removeConnectorVar(mmo);
+    Modelica::Flatter::GenerateSBGInput sbg_generator{mmo};
+    sbg_generator.buildFromModel();
     if (debug) {
       LOG << "First Flatter: " << endl;
       LOG << mmo << std::endl;
