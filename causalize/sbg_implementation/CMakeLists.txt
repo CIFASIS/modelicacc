@@ -43,7 +43,7 @@ add_executable(causalize
 )
 
 target_include_directories(causalize PRIVATE ${BOOST_1_81_DIR}/include)
-target_link_libraries(causalize PRIVATE modelica ginac sbgraph ModelicaCC::profiler)
+target_link_libraries(causalize PRIVATE modelica ginac ModelicaCC::profiler)
 
 add_custom_target(causalize_test
   COMMAND ${CMAKE_COMMAND} -E echo "BUILDING CAUSALIZE TESTS: not implemented"

@@ -40,6 +40,6 @@ set(FLATTER_SRC
 add_executable(flatter ${FLATTER_SRC})
 
 target_include_directories(flatter PRIVATE ${BOOST_1_81_DIR}/include)
-target_link_libraries(flatter PRIVATE modelica ginac sbgraph ModelicaCC::profiler)
+target_link_libraries(flatter PRIVATE modelica ginac ModelicaCC::profiler)
 
 add_subdirectory(test)
