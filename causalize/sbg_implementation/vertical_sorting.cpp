@@ -20,6 +20,7 @@
 #include "causalize/sbg_implementation/vertical_sorting.hpp"
 #include "ast/equation.hpp"
 #include "ast/modification.hpp"
+#include "ast/queries.hpp"
 #include "causalize/sbg_implementation/ast_visitors/residual_equation.hpp"
 #include "causalize/sbg_implementation/ast_visitors/variable_renamer.hpp"
 #include "util/debug.hpp"
@@ -46,6 +47,7 @@ namespace Causalize {
 // ModelicaSBG modifier --------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
+
 // Getters ---------------------------------------------------------------------
 
 const ModelicaSBG& ModelicaSBGModifier::modelica_bsbg() const
@@ -61,24 +63,56 @@ const std::vector<std::pair<AST::Name, VarInfo>>&
 
 // Member functions ------------------------------------------------------------
 
+//TODO: generalize
+void ModelicaSBGModifier::addVarDeclaration(
+  const SetEdge& se, const SBG::LIB::Set& se_res
+)
+{
+  AST::Name start_mod = "start";
+  AST::ClassModification class_mod;
+  class_mod.push_back(AST::ElMod{start_mod, AST::ModEq{AST::Expression{1}}});
+  SetVertex var_sv = _input_modelica_bsbg.setVertex(se.var_id());
+  VarInfo var_info = std::get<VarInfo>(var_sv.info());
+  var_info.set_modification(AST::Modification{AST::ModClass{class_mod}});
+
+  AST::Name name;
+  if (se_res.cardinal() == 1) {
+    AST::ExpList sizes;
+    for (std::size_t k = 1; k < se_res.arity(); ++k) {
+      sizes.push_back(1);
+    }
+    var_info.set_indices(sizes);
+
+    AST::Reference rfrnc = get<Reference>(se.access());
+    AST::RefTuple ref_tuple = rfrnc.ref().front();
+    AST::ExpList decls = get<1>(rfrnc.ref().front());
+    name = get<0>(ref_tuple);
+    for (const AST::Expression& decl : decls) {
+      std::ostringstream ss;
+      ss << decl;
+      name = name + "_" + ss.str();
+    }
+  } else {
+    SBG::LIB::Map m{se_res, se.map2()};
+    ERROR_UNLESS(m.image() == var_sv.set()
+      , "ModelicaSBGModifier::addVarDeclaration: not supported yet");
+  }
+
+  _added_variables.push_back(
+    {"guess_" + name, var_info}
+  );
+  _added_variables.push_back(
+    {"res_" + name, var_info}
+  );
+}
+
 void ModelicaSBGModifier::addVarsDeclarations()
 {
   for (SetEdge& se : _input_modelica_bsbg.set_edges()) {
     SBG::LIB::Set se_res = se.translatedDomain()
       .intersection(_residual_vertices);
     if (!se_res.isEmpty()) {
-      AST::Name start_mod = "start";
-      AST::ClassModification class_mod;
-      class_mod.push_back(AST::ElMod{start_mod, AST::ModEq{AST::Expression{1}}});
-      SetVertex var_sv = _input_modelica_bsbg.setVertex(se.var_id());
-      VarInfo var_info = std::get<VarInfo>(var_sv.info());
-      var_info.set_modification(AST::Modification{AST::ModClass{class_mod}});
-      _added_variables.push_back(
-        {"guess_" + var_sv.name(), var_info}
-      );
-      _added_variables.push_back(
-        {"res_" + var_sv.name(), var_info}
-      );
+      addVarDeclaration(se, se_res);
     }
   }
 }
@@ -186,7 +220,7 @@ void ModelicaSBGModifier::modifyResidual(
 
 void ModelicaSBGModifier::modifyResidualMatchs()
 {
-  SetEdges ses = _output_modelica_bsbg.set_edges(); 
+  SetEdges& ses = _output_modelica_bsbg.set_edges();
   for (SetEdge& se : ses) {
     SBG::LIB::Set se_res = se.translatedDomain()
       .intersection(_residual_vertices);

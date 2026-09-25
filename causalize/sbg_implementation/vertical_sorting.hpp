@@ -71,6 +71,7 @@ private:
   void modifyResidual(SetEdge& se, const SBG::LIB::Set& se_res);
   void modifyResidualMatchs();
 
+  void addVarDeclaration(const SetEdge& se, const SBG::LIB::Set& se_res);
   void addVarsDeclarations();
 
   ModelicaSBG _input_modelica_bsbg;
