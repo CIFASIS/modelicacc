@@ -13,7 +13,6 @@ set(FLATTER_SRC
   ${UTIL_DIR}/type.cpp
   ${UTIL_DIR}/ast_visitors/constant_expression.cpp
   ${UTIL_DIR}/ast_visitors/contains_expression.cpp
-  ${UTIL_DIR}/ast_visitors/contains_expression_flatter.cpp
   ${UTIL_DIR}/ast_visitors/dot_expression.cpp
   ${UTIL_DIR}/ast_visitors/eval_expression.cpp
   ${UTIL_DIR}/ast_visitors/eval_integer.cpp
