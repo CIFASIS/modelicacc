@@ -68,6 +68,9 @@ void ModelicaSBGModifier::addVarDeclaration(
   const SetEdge& se, const SBG::LIB::Set& se_res
 )
 {
+  ERROR_UNLESS(se_res.arity() < 2, "ModelicaSBGModifier::addVarDeclaration: "
+    , " multi-dimensional case not supported");
+
   AST::Name start_mod = "start";
   AST::ClassModification class_mod;
   class_mod.push_back(AST::ElMod{start_mod, AST::ModEq{AST::Expression{1}}});
@@ -75,28 +78,28 @@ void ModelicaSBGModifier::addVarDeclaration(
   VarInfo var_info = std::get<VarInfo>(var_sv.info());
   var_info.set_modification(AST::Modification{AST::ModClass{class_mod}});
 
-  AST::Name name;
+  AST::Reference rfrnc = get<Reference>(se.access());
+  AST::RefTuple ref_tuple = rfrnc.ref().front();
+  AST::ExpList decls = *(var_info.indices());
+  AST::Name name = get<0>(ref_tuple);
+  AST::ExpList var_decl_sizes;
   if (se_res.cardinal() == 1) {
-    AST::ExpList sizes;
     for (std::size_t k = 1; k < se_res.arity(); ++k) {
-      sizes.push_back(1);
+      var_decl_sizes.push_back(1);
     }
-    var_info.set_indices(sizes);
-
-    AST::Reference rfrnc = get<Reference>(se.access());
-    AST::RefTuple ref_tuple = rfrnc.ref().front();
-    AST::ExpList decls = get<1>(rfrnc.ref().front());
-    name = get<0>(ref_tuple);
     for (const AST::Expression& decl : decls) {
       std::ostringstream ss;
       ss << decl;
       name = name + "_" + ss.str();
     }
   } else {
-    SBG::LIB::Map m{se_res, se.map2()};
-    ERROR_UNLESS(m.image() == var_sv.set()
-      , "ModelicaSBGModifier::addVarDeclaration: not supported yet");
+    for (const AST::Expression& decl : decls) {
+      var_decl_sizes.push_back(AST::BinOp{
+        decl, AST::BinOpType::Sub, AST::Integer{var_sv.set().cardinal() - se_res.cardinal()}
+      });
+    }
   }
+  var_info.set_indices(var_decl_sizes);
 
   _added_variables.push_back(
     {"guess_" + name, var_info}
