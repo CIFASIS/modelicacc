@@ -24,13 +24,13 @@
 #include "util/debug.hpp"
 #include "util/logger.hpp"
 #include "util/table.hpp"
+#include "util/profiler.hpp"
 #include "util/ast_visitors/state_variables_finder.hpp"
 #include "util/solve/solve.hpp"
 
 #include <boost/variant/get.hpp>
-#include <sbg/pwmap_impl.hpp>
-#include <sbg/set_impl.hpp>
-#include <util/time_profiler.hpp>
+#include <sbgraph/sbg/pwmap_impl.hpp>
+#include <sbgraph/sbg/set_impl.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -101,6 +101,7 @@ int main(int argc, char** argv)
     }
   }
 
+  Modelica::Profiler::instance().set_enabled(true);
   StoredDef stored_def;
   bool status = false;
   std::string model_file = "";
@@ -131,7 +132,7 @@ int main(int argc, char** argv)
   Modelica::Causalize::CausalizationResult result;
   EquationList causalized;
   {
-    SBG::Util::Internal::TimeProfiler profiler{"Causalization"};
+    Modelica::TimeScope timer{"causalize.total"};
     result = Modelica::Causalize::Causalize{}.causalize(mmo_class);
 
     //debugInit("s");
@@ -191,16 +192,8 @@ int main(int argc, char** argv)
   }
 
   std::cout << "\n";
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Horizontal sorting SBG builder");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Horizontal sorting");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Algebraic loops SBG builder");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Algebraic loops detection");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Tearing SBG builder");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Tearing");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Vertical sorting SBG builder");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Vertical sorting");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("GiNaC solve");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Causalization");
+  std::ofstream profiler_stream{"profiler.txt"};
+  Modelica::Profiler::instance().print(profiler_stream);
   std::cout << "\n\n";
 
   return 0;

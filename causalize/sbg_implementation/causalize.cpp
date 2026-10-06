@@ -19,7 +19,7 @@
 ******************************************************************************/
 
 #include "causalize/sbg_implementation/causalize.hpp"
-#include "causalize/sbg_implementation/modelica_sbg.hpp"
+#include "util/sbg/modelica_sbg.hpp"
 
 namespace Modelica {
 

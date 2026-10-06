@@ -20,11 +20,10 @@
 #include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 
 #include <boost/variant/get.hpp>
-#include <sbg/bipartite_sbg.hpp>
-#include <sbg/map.hpp>
-#include <sbg/pw_map.hpp>
-#include <sbg/set.hpp>
-#include <util/time_profiler.hpp>
+#include <sbgraph/sbg/bipartite_sbg.hpp>
+#include <sbgraph/sbg/map.hpp>
+#include <sbgraph/sbg/pw_map.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 #include <string>
 #include <variant>
@@ -140,8 +139,6 @@ void partitionEmap(SBG::LIB::DirectedSBG& dsbg)
 
 SBG::LIB::DirectedSBG buildLoopDetectionSBG(const SBG::LIB::MatchData& data)
 {
-  SBG::Util::Internal::TimeProfiler profiler{"SBG Loop Detection builder"};
-
   SBG::LIB::Set V;
   SBG::LIB::PWMap Vmap;
   std::tie(V, Vmap) = buildSCCVertices(data);
@@ -163,8 +160,6 @@ SBG::LIB::DirectedSBG buildLoopDetectionSBG(const SBG::LIB::MatchData& data)
 
 SBG::LIB::DirectedSBG buildTearingSBG(const SBG::LIB::SCCData& data)
 {
-  SBG::Util::Internal::TimeProfiler profiler{"SBG Tearing builder"};
-
   // Erase edges connecting different SCC
   SBG::LIB::DirectedSBG dsbg = data.dsbg();
   dsbg.eraseEdges(data.Ediff());
@@ -329,8 +324,6 @@ void VerticalSortingBuilder::redirectEdiff(
 
 void VerticalSortingBuilder::build()
 {
-  SBG::Util::Internal::TimeProfiler profiler{"SBG Vertical Sorting builder"};
-
   _output_dsbg = _input_dsbg;
 
   // Add guess vertices.

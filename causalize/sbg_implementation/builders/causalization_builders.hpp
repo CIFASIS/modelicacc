@@ -20,9 +20,9 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_BUILDERS_CAUSALIZATION_BUILDERS_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_BUILDERS_CAUSALIZATION_BUILDERS_HPP_
 
-#include <algorithms/matching/match_data.hpp>
-#include <algorithms/scc/scc_data.hpp>
-#include <sbg/directed_sbg.hpp>
+#include <sbgraph/algorithms/matching/match_data.hpp>
+#include <sbgraph/algorithms/scc/scc_data.hpp>
+#include <sbgraph/sbg/directed_sbg.hpp>
 
 #include <tuple>
 #include <vector>

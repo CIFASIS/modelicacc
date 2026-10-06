@@ -23,13 +23,13 @@
 #include "ast/expression.hpp"
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
 #include "causalize/sbg_implementation/causal_model.hpp"
-#include "causalize/sbg_implementation/equation_info.hpp"
-#include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "causalize/sbg_implementation/tearing.hpp"
 #include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 #include "util/table.hpp"
+#include "util/sbg/equation_info.hpp"
+#include "util/sbg/modelica_sbg.hpp"
 
-#include <sbg/set.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 #include <iosfwd>
 #include <tuple>
@@ -71,6 +71,7 @@ private:
   void modifyResidual(SetEdge& se, const SBG::LIB::Set& se_res);
   void modifyResidualMatchs();
 
+  void addVarDeclaration(const SetEdge& se, const SBG::LIB::Set& se_res);
   void addVarsDeclarations();
 
   ModelicaSBG _input_modelica_bsbg;

@@ -20,13 +20,13 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_GENERATE_SBG_INPUT_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_GENERATE_SBG_INPUT_HPP_
 
-#include "causalize/sbg_implementation/modelica_sbg.hpp"
-#include "causalize/sbg_implementation/set_edge.hpp"
-#include "causalize/sbg_implementation/set_vertex.hpp"
 #include "mmo/mmo_class.hpp"
+#include "util/sbg/modelica_sbg.hpp"
+#include "util/sbg/set_edge.hpp"
+#include "util/sbg/set_vertex.hpp"
 
-#include <sbg/bipartite_sbg.hpp>
-#include <sbg/expression.hpp>
+#include <sbgraph/sbg/bipartite_sbg.hpp>
+#include <sbgraph/sbg/expression.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -81,13 +81,6 @@ public:
 
 protected:
   void addVariableSet(const VarInfo& variable, const Name& name);
-
-  /**
-   * @brief Generates an equivalent list of equations to that of
-   * _mmo_class.equations().equations() where each loop has an unique
-   * inner-most equation.
-   */
-  EquationList flatterForEqs() const;
 
   /**
    * @brief Creates maps from edges to equations nodes.
