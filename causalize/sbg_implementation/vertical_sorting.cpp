@@ -244,20 +244,20 @@ VerticalSorting::VerticalSorting(AlgebraicLoopsResult& loops_result, TearingResu
 
 VerticalSortingResult VerticalSorting::sort()
 {
-  misc::VerticalSortingBuilder vs_builder{_loops_result.scc_result()
-    , _tearing_result.mfvs_result()};
+  SBG::LIB::DirectedSBG vertical_dsbg;
   {
-    SBG::Util::Internal::TimeProfiler timer{"vertical sorting SBG builder"};
-    vs_builder.buildVerticalSorting();
+    SBG::Util::Internal::TimeProfiler profiler{"Vertical sorting SBG builder"};
+    vertical_dsbg = misc::buildVerticalSortingSBG(_loops_result.scc_result(), _tearing_result.mfvs_result());
   }
   SBG::LIB::PWMap vertical_sort;
   {
     SBG::Util::Internal::TimeProfiler profiler{"Vertical sorting"};
-    vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(vs_builder.dsbg(), vs_builder.rmap());
+    vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(vertical_dsbg, SBG::LIB::PWMap{});
   }
 
   return VerticalSortingResult{_tearing_result.modelica_bsbg(), vertical_sort};
 }
+
 
 }  // namespace Causalize
 

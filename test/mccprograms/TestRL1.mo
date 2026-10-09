@@ -6,7 +6,7 @@
 model TestRL1
   constant Integer N = 100;
   Real iL[N], Ua[N], Uc[N];
-  parameter Real Ra = 1, Rb = 1, Rc = 1, L = 1;
+  parameter Real Ra = 1, Rb = 1, Rc = 1, L = 1, U0 = 1;
 equation
   der(iL[1]) = U0 - Ua[1];
   for i in 2:N loop

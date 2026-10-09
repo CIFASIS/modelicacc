@@ -1,6 +1,5 @@
 # Target variables
 MODE ?= Release
-sbg_branch ?= iss-87-refine-interfaces
 build_sbg ?= True
 repo_checkout=ssh
 
@@ -115,10 +114,6 @@ ifeq ("$(wildcard $(BOOST_LIB_PATH)/$(BOOST_1_81))","")
 	cd $(BOOST_LIB_PATH); tar -xvf $(BOOST_1_81_LIB)
 endif
 
-update-sbg:
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB); python3 ./update.py --branch_name $(sbg_branch) --repo_checkout $(repo_checkout)
-	cd $(3RD_PARTY_DIR)/$(SBG_LIB); tar -zxvf $(SBG_DEV).tar.gz
-
 lib-sbg: lib-boost  
 ifeq ("$(wildcard $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0))","")
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB); tar -zxvf $(SBG_1_0_0).tar.gz
@@ -129,10 +124,8 @@ ifeq ("$(wildcard $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0))","")
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0); mkdir -p usr
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_1_0_0); make install prefix=./usr
 endif
-ifeq ("$(wildcard $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV))","")
-	make update-sbg
-endif
 ifeq ($(build_sbg), True)
+	cd $(3RD_PARTY_DIR)/$(SBG_LIB); tar -zxvf $(SBG_DEV).tar.gz
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV); mkdir -p build
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/build; cmake ..
 	cd $(3RD_PARTY_DIR)/$(SBG_LIB)/$(SBG_DEV)/build; make

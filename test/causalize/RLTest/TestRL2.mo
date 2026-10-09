@@ -17,19 +17,3 @@ equation
   iR[N]-iL[N]+I=0;
   uL[1]+(R+R0)*iR[1]=0;
 end TestRL2;
-
-//Algebraic Loops:
-//der(iL[i])
-//L*der(iL[i]) = uL[i]
-//
-//iR[i]
-//iR[i]-iR[i+1]-iL[i] = 0
-//
-//uL[i+1]
-//uL[i]-uL[i+1]-R*iR[i+1] = 0
-//
-//iR[N]
-//iR[N]-iL[N]+I = 0
-//
-//uL[1]
-//uL[1]+(R+R0)*iR[1] = 0
