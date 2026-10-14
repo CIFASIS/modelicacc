@@ -74,7 +74,7 @@ int main(int argc, char** argv)
                                            {"tearing", no_argument, 0, 't'},
                                            {0, 0, 0, 0}};
     int option_index = 0;
-    opt = getopt_long(argc, argv, "vhot:", long_options, &option_index);
+    opt = getopt_long(argc, argv, "vhto:", long_options, &option_index);
     if (opt == EOF) {
       break;
     }
@@ -133,7 +133,7 @@ int main(int argc, char** argv)
     SBG::Util::Internal::TimeProfiler profiler{"Causalization"};
     result = Modelica::Causalize::Causalize{}.causalize(mmo_class);
 
-    //debugInit("s");
+    // debugInit("s");
     {
       SBG::Util::Internal::TimeProfiler solve_profiler{"GiNaC solve"};
       Modelica::AST::ClassList classes = stored_def.classes();
