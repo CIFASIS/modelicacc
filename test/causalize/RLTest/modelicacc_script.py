@@ -175,12 +175,14 @@ def run_modelicacc_benchmarks(filename, valores_n, runs=10):
         logging.info(f"╚══════════════════════════════════════════════════════════╝")
         
         modified_content = re.sub(r'(\bN\s*=\s*)\d+', lambda match: f"{match.group(1)}{n}", original_content)
+        # Replace index accesses {any_variable}[N] with {any_variable}[n].
+        modified_content = re.sub(r'(\b\w+\s*)\[\s*N\s*\]', lambda match: f"{match.group(1)}[{n}]", modified_content)
         
         temp_filename = f"temp_benchmark_{filename}"
         with open(temp_filename, 'w', encoding='utf-8') as f:
             f.write(modified_content);
 
-        command = ["../../../bin/causalize", temp_filename]
+        command = ["../../../bin/causalize", "--tearing",  temp_filename]
         pattern = re.compile(r"^(.+?):\s*([\d.]+)\s*ms", re.MULTILINE)
         fases_tiempos = defaultdict(list)
 
