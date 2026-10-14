@@ -1,4 +1,4 @@
-## ModelicaCC 5.0
+## ModelicaCC 5.1
 
 ModelicaCC is a Modelica C Compiler implemented in C++, the main goal of this project is to provide an environment to develop and test novel algorithms involved in the different compilation stages of large scale Modelica models. The different stages of the compilation pipeline follows the usual order: 
 
