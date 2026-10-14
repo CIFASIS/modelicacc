@@ -78,6 +78,17 @@ If Python3 is not installed, replace the occurrences of `python3` with
 
 ## Changelog
 
+## [5.1] - 2026-10-14
+
+### Added
+
+- Added README to run causalization test benchmarks.
+
+### Fixed
+
+- Modified `omc` causalization scripts to use the new backend and report times from `dumpBackendClocks` compiler option.
+- Fixed tearing option for causalization binary.
+
 ## [5.0] - 2026-07-13
 ### Added
 - Integrate **SCC** SBG library algorithm for causalization.
