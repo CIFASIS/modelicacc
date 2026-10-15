@@ -148,8 +148,8 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
         for stage in omc_stages:
             tiempos = fases_tiempos[stage]
             if tiempos:
-                #resultados_totales[n][stage] = 1e3*sum(tiempos) / len(tiempos)
-                resultados_totales[n][stage] = sum(tiempos) / len(tiempos)
+                resultados_totales[n][stage] = 1e3*sum(tiempos) / len(tiempos)
+                #resultados_totales[n][stage] = sum(tiempos) / len(tiempos)
 
         logging.info("Finished.                      ")
 
