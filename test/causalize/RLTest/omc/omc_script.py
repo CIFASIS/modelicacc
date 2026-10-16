@@ -58,7 +58,7 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
     logging.info(f"Values of N: {valores_n}")
     logging.info(f"Number of runs: {runs}\n")
 
-    omc_stages = ["Causalize", "Tearing", "Solve", "C File Size", "Total compile time", "Build C model"]
+    omc_stages = ["Causalize", "Tearing", "Solve", "C File Size (kB)", "Total compile time", "Build C model"]
     #omc_stages = ["sorting global known variables", "sort global known variables",
     #              "postOpt tearingSystem (initialization)", "postOpt tearingSystem (simulation)",
     #              "postOpt solveSimpleEquations (simulation)", "postOpt solveSimpleEquations (initialization)",
@@ -118,7 +118,7 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
                 base_name = Path(model_file).stem
                 c_files = [c_file for c_file in Path(".").glob("*.c") if base_name in c_file.name]
                 file_size = sum(c_file.stat().st_size for c_file in c_files) / 1024
-                fases_tiempos["C File Size"].append(float(file_size))
+                fases_tiempos["C File Size (kB)"].append(float(file_size/1e3))
                 
                 base_name = Path(model_file).stem
                 comp_file = Path(".") / base_name

@@ -166,7 +166,7 @@ def run_modelicacc_benchmarks(filename, valores_n, runs=10):
       , "Tearing SBG builder", "Tearing"
       , "Vertical sorting SBG builder", "Vertical sorting"
       , "GiNaC solve", "Causalization"]
-    qss_stages = ["ModelicaCC compilation", "C compilation", "C File Size"]
+    qss_stages = ["ModelicaCC compilation", "C compilation", "C File Size (kB)"]
     resultados_totales = {}
 
     for n in valores_n:
@@ -225,10 +225,10 @@ def run_modelicacc_benchmarks(filename, valores_n, runs=10):
             end_time = time.perf_counter()
             execution_time = end_time - start_time
             if comp_res:
-                fases_tiempos[qss_stages[0]].append(float(execution_time))
-                logging.info(f"  MMOC Compilation successful (took {execution_time:.2f} seconds)")
+                fases_tiempos[qss_stages[0]].append(float(1e3*execution_time))
+                logging.info(f"  MMOC Compilation successful (took {execution_time:.2f} ms)")
             else:
-                logging.info(f"  MMOC Compilation failed (took {execution_time:.2f} seconds)")
+                logging.info(f"  MMOC Compilation failed (took {execution_time:.2f} ms)")
                 continue
 
             base_name = Path(model_file).stem
@@ -244,11 +244,11 @@ def run_modelicacc_benchmarks(filename, valores_n, runs=10):
             if comp_res:
                 c_file_name = f"{base_name}.c"
                 file_size = Path(c_file_name).stat().st_size / 1024
-                fases_tiempos[qss_stages[1]].append(float(execution_time))
+                fases_tiempos[qss_stages[1]].append(float(1e3*execution_time))
                 fases_tiempos[qss_stages[2]].append(float(file_size))
-                logging.info(f"  C Model Compilation successful (took {execution_time:.2f} seconds)")
+                logging.info(f"  C Model Compilation successful (took {execution_time:.2f} ms)")
             else:
-                logging.info(f"  C Model Compilation failed (took {execution_time:.2f} seconds)")
+                logging.info(f"  C Model Compilation failed (took {execution_time:.2f} ms)")
                 continue
             
         if os.path.exists(temp_filename):
