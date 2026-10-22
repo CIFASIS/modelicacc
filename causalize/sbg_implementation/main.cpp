@@ -75,7 +75,7 @@ int main(int argc, char** argv)
                                            {"tearing", no_argument, 0, 't'},
                                            {0, 0, 0, 0}};
     int option_index = 0;
-    opt = getopt_long(argc, argv, "vhot:", long_options, &option_index);
+    opt = getopt_long(argc, argv, "vhto:", long_options, &option_index);
     if (opt == EOF) {
       break;
     }

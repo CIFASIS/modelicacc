@@ -22,20 +22,3 @@ equation
   iL[N] = Ua[N]/Ra + Uc[N]/Rc;
   Ua[N] = Uc[N]*Rb/Rc;
 end TestRL1;
-
-//Algebraic Loops:
-//der(iL[1])
-//der(iL[1]) = U0-Ua[1]
-//
-//der(iL[i])
-//L*der(iL[i]) = Uc[i-1]-Ua[i]
-//
-//Ua[i]
-//Uc[i]
-//Ua[i] = Rb*iL[i+1]+Uc[i]*Rb/Rc
-//iL[i] = Ua[i]/Ra+Uc[i]/Rc+iL[i+1]
-//
-//Uc[N]
-//Ua[N]
-//iL[N] = Ua[N]/Ra+Uc[N]/Rc
-//Ua[N] = Uc[N]*Rb/Rc

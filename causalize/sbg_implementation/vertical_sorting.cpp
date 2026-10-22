@@ -551,6 +551,7 @@ VerticalSortingResult VerticalSorting::sort()
   };
 }
 
+
 }  // namespace Causalize
 
 }  // namespace Modelica
