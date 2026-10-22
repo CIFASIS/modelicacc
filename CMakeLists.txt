@@ -2,6 +2,20 @@ cmake_minimum_required(VERSION 3.16)
 project(modelicacc)
 include(ExternalProject)
 include(FetchContent)
+include(GNUInstallDirs)
+
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(
+    CMAKE_INSTALL_PREFIX
+    "$ENV{HOME}/.local/modelicacc"
+    CACHE PATH
+    "Installation prefix"
+    FORCE
+  )
+endif()
+
+option(MODELICACC_BUILD_TESTS "Build ModelicaCC tests" ON)
+option(MODELICACC_BUILD_BENCHMARKS "Build ModelicaCC benchmarks" ON)
 
 # ------------------------------------------------------------------------------
 # Build type: Debug, Release
@@ -26,6 +40,47 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 else()
   add_compile_options(-O3)
 endif()
+
+# ------------------------------------------------------------------------------
+# ModelicaCC dependencies: sbgraph, ginac
+# ------------------------------------------------------------------------------
+
+# Keep this before include_directories() and the output directories: they
+# would leak into sb-graph when it is fetched (e.g. ModelicaCC's util/ and
+# parser/ headers shadowing sb-graph's ones).
+
+set(CMAKE_PREFIX_PATH
+  "$ENV{HOME}/.local/sbgraph"
+  CACHE PATH
+  "Paths where CMake looks for installed packages (e.g. sb-graph)"
+)
+set(SBG_REF "sb-graph-dev" CACHE STRING
+  "Branch, tag or commit of sb-graph to fetch when SBGraph is not installed")
+
+find_package(SBGraph CONFIG QUIET)
+
+if(SBGraph_FOUND)
+  message(STATUS "Using installed SBGraph: ${SBGraph_DIR}")
+else()
+  message(STATUS "SBGraph not found, downloading sb-graph (${SBG_REF}) with FetchContent")
+
+  # Only the library is needed, skip sb-graph tests, its 3rd-party deps and
+  # docs (same settings as .github/workflows/c-cpp.yml).
+  set(SBG_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(SBG_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+
+  FetchContent_Declare(
+    sbgraph
+    GIT_REPOSITORY https://github.com/CIFASIS/sb-graph.git
+    GIT_TAG        ${SBG_REF}
+    GIT_SHALLOW    TRUE
+  )
+
+  FetchContent_MakeAvailable(sbgraph)
+endif()
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GiNaC REQUIRED IMPORTED_TARGET ginac)
 
 # ------------------------------------------------------------------------------
 # Output directories: bin/ and lib/
@@ -71,19 +126,6 @@ set(COMMON_SRC
 )
 
 # ------------------------------------------------------------------------------
-# ModelicaCC dependencies: sbgraph, ginac
-# ------------------------------------------------------------------------------
-
-set(CMAKE_PREFIX_PATH
-  "$ENV{HOME}/.local/sbgraph"
-  CACHE PATH
-  "Paths where CMake looks for installed packages (e.g. sb-graph)"
-)
-find_package(SBGraph CONFIG REQUIRED)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GiNaC REQUIRED IMPORTED_TARGET ginac)
-
-# ------------------------------------------------------------------------------
 # libmodelica.a
 # ------------------------------------------------------------------------------
 
@@ -112,6 +154,15 @@ target_compile_features(modelicacc-profiler
 add_library(ModelicaCC::profiler ALIAS modelicacc-profiler)
 
 # ------------------------------------------------------------------------------
+# Testing dependencies: GTest, Google Benchmark
+# ------------------------------------------------------------------------------
+
+if(MODELICACC_BUILD_TESTS OR MODELICACC_BUILD_BENCHMARKS)
+  add_subdirectory(3rd-party)
+  enable_testing()
+endif()
+
+# ------------------------------------------------------------------------------
 # Submodules of ModelicaCC
 # ------------------------------------------------------------------------------
 
@@ -124,19 +175,27 @@ add_subdirectory(causalize)
 # ModelicaCC testing
 # ------------------------------------------------------------------------------
 
-option(MODELICACC_BUILD_TESTS "Build ModelicaCC tests" ON)
-option(MODELICACC_BUILD_BENCHMARKS "Build ModelicaCC benchmarks" ON)
-
-if(MODELICACC_BUILD_TESTS OR MODELICACC_BUILD_BENCHMARKS)
-  add_subdirectory(3rd-party)
-  enable_testing()
+if(MODELICACC_BUILD_TESTS)
+  add_custom_target(modelicacc_test
+    #COMMAND ${CMAKE_COMMAND} --build . --target flatter_test
+    COMMAND ${CMAKE_COMMAND} --build . --target causalize_test
+    DEPENDS GTest::gtest  GTest::gmock GTest::gtest_main
+    COMMENT "Running test suite"
+  )
 endif()
 
-add_custom_target(modelicacc_test
-  #COMMAND ${CMAKE_COMMAND} --build . --target flatter_test
-  COMMAND ${CMAKE_COMMAND} --build . --target causalize_test
-  DEPENDS GTest::gtest  GTest::gmock GTest::gtest_main
-  COMMENT "Running test suite"
+# ------------------------------------------------------------------------------
+# Install: cmake --install <build-dir> [--prefix <dir>]
+# ------------------------------------------------------------------------------
+
+install(
+  TARGETS mmo antialias flatter causalize
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(
+  TARGETS modelica modelicacc-profiler
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 # ------------------------------------------------------------------------------
@@ -160,6 +219,10 @@ add_custom_target(help_modelicacc
   COMMAND ${CMAKE_COMMAND} -E echo "Default values:"
   COMMAND ${CMAKE_COMMAND} -E echo "CMAKE_BUILD_TYPE=Release"
   COMMAND ${CMAKE_COMMAND} -E echo "CMAKE_PREFIX_PATH=$HOME/.local/sbgraph"
+  COMMAND ${CMAKE_COMMAND} -E echo "SBG_REF=sb-graph-dev"
+  COMMAND ${CMAKE_COMMAND} -E echo "CMAKE_INSTALL_PREFIX=$HOME/.local/modelicacc"
+  COMMAND ${CMAKE_COMMAND} -E echo "MODELICACC_BUILD_TESTS=ON"
+  COMMAND ${CMAKE_COMMAND} -E echo "MODELICACC_BUILD_BENCHMARKS=ON"
 )
 
 # ------------------------------------------------------------------------------

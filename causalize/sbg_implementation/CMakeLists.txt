@@ -42,7 +42,6 @@ add_executable(causalize
   ${CAUSALIZE_COMMON_SRC}
 )
 
-target_include_directories(causalize PRIVATE ${BOOST_1_81_DIR}/include)
 target_link_libraries(causalize PRIVATE modelica ginac ModelicaCC::profiler)
 
 add_custom_target(causalize_test
