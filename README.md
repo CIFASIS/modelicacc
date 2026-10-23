@@ -1,4 +1,4 @@
-## ModelicaCC 5.0
+## ModelicaCC 5.1
 
 ModelicaCC is a Modelica C Compiler implemented in C++, the main goal of this project is to provide an environment to develop and test novel algorithms involved in the different compilation stages of large scale Modelica models. The different stages of the compilation pipeline follows the usual order: 
 
@@ -82,6 +82,17 @@ The makefile script accepts the following targets:
 To list all the available targets run `make help`.
 
 ## Changelog
+
+## [5.1] - 2026-10-14
+
+### Added
+
+- Added README to run causalization test benchmarks.
+
+### Fixed
+
+- Modified `omc` causalization scripts to use the new backend and report times from `dumpBackendClocks` compiler option.
+- Fixed tearing option for causalization binary.
 
 ## [5.0] - 2026-07-13
 ### Added
