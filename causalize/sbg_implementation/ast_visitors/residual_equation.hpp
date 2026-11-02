@@ -31,7 +31,8 @@ namespace Modelica {
 namespace Causalize {
 
 /**
- * @brief Given the original equation, it constructs the modified equation that
+ * @brief Given the original equation and the residual variable access, it
+ * constructs the modified equation that
  * uses the residual of the original variable. 
  */
 class ResidualEqVisitor : public boost::static_visitor<AST::Equation> {
@@ -45,7 +46,7 @@ public:
   AST::Equation operator()(AST::WhenEq eq);
 
 private:
-  AST::Expression _original_expr;
+  AST::Expression _residual_expr;
 };
 
 } // namespace Causalize
