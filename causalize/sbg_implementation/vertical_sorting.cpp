@@ -47,29 +47,48 @@ namespace Causalize {
 // ModelicaSBG modifier --------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-
 // Getters ---------------------------------------------------------------------
 
-const ModelicaSBG& ModelicaSBGModifier::modelica_bsbg() const
-{
-  return _output_modelica_bsbg;
-}
+const ModelicaSBG& ModelicaSBGModifier::modelica_bsbg() const { return _output_modelica_bsbg; }
 
-const std::vector<std::pair<AST::Name, VarInfo>>&
-  ModelicaSBGModifier::added_variables() const
-{
-  return _added_variables;
-}
+const std::vector<std::pair<AST::Name, VarInfo>>& ModelicaSBGModifier::added_variables() const { return _added_variables; }
 
 // Member functions ------------------------------------------------------------
 
-//TODO: generalize
-void ModelicaSBGModifier::addVarDeclaration(
-  const SetEdge& se, const SBG::LIB::Set& se_res
-)
+// TODO: generalize
+AST::Name ModelicaSBGModifier::auxVarName(const SetEdge& se, const SBG::LIB::Set& se_res) const
 {
-  ERROR_UNLESS(se_res.arity() < 2, "ModelicaSBGModifier::addVarDeclaration: "
-    , " multi-dimensional case not supported");
+  AST::Reference rfrnc = get<Reference>(se.access());
+  AST::Name name = get<0>(rfrnc.ref().front());
+  if (se_res.cardinal() == 1) {
+    const SetVertex& var_sv = _input_modelica_bsbg.setVertex(se.var_id());
+    VarInfo var_info = std::get<VarInfo>(var_sv.info());
+    AST::ExpList decls = *(var_info.indices());
+    for (const AST::Expression& decl : decls) {
+      std::ostringstream ss;
+      ss << decl;
+      name = name + "_" + ss.str();
+    }
+  }
+
+  return name;
+}
+
+AST::Expression ModelicaSBGModifier::auxVarAccess(const std::string& prefix, const SetEdge& se, const SBG::LIB::Set& se_res) const
+{
+  // Scalar auxiliary variables are declared without subscripts.
+  if (se_res.cardinal() == 1) {
+    return AST::Reference{prefix + auxVarName(se, se_res)};
+  }
+
+  VariableRenamer renamer{prefix};
+  return Apply(renamer, se.access());
+}
+
+// TODO: generalize
+void ModelicaSBGModifier::addVarDeclaration(const SetEdge& se, const SBG::LIB::Set& se_res)
+{
+  ERROR_UNLESS(se_res.arity() < 2, "ModelicaSBGModifier::addVarDeclaration: ", " multi-dimensional case not supported");
 
   AST::Name start_mod = "start";
   AST::ClassModification class_mod;
@@ -78,42 +97,32 @@ void ModelicaSBGModifier::addVarDeclaration(
   VarInfo var_info = std::get<VarInfo>(var_sv.info());
   var_info.set_modification(AST::Modification{AST::ModClass{class_mod}});
 
-  AST::Reference rfrnc = get<Reference>(se.access());
-  AST::RefTuple ref_tuple = rfrnc.ref().front();
   AST::ExpList decls = *(var_info.indices());
-  AST::Name name = get<0>(ref_tuple);
+  AST::Name name = auxVarName(se, se_res);
   AST::ExpList var_decl_sizes;
   if (se_res.cardinal() == 1) {
     for (std::size_t k = 1; k < se_res.arity(); ++k) {
       var_decl_sizes.push_back(1);
     }
-    for (const AST::Expression& decl : decls) {
-      std::ostringstream ss;
-      ss << decl;
-      name = name + "_" + ss.str();
-    }
   } else {
     for (const AST::Expression& decl : decls) {
-      var_decl_sizes.push_back(AST::BinOp{
-        decl, AST::BinOpType::Sub, AST::Integer{var_sv.set().cardinal() - se_res.cardinal()}
-      });
+      var_decl_sizes.push_back(AST::BinOp{decl, AST::BinOpType::Sub, AST::Integer{var_sv.set().cardinal() - se_res.cardinal()}});
     }
   }
-  var_info.set_indices(var_decl_sizes);
+  if (var_decl_sizes.empty()) {
+    var_info.set_indices(Option<AST::ExpList>{});
+  } else {
+    var_info.set_indices(var_decl_sizes);
+  }
 
-  _added_variables.push_back(
-    {"guess_" + name, var_info}
-  );
-  _added_variables.push_back(
-    {"res_" + name, var_info}
-  );
+  _added_variables.push_back({kTearingGuessPrefix + name, var_info});
+  _added_variables.push_back({kTearingResPrefix + name, var_info});
 }
 
 void ModelicaSBGModifier::addVarsDeclarations()
 {
   for (SetEdge& se : _input_modelica_bsbg.set_edges()) {
-    SBG::LIB::Set se_res = se.translatedDomain()
-      .intersection(_residual_vertices);
+    SBG::LIB::Set se_res = se.translatedDomain().intersection(_residual_vertices);
     if (!se_res.isEmpty()) {
       addVarDeclaration(se, se_res);
     }
@@ -131,38 +140,26 @@ void ModelicaSBGModifier::partition(const SBG::LIB::Set& not_residual)
 
   SetEdges ses = _input_modelica_bsbg.set_edges();
   for (const SetEdge& se : ses) {
-    _output_modelica_bsbg.addSetEdge(se.restrict(
-      SBG::LIB::Set{_residual_vertices}
-    ));
+    _output_modelica_bsbg.addSetEdge(se.restrict(SBG::LIB::Set{_residual_vertices}));
     _output_modelica_bsbg.addSetEdge(se.restrict(not_residual));
   }
 }
 
-void ModelicaSBGModifier::addGuess(
-  const SetEdge& se, const SBG::LIB::Set& se_res
-  , const SBG::LIB::IntTuple& max_elem
-)
+void ModelicaSBGModifier::addGuess(const SetEdge& se, const SBG::LIB::Set& se_res, const SBG::LIB::IntTuple& max_elem)
 {
   // Add guess equation vertices.
   SetVertex original_eq_sv = _output_modelica_bsbg.setVertex(se.eq_id());
   std::string name = "guess(" + original_eq_sv.name() + ")";
-  VariableRenamer renamer{"guess_"};
-  AST::Equation guess_eq{AST::Equality{
-    se.access(), Apply(renamer, se.access())
-  }};
+  AST::Equation guess_eq{AST::Equality{se.access(), auxVarAccess(kTearingGuessPrefix, se, se_res)}};
   EquationInfo original_info = std::get<EquationInfo>(original_eq_sv.info());
-  EquationInfo guess_info{
-    original_info.indices(), guess_eq, original_info.scalar()
-  };
+  EquationInfo guess_info{original_info.indices(), guess_eq, original_info.scalar()};
   SBG::LIB::IntTuple neg_translation;
   for (const SBG::LIB::Int x : se.translation()) {
     neg_translation.pushBack(-x);
   }
   SBG::LIB::Set guess_vertices = se_res;
   guess_vertices = guess_vertices.translate(neg_translation);
-  int guess_eq_id = _output_modelica_bsbg.addSetVertex(
-    guess_vertices, name, guess_info
-  );
+  int guess_eq_id = _output_modelica_bsbg.addSetVertex(guess_vertices, name, guess_info);
 
   // Add guess/equation matching edges.
   SBG::LIB::Set edges = se.domain();
@@ -173,40 +170,31 @@ void ModelicaSBGModifier::addGuess(
     t.pushBack(max_elem[k] + se_translation[k]);
   }
   name = "guess equation of " + se.name();
-  _output_modelica_bsbg.addSetEdge(
-    se.var_id(), guess_eq_id, edges, t, se.access(), name
-  );
+  _output_modelica_bsbg.addSetEdge(se.var_id(), guess_eq_id, edges, t, se.access(), name);
 }
 
 void ModelicaSBGModifier::addGuessMatchs(const SBG::LIB::IntTuple& max_elem)
 {
-  SetEdges ses = _input_modelica_bsbg.set_edges(); 
+  SetEdges ses = _input_modelica_bsbg.set_edges();
   for (const SetEdge& se : ses) {
-    SBG::LIB::Set se_res = se.translatedDomain()
-      .intersection(_residual_vertices);
+    SBG::LIB::Set se_res = se.translatedDomain().intersection(_residual_vertices);
     if (!se_res.isEmpty()) {
       addGuess(se, se_res, max_elem);
     }
   }
 }
 
-void ModelicaSBGModifier::modifyResidual(
-  SetEdge& se, const SBG::LIB::Set& se_res
-)
+void ModelicaSBGModifier::modifyResidual(SetEdge& se, const SBG::LIB::Set& se_res)
 {
   // Modify equation expression.
   SetVertex& eq_sv = _output_modelica_bsbg.setVertex(se.eq_id());
   EquationInfo eq_info = std::get<EquationInfo>(eq_sv.info());
-  ResidualEqVisitor res_visit{se.access()};
-  eq_sv.set_info(EquationInfo{
-    eq_info.indices()
-    , Apply(res_visit, eq_info.equation())
-    , eq_info.scalar()
-  });
+  AST::Expression res_access = auxVarAccess(kTearingResPrefix, se, se_res);
+  ResidualEqVisitor res_visit{res_access};
+  eq_sv.set_info(EquationInfo{eq_info.indices(), Apply(res_visit, eq_info.equation()), eq_info.scalar()});
 
   // Add residual variable vertices.
-  std::string name = "res_" + _output_modelica_bsbg
-    .setVertex(se.var_id()).name();
+  std::string name = kTearingResPrefix + _output_modelica_bsbg.setVertex(se.var_id()).name();
   SBG::LIB::IntTuple neg_translation;
   for (const SBG::LIB::Int x : se.translation()) {
     neg_translation.pushBack(-x);
@@ -217,25 +205,21 @@ void ModelicaSBGModifier::modifyResidual(
 
   // Modify matched variable.
   se.set_var_id(res_var_id);
-  VariableRenamer renamer{"res_"};
-  se.set_access(Apply(renamer, se.access()));
+  se.set_access(res_access);
 }
 
 void ModelicaSBGModifier::modifyResidualMatchs()
 {
   SetEdges& ses = _output_modelica_bsbg.set_edges();
   for (SetEdge& se : ses) {
-    SBG::LIB::Set se_res = se.translatedDomain()
-      .intersection(_residual_vertices);
+    SBG::LIB::Set se_res = se.translatedDomain().intersection(_residual_vertices);
     if (!se_res.isEmpty()) {
       modifyResidual(se, se_res);
     }
   }
 }
 
-ModelicaSBG ModelicaSBGModifier::modify(
-  ModelicaSBG modelica_bsbg, const VerticalSortingBuilder& builder
-)
+ModelicaSBG ModelicaSBGModifier::modify(ModelicaSBG modelica_bsbg, const VerticalSortingBuilder& builder)
 {
   _input_modelica_bsbg = modelica_bsbg;
   _output_modelica_bsbg = ModelicaSBG{};
@@ -243,13 +227,10 @@ ModelicaSBG ModelicaSBGModifier::modify(
   _residual_vertices = builder.residual_vertices();
 
   addVarsDeclarations();
-  SBG::LIB::Set not_residual = builder.dsbg().V()
-    .difference(_residual_vertices);
+  SBG::LIB::Set not_residual = builder.dsbg().V().difference(_residual_vertices);
   partition(not_residual);
-  SBG::LIB::Set guess_vertices = builder.guess_offset()
-    .image(_residual_vertices);
-  SBG::LIB::IntTuple max_elem = builder.dsbg().V().difference(guess_vertices)
-    .maxElem();
+  SBG::LIB::Set guess_vertices = builder.guess_offset().image(_residual_vertices);
+  SBG::LIB::IntTuple max_elem = builder.dsbg().V().difference(guess_vertices).maxElem();
   addGuessMatchs(max_elem);
   modifyResidualMatchs();
 
@@ -260,20 +241,16 @@ ModelicaSBG ModelicaSBGModifier::modify(
 // Converter to Modelica code of an equation/variable pairing ------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-MatchToModelicaFormat::MatchToModelicaFormat(
-  const ModelicaSBG& modelica_bsbg, const SBG::LIB::PWMap& sort
-  , const VerticalSortingBuilder& builder, const SBG::LIB::Map& jth_scc_smap
-) : _modelica_bsbg(modelica_bsbg), _sort(sort), _builder(builder)
-    , _jth_scc_smap(jth_scc_smap) {}
-
-detail::SortedMatchs MatchToModelicaFormat::equationToModelicaFormat(
-  const SetEdge& se, const SBG::LIB::Set& se_match
-  , const SBG::LIB::Expression& expr
-)
+MatchToModelicaFormat::MatchToModelicaFormat(const ModelicaSBG& modelica_bsbg, const SBG::LIB::PWMap& sort,
+                                             const VerticalSortingBuilder& builder, const SBG::LIB::Map& jth_scc_smap)
+    : _modelica_bsbg(modelica_bsbg), _sort(sort), _builder(builder), _jth_scc_smap(jth_scc_smap)
 {
-  bool is_residual = !se_match.intersection(
-    _builder.residual_vertices()
-  ).isEmpty();
+}
+
+detail::SortedMatchs MatchToModelicaFormat::equationToModelicaFormat(const SetEdge& se, const SBG::LIB::Set& se_match,
+                                                                     const SBG::LIB::Expression& expr)
+{
+  bool is_residual = !se_match.intersection(_builder.residual_vertices()).isEmpty();
   auto [eq_info, accesses] = getAccess(_modelica_bsbg, se, se_match, expr);
 
   // Create new equation and save it to current matching.
@@ -285,17 +262,13 @@ detail::SortedMatchs MatchToModelicaFormat::equationToModelicaFormat(
     if (is_residual) {
       AST::Equality eq{se.access(), 0};
       EquationInfo residual_eq_info{indexes, eq, eq_info.scalar()};
-      _residual_zero.push_back(
-        detail::SortedMatch{residual_eq_info, AST::Expression{}}
-      );
+      _residual_zero.push_back(detail::SortedMatch{residual_eq_info, AST::Expression{}});
     }
   }
   return result;
 }
 
-detail::SortedMatchs MatchToModelicaFormat::format(
-  const SBG::LIB::Map& match, const SBG::LIB::Expression& expr
-)
+detail::SortedMatchs MatchToModelicaFormat::format(const SBG::LIB::Map& match, const SBG::LIB::Expression& expr)
 {
   detail::SortedMatchs result;
 
@@ -303,26 +276,15 @@ detail::SortedMatchs MatchToModelicaFormat::format(
   SBG::LIB::Set match_domain = match.domain();
   match_domain.compact();
   for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-    SBG::LIB::Set jth_eq_var_match = se.translatedDomain()
-      .intersection(match_domain);
+    SBG::LIB::Set jth_eq_var_match = se.translatedDomain().intersection(match_domain);
     if (jth_eq_var_match.cardinal() > 0) {
-      detail::SortedMatchs jth_result = equationToModelicaFormat(
-        se, jth_eq_var_match, expr
-      );
-      result.insert(
-        result.end()
-        , std::make_move_iterator(jth_result.begin())
-        , std::make_move_iterator(jth_result.end())
-      );
+      detail::SortedMatchs jth_result = equationToModelicaFormat(se, jth_eq_var_match, expr);
+      result.insert(result.end(), std::make_move_iterator(jth_result.begin()), std::make_move_iterator(jth_result.end()));
     }
   }
 
   // Add res(...) = 0 equations at the end.
-  result.insert(
-    result.end()
-    , std::make_move_iterator(_residual_zero.begin())
-    , std::make_move_iterator(_residual_zero.end())
-  );
+  result.insert(result.end(), std::make_move_iterator(_residual_zero.begin()), std::make_move_iterator(_residual_zero.end()));
 
   return result;
 }
@@ -333,31 +295,23 @@ detail::SortedMatchs MatchToModelicaFormat::format(
 
 // Constructors/destructors ----------------------------------------------------
 
-VerticalSortingResult::VerticalSortingResult(
-  const ModelicaSBG& modelica_bsbg, const SBG::LIB::PWMap& sort
-  , const VerticalSortingBuilder& builder
-) : _modelica_bsbg(modelica_bsbg), _sort(sort), _builder(builder) {}
+VerticalSortingResult::VerticalSortingResult(const ModelicaSBG& modelica_bsbg, const SBG::LIB::PWMap& sort,
+                                             const VerticalSortingBuilder& builder)
+    : _modelica_bsbg(modelica_bsbg), _sort(sort), _builder(builder)
+{
+}
 
 // Getters ---------------------------------------------------------------------
 
-const ModelicaSBG& VerticalSortingResult::modelica_bsbg() const
-{
-  return _modelica_bsbg;
-}
+const ModelicaSBG& VerticalSortingResult::modelica_bsbg() const { return _modelica_bsbg; }
 
 const SBG::LIB::PWMap& VerticalSortingResult::sort() const { return _sort; }
 
-const std::vector<std::pair<AST::Name, VarInfo>>
-  VerticalSortingResult::added_variables() const
-{
-  return _added_variables;
-}
+const std::vector<std::pair<AST::Name, VarInfo>> VerticalSortingResult::added_variables() const { return _added_variables; }
 
 // Member functions ------------------------------------------------------------
 
-SortedAlgebraicLoop VerticalSortingResult::outerBounds(
-  const detail::SortedMatchs& matchs, bool is_scalar
-) const
+SortedAlgebraicLoop VerticalSortingResult::outerBounds(const detail::SortedMatchs& matchs, bool is_scalar) const
 {
   SortedAlgebraicLoop loop;
 
@@ -365,9 +319,7 @@ SortedAlgebraicLoop VerticalSortingResult::outerBounds(
     for (const detail::SortedMatch& match : matchs) {
       EquationInfo eq_info = match.first;
       AST::Expression expr = match.second;
-      loop.pushBack(EqVarMatch{
-        eq_info.restrictBounds(eq_info.indices()), AST::ExpList{expr}
-      });
+      loop.pushBack(EqVarMatch{eq_info.restrictBounds(eq_info.indices()), AST::ExpList{expr}});
     }
   } else {
     bool scalar_equations = true;
@@ -401,9 +353,7 @@ SortedAlgebraicLoop VerticalSortingResult::outerBounds(
   return loop;
 }
 
-bool isScalar(
-  const SBG::LIB::PWMap& sort, const SBG::LIB::Set& scc, std::size_t card
-)
+bool isScalar(const SBG::LIB::PWMap& sort, const SBG::LIB::Set& scc, std::size_t card)
 {
   bool result = false;
   SBG::LIB::PWMap scc_sort = sort.restrict(scc);
@@ -416,13 +366,9 @@ bool isScalar(
   return result;
 }
 
-SortedAlgebraicLoop VerticalSortingResult::sortLoop(
-  const SBG::LIB::Map& jth_scc_smap
-) const
+SortedAlgebraicLoop VerticalSortingResult::sortLoop(const SBG::LIB::Map& jth_scc_smap) const
 {
-  MatchToModelicaFormat match_formatter{
-    _modelica_bsbg, _sort, _builder, jth_scc_smap
-  };
+  MatchToModelicaFormat match_formatter{_modelica_bsbg, _sort, _builder, jth_scc_smap};
   SBG::LIB::Set reps = jth_scc_smap.domain();
   std::size_t card = reps.cardinal();
   const SBG::LIB::PWMap& rmap = _builder.rmap();
@@ -435,35 +381,24 @@ SortedAlgebraicLoop VerticalSortingResult::sortLoop(
   SBG::LIB::Set jth_vertices = reps;
   while (!unsorted_vertices.isEmpty()) {
     // Handle current equation/variable matching.
-    SBG::LIB::Map jth_vertices_smap = *(
-      vertices_smap.restrict(jth_vertices).begin()
-    );
+    SBG::LIB::Map jth_vertices_smap = *(vertices_smap.restrict(jth_vertices).begin());
     SBG::LIB::Set sorted_vertices = jth_vertices_smap.domain();
     sorted_vertices.compact();
 
     // Check if we can handle these repetitive structures.
-    if (!is_scalar) { // Array of algebraic loops.
-      ERROR_UNLESS(card == sorted_vertices.cardinal()
-        , "VericalSortingResult::sortLoop: incompatible repetitive structures");
+    if (!is_scalar) {  // Array of algebraic loops.
+      ERROR_UNLESS(card == sorted_vertices.cardinal(), "VericalSortingResult::sortLoop: incompatible repetitive structures");
     }
 
-    SBG::LIB::Expression expr = is_scalar ? jth_vertices_smap.law()
-      : jth_scc_smap.law();
-    detail::SortedMatchs jth_matchs = match_formatter.format(
-      jth_vertices_smap, expr
-    );
-    matchs.insert(
-      matchs.end()
-      , std::make_move_iterator(jth_matchs.begin())
-      , std::make_move_iterator(jth_matchs.end())
-    );
+    SBG::LIB::Expression expr = is_scalar ? jth_vertices_smap.law() : jth_scc_smap.law();
+    detail::SortedMatchs jth_matchs = match_formatter.format(jth_vertices_smap, expr);
+    matchs.insert(matchs.end(), std::make_move_iterator(jth_matchs.begin()), std::make_move_iterator(jth_matchs.end()));
 
     // Get next map in the sort.
     unsorted_vertices = unsorted_vertices.difference(sorted_vertices);
     vertices_smap = vertices_smap.restrict(unsorted_vertices);
     for (const SBG::LIB::Map& m : vertices_smap) {
-      if (!m.image().intersection(sorted_vertices).isEmpty()
-         && m.domain().intersection(sorted_vertices).isEmpty()) {
+      if (!m.image().intersection(sorted_vertices).isEmpty() && m.domain().intersection(sorted_vertices).isEmpty()) {
         jth_vertices = m.domain();
         break;
       }
@@ -479,8 +414,7 @@ CausalModel VerticalSortingResult::sortLoops() const
 
   const SBG::LIB::PWMap& rmap = _builder.rmap();
   const SBG::LIB::Set reps = rmap.fixedPoints();
-  SBG::LIB::PWMap sccs_smap = _builder.guess_offset()
-    .composition(_sort.restrict(_builder.end_points()));
+  SBG::LIB::PWMap sccs_smap = _builder.guess_offset().composition(_sort.restrict(_builder.end_points()));
   SBG::LIB::Set unsorted_sccs = reps;
   SBG::LIB::Set jth_scc = sccs_smap.fixedPoints();
   while (!unsorted_sccs.isEmpty()) {
@@ -518,6 +452,7 @@ CausalModel VerticalSortingResult::toModelicaFormat()
   ModelicaSBGModifier modifier;
   modifier.modify(_modelica_bsbg, _builder);
   _modelica_bsbg = modifier.modelica_bsbg();
+  _added_variables = modifier.added_variables();
 
   partitionSort();
   return sortLoops();
@@ -527,14 +462,14 @@ CausalModel VerticalSortingResult::toModelicaFormat()
 // Vertical sorting ------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-VerticalSorting::VerticalSorting(
-  AlgebraicLoopsResult& loops_result, TearingResult& tearing_result
-) : _loops_result(loops_result), _tearing_result(tearing_result) {}
+VerticalSorting::VerticalSorting(AlgebraicLoopsResult& loops_result, TearingResult& tearing_result)
+    : _loops_result(loops_result), _tearing_result(tearing_result)
+{
+}
 
 VerticalSortingResult VerticalSorting::sort()
 {
-  VerticalSortingBuilder vs_builder{_loops_result.scc_result()
-    , _tearing_result.mfvs_result()};
+  VerticalSortingBuilder vs_builder{_loops_result.scc_result(), _tearing_result.mfvs_result()};
   {
     TimeScope timer{"vertical sorting SBG builder"};
     vs_builder.build();
@@ -542,15 +477,11 @@ VerticalSortingResult VerticalSorting::sort()
   SBG::LIB::PWMap vertical_sort;
   {
     TimeScope timer{"vertical sorting"};
-    vertical_sort = SBG::LIB::TopologicalSorting{}
-      .calculate(vs_builder.dsbg(), vs_builder.rmap());
+    vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(vs_builder.dsbg(), vs_builder.rmap());
   }
 
-  return VerticalSortingResult{
-    _tearing_result.modelica_bsbg(), vertical_sort, vs_builder
-  };
+  return VerticalSortingResult{_tearing_result.modelica_bsbg(), vertical_sort, vs_builder};
 }
-
 
 }  // namespace Causalize
 

@@ -71,6 +71,11 @@ private:
   void modifyResidual(SetEdge& se, const SBG::LIB::Set& se_res);
   void modifyResidualMatchs();
 
+  AST::Name auxVarName(const SetEdge& se, const SBG::LIB::Set& se_res) const;
+  AST::Expression auxVarAccess(
+    const std::string& prefix, const SetEdge& se, const SBG::LIB::Set& se_res
+  ) const;
+
   void addVarDeclaration(const SetEdge& se, const SBG::LIB::Set& se_res);
   void addVarsDeclarations();
 
@@ -88,6 +93,7 @@ namespace detail {
 
 using SortedMatch = std::pair<EquationInfo, AST::Expression>;
 using SortedMatchs = std::vector<SortedMatch>;
+using TearingAuxVars = std::vector<std::pair<AST::Name, VarInfo>>;
 
 } // namespace detail
 
@@ -128,7 +134,7 @@ public:
 
   const ModelicaSBG& modelica_bsbg() const;
   const SBG::LIB::PWMap& sort() const;
-  const std::vector<std::pair<AST::Name, VarInfo>> added_variables() const;
+  const detail::TearingAuxVars added_variables() const;
 
   /**
    * @brief Converts the SBG obtained result to a ModelicaCC list of equations
@@ -164,7 +170,7 @@ private:
   ModelicaSBG _modelica_bsbg;
   SBG::LIB::PWMap _sort;
   VerticalSortingBuilder _builder;
-  std::vector<std::pair<AST::Name, VarInfo>> _added_variables;
+  detail::TearingAuxVars _added_variables;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
