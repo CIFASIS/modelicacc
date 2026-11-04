@@ -1,4 +1,4 @@
-## ModelicaCC 5.1
+## ModelicaCC 5.2
 
 ModelicaCC is a Modelica C Compiler implemented in C++, the main goal of this project is to provide an environment to develop and test novel algorithms involved in the different compilation stages of large scale Modelica models. The different stages of the compilation pipeline follows the usual order: 
 
@@ -83,6 +83,17 @@ To list all the available targets run `make help`.
 
 ## Changelog
 
+## [5.2] - 2026-10-16
+
+### Fixed
+
+- Fixed compilation of SBG legacy library version for flatter algorithms 
+
+Detailed instructions of how to run benchmark causalization tests can be found in:
+```
+{MCC_ROOT}/test/causalize/RLTest/README.md
+```
+
 ## [5.1] - 2026-10-14
 
 ### Added
@@ -99,15 +110,6 @@ To list all the available targets run `make help`.
 - Integrate **SCC** SBG library algorithm for causalization.
 - Generate Modelica code to solve algebraic loops.
 
-## [4.0] - 2022-05-04
-### Added
-- Implemented SBGraphs as an independent library. As such, new algorithms
-for causalization will be listed in its corresponding repository.
-
-## [3.0] - 2021-08-20
-### Added
-- Implemented SBGraphs data structures and helper classes.
-- Implemented **new flatter** algorithm based on **SBGraphs**.
 
 ## Licensing
 

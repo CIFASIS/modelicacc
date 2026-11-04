@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.2] - 2026-10-16
+
+### Fixed
+
+- Fixed compilation of SBG legacy library version for flatter algorithms 
+
+Detailed instructions of how to run benchmark causalization tests can be found in:
+```
+{MCC_ROOT}/test/causalize/RLTest/README.md
+```
+
 ## [5.1] - 2026-10-14
 
 ### Added
