@@ -30,6 +30,10 @@ namespace Modelica {
 
 namespace Causalize {
 
+/// Prefixes of the auxiliary guess and residual variables introduced by tearing.
+inline const AST::Name kTearingGuessPrefix = "tearing_var_guess_";
+inline const AST::Name kTearingResPrefix = "tearing_var_res_";
+
 ////////////////////////////////////////////////////////////////////////////////
 // Tearing variable ------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////

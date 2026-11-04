@@ -29,32 +29,32 @@ namespace Causalize {
 // Causalization result --------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-CausalizationResult::CausalizationResult(
-  ModelMatch horizontal_sort, AlgebraicLoops loops, TearingVariables tearing
-  , CausalModel vertical_sort
-) : _horizontal_sort(horizontal_sort), _loops(loops), _tearing(tearing)
-  , _vertical_sort(vertical_sort) {}
-
-const ModelMatch& CausalizationResult::horizontal_sort() const
+CausalizationResult::CausalizationResult(ModelMatch horizontal_sort, AlgebraicLoops loops, TearingVariables tearing,
+                                         CausalModel vertical_sort, std::vector<std::pair<AST::Name, VarInfo>> added_variables)
+    : _horizontal_sort(horizontal_sort), _loops(loops), _tearing(tearing), _vertical_sort(vertical_sort), _added_variables(added_variables)
 {
-  return _horizontal_sort;
 }
+
+const ModelMatch& CausalizationResult::horizontal_sort() const { return _horizontal_sort; }
 
 const AlgebraicLoops& CausalizationResult::loops() const { return _loops; }
 
-const TearingVariables& CausalizationResult::tearing() const
+const TearingVariables& CausalizationResult::tearing() const { return _tearing; }
+
+const CausalModel& CausalizationResult::vertical_sort() const { return _vertical_sort; }
+
+const detail::TearingAuxVars& CausalizationResult::added_variables() const { return _added_variables; }
+
+std::vector<AST::Name> CausalizationResult::aux_vars_names()
 {
-  return _tearing;
+  std::vector<AST::Name> names;
+  names.reserve(_added_variables.size());
+  for (const auto& [name, _] : _added_variables) names.push_back(name);
+
+  return names;
 }
 
-const CausalModel& CausalizationResult::vertical_sort() const
-{
-  return _vertical_sort;
-}
-
-std::ostream& operator<<(
-  std::ostream& out, const CausalizationResult& causalized
-)
+std::ostream& operator<<(std::ostream& out, const CausalizationResult& causalized)
 {
   out << "Horizontal sort:\n";
   out << causalized.horizontal_sort() << "\n";
@@ -93,7 +93,7 @@ CausalizationResult Causalize::causalize(MMO_Class& mmo_class) const
   VerticalSortingResult vs_result = vertical_sorter.sort();
   CausalModel vertical_sort = vs_result.toModelicaFormat();
 
-  return CausalizationResult{horizontal_sort, loops, tearing, vertical_sort};
+  return CausalizationResult{horizontal_sort, loops, tearing, vertical_sort, vs_result.added_variables()};
 }
 
 }  // namespace Causalize

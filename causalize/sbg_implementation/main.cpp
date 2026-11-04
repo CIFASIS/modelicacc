@@ -135,21 +135,19 @@ int main(int argc, char** argv)
     Modelica::TimeScope timer{"causalize.total"};
     result = Modelica::Causalize::Causalize{}.causalize(mmo_class);
 
-    //debugInit("s");
-    //{
-    //  SBG::Util::Internal::TimeProfiler solve_profiler{"GiNaC solve"};
-    //  Modelica::AST::ClassList classes = stored_def.classes();
-    //  Modelica::Causalize::CausalModel causal_model = result.vertical_sort();
-    //  Modelica::Causalize::TearingVariables tearing_vars;
-    //  if (tearing) {
-    //    tearing_vars = result.tearing();
-    //  }
-    //  for (const Modelica::Causalize::SortedAlgebraicLoop& s : causal_model) {
-    //    EquationList res =
-    //        EquationSolver::Solve(s.equations(), s.variables(), mmo_class.syms_ref(), mmo_class.variables_ref(), classes, tearing_vars);
-    //    causalized.insert(causalized.end(), res.begin(), res.end());
-    //  }
-    //}
+    // Declare the tearing_var_guess_ and tearing_var_res_ variables introduced by tearing.
+    for (const auto& [name, var_info] : result.added_variables()) {
+      mmo_class.syms_ref().insert(name, var_info);
+      mmo_class.variables_ref().push_back(name);
+    }
+
+    debugInit("s");
+    {
+      Modelica::TimeScope solve_timer{"GiNaC solve"};
+      Modelica::AST::ClassList classes = stored_def.classes();
+      auto aux_va_names = result.aux_vars_names();
+      causalized = EquationSolver::Solve(result.vertical_sort(), mmo_class.syms_ref(), mmo_class.variables_ref(), classes, aux_va_names);
+    }
   }
   mmo_class.equations_ref().equations_ref() = causalized;
 

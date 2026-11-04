@@ -41,18 +41,32 @@ class CausalizationResult {
 public:
   CausalizationResult() = default;
   CausalizationResult(ModelMatch horizontal_sort, AlgebraicLoops loops
-    , TearingVariables tearing, CausalModel vertical_sort);
+    , TearingVariables tearing, CausalModel vertical_sort
+    , std::vector<std::pair<AST::Name, VarInfo>> added_variables);
 
   const ModelMatch& horizontal_sort() const;
   const AlgebraicLoops& loops() const;
   const TearingVariables& tearing() const;
   const CausalModel& vertical_sort() const;
+  /**
+   * @brief Variables introduced by tearing (tearing_var_guess_ and tearing_var_res_) that must be
+   * declared in the causalized model.
+   */
+  const detail::TearingAuxVars& added_variables() const;
+
+  /**
+   * @brief Returns the names (first element of each pair) of the given
+   * tearing auxiliary variables.
+   */
+  std::vector<AST::Name> aux_vars_names();
+
 
 private:
   ModelMatch _horizontal_sort;
   AlgebraicLoops _loops;
   TearingVariables _tearing;
   CausalModel _vertical_sort;
+  std::vector<std::pair<AST::Name, VarInfo>> _added_variables;
 };
 
 std::ostream& operator<<(std::ostream& out
