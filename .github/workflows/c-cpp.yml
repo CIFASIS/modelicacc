@@ -18,7 +18,7 @@ jobs:
         with:
           repository: CIFASIS/sb-graph
 
-          ref: iss-135-define-include-directory
+          ref: sb-graph-dev
 
           path: _deps/sb-graph
 
