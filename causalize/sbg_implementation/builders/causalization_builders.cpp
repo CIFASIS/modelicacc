@@ -210,6 +210,11 @@ const SBG::LIB::Set& VerticalSortingBuilder::end_points() const
   return _end_points;
 }
 
+const SBG::LIB::PWMap& VerticalSortingBuilder::reps_to_endpoints() const
+{
+  return _reps_to_endpoints;
+}
+
 // Member functions ------------------------------------------------------------
 
 void VerticalSortingBuilder::addGuessVertices()
@@ -341,6 +346,7 @@ void VerticalSortingBuilder::build()
   SBG::LIB::PWMap Vid{_input_dsbg.V()};
   reps_to_endpoint = std::move(reps_to_endpoint).combine(Vid);
   residual_to_endpoint = std::move(residual_to_endpoint).combine(Vid);
+  _reps_to_endpoints = reps_to_endpoint;
 
   // Add edges between tearing variables.
   addDependencies(residual_to_endpoint);

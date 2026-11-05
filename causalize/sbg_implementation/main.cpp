@@ -29,6 +29,8 @@
 #include "util/solve/solve.hpp"
 
 #include <boost/variant/get.hpp>
+#include <sbgraph/algorithms/scc/scc_impl.hpp>
+#include <sbgraph/algorithms/sorting/topological/ts_impl.hpp>
 #include <sbgraph/sbg/pwmap_impl.hpp>
 #include <sbgraph/sbg/set_impl.hpp>
 
@@ -129,6 +131,8 @@ int main(int argc, char** argv)
 
   SBG::LIB::SET_IMPL.set_set_fact(SBG::LIB::SetKind::kOrdUnidimDense);
   SBG::LIB::PWMAP_IMPL.set_pwmap_fact(SBG::LIB::PWMapKind::kUnordered);
+  SBG::LIB::SCC_IMPL.set_scc_fact(SBG::LIB::SCCKind::kMinReachV3);
+  SBG::LIB::TS_IMPL.set_ts_fact(SBG::LIB::TSKind::kTwoPhases);
   Modelica::Causalize::CausalizationResult result;
   EquationList causalized;
   {

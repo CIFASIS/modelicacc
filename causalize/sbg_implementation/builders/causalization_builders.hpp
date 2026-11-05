@@ -76,6 +76,7 @@ public:
   const SBG::LIB::Set& residual_vertices() const;
   const SBG::LIB::PWMap& guess_offset() const;
   const SBG::LIB::Set& end_points() const;
+  const SBG::LIB::PWMap& reps_to_endpoints() const;
 
 private:
   void addGuessVertices();
@@ -100,6 +101,7 @@ private:
   SBG::LIB::Set _residual_vertices;
   SBG::LIB::PWMap _guess_offset;
   SBG::LIB::Set _end_points;
+  SBG::LIB::PWMap _reps_to_endpoints;
 };
 
 } // namespace Causalize

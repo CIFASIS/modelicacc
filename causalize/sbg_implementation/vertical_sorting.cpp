@@ -29,6 +29,7 @@
 #include "util/sbg/set_vertex.hpp"
 
 #include <sbgraph/algorithms/sorting/topological/topological_sorting.hpp>
+#include <sbgraph/algorithms/sorting/topological/ts_utils.hpp>
 #include <sbgraph/sbg/directed_sbg.hpp>
 #include <sbgraph/sbg/expression.hpp>
 #include <sbgraph/sbg/integer.hpp>
@@ -474,11 +475,18 @@ VerticalSortingResult VerticalSorting::sort()
     TimeScope timer{"vertical sorting SBG builder"};
     vs_builder.build();
   }
+  SBG::LIB::TSInput input;
+  SBG::LIB::DirectedSBG dsbg = vs_builder.dsbg();
+  input.set_dsbg(dsbg);
+  input.set_rmap(vs_builder.rmap());
+  input.set_rmap_ends(vs_builder.reps_to_endpoints());
+  input.set_rmap_starts(vs_builder.guess_offset().composition(vs_builder.reps_to_endpoints()));
   SBG::LIB::PWMap vertical_sort;
   {
     TimeScope timer{"vertical sorting"};
-    vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(vs_builder.dsbg(), vs_builder.rmap());
+    vertical_sort = SBG::LIB::TopologicalSorting{}.calculate(input);
   }
+  checkSort(vertical_sort, vs_builder.dsbg());
 
   return VerticalSortingResult{_tearing_result.modelica_bsbg(), vertical_sort, vs_builder};
 }
