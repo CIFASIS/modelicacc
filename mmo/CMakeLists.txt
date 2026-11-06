@@ -1,5 +1,4 @@
 set(MMO_SRC
-  main.cpp
   ${MMO_DIR}/mmo_class.cpp
   ${UTIL_DIR}/table.cpp
   ${UTIL_DIR}/debug.cpp
@@ -11,5 +10,8 @@ set(MMO_SRC
   ${UTIL_DIR}/type.cpp
 )
 
-add_executable(mmo ${MMO_SRC})
-target_link_libraries(mmo PRIVATE modelica ginac)
+add_library(mmo-lib STATIC ${MMO_SRC})
+target_link_libraries(mmo-lib PUBLIC modelica ginac)
+
+add_executable(mmo ${MMO_DIR}/main.cpp)
+target_link_libraries(mmo PRIVATE mmo-lib)

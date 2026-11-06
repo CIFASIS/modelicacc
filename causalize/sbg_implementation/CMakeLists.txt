@@ -1,7 +1,6 @@
 set(CAUSALIZE_SBG_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 set(CAUSALIZE_SBG_SRC
-  main.cpp
   ${CAUSALIZE_SBG_DIR}/algebraic_loops.cpp
   ${CAUSALIZE_SBG_DIR}/algebraic_loops_detection.cpp
   ${CAUSALIZE_SBG_DIR}/causalize.cpp
@@ -37,12 +36,14 @@ set(CAUSALIZE_SBG_SRC
   ${UTIL_DIR}/sbg/ast_visitors/sbg_set_visitor.cpp
 )
 
+add_library(causalize-lib STATIC ${CAUSALIZE_SBG_SRC} ${CAUSALIZE_COMMON_SRC})
+target_link_libraries(causalize-lib PUBLIC modelica mmo-lib ginac)
+
 add_executable(causalize
-  ${CAUSALIZE_SBG_SRC}
-  ${CAUSALIZE_COMMON_SRC}
+  ${CAUSALIZE_SBG_DIR}/main.cpp
 )
 
-target_link_libraries(causalize PRIVATE modelica ginac ModelicaCC::profiler)
+target_link_libraries(causalize PRIVATE causalize-lib ModelicaCC::profiler)
 
 add_custom_target(causalize_test
   COMMAND ${CMAKE_COMMAND} -E echo "BUILDING CAUSALIZE TESTS: not implemented"

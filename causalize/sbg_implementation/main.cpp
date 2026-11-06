@@ -57,7 +57,7 @@ void usage()
 
 void version()
 {
-  cout << "Modelica C Compiler 2.0" << endl;
+  cout << "Modelica C Compiler 5.2.0" << endl;
   cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.hpptml>" << endl;
   cout << "This is free software: you are free to change and redistribute it." << endl;
   cout << "There is NO WARRANTY, to the extent permitted by law." << endl;
@@ -129,10 +129,6 @@ int main(int argc, char** argv)
   StateVariablesFinder setup_state_var(mmo_class);
   setup_state_var.findStateVariables();
 
-  SBG::LIB::SET_IMPL.set_set_fact(SBG::LIB::SetKind::kOrdUnidimDense);
-  SBG::LIB::PWMAP_IMPL.set_pwmap_fact(SBG::LIB::PWMapKind::kUnordered);
-  SBG::LIB::SCC_IMPL.set_scc_fact(SBG::LIB::SCCKind::kMinReachV3);
-  SBG::LIB::TS_IMPL.set_ts_fact(SBG::LIB::TSKind::kTwoPhases);
   Modelica::Causalize::CausalizationResult result;
   EquationList causalized;
   {

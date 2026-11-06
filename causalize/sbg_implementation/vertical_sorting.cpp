@@ -480,7 +480,9 @@ VerticalSortingResult VerticalSorting::sort()
   input.set_dsbg(dsbg);
   input.set_rmap(vs_builder.rmap());
   input.set_rmap_ends(vs_builder.reps_to_endpoints());
-  input.set_rmap_starts(vs_builder.guess_offset().composition(vs_builder.reps_to_endpoints()));
+  input.set_rmap_starts(
+    vs_builder.guess_offset().composition(vs_builder.reps_to_endpoints())
+  );
   SBG::LIB::PWMap vertical_sort;
   {
     TimeScope timer{"vertical sorting"};

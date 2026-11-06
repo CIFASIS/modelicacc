@@ -184,6 +184,14 @@ if(MODELICACC_BUILD_TESTS)
   )
 endif()
 
+# Scalar benchmark using Boost
+#option(SCALAR_BENCHMARKS "Compile benchmarks" ${PROJECT_IS_TOP_LEVEL})
+#
+#if(SCALAR_BENCHMARKS)
+#  add_subdirectory(test/performance/scalar)
+#endif()
+add_subdirectory(test/performance)
+
 # ------------------------------------------------------------------------------
 # Install: cmake --install <build-dir> [--prefix <dir>]
 # ------------------------------------------------------------------------------
