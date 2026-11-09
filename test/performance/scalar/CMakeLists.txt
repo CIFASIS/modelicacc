@@ -1,6 +1,3 @@
-find_package(benchmark REQUIRED)
-find_package(Boost REQUIRED)
-
 add_executable(scalar-benchmark main.cpp)
 
 target_include_directories(scalar-benchmark

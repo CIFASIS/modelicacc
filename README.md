@@ -39,18 +39,17 @@ Proceedings of the 11th International Modelica Conference 2015
 
 These are generic installation instructions.
 
-## Dependences
+## Dependencies
 
 In order to be able to install and compile ModelicaCC, 
 the following  dependencies must be installed: 
 
-    * autoconf 2.69 (avoid 2.71)
     * boost1.81
     * cmake
-    * doxygen
     * g++
     * libginac-dev 
     * make     
+    * SBG
 
 ## Basic Installation
 
@@ -72,10 +71,6 @@ The simplest way to compile this package is to run the following commands from t
 ## Makefile targets
 
 The makefile script accepts the following targets:
-
-  * update\_sbg: updates the SBG library.
-
-  * main\_test: builds and run integration and unit tests.
 
   * doc: builds the documentation.
 

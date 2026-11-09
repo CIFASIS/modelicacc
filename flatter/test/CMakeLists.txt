@@ -27,7 +27,6 @@ target_link_libraries(
   PRIVATE
   GTest::gtest
   GTest::gmock
-  PkgConfig::GiNaC
 )
 
 # ---------------------------------------------------------------------------

@@ -1,6 +1,3 @@
-find_package(benchmark REQUIRED)
-find_package(Boost REQUIRED)
-
 add_executable(modelicacc-sbg-benchmark main.cpp)
 
 target_include_directories(modelicacc-sbg-benchmark
@@ -33,8 +30,8 @@ target_link_libraries(
 )
 
 add_custom_target(run-benchmark
-      COMMAND echo "Running SBG/scalar Benchmark."
-      COMMAND cd ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && ./modelicacc-sbg-benchmark
+  COMMAND echo "Running SBG/scalar Benchmark."
+  COMMAND cd ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && ./modelicacc-sbg-benchmark
 )
 
 add_subdirectory(scalar)

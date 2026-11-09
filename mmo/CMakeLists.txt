@@ -11,7 +11,7 @@ set(MMO_SRC
 )
 
 add_library(mmo-lib STATIC ${MMO_SRC})
-target_link_libraries(mmo-lib PUBLIC modelica ginac)
+target_link_libraries(mmo-lib PUBLIC modelica PRIVATE Boost::boost)
 
 add_executable(mmo ${MMO_DIR}/main.cpp)
 target_link_libraries(mmo PRIVATE mmo-lib)

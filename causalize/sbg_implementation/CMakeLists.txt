@@ -37,13 +37,13 @@ set(CAUSALIZE_SBG_SRC
 )
 
 add_library(causalize-lib STATIC ${CAUSALIZE_SBG_SRC} ${CAUSALIZE_COMMON_SRC})
-target_link_libraries(causalize-lib PUBLIC modelica mmo-lib ginac)
+target_link_libraries(causalize-lib PUBLIC Boost::boost modelica mmo-lib ginac)
 
 add_executable(causalize
   ${CAUSALIZE_SBG_DIR}/main.cpp
 )
 
-target_link_libraries(causalize PRIVATE causalize-lib ModelicaCC::profiler)
+target_link_libraries(causalize PRIVATE Boost::boost causalize-lib ModelicaCC::profiler)
 
 add_custom_target(causalize_test
   COMMAND ${CMAKE_COMMAND} -E echo "BUILDING CAUSALIZE TESTS: not implemented"

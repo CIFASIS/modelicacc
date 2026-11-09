@@ -45,42 +45,10 @@ endif()
 # ModelicaCC dependencies: sbgraph, ginac
 # ------------------------------------------------------------------------------
 
-# Keep this before include_directories() and the output directories: they
-# would leak into sb-graph when it is fetched (e.g. ModelicaCC's util/ and
-# parser/ headers shadowing sb-graph's ones).
-
-set(CMAKE_PREFIX_PATH
-  "$ENV{HOME}/.local/sbgraph"
-  CACHE PATH
-  "Paths where CMake looks for installed packages (e.g. sb-graph)"
-)
-set(SBG_REF "sb-graph-dev" CACHE STRING
-  "Branch, tag or commit of sb-graph to fetch when SBGraph is not installed")
-
-find_package(SBGraph CONFIG QUIET)
-
-if(SBGraph_FOUND)
-  message(STATUS "Using installed SBGraph: ${SBGraph_DIR}")
-else()
-  message(STATUS "SBGraph not found, downloading sb-graph (${SBG_REF}) with FetchContent")
-
-  # Only the library is needed, skip sb-graph tests, its 3rd-party deps and
-  # docs (same settings as .github/workflows/c-cpp.yml).
-  set(SBG_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-  set(SBG_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-
-  FetchContent_Declare(
-    sbgraph
-    GIT_REPOSITORY https://github.com/CIFASIS/sb-graph.git
-    GIT_TAG        ${SBG_REF}
-    GIT_SHALLOW    TRUE
-  )
-
-  FetchContent_MakeAvailable(sbgraph)
+add_subdirectory(3rd-party)
+if(MODELICACC_BUILD_TESTS OR MODELICACC_BUILD_BENCHMARKS)
+  enable_testing()
 endif()
-
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GiNaC REQUIRED IMPORTED_TARGET ginac)
 
 # ------------------------------------------------------------------------------
 # Output directories: bin/ and lib/
@@ -131,7 +99,7 @@ set(COMMON_SRC
 
 add_library(modelica STATIC ${COMMON_SRC})
 set_target_properties(modelica PROPERTIES OUTPUT_NAME "modelica")
-target_link_libraries(modelica PUBLIC SBG::sbgraph)
+target_link_libraries(modelica PUBLIC Boost::boost ginac SBG::sbgraph)
 
 # ------------------------------------------------------------------------------
 # ModelicaCC profiler
@@ -152,15 +120,6 @@ target_compile_features(modelicacc-profiler
 )
 
 add_library(ModelicaCC::profiler ALIAS modelicacc-profiler)
-
-# ------------------------------------------------------------------------------
-# Testing dependencies: GTest, Google Benchmark
-# ------------------------------------------------------------------------------
-
-if(MODELICACC_BUILD_TESTS OR MODELICACC_BUILD_BENCHMARKS)
-  add_subdirectory(3rd-party)
-  enable_testing()
-endif()
 
 # ------------------------------------------------------------------------------
 # Submodules of ModelicaCC
@@ -184,13 +143,9 @@ if(MODELICACC_BUILD_TESTS)
   )
 endif()
 
-# Scalar benchmark using Boost
-#option(SCALAR_BENCHMARKS "Compile benchmarks" ${PROJECT_IS_TOP_LEVEL})
-#
-#if(SCALAR_BENCHMARKS)
-#  add_subdirectory(test/performance/scalar)
-#endif()
-add_subdirectory(test/performance)
+if(MODELICACC_BUILD_BENCHMARKS)
+  add_subdirectory(test/performance)
+endif()
 
 # ------------------------------------------------------------------------------
 # Install: cmake --install <build-dir> [--prefix <dir>]

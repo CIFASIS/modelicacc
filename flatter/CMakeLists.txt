@@ -38,7 +38,7 @@ set(FLATTER_SRC
 
 add_executable(flatter ${FLATTER_SRC})
 
-target_link_libraries(flatter PRIVATE modelica ginac ModelicaCC::profiler)
+target_link_libraries(flatter PRIVATE modelica ModelicaCC::profiler Boost::boost)
 
 if(MODELICACC_BUILD_TESTS)
   add_subdirectory(test)
