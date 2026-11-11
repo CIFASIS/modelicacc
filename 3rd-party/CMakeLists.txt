@@ -13,31 +13,26 @@ set(CMAKE_PREFIX_PATH
   CACHE PATH
   "Paths where CMake looks for installed packages (e.g. sb-graph)"
 )
-set(SBG_REF "sb-graph-dev" CACHE STRING
+set(SBG_REF "5b1384bee67f546ab6f4777fe4ecc5440fa04d30" CACHE STRING
   "Branch, tag or commit of sb-graph to fetch when SBGraph is not installed")
 
 find_package(SBGraph CONFIG QUIET)
 
-if(SBGraph_FOUND)
-  message(STATUS "Using installed SBGraph: ${SBGraph_DIR}")
-  set_target_properties(SBG::sbgraph PROPERTIES IMPORTED_GLOBAL TRUE)
-else()
-  message(STATUS "SBGraph not found, downloading sb-graph (${SBG_REF}) with FetchContent")
+message(STATUS "Downloading sb-graph (${SBG_REF}) with FetchContent")
 
-  # Only the library is needed, skip sb-graph tests, its 3rd-party deps and
-  # docs (same settings as .github/workflows/c-cpp.yml).
-  set(SBG_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-  set(SBG_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+# Only the library is needed, skip sb-graph tests, its 3rd-party deps and
+# docs (same settings as .github/workflows/c-cpp.yml).
+set(SBG_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(SBG_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 
-  FetchContent_Declare(
-    sbgraph
-    GIT_REPOSITORY https://github.com/CIFASIS/sb-graph.git
-    GIT_TAG        ${SBG_REF}
-    GIT_SHALLOW    TRUE
-  )
+FetchContent_Declare(
+  sbgraph
+  GIT_REPOSITORY https://github.com/CIFASIS/sb-graph.git
+  GIT_TAG        ${SBG_REF}
+  GIT_SHALLOW    TRUE
+)
 
-  FetchContent_MakeAvailable(sbgraph)
-endif()
+FetchContent_MakeAvailable(sbgraph)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GiNaC REQUIRED IMPORTED_TARGET ginac)

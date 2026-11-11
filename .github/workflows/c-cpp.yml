@@ -18,7 +18,7 @@ jobs:
         with:
           repository: CIFASIS/sb-graph
 
-          ref: sb-graph-dev
+          ref: 5b1384bee67f546ab6f4777fe4ecc5440fa04d30
 
           path: _deps/sb-graph
 
