@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.0] - 2026-11-18
+
+### Fixed
+
+- **Merged version 5.2** into main development branch.
+- Restored **solve** function call for causalization on development brnch that uses the new vertical sort data structures.  
+
+### Removed
+
+- **Legacy SBG 1.0.0** dependency used for flatter algorithms.
+
+
 ## [5.2] - 2026-10-16
 
 ### Fixed

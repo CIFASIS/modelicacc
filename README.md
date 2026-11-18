@@ -1,4 +1,4 @@
-## ModelicaCC 5.2
+## ModelicaCC 6.0
 
 ModelicaCC is a Modelica C Compiler implemented in C++, the main goal of this project is to provide an environment to develop and test novel algorithms involved in the different compilation stages of large scale Modelica models. The different stages of the compilation pipeline follows the usual order: 
 
@@ -83,6 +83,18 @@ To list all the available targets run `make help`.
 
 ## Changelog
 
+## [6.0] - 2026-11-18
+
+### Fixed
+
+- **Merged version 5.2** into main development branch.
+- Restored **solve** function call for causalization on development brnch that uses the new vertical sort data structures.  
+
+### Removed
+
+- **Legacy SBG 1.0.0** dependency used for flatter algorithms.
+
+
 ## [5.2] - 2026-10-16
 
 ### Fixed
@@ -105,11 +117,6 @@ Detailed instructions of how to run benchmark causalization tests can be found i
 - Modified `omc` causalization scripts to use the new backend and report times from `dumpBackendClocks` compiler option.
 - Fixed tearing option for causalization binary.
 
-## [5.0] - 2026-07-13
-### Added
-- Integrate **SCC** SBG library algorithm for causalization.
-- Generate Modelica code to solve algebraic loops.
-
 
 ## Licensing
 
@@ -117,4 +124,4 @@ Please see the file called LICENSE.
 
 ## Bug Reporting
 
-Report bugs to: fernandez@cifasis-conicet.gov.ar
+Report bugs to: fernandez@cifasis-conicet.gov.ar, marzorati@cifasis-conicet.gov.ar
