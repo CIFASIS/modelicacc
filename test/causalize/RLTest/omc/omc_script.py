@@ -58,13 +58,13 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
     logging.info(f"Values of N: {valores_n}")
     logging.info(f"Number of runs: {runs}\n")
 
-    #omc_stages = ["Causalize", "Tearing", "Solve", "C File Size"]
-    omc_stages = ["sorting global known variables", "sort global known variables",
-                  "postOpt tearingSystem (initialization)", "postOpt tearingSystem (simulation)",
-                  "postOpt solveSimpleEquations (simulation)", "postOpt solveSimpleEquations (initialization)",
-                  "matching and sorting (n=400) (initialization)", "matching and sorting (n=300)", 
-                  "preOpt resolveLoops (simulation)", "Total compile time", "Build C model", 
-                  "C File Size"]
+    omc_stages = ["Causalize", "Tearing", "Solve", "C File Size (kB)", "Total compile time", "Build C model"]
+    #omc_stages = ["sorting global known variables", "sort global known variables",
+    #              "postOpt tearingSystem (initialization)", "postOpt tearingSystem (simulation)",
+    #              "postOpt solveSimpleEquations (simulation)", "postOpt solveSimpleEquations (initialization)",
+    #              "matching and sorting (n=400) (initialization)", "matching and sorting (n=300)", 
+    #              "preOpt resolveLoops (simulation)", "Total compile time", "Build C model", 
+    #              "C File Size"]
 
     #omc_stages = ["Compile", "C File Size"]
 
@@ -81,18 +81,18 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
         with open(temp_filename, 'w', encoding='utf-8') as f:
             f.write(modified_content);
 
-        #command = ["omc", "-s", "--newBackend", "-d=dumpBackendClocks", temp_filename]
-        command = ["omc", "-s", "-d=execstat", temp_filename]
+        command = ["omc", "-s", "--newBackend", "-d=dumpBackendClocks", temp_filename]
+        #command = ["omc", "-s", "-d=execstat", temp_filename]
 
-        #pattern = re.compile(r"^\s*([\w\s\d]+?)\.+\s*([\d.e+-]+)", re.MULTILINE)
-        pattern = re.compile(r"Performance of (?:[^:]+: )?([^:]+): time ([\d.]+)", re.MULTILINE)
+        pattern = re.compile(r"^\s*([\w\s\d]+?)\.+\s*([\d.e+-]+)", re.MULTILINE)
+        #pattern = re.compile(r"Performance of (?:[^:]+: )?([^:]+): time ([\d.]+)", re.MULTILINE)
         fases_tiempos = defaultdict(list)
 
         resultados_totales[n] = dict.fromkeys(omc_stages)
         error_en_este_n = False
 
         for i in range(1, runs + 1):
-            logging.info(f"Run {i}/{runs}...") #, end="\r")
+            logging.info(f"Run {i}/{runs}...")
             try:
                 start_time = time.perf_counter()
                 result = subprocess.run(command, capture_output=True, text=True, check=True)
@@ -103,6 +103,7 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
                 lineas = output.splitlines()
                 output = "\n".join(lineas[19:])
                 
+                logging.info(f"Compitation output: \n'{output}") 
                 matches = pattern.findall(output)
                 for fase, tiempo_str in matches:
                     fase_clean = fase.strip()
@@ -115,9 +116,9 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
                 model_p = Path(model_file).resolve()
                 model_file = str(model_p)
                 base_name = Path(model_file).stem
-                c_file_name = f"{base_name}.c"
-                file_size = Path(c_file_name).stat().st_size / 1024
-                fases_tiempos["C File Size"].append(float(file_size))
+                c_files = [c_file for c_file in Path(".").glob("*.c") if base_name in c_file.name]
+                file_size = sum(c_file.stat().st_size for c_file in c_files) / 1024
+                fases_tiempos["C File Size (kB)"].append(float(file_size/1e3))
                 
                 base_name = Path(model_file).stem
                 comp_file = Path(".") / base_name
@@ -147,8 +148,8 @@ def run_omc_benchmarks(filename, valores_n, runs=10):
         for stage in omc_stages:
             tiempos = fases_tiempos[stage]
             if tiempos:
-                #resultados_totales[n][stage] = 1e3*sum(tiempos) / len(tiempos)
-                resultados_totales[n][stage] = sum(tiempos) / len(tiempos)
+                resultados_totales[n][stage] = 1e3*sum(tiempos) / len(tiempos)
+                #resultados_totales[n][stage] = sum(tiempos) / len(tiempos)
 
         logging.info("Finished.                      ")
 
@@ -201,7 +202,7 @@ if __name__ == "__main__":
 
     input_runs = int(sys.argv[1])
     
-    lista_n = [10**i for i in range(4, 5)]
+    lista_n = [10**i for i in range(2, 4)]
     
     cur_folder = Path(".")
     clean_folder(cur_folder)

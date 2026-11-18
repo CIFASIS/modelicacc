@@ -18,18 +18,16 @@
 ******************************************************************************/
 
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
-#include "causalize/sbg_implementation/equation_info.hpp"
-#include "causalize/sbg_implementation/set_edge.hpp"
-#include "causalize/sbg_implementation/set_vertex.hpp"
+#include "causalize/sbg_implementation/builders/causalization_builders.hpp"
 #include "util/debug.hpp"
-#include "util/compact_set.hpp"
+#include "util/profiler.hpp"
+#include "util/sbg/equation_info.hpp"
+#include "util/sbg/set_edge.hpp"
+#include "util/sbg/set_vertex.hpp"
 
-#include <algorithms/misc/causalization_builders.hpp>
-#include <algorithms/scc/scc.hpp>
-#include <sbg/directed_sbg.hpp>
-#include <sbg/pw_map.hpp>
-#include <sbg/set.hpp>
-#include <util/time_profiler.hpp>
+#include <sbgraph/algorithms/scc/scc.hpp>
+#include <sbgraph/sbg/directed_sbg.hpp>
+#include <sbgraph/sbg/pw_map.hpp>
 
 #include <algorithm>
 
@@ -38,92 +36,101 @@ namespace Modelica {
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// ModelicaCC algebraic loops --------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
-
-// AlgebraicLoop ---------------------------------------------------------------
-
-AlgebraicLoop::AlgebraicLoop(EquationList equations, ExpList variables) : _equations(equations), _variables(variables) {}
-
-const EquationList& AlgebraicLoop::equations() const { return _equations; }
-
-const ExpList& AlgebraicLoop::variables() const { return _variables; }
-
-bool AlgebraicLoop::isEmpty() const { return _equations.empty(); }
-
-void AlgebraicLoop::pushBack(Equation equation, Expression variable)
-{
-  _equations.push_back(equation);
-  _variables.push_back(variable);
-}
-
-void AlgebraicLoop::concatenation(AlgebraicLoop other)
-{
-  _equations.insert(_equations.end(), other._equations.begin(), other._equations.end());
-  _variables.insert(_variables.end(), other._variables.begin(), other._variables.end());
-}
-
-std::ostream& operator<<(std::ostream& out, const AlgebraicLoop& loop)
-{
-  for (const Expression& var : loop.variables()) {
-    out << var << "\n";
-  }
-  for (const Equation& eq : loop.equations()) {
-    out << eq << "\n";
-  }
-
-  return out;
-}
-
-// AlgebraicLoops --------------------------------------------------------------
-
-std::size_t AlgebraicLoops::size() const { return _loops.size(); }
-
-AlgebraicLoop AlgebraicLoops::operator[](std::size_t k) const
-{
-  ERROR_UNLESS(k < _loops.size(), "AlgebraicLoops::operator[]: index ", k, " out of range");
-  return _loops[k];
-}
-
-void AlgebraicLoops::pushBack(AlgebraicLoop loop)
-{
-  if (!loop.isEmpty()) {
-    _loops.push_back(loop);
-  }
-}
-
-void AlgebraicLoops::reverse() { std::reverse(_loops.begin(), _loops.end()); }
-
-std::ostream& operator<<(std::ostream& out, const AlgebraicLoops& loops)
-{
-  for (const AlgebraicLoop& loop : loops) {
-    out << loop << "\n";
-  }
-
-  return out;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // Algebraic loops return structure --------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-AlgebraicLoopsResult::AlgebraicLoopsResult(ModelicaSBG modelica_bsbg, SBG::LIB::SCCData scc_result)
-    : _modelica_bsbg(modelica_bsbg), _scc_result(scc_result)
+// Constructors/Destructors ----------------------------------------------------
+
+AlgebraicLoopsResult::AlgebraicLoopsResult(
+  ModelicaSBG modelica_bsbg, SBG::LIB::SCCData scc_result
+) : _modelica_bsbg(modelica_bsbg), _scc_result(scc_result) {}
+
+// Getters ---------------------------------------------------------------------
+
+const ModelicaSBG& AlgebraicLoopsResult::modelica_bsbg() const
 {
+  return _modelica_bsbg;
 }
 
-const ModelicaSBG& AlgebraicLoopsResult::modelica_bsbg() const { return _modelica_bsbg; }
-
-const SBG::LIB::SCCData& AlgebraicLoopsResult::scc_result() const { return _scc_result; }
-
-AlgebraicLoop AlgebraicLoopsResult::loopToModelicaFormat(const SetEdge& se) const
+const SBG::LIB::SCCData& AlgebraicLoopsResult::scc_result() const
 {
-  AlgebraicLoop result;
+  return _scc_result;
+}
 
-  SetVertex eq_sv = _modelica_bsbg.setVertex(se.eq_id());
-  EquationInfo eq_info = eq_sv.info().value();
-  result.pushBack(eq_info.restrictEquation(eq_info.indices()), se.access());
+// Extra functions -------------------------------------------------------------
 
+namespace {
+
+AST::Equation innerBounds(
+  const EquationInfo& eq_info, const SBG::LIB::Set& reps
+  , const AST::Indexes& indexes, const AST::Indexes& other_indexes
+)
+{
+  if (reps.cardinal() == 1) { // Scalar algebraic loop.
+    return eq_info.restrictBounds(other_indexes);
+  }
+
+  // Array of algebraic loops.
+  return eq_info.adjustSubscripts(indexes, other_indexes);
+}
+
+} // namespace
+
+EquationList AlgebraicLoopsResult::loopToModelicaFormat(
+  const SBG::LIB::Set& reps, const SBG::LIB::Set& represented
+  , const AST::Indexes& indexes
+) const
+{
+  EquationList result;
+
+  for (const SetEdge& se : _modelica_bsbg.set_edges()) {
+    SBG::LIB::Set se_scc = se.translatedDomain().intersection(represented);
+    if (se_scc.cardinal() > 0) {
+      // Bounds for arrays of equations inside an algebraic loop.
+      auto [eq_info, accesses] = getAccess(_modelica_bsbg, se, se_scc);
+      for (const auto& [_, other_indexes] : accesses) {
+        result.push_back(innerBounds(eq_info, reps, indexes, other_indexes));
+      }
+    }
+  }
+
+  return result;
+}
+
+namespace {
+
+AlgebraicLoop outerBounds(
+  const SBG::LIB::Set& reps, const AST::EquationList& eq_list, const AST::Indexes indexes
+)
+{
+  // Bounds for arrays of algebraic loops.
+  if (reps.cardinal() == 1) { // Scalar algebraic loop.
+    return AlgebraicLoop{eq_list};
+  }
+
+  // Array of algebraic loops.
+  ForEq for_eq{indexes, eq_list};
+  return AlgebraicLoop{EquationList{1, for_eq}};
+}
+
+} // namespace
+
+AlgebraicLoops AlgebraicLoopsResult::loopsToModelicaFormat(
+  const SetEdge& se, const SBG::LIB::Set& se_scc
+) const
+{
+  // Create the indices for an array of algebraic loops (possibly empty if there
+  // is a large algebraic loop).
+  auto [eq_info, accesses] = getAccess(_modelica_bsbg, se, se_scc);
+
+  // Get other equations that belong to the current SCCs determined by
+  // \p se_scc.
+  AlgebraicLoops result;
+  for (const auto& [reps, indexes] : accesses) {
+    SBG::LIB::Set represented = _scc_result.rmap().preImage(reps);
+    EquationList eq_list = loopToModelicaFormat(reps, represented, indexes);
+    result.pushBack(outerBounds(reps, eq_list, indexes));
+  }
   return result;
 }
 
@@ -131,47 +138,12 @@ AlgebraicLoops AlgebraicLoopsResult::toModelicaFormat() const
 {
   AlgebraicLoops result;
 
-  SBG::LIB::PWMap rmap = _scc_result.rmap();
-  SBG::LIB::Set representatives = rmap.image();
-  while (!representatives.isEmpty()) {
-    SBG::LIB::Set min_elem_set{representatives.minElem()};
-    CompactSet represented{rmap.preImage(min_elem_set)};
-    // Get all equations and variables that belong to this loop
-    AlgebraicLoop loop;
-    for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-      CompactSet jth_domain = se.domain();
-      jth_domain.intersection(represented);
-      if (jth_domain.cardinal() > 0) {
-        loop.concatenation(loopToModelicaFormat(se));
-        representatives = representatives.difference(se.domain().set());
-      }
+  SBG::LIB::Set representatives = _scc_result.rmap().fixedPoints();
+  for (const SetEdge& se : _modelica_bsbg.set_edges()) {
+    SBG::LIB::Set se_scc = se.translatedDomain().intersection(representatives);
+    if (se_scc.cardinal() > 0) {
+      result.concatenation(loopsToModelicaFormat(se, se_scc));
     }
-    result.pushBack(loop);
-  }
-
-  return result;
-}
-
-std::vector<LoopT> AlgebraicLoopsResult::toSBGFormat() const
-{
-  std::vector<LoopT> result;
-
-  SBG::LIB::PWMap rmap = _scc_result.rmap();
-  SBG::LIB::Set representatives = rmap.image();
-  while (!representatives.isEmpty()) {
-    SBG::LIB::Set min_elem_set{representatives.minElem()};
-    SBG::LIB::Set represented = rmap.preImage(min_elem_set);
-    // Get all equations and variables that belong to this loop
-    LoopT loop;
-    for (const SetEdge& se : _modelica_bsbg.set_edges()) {
-      SBG::LIB::Set se_domain = se.domain().set();
-      SBG::LIB::Set loop_in_se = se_domain.intersection(represented);
-      if (loop_in_se.cardinal() > 0) {
-        loop.push_back(se.domain().set());
-        representatives = representatives.difference(se_domain);
-      }
-    }
-    result.push_back(loop);
   }
 
   return result;
@@ -181,19 +153,21 @@ std::vector<LoopT> AlgebraicLoopsResult::toSBGFormat() const
 // Algebraic loops detector ----------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-AlgebraicLoopsDetector::AlgebraicLoopsDetector(HorizontalSortingResult& hs_result) : _hs_result(hs_result) {}
+AlgebraicLoopsDetector::AlgebraicLoopsDetector(
+  HorizontalSortingResult& hs_result
+) : _hs_result(hs_result) {}
 
 AlgebraicLoopsResult AlgebraicLoopsDetector::detect()
 {
   SBG::LIB::DirectedSBG loops_dsbg;
   {
-    SBG::Util::Internal::TimeProfiler profiler{"Algebraic loops SBG builder"};
-    loops_dsbg = misc::buildLoopDetectionSBG(_hs_result.matching_result());
+    TimeScope timer{"algebraic loops SBG builder"};
+    loops_dsbg = buildLoopDetectionSBG(_hs_result.matching_result());
   }
   SBG::LIB::SCCData scc_result{SBG::LIB::DirectedSBG{}, SBG::LIB::PWMap{}
     , SBG::LIB::Set{}};
   {
-    SBG::Util::Internal::TimeProfiler profiler{"Algebraic loops detection"};
+    TimeScope timer{"algebraic loops detection"};
     scc_result = SBG::LIB::SCC{}.calculate(loops_dsbg);
   }
 

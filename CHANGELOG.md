@@ -1,5 +1,39 @@
 # Changelog
 
+## [6.0] - 2026-11-18
+
+### Fixed
+
+- **Merged version 5.2** into main development branch.
+- Restored **solve** function call for causalization on development brnch that uses the new vertical sort data structures.  
+
+### Removed
+
+- **Legacy SBG 1.0.0** dependency used for flatter algorithms.
+
+
+## [5.2] - 2026-10-16
+
+### Fixed
+
+- Fixed compilation of SBG legacy library version for flatter algorithms 
+
+Detailed instructions of how to run benchmark causalization tests can be found in:
+```
+{MCC_ROOT}/test/causalize/RLTest/README.md
+```
+
+## [5.1] - 2026-10-14
+
+### Added
+
+- Added README to run causalization test benchmarks.
+
+### Fixed
+
+- Modified `omc` causalization scripts to use the new backend and report times from `dumpBackendClocks` compiler option.
+- Fixed tearing option for causalization binary.
+
 ## [5.0] - 2026-07-13
 ### Added
 - Integrate **SCC** SBG library algorithm for causalization.

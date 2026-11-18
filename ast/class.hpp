@@ -55,7 +55,7 @@ inline bool is(CompElement c)
 }
 
 struct Composition {
-  Composition(){};
+  Composition() : external_(false) {};
   Composition(ElemList, CompElemList,
               boost::optional<boost::fusion::vector3<boost::optional<String>, boost::optional<External>, boost::optional<Annotation>>>);
   member_(ElemList, elements);

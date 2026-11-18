@@ -20,13 +20,13 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_GENERATE_SBG_INPUT_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_GENERATE_SBG_INPUT_HPP_
 
-#include "causalize/sbg_implementation/modelica_sbg.hpp"
-#include "causalize/sbg_implementation/set_edge.hpp"
-#include "causalize/sbg_implementation/set_vertex.hpp"
 #include "mmo/mmo_class.hpp"
-#include "util/compact_set.hpp"
+#include "util/sbg/modelica_sbg.hpp"
+#include "util/sbg/set_edge.hpp"
+#include "util/sbg/set_vertex.hpp"
 
-#include "sbg/bipartite_sbg.hpp"
+#include <sbgraph/sbg/bipartite_sbg.hpp>
+#include <sbgraph/sbg/expression.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -83,30 +83,18 @@ protected:
   void addVariableSet(const VarInfo& variable, const Name& name);
 
   /**
-   * @brief Generates an equivalent list of equations to that of
-   * _mmo_class.equations().equations() where each loop has an unique
-   * inner-most equation.
-   */
-  EquationList flatterForEqs() const;
-
-  /**
    * @brief Creates maps from edges to equations nodes.
    */
-  CompactTransformation createMap1(const CompactSet& eq_nodes
-    , const Translation& eq_nodes_trans) const;
+  SBG::LIB::Expression createMap1(
+    const SetEdge& eq_se, const SetVertex& eq_sv
+  ) const;
 
   /**
    * @brief Creates maps from edges to variables nodes.
    */
-  CompactTransformation createMap2(const Reference& reference
-    , const IndexList& counters, const Translation& var_trans) const;
-
-  /**
-   * @brief Adds maps definitions to a set-edge, and saves the element to
-   * _set_edges.
-   */
-  void addMaps(SetEdge se, const SetVertex& eq_sv, const SetVertex& var_sv
-    , const Reference& reference);
+  SBG::LIB::Expression createMap2(
+    const SetEdge& eq_se, const SetVertex& var_sv
+   ) const;
 
   /**
    * @brief Adds all edges between an equation and all of the occurences of a
@@ -130,13 +118,8 @@ protected:
 
 private:
   Modelica::MMO_Class& _mmo_class;
+  ModelicaSBG _modelica_bsbg;
   unsigned int _max_dim;
-  SetVertices _set_vertices;
-  SetEdges _set_edges;
-  int _node_id; ///< Counter for set-vertices
-  int _edge_id; ///< Counter for set-edges
-  Integer _vertex_offset; ///< Current vertex offset
-  Integer _edge_offset; ///< Current edge offset
   std::ofstream _sbg_input;
 };
 

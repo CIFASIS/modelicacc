@@ -20,10 +20,14 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_CAUSALIZE_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_CAUSALIZE_HPP_
 
+#include "causalize/sbg_implementation/algebraic_loops.hpp"
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
+#include "causalize/sbg_implementation/causal_model.hpp"
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
 #include "causalize/sbg_implementation/horizontal_sorting.hpp"
+#include "causalize/sbg_implementation/model_match.hpp"
 #include "causalize/sbg_implementation/tearing.hpp"
+#include "causalize/sbg_implementation/tearing_variables.hpp"
 #include "causalize/sbg_implementation/vertical_sorting.hpp"
 #include "mmo/mmo_class.hpp"
 
@@ -37,18 +41,32 @@ class CausalizationResult {
 public:
   CausalizationResult() = default;
   CausalizationResult(ModelMatch horizontal_sort, AlgebraicLoops loops
-    , TearingVariables tearing, CausalModel vertical_sort);
+    , TearingVariables tearing, CausalModel vertical_sort
+    , std::vector<std::pair<AST::Name, VarInfo>> added_variables);
 
   const ModelMatch& horizontal_sort() const;
   const AlgebraicLoops& loops() const;
   const TearingVariables& tearing() const;
   const CausalModel& vertical_sort() const;
+  /**
+   * @brief Variables introduced by tearing (tearing_var_guess_ and tearing_var_res_) that must be
+   * declared in the causalized model.
+   */
+  const detail::TearingAuxVars& added_variables() const;
+
+  /**
+   * @brief Returns the names (first element of each pair) of the given
+   * tearing auxiliary variables.
+   */
+  std::vector<AST::Name> aux_vars_names();
+
 
 private:
   ModelMatch _horizontal_sort;
   AlgebraicLoops _loops;
   TearingVariables _tearing;
   CausalModel _vertical_sort;
+  std::vector<std::pair<AST::Name, VarInfo>> _added_variables;
 };
 
 std::ostream& operator<<(std::ostream& out

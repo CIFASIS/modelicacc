@@ -1,4 +1,4 @@
-## ModelicaCC 5.0
+## ModelicaCC 6.0
 
 ModelicaCC is a Modelica C Compiler implemented in C++, the main goal of this project is to provide an environment to develop and test novel algorithms involved in the different compilation stages of large scale Modelica models. The different stages of the compilation pipeline follows the usual order: 
 
@@ -54,44 +54,69 @@ the following  dependencies must be installed:
 
 ## Basic Installation
 
-The simplest way to compile this package is:
+The simplest way to compile this package is to run the following commands from the library root directory (`${MODELICACC_ROOT_DIR}`):
 
-  1. `cd` to the directory containing the package's source code and type
-     `autoconf` to generate the configuration scripts.
+  1. `mkdir build`
   
-  2. Type `./configure` to run the configuration script.
+  2. `cd build` 
+      
+  3. `cmake ..`
+
+      Note that by default the biuld type is set to `Release`, to make a debug build, add `-DCMAKE_BUILD_TYPE=Debug`
+
+  4. `make` 
   
-  3. Type `make` to compile all the binaries. The different tools are located 
-     in the bin folder. 
+  6. You can remove the generated library and object files from the
+     source code directory by typing `make clean-all`.
 
-  4. You can remove the program binaries and object files from the
-     source code directory by typing `make clean`.  
+## Makefile targets
 
-## SBG library instructions
+The makefile script accepts the following targets:
 
-To use the newest versions of SBG algorithms type `make update-sbg`, and
-then re-compile binaries by typing `make`. This is done automatically the
-first time the whole project is built.
+  * update\_sbg: updates the SBG library.
 
-If Python3 is not installed, replace the occurrences of `python3` with
-`python`.
+  * main\_test: builds and run integration and unit tests.
+
+  * doc: builds the documentation.
+
+To list all the available targets run `make help`.
 
 ## Changelog
 
-## [5.0] - 2026-07-13
-### Added
-- Integrate **SCC** SBG library algorithm for causalization.
-- Generate Modelica code to solve algebraic loops.
+## [6.0] - 2026-11-18
 
-## [4.0] - 2022-05-04
-### Added
-- Implemented SBGraphs as an independent library. As such, new algorithms
-for causalization will be listed in its corresponding repository.
+### Fixed
 
-## [3.0] - 2021-08-20
+- **Merged version 5.2** into main development branch.
+- Restored **solve** function call for causalization on development brnch that uses the new vertical sort data structures.  
+
+### Removed
+
+- **Legacy SBG 1.0.0** dependency used for flatter algorithms.
+
+
+## [5.2] - 2026-10-16
+
+### Fixed
+
+- Fixed compilation of SBG legacy library version for flatter algorithms 
+
+Detailed instructions of how to run benchmark causalization tests can be found in:
+```
+{MCC_ROOT}/test/causalize/RLTest/README.md
+```
+
+## [5.1] - 2026-10-14
+
 ### Added
-- Implemented SBGraphs data structures and helper classes.
-- Implemented **new flatter** algorithm based on **SBGraphs**.
+
+- Added README to run causalization test benchmarks.
+
+### Fixed
+
+- Modified `omc` causalization scripts to use the new backend and report times from `dumpBackendClocks` compiler option.
+- Fixed tearing option for causalization binary.
+
 
 ## Licensing
 
@@ -99,4 +124,4 @@ Please see the file called LICENSE.
 
 ## Bug Reporting
 
-Report bugs to: fernandez@cifasis-conicet.gov.ar
+Report bugs to: fernandez@cifasis-conicet.gov.ar, marzorati@cifasis-conicet.gov.ar

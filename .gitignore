@@ -2,6 +2,7 @@
 *~
 bin/*
 doc/
+build/*
 *.cache
 Makefile
 *.log
@@ -15,11 +16,11 @@ configure
 *.bin
 
 # 3rd-party files.
-/3rd-party/gtest/usr/*
+/3rd-party/gtest/*
 /3rd-party/sbg/sb-graph-dev.tar.gz
 /3rd-party/sbg/sb-graph-dev
 /3rd-party/sbg/sb-graph-1.0.0
-/3rd-party/boost/boost-1.81.0/
+/3rd-party/boost/*
 
 # Test generated files.
 /flatter/test/test_data/*

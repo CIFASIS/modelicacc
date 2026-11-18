@@ -21,13 +21,22 @@
 #include <ast/equation.hpp>
 #include <mmo/mmo_class.hpp>
 #include <util/table.hpp>
+#include "causalize/sbg_implementation/causal_model.hpp"
 #include "causalize/sbg_implementation/tearing_variables.hpp"
 
 using namespace Modelica::AST;
 class EquationSolver {
   public:
-  static EquationList Solve(EquationList eqs, ExpList crs, VarSymbolTable &syms, std::vector<Name>& variables, ClassList &cl,
-                            Modelica::Causalize::TearingVariables tearing_vars);
-  static Equation Solve(Equation eq, Expression exp, VarSymbolTable &syms, std::vector<Name>& variables, ClassList &cl,
-                        Modelica::Causalize::TearingVariables tearing_vars);
+  static EquationList Solve(EquationList eqs, ExpList vars, VarSymbolTable &syms, std::vector<Name>& variables, ClassList &cl,
+                            std::vector<Name> &tearing_aux_vars);
+  static EquationList Solve(Equation eq, ExpList vars, VarSymbolTable &syms, std::vector<Name>& variables, ClassList &cl,
+                            std::vector<Name> &tearing_aux_vars);
+  static EquationList Solve(const Modelica::Causalize::CausalModel &causal_model, VarSymbolTable &syms, std::vector<Name> &variables,
+                            ClassList &cl, std::vector<Name> &tearing_aux_vars);
+
+  private:
+  static bool isUnmatchedVar(Expression var);
+  static EquationList groupForEquations(const EquationList &eqs);
+  static bool containsAnyVar(Equation eq, const std::vector<Name> &var_names);
+  static void splitAuxVars(const std::vector<Name> &tearing_aux_vars, std::vector<Name> &guess_vars, std::vector<Name> &res_vars);
 };

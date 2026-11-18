@@ -17,23 +17,24 @@
 
 ******************************************************************************/
 
-#include <fstream>
-#include <iostream>
-#include "boost/variant/get.hpp"
-#include <getopt.h>
-
+#include "ast/equation.hpp"
 #include "causalize/sbg_implementation/causalize.hpp"
 #include "mmo/mmo_class.hpp"
 #include "parser/parser.hpp"
-#include "util/ast_visitors/state_variables_finder.hpp"
 #include "util/debug.hpp"
 #include "util/logger.hpp"
-#include <util/solve/solve.hpp>
-#include <ast/equation.hpp>
-#include <util/table.hpp>
-#include <sbg/pwmap_impl.hpp>
-#include <sbg/set_impl.hpp>
-#include <util/time_profiler.hpp>
+#include "util/table.hpp"
+#include "util/profiler.hpp"
+#include "util/ast_visitors/state_variables_finder.hpp"
+#include "util/solve/solve.hpp"
+
+#include <boost/variant/get.hpp>
+#include <sbgraph/sbg/pwmap_impl.hpp>
+#include <sbgraph/sbg/set_impl.hpp>
+
+#include <fstream>
+#include <iostream>
+#include <getopt.h>
 
 using namespace std;
 using namespace Modelica;
@@ -54,7 +55,7 @@ void usage()
 
 void version()
 {
-  cout << "Modelica C Compiler 2.0" << endl;
+  cout << "Modelica C Compiler 6.0" << endl;
   cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.hpptml>" << endl;
   cout << "This is free software: you are free to change and redistribute it." << endl;
   cout << "There is NO WARRANTY, to the extent permitted by law." << endl;
@@ -74,7 +75,7 @@ int main(int argc, char** argv)
                                            {"tearing", no_argument, 0, 't'},
                                            {0, 0, 0, 0}};
     int option_index = 0;
-    opt = getopt_long(argc, argv, "vhot:", long_options, &option_index);
+    opt = getopt_long(argc, argv, "vhto:", long_options, &option_index);
     if (opt == EOF) {
       break;
     }
@@ -100,6 +101,7 @@ int main(int argc, char** argv)
     }
   }
 
+  Modelica::Profiler::instance().set_enabled(true);
   StoredDef stored_def;
   bool status = false;
   std::string model_file = "";
@@ -130,23 +132,21 @@ int main(int argc, char** argv)
   Modelica::Causalize::CausalizationResult result;
   EquationList causalized;
   {
-    SBG::Util::Internal::TimeProfiler profiler{"Causalization"};
+    Modelica::TimeScope timer{"causalize.total"};
     result = Modelica::Causalize::Causalize{}.causalize(mmo_class);
 
-    //debugInit("s");
+    // Declare the tearing_var_guess_ and tearing_var_res_ variables introduced by tearing.
+    for (const auto& [name, var_info] : result.added_variables()) {
+      mmo_class.syms_ref().insert(name, var_info);
+      mmo_class.variables_ref().push_back(name);
+    }
+
+    debugInit("s");
     {
-      SBG::Util::Internal::TimeProfiler solve_profiler{"GiNaC solve"};
+      Modelica::TimeScope solve_timer{"GiNaC solve"};
       Modelica::AST::ClassList classes = stored_def.classes();
-      const Modelica::Causalize::CausalModel& causal_model = result.vertical_sort();
-      Modelica::Causalize::TearingVariables tearing_vars;
-      if (tearing) {
-        tearing_vars = result.tearing();
-      }
-      for (const Modelica::Causalize::CausalEquations& s : causal_model) {
-        EquationList res =
-            EquationSolver::Solve(s.equations(), s.variables(), mmo_class.syms_ref(), mmo_class.variables_ref(), classes, tearing_vars);
-        causalized.insert(causalized.end(), res.begin(), res.end());
-      }
+      auto aux_va_names = result.aux_vars_names();
+      causalized = EquationSolver::Solve(result.vertical_sort(), mmo_class.syms_ref(), mmo_class.variables_ref(), classes, aux_va_names);
     }
   }
   mmo_class.equations_ref().equations_ref() = causalized;
@@ -190,16 +190,8 @@ int main(int argc, char** argv)
   }
 
   std::cout << "\n";
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Horizontal sorting SBG builder");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Horizontal sorting");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Algebraic loops SBG builder");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Algebraic loops detection");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Tearing SBG builder");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Tearing");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Vertical sorting SBG builder");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Vertical sorting");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("GiNaC solve");
-  SBG::Util::Internal::TimeProfiler::print_execution_time("Causalization");
+  std::ofstream profiler_stream{"profiler.txt"};
+  Modelica::Profiler::instance().print(profiler_stream);
   std::cout << "\n\n";
 
   return 0;

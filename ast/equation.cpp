@@ -21,6 +21,9 @@
 
 namespace Modelica {
 namespace AST {
+
+member_imp(EquationBase, Option<Comment>, comment);
+
 Equality::Equality(Expression l, Expression r) : left_(l), right_(r){};
 member_imp(Equality, Expression, left);
 member_imp(Equality, Expression, right);

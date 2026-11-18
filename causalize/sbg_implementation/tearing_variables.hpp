@@ -30,11 +30,12 @@ namespace Modelica {
 
 namespace Causalize {
 
+/// Prefixes of the auxiliary guess and residual variables introduced by tearing.
+inline const AST::Name kTearingGuessPrefix = "tearing_var_guess_";
+inline const AST::Name kTearingResPrefix = "tearing_var_res_";
+
 ////////////////////////////////////////////////////////////////////////////////
 // Tearing variable ------------------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
-
-// ModelicaCC tearing variable representation ----------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 class TearingVariable {
@@ -51,11 +52,15 @@ private:
 
 std::ostream& operator<<(std::ostream& out, const TearingVariable& var);
 
+////////////////////////////////////////////////////////////////////////////////
+// Tearing variables -----------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 class TearingVariables {
 public:
   TearingVariables() = default;
 
-  bool empty() const { return _variables.empty(); }
+  bool empty() const;
 
   auto begin() const { return _variables.begin(); }
   auto end() const { return _variables.end(); }

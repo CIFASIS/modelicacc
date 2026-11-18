@@ -22,10 +22,10 @@
 
 #include "ast/expression.hpp"
 #include "causalize/sbg_implementation/algebraic_loops_detection.hpp"
-#include "causalize/sbg_implementation/modelica_sbg.hpp"
 #include "causalize/sbg_implementation/tearing_variables.hpp"
+#include "util/sbg/modelica_sbg.hpp"
 
-#include <sbg/set.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 #include <iosfwd>
 #include <map>
@@ -59,7 +59,7 @@ public:
 
 private:
   TearingVariables variableToModelicaFormat(const SetEdge& se
-    , CompactSet jth_tear) const;
+    , SBG::LIB::Set jth_tear) const;
 
   ModelicaSBG _modelica_bsbg;
   SBG::LIB::Set _mfvs_result;

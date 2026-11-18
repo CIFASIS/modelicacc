@@ -190,9 +190,14 @@ std::ostream& operator<<(std::ostream& out, const Protected& p)  // output
 Composition::Composition(
     ElemList el, CompElemList comp_el,
     boost::optional<boost::fusion::vector3<boost::optional<String>, boost::optional<External>, boost::optional<Annotation>>> ext)
-    : elements_(el), comp_elem_(comp_el)
+    : external_(false), elements_(el), comp_elem_(comp_el)
 {
-  if (ext) external_ = true;
+  if (ext) {
+    external_ = true;
+    language_ = boost::fusion::at_c<0>(*ext);
+    call_ = boost::fusion::at_c<1>(*ext);
+    ext_annot_ = boost::fusion::at_c<2>(*ext);
+  }
 }
 
 Name className(ClassType c)

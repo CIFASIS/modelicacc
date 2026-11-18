@@ -20,14 +20,13 @@
 #ifndef MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_HORIZONTAL_SORTING_HPP_
 #define MODELICACC_CAUSALIZE_SBG_IMPLEMENTATION_HORIZONTAL_SORTING_HPP_
 
-#include "ast/equation.hpp"
-#include "ast/expression.hpp"
 #include "causalize/sbg_implementation/generate_sbg_input.hpp"
-#include "causalize/sbg_implementation/modelica_sbg.hpp"
-#include "causalize/sbg_implementation/set_edge.hpp"
-#include "util/compact_set.hpp"
+#include "causalize/sbg_implementation/model_match.hpp"
+#include "util/sbg/modelica_sbg.hpp"
+#include "util/sbg/set_edge.hpp"
 
-#include <algorithms/matching/match_data.hpp>
+#include <sbgraph/algorithms/matching/match_data.hpp>
+#include <sbgraph/sbg/set.hpp>
 
 #include <iosfwd>
 #include <vector>
@@ -35,51 +34,6 @@
 namespace Modelica {
 
 namespace Causalize {
-
-////////////////////////////////////////////////////////////////////////////////
-// ModelicaCC variable-equation matching ---------------------------------------
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- * @class EqVarMatch
- * @brief Represents the pairing between an equation and the unknown that will
- * be solved for it.
- */
-class EqVarMatch {
-public:
-  EqVarMatch(Equation equation, Expression variable);
-
-  const Equation& equation() const;
-  const Expression& variable() const;
-
-private:
-  Equation _equation;
-  Expression _variable;
-};
-
-std::ostream& operator<<(std::ostream& out, const EqVarMatch& match);
-
-/**
- * @class ModelMatch
- * @brief Represents the pairing between equations and variables for a whole
- * Modelica model.
- */
-class ModelMatch {
-public:
-  ModelMatch() = default;
-
-  std::size_t size() const;
-  EqVarMatch operator[](std::size_t k) const;
-
-  void pushBack(EqVarMatch match);
-
-  void concatenation(ModelMatch other);
-
-private:
-  std::vector<EqVarMatch> _model_match;
-};
-
-std::ostream& operator<<(std::ostream& out, const ModelMatch& match);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Horizontal sorting return structure -----------------------------------------
@@ -117,7 +71,7 @@ public:
   ModelMatch toModelicaFormat() const;
 
 private:
-  ModelMatch equationToModelicaFormat(SetEdge se, CompactSet se_match) const;
+  ModelMatch equationToModelicaFormat(SetEdge se, SBG::LIB::Set se_match) const;
 
   ModelicaSBG _modelica_bsbg; ///< Resulting bipartite Modelica SBG
     ///< after horizontal sorting

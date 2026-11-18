@@ -17,21 +17,18 @@
 
 ******************************************************************************/
 
-// #include "ast/queries.hpp"
 #include "causalize/sbg_implementation/tearing_variables.hpp"
-// #include "util/debug.hpp"
 
 namespace Modelica {
 
 namespace Causalize {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Tearing variables -----------------------------------------------------------
+// Tearing variable ------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-// TearingVariable -------------------------------------------------------------
-
-TearingVariable::TearingVariable(AST::Name name, AST::Bracket subscripts) : _name(name), _subscripts(subscripts) {}
+TearingVariable::TearingVariable(AST::Name name, AST::Bracket subscripts)
+  : _name(name), _subscripts(subscripts) {}
 
 const AST::Name& TearingVariable::name() const { return _name; }
 
@@ -43,13 +40,26 @@ std::ostream& operator<<(std::ostream& out, const TearingVariable& var)
   return out;
 }
 
-// TearingVariables ------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+// Tearing variables -----------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 
-std::set<AST::Bracket>& TearingVariables::operator[](AST::Name name) { return _variables[name]; }
+bool TearingVariables::empty() const { return _variables.empty(); }
 
-const std::set<AST::Bracket>& TearingVariables::operator[](AST::Name name) const { return _variables.at(name); }
+std::set<AST::Bracket>& TearingVariables::operator[](AST::Name name)
+{
+  return _variables[name];
+}
 
-void TearingVariables::insert(TearingVariable variable) { _variables[variable.name()].insert(variable.subscripts()); }
+const std::set<AST::Bracket>& TearingVariables::operator[](AST::Name name) const
+{
+  return _variables.at(name);
+}
+
+void TearingVariables::insert(TearingVariable variable)
+{
+  _variables[variable.name()].insert(variable.subscripts());
+}
 
 void TearingVariables::concatenation(TearingVariables other)
 {
@@ -63,7 +73,10 @@ void TearingVariables::concatenation(TearingVariables other)
 std::vector<AST::Name> TearingVariables::variables() const
 {
   std::vector<std::string> var_names;
-  std::transform(_variables.begin(), _variables.end(), std::back_inserter(var_names), [](const auto& pair) { return pair.first; });
+  std::transform(
+     _variables.begin(), _variables.end(), std::back_inserter(var_names)
+    , [](const auto& pair) { return pair.first; }
+  );
   return var_names;
 }
 
@@ -71,9 +84,7 @@ std::ostream& operator<<(std::ostream& out, const TearingVariables& vars)
 {
   for (auto const& [name, access] : vars) {
     for (const AST::Bracket& subs : access) {
-      out << name;
-      out << subs;
-      out << "\n";
+      out << name << subs << "\n";
     }
     out << "\n";
   }
