@@ -56,7 +56,7 @@ void usage()
 
 void version()
 {
-  cout << "Modelica C Compiler 2.0" << endl;
+  cout << "Modelica C Compiler 6.0" << endl;
   cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.hpptml>" << endl;
   cout << "This is free software: you are free to change and redistribute it." << endl;
   cout << "There is NO WARRANTY, to the extent permitted by law." << endl;

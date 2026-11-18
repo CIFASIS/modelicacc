@@ -26,7 +26,6 @@
 #include <cassert>
 #include <getopt.h>
 
-
 #include <causalize/sbg_implementation/matching_graph_builder.h>
 #include <mmo/mmo_class.h>
 #include <parser/parser.h>
@@ -48,7 +47,8 @@ using namespace Causalize;
 void usage()
 {
   cout << "Usage: boost-cpm [options] file" << endl;
-  cout << "Computes matching for a given Modelica model file using SBG and boost matching algorithms and shows the execution time of both." << endl;
+  cout << "Computes matching for a given Modelica model file using SBG and boost matching algorithms and shows the execution time of both."
+       << endl;
   cout << endl;
   cout << "-d, --debug      Print debug information about graph generation." << endl;
   cout << "-h, --help       Display this information and exit" << endl;
@@ -59,14 +59,14 @@ void usage()
 
 void version()
 {
-  cout << "Modelica C Compiler 2.0" << endl;
+  cout << "Modelica C Compiler 6.0" << endl;
   cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << endl;
   cout << "This is free software: you are free to change and redistribute it." << endl;
   cout << "There is NO WARRANTY, to the extent permitted by law." << endl;
 }
 
 //===============================================================================
-// Based on the example code from Aaron Windsor: 
+// Based on the example code from Aaron Windsor:
 //
 // https://www.boost.org/doc/libs/1_46_0/libs/graph/example/matching_example.cpp
 //
@@ -74,14 +74,13 @@ void version()
 
 void computeMaxCardinalityMatching(SBG::SBGraph sb_graph, std::string dot_file, bool debug)
 {
-
   OG::OrdinaryGraphBuilder ordinary_graph_builder(sb_graph);
 
   OG::Graph graph = ordinary_graph_builder.build();
 
   if (debug) {
     OG::GraphPrinter printer(graph);
-    printer.printGraph(dot_file+"_boost.dot");
+    printer.printGraph(dot_file + "_boost.dot");
   }
 
   int n_vertices = num_vertices(graph);
@@ -96,9 +95,9 @@ void computeMaxCardinalityMatching(SBG::SBGraph sb_graph, std::string dot_file, 
     std::cout << std::endl << "Boost: Found a matching of size " << matching_size(graph, &mate[0]) << std::endl;
 
     std::cout << "The matching is:" << std::endl;
-    
+
     graph_traits<OG::Graph>::vertex_iterator vi, vi_end;
-    for(tie(vi,vi_end) = vertices(graph); vi != vi_end; ++vi)
+    for (tie(vi, vi_end) = vertices(graph); vi != vi_end; ++vi)
       if (mate[*vi] != graph_traits<OG::Graph>::null_vertex() && *vi < mate[*vi])
         std::cout << "{" << *vi << ", " << mate[*vi] << "}" << std::endl;
 
@@ -108,7 +107,7 @@ void computeMaxCardinalityMatching(SBG::SBGraph sb_graph, std::string dot_file, 
   std::cout << "Boost Edmonds Maximum cardinality matching time: " << milliseconds.count() << " " << std::endl;
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   int opt;
   extern char* optarg;
@@ -148,7 +147,7 @@ int main(int argc, char **argv)
   bool status = false;
   if (argv[optind] != nullptr) {
     stored_def = Parser::ParseFile(argv[optind], status);
-  } 
+  }
 
   if (!status) {
     return -1;
@@ -159,7 +158,7 @@ int main(int argc, char **argv)
   StateVariablesFinder setup_state_var(mmo_class);
   setup_state_var.findStateVariables();
 
-  std::string dot_file = output_path+mmo_class.name();
+  std::string dot_file = output_path + mmo_class.name();
   Logger::instance().setFile(dot_file);
 
   MatchingGraphBuilder matching_graph_builder(mmo_class);
@@ -167,7 +166,7 @@ int main(int argc, char **argv)
   SBG::SBGraph matching_graph = matching_graph_builder.makeGraph();
   SBG::GraphPrinter printer(matching_graph, 0);
 
-  printer.printGraph(dot_file+".dot");
+  printer.printGraph(dot_file + ".dot");
 
   MatchingStruct match(matching_graph);
   auto begin = std::chrono::high_resolution_clock::now();
@@ -177,8 +176,7 @@ int main(int argc, char **argv)
 
   cout << "Generated matching:\n";
   cout << get<0>(res) << "\n\n";
-  if (get<1>(res))
-     cout << ">>> Matched all unknowns\n";
+  if (get<1>(res)) cout << ">>> Matched all unknowns\n";
   std::cout << "SBG Algorithn matching time: " << milliseconds.count() << std::endl;
 
   computeMaxCardinalityMatching(matching_graph, dot_file, debug);
